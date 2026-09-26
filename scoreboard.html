@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>备份计分板 · 红石的小工具箱</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
 <style>
 :root{
   --bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;
@@ -18,13 +20,11 @@
   --grid:rgba(61,82,31,.04);
   --p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;
   --hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);
-  --tile-accent:linear-gradient(135deg,#7a9c3c,#3d521f);
 }
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--bg);scroll-behavior:smooth}
 body{margin:0;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-/* 背景装饰 */
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform,opacity}
 .b1{width:400px;height:400px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 28s ease-in-out infinite}
@@ -40,7 +40,6 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
 #particles{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.5}
 
-/* 顶栏 */
 .topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;
   background:linear-gradient(180deg,#56682c,#3d521f);border-bottom:2px solid #2a3a1a;color:#fff;z-index:50;
   box-shadow:0 2px 8px rgba(0,0,0,.15)}
@@ -48,14 +47,14 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 .topbar .logo-icon{font-size:16px;display:inline-block;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
 .topbar .logo:hover .logo-icon{transform:rotate(-8deg) scale(1.08)}
 .topbar .sp{flex:1}
-.topbar .icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;
-  color:rgba(255,255,255,.85);background:transparent;border:none;border-radius:var(--r);cursor:pointer;
-  transition:background .15s,color .15s,transform .2s;text-decoration:none}
+.topbar .icon{display:grid;place-items:center;width:auto;min-width:30px;height:30px;padding:0 8px;flex:none;
+  font-size:13px;font-family:inherit;font-weight:600;
+  color:rgba(255,255,255,.9);background:transparent;border:none;border-radius:var(--r);cursor:pointer;
+  transition:background .15s,color .15s;text-decoration:none;white-space:nowrap}
 .topbar .icon:hover{background:rgba(0,0,0,.2);color:#fff}
-.topbar .icon:active{transform:scale(.92)}
+.topbar .icon.primary{background:linear-gradient(180deg,#a4d468,#7a9c3c);color:#1f1f1f;border:1px solid #3d521f;text-shadow:none}
 
-/* 按钮 */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:13px;font-family:inherit;font-weight:600;
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;font-size:13px;font-family:inherit;font-weight:600;
   color:#1f1f1f;background:linear-gradient(180deg,#e8e2cc,#d4ceb8);border:1px solid #4a4a3a;border-radius:var(--r);
   cursor:pointer;box-shadow:var(--bevel);transition:filter .15s,box-shadow .15s}
 .btn:hover:not(:disabled){filter:brightness(1.08);box-shadow:var(--bevel),0 0 8px rgba(142,196,74,.3)}
@@ -64,205 +63,293 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 .btn.p{color:#fff;background:linear-gradient(180deg,#7a9c3c,#56682c)}
 .btn.d{color:var(--dgr);background:transparent;box-shadow:none}
 .btn.d:hover:not(:disabled){background:rgba(160,32,32,.08);filter:none;box-shadow:none}
-.btn.sm{padding:3px 8px;font-size:11.5px}
 .btn.gold{color:#1f1f1f;background:linear-gradient(180deg,#e8d68a,#c8a227);border-color:#7a6210}
+.btn.sm{padding:4px 10px;font-size:12px}
 
-/* 主体 */
 .wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:72px 20px 60px}
 
-/* 页头 */
 .page-head{margin:0 auto 20px;text-align:center;padding:14px 0}
 .page-head h1{margin:0 0 6px;font-size:clamp(1.5rem,3vw,2rem);font-weight:800;letter-spacing:-.02em;
   background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .page-head .sub{margin:0;font-size:13px;color:var(--muted)}
 
-/* 统计条 */
-.stats-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 auto 20px}
+.stats-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 auto 16px}
 .stat{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--bg2);border:2px solid var(--bd2);
   border-radius:2px;box-shadow:var(--bevel);font-size:12.5px;color:var(--muted)}
 .stat strong{color:var(--ac);font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
 .stat.gold strong{color:var(--gold)}
 
-/* 工具条 */
-.toolbar{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 auto 16px;padding:10px;
-  background:var(--bg2);border:2px solid var(--bd2);box-shadow:var(--bevel);border-radius:2px}
-.toolbar .sep{width:1px;background:var(--bd);margin:0 4px;align-self:stretch}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  padding:10px 12px;margin:0 auto 14px;
+  background:var(--bg2);border:2px solid var(--bd2);
+  box-shadow:var(--bevel);border-radius:2px}
+.toolbar .search{position:relative;flex:1;min-width:180px}
+.toolbar .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.toolbar .search input{width:100%;height:32px;padding:0 10px 0 32px;font-size:13.5px;font-family:inherit;
+  color:var(--text);background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel-in);
+  border-radius:2px;outline:none;transition:border-color .15s,box-shadow .15s}
+.toolbar .search input:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}
+.toolbar .search input::placeholder{color:var(--muted)}
+.toolbar .search .clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:20px;height:20px;display:none;place-items:center;font-size:12px;font-family:inherit;color:var(--muted);
+  background:transparent;border:none;border-radius:2px;cursor:pointer;transition:background .15s,color .15s}
+.toolbar .search .clear:hover{background:var(--bg3);color:var(--text)}
+.toolbar .search.has-value .clear{display:grid}
 
-/* 计分板表格 */
-.board{
-  background:linear-gradient(135deg,var(--bg2),var(--bg));
-  border:2px solid var(--bd2);
-  box-shadow:var(--bevel);
-  border-radius:2px;
-  overflow:hidden;
+/* 云端状态横幅 */
+.cloud-banner{
+  margin:0 auto 14px;padding:8px 14px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  border:2px solid var(--bd2);border-radius:2px;
+  font-size:12.5px;
+  background:var(--bg2);box-shadow:var(--bevel);
 }
-.board-head{
-  display:grid;
-  grid-template-columns:44px 1fr 110px 190px 40px;
-  gap:0;padding:10px 12px;
-  background:linear-gradient(180deg,#7a9c3c,#56682c);
-  color:#fff;font-size:11.5px;font-weight:700;
-  letter-spacing:.06em;text-transform:uppercase;
-  text-shadow:1px 1px 0 rgba(0,0,0,.3);
-  border-bottom:2px solid #3d521f;
-}
+.cloud-banner.hidden{display:none}
+.cloud-banner .cdot{width:10px;height:10px;flex:none;background:#8a8a8a;box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
+.cloud-banner.online .cdot{background:#a4d468;box-shadow:0 0 0 2px rgba(164,212,104,.35)}
+.cloud-banner.offline .cdot{background:#e8a840;box-shadow:0 0 0 2px rgba(232,168,64,.3)}
+.cloud-banner .sp{flex:1}
+.cloud-banner code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;padding:1px 5px;
+  background:var(--bg);border:1px solid var(--bd);border-radius:2px}
+
+.image-panel{position:relative;margin:0 auto 14px;background:var(--bg2);border:2px solid var(--bd2);
+  box-shadow:var(--bevel);border-radius:2px;overflow:hidden;min-height:140px;
+  display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+.image-panel:hover{border-color:var(--ac)}
+.image-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  padding:32px 20px;color:var(--muted);cursor:pointer;width:100%;height:100%;text-align:center;transition:background .15s}
+.image-empty:hover{background:var(--bg3)}
+.image-empty .ic{font-size:40px;opacity:.5;line-height:1;display:block}
+.image-empty .txt{font-size:13.5px;line-height:1.5}
+.image-empty .hint{font-size:11.5px;opacity:.7}
+.image-display{display:none;max-width:100%;max-height:420px;object-fit:contain;cursor:zoom-in;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.image-display:hover{transform:scale(1.015)}
+.image-remove{position:absolute;top:8px;right:8px;width:28px;height:28px;display:grid;place-items:center;
+  font-size:14px;font-family:inherit;color:#fff;background:rgba(160,32,32,.85);border:2px solid rgba(0,0,0,.5);
+  border-radius:2px;cursor:pointer;box-shadow:var(--bevel);transition:background .15s;z-index:2}
+.image-remove:hover{background:rgba(200,40,40,1)}
+
+.ocr-panel{margin:0 auto 14px;background:var(--bg2);border:2px solid var(--bd2);
+  box-shadow:var(--bevel);border-radius:2px;overflow:hidden;display:none;animation:fadeIn .3s both}
+.ocr-panel.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+.ocr-head{display:flex;align-items:center;gap:8px;padding:8px 12px;
+  background:linear-gradient(180deg,#7a9c3c,#56682c);color:#fff;font-size:12px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
+.ocr-head .status-dot{width:10px;height:10px;flex:none;background:#8a8a8a;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.3);transition:background .2s}
+.ocr-head .status-dot.busy{background:#d4a72c;animation:pulse 1s infinite}
+.ocr-head .status-dot.ok{background:#a4d468;box-shadow:0 0 0 2px rgba(164,212,104,.4)}
+.ocr-head .status-dot.warn{background:#e8a840}
+.ocr-head .status-dot.bad{background:#e05050}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ocr-head .sp{flex:1}
+.ocr-head .icon-x{width:24px;height:24px;display:grid;place-items:center;font-size:12px;font-family:inherit;
+  color:rgba(255,255,255,.85);background:transparent;border:none;border-radius:2px;cursor:pointer}
+.ocr-head .icon-x:hover{background:rgba(0,0,0,.2);color:#fff}
+
+.ocr-body{padding:12px 14px}
+.ocr-status{font-size:13px;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ocr-status .badge{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;
+  font-size:11px;font-weight:700;letter-spacing:.04em;
+  background:var(--acs);border:1px solid var(--ac);color:var(--ac)}
+.ocr-status .badge.bad{background:rgba(160,32,32,.1);border-color:var(--dgr);color:var(--dgr)}
+.ocr-status .badge.gold{background:linear-gradient(180deg,#e8d68a,#c8a227);border-color:#7a6210;color:#1f1f1f}
+.ocr-progress{height:10px;background:var(--bg3);border:1px solid var(--bd);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.ocr-progress-bar{height:100%;width:0;background:linear-gradient(90deg,#7a9c3c,#a4d468);transition:width .2s}
+.ocr-text{padding:10px 12px;background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel-in);
+  border-radius:2px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.65;
+  max-height:180px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;color:var(--text)}
+.ocr-text mark{background:#d4a72c;color:#1f1f1f;padding:0 2px;border-radius:2px;font-weight:700}
+.ocr-text mark.gold{background:linear-gradient(180deg,#e8d68a,#c8a227)}
+
+.players-preview{margin-top:12px}
+.pp-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:6px 10px;margin-bottom:8px;
+  background:linear-gradient(180deg,#e8e2cc,#d4ceb8);
+  border:1px solid var(--bd2);border-radius:2px;
+  font-size:12px;font-weight:700;color:#2a3a1a}
+.pp-head .sp{flex:1}
+.pp-head .count{font-size:11px;padding:1px 8px;background:var(--acs);color:var(--ac);
+  border:1px solid var(--ac);border-radius:2px}
+
+.player-card{background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel-in);
+  border-radius:2px;padding:10px 12px;margin-bottom:8px;
+  animation:cardIn .3s cubic-bezier(.22,1,.36,1) both}
+@keyframes cardIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.player-card .pc-head{display:flex;align-items:center;gap:8px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px dashed var(--bd);flex-wrap:wrap}
+.player-card .pc-name{font-size:15px;font-weight:800;color:#2a3a1a;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player-card .pc-name .idx{display:inline-block;font-size:11px;font-weight:700;color:var(--ac);
+  background:var(--acs);padding:1px 6px;margin-right:6px;border-radius:2px;letter-spacing:.04em}
+.player-card .pc-add{flex:none;padding:4px 12px;font-size:11.5px;font-family:inherit;font-weight:700;
+  color:#fff;background:linear-gradient(180deg,#7a9c3c,#56682c);border:1px solid #3d521f;border-radius:2px;
+  cursor:pointer;box-shadow:var(--bevel);transition:filter .12s}
+.player-card .pc-add:hover{filter:brightness(1.1)}
+.player-card .pc-add:active{box-shadow:var(--bevel-in)}
+.player-card .pc-add.added{background:linear-gradient(180deg,#a4d468,#7a9c3c);cursor:default;opacity:.7}
+.player-card .pc-add.submitting{background:linear-gradient(180deg,#e8a840,#b08800);cursor:wait}
+.player-card .pc-add.gold{background:linear-gradient(180deg,#e8d68a,#c8a227);color:#1f1f1f;border-color:#7a6210}
+.player-card .pc-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px}
+.pc-field{display:flex;align-items:center;gap:5px;padding:3px 6px;background:var(--bg2);
+  border:1px solid var(--bd);border-radius:2px;font-size:11.5px;overflow:hidden}
+.pc-field .fname{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.02em;flex:none;text-transform:uppercase}
+.pc-field .fval{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:700;
+  color:var(--ac);text-align:right;font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-field.missing .fval{color:var(--muted);font-style:italic;font-weight:400}
+.pp-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--bd)}
+
+.ocr-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--bd)}
+
+/* 管理员面板 */
+.admin-panel{margin:0 auto 14px;background:var(--bg2);border:2px solid var(--bd2);
+  box-shadow:var(--bevel);border-radius:2px;overflow:hidden;display:none;animation:fadeIn .3s both}
+.admin-panel.show{display:block}
+.admin-head{display:flex;align-items:center;gap:8px;padding:8px 12px;
+  background:linear-gradient(180deg,#c8a227,#a07a10);color:#fff;font-size:12px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;text-shadow:1px 1px 0 rgba(0,0,0,.35)}
+.admin-head .sp{flex:1}
+.admin-head .cnt{font-size:11px;padding:1px 8px;background:rgba(255,255,255,.25);
+  color:#fff;border-radius:2px;border:1px solid rgba(255,255,255,.35)}
+.admin-body{padding:12px 14px}
+.admin-pending-list{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto}
+
+.pending-card{background:var(--bg);border:2px solid var(--bd2);border-radius:2px;padding:10px 12px;
+  animation:cardIn .3s cubic-bezier(.22,1,.36,1) both}
+.pending-card .pd-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.pending-card .pd-name{font-size:14px;font-weight:800;color:#2a3a1a;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pending-card .pd-time{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pending-card .pd-score{font-size:13px;font-weight:800;color:var(--ac);
+  background:var(--acs);padding:1px 8px;border:1px solid var(--ac);border-radius:2px;font-variant-numeric:tabular-nums}
+.pending-card .pd-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+  gap:4px;margin-bottom:8px;padding:6px;background:var(--bg2);border:1px solid var(--bd);border-radius:2px}
+.pending-card .pd-fields .pd-f{display:flex;justify-content:space-between;gap:4px;font-size:10.5px}
+.pending-card .pd-fields .pd-f .k{color:var(--muted);font-weight:600}
+.pending-card .pd-fields .pd-f .v{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--ac)}
+.pending-card .pd-acts{display:flex;gap:6px;flex-wrap:wrap}
+.pending-card .pd-acts .btn{flex:none}
+
+.board{background:linear-gradient(135deg,var(--bg2),var(--bg));border:2px solid var(--bd2);
+  box-shadow:var(--bevel);border-radius:2px;overflow:hidden}
+.board-head{display:grid;grid-template-columns:44px 1fr 110px 190px 40px;gap:0;padding:10px 12px;
+  background:linear-gradient(180deg,#7a9c3c,#56682c);color:#fff;font-size:11.5px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;text-shadow:1px 1px 0 rgba(0,0,0,.3);border-bottom:2px solid #3d521f}
 .board-head > div{display:flex;align-items:center}
 .board-head .col-score,.board-head .col-acts{justify-content:center}
 .board-body{display:flex;flex-direction:column}
 
-.row{
-  display:grid;
-  grid-template-columns:44px 1fr 110px 190px 40px;
-  align-items:center;
-  padding:10px 12px;
-  border-bottom:1px solid var(--bd);
-  transition:background .15s;
-  animation:rowIn .3s cubic-bezier(.22,1,.36,1) both;
-}
+.row{display:grid;grid-template-columns:44px 1fr 110px 190px 40px;align-items:center;
+  padding:10px 12px;border-bottom:1px solid var(--bd);transition:background .15s;
+  animation:rowIn .3s cubic-bezier(.22,1,.36,1) both}
 .row:last-child{border-bottom:none}
 .row:hover{background:var(--bg3)}
 .row.top1{background:linear-gradient(90deg,rgba(200,162,39,.18),transparent 60%)}
 .row.top2{background:linear-gradient(90deg,rgba(180,180,180,.15),transparent 60%)}
 .row.top3{background:linear-gradient(90deg,rgba(190,120,60,.15),transparent 60%)}
 @keyframes rowIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
-
 .row .rank{font-weight:800;font-size:14px;color:var(--muted);text-align:center}
 .row.top1 .rank{color:var(--gold)}
 .row.top2 .rank{color:#8a8a8a}
 .row.top3 .rank{color:#b8722c}
-
-.row .name{
-  font-size:14.5px;font-weight:700;color:#2a3a1a;
-  padding:0 8px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  cursor:text;
-}
-.row .name-input{
-  font:inherit;font-weight:700;font-size:14.5px;color:#2a3a1a;
-  width:100%;padding:2px 6px;
-  background:var(--bg);
-  border:2px solid var(--bd2);
-  box-shadow:var(--bevel-in);
-  border-radius:2px;outline:none;
-}
+.row .name{font-size:14.5px;font-weight:700;color:#2a3a1a;padding:0 8px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;
+  display:flex;align-items:center;gap:6px}
+.row .name .name-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .name .fields-badge{flex:none;font-size:10px;font-weight:700;color:var(--ac);background:var(--acs);
+  padding:1px 5px;border:1px solid var(--ac);border-radius:2px;cursor:help;letter-spacing:.03em}
+.row .name mark{background:var(--gold);color:#1f1f1f;padding:0 2px;border-radius:2px}
+.row .name-input{font:inherit;font-weight:700;font-size:14.5px;color:#2a3a1a;width:100%;padding:2px 6px;
+  background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel-in);border-radius:2px;outline:none}
 .row .name-input:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}
-
-.row .score{
-  font-size:20px;font-weight:800;color:var(--ac);
-  text-align:center;font-variant-numeric:tabular-nums;
-  cursor:pointer;
-  padding:2px 4px;
-  border-radius:2px;
-  transition:background .15s;
-}
+.row .score{font-size:20px;font-weight:800;color:var(--ac);text-align:center;font-variant-numeric:tabular-nums;
+  cursor:pointer;padding:2px 4px;border-radius:2px;transition:background .15s}
 .row .score:hover{background:var(--acs)}
 .row .score.neg{color:var(--dgr)}
-.row .score-input{
-  font:inherit;font-weight:800;font-size:20px;color:var(--ac);
-  width:100%;padding:1px 4px;
-  text-align:center;
-  background:var(--bg);
-  border:2px solid var(--bd2);
-  box-shadow:var(--bevel-in);
-  border-radius:2px;outline:none;
-  font-variant-numeric:tabular-nums;
-}
+.row .score-input{font:inherit;font-weight:800;font-size:20px;color:var(--ac);width:100%;padding:1px 4px;
+  text-align:center;background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel-in);
+  border-radius:2px;outline:none;font-variant-numeric:tabular-nums}
 .row .score-input:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}
-
 .row .acts{display:flex;gap:3px;justify-content:center}
-.act{
-  display:grid;place-items:center;
-  width:26px;height:26px;
-  font-size:13px;font-family:inherit;font-weight:700;
-  color:#1f1f1f;
-  background:linear-gradient(180deg,#e8e2cc,#d4ceb8);
-  border:1px solid #4a4a3a;
-  box-shadow:var(--bevel);
-  border-radius:2px;cursor:pointer;
-  transition:filter .12s,box-shadow .12s,transform .12s;
-}
+.act{display:grid;place-items:center;width:26px;height:26px;font-size:13px;font-family:inherit;font-weight:700;
+  color:#1f1f1f;background:linear-gradient(180deg,#e8e2cc,#d4ceb8);border:1px solid #4a4a3a;
+  box-shadow:var(--bevel);border-radius:2px;cursor:pointer;transition:filter .12s,box-shadow .12s,transform .12s}
 .act:hover{filter:brightness(1.1)}
 .act:active{box-shadow:var(--bevel-in);transform:translateY(1px)}
 .act.plus{background:linear-gradient(180deg,#a4d468,#7a9c3c);color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
 .act.minus{background:linear-gradient(180deg,#e88a8a,#c04040);color:#fff;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
 .act.del{background:transparent;border-color:transparent;box-shadow:none;color:var(--muted)}
 .act.del:hover{color:var(--dgr);background:rgba(160,32,32,.08)}
+.row .acts.readonly{opacity:.55;pointer-events:none}
 
-/* 空状态 */
 .empty{padding:60px 20px;text-align:center;color:var(--muted)}
 .empty .ic{font-size:48px;opacity:.4;margin-bottom:10px;display:block}
 .empty .lead{font-size:14px;line-height:1.8}
 
-/* 添加行 */
-.add-row{
-  display:flex;gap:8px;align-items:center;
-  padding:12px;
-  background:var(--bg2);
-  border:2px solid var(--bd2);
-  border-top:none;
-  box-shadow:var(--bevel);
-  border-radius:0 0 2px 2px;
-}
-.add-row input{
-  flex:1;
-  height:34px;
-  padding:0 10px;
-  font-size:14px;font-family:inherit;
-  color:var(--text);
-  background:var(--bg);
-  border:2px solid var(--bd2);
-  box-shadow:var(--bevel-in);
-  border-radius:2px;
-  outline:none;
-  transition:border-color .15s,box-shadow .15s;
-}
+.add-row{display:flex;gap:8px;align-items:center;padding:12px;
+  background:var(--bg2);border:2px solid var(--bd2);border-top:none;
+  box-shadow:var(--bevel);border-radius:0 0 2px 2px}
+.add-row input{flex:1;height:34px;padding:0 10px;font-size:14px;font-family:inherit;color:var(--text);
+  background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel-in);border-radius:2px;outline:none;
+  transition:border-color .15s,box-shadow .15s}
 .add-row input:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}
 .add-row input::placeholder{color:var(--muted)}
-.add-row .num-input{
-  width:80px;flex:none;text-align:center;
-}
+.add-row .num-input{width:80px;flex:none;text-align:center}
+.add-row.admin-only{display:none}
+.add-row.admin-only.show{display:flex}
 
-/* 提示 */
-.toast{position:fixed;left:50%;bottom:20px;max-width:calc(100vw - 32px);padding:8px 16px;font-size:13px;
-  color:#e8ffd0;background:#2a3a1a;border:2px solid #4a4a3a;border-radius:2px;
-  box-shadow:2px 2px 0 rgba(0,0,0,.4);
-  opacity:0;transform:translateX(-50%) translateY(16px);
-  transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);
-  pointer-events:none;z-index:200}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* 弹窗 */
 .ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;
-  background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:100;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:150;
   opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
 .ov.show{opacity:1;visibility:visible}
-.pnl{display:flex;flex-direction:column;width:100%;max-width:520px;max-height:calc(100vh - 32px);
+.pnl{display:flex;flex-direction:column;width:100%;max-width:440px;max-height:calc(100vh - 32px);
   background:var(--bg);border:2px solid var(--bd2);border-radius:2px;box-shadow:3px 3px 0 rgba(0,0,0,.3);
   overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
 .ov.show .pnl{transform:none}
 .ph{display:flex;align-items:center;gap:8px;padding:10px 14px;
   background:linear-gradient(180deg,#7a9c3c,#56682c);color:#fff;border-bottom:2px solid #3d521f;
   text-shadow:1px 1px 0 rgba(0,0,0,.3)}
-.ph strong{font-size:14px}
-.ph .sp{flex:1}
+.ph.gold{background:linear-gradient(180deg,#c8a227,#a07a10);border-bottom-color:#7a6210}
+.ph strong{font-size:14px;flex:1}
 .ph .icon{display:grid;place-items:center;width:26px;height:26px;font-size:13px;font-family:inherit;
   color:rgba(255,255,255,.85);background:transparent;border:none;border-radius:2px;cursor:pointer}
 .ph .icon:hover{background:rgba(0,0,0,.2);color:#fff}
-.pb{padding:14px;overflow-y:auto;font-size:13.5px;line-height:1.65}
-.pb p{margin:0 0 10px}
-.pb .hint{padding:8px 10px;background:var(--bg2);border:1px solid var(--bd);border-radius:2px;font-size:12.5px;color:var(--muted);line-height:1.6}
-.pb .warn{color:var(--dgr);font-weight:600}
-.pb textarea{
-  width:100%;height:180px;padding:10px;
-  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;
-  color:var(--text);background:var(--bg2);border:2px solid var(--bd2);box-shadow:var(--bevel-in);
-  border-radius:2px;outline:none;resize:none;
-}
-.pb textarea:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}
+.pb{padding:14px;overflow-y:auto}
+.pb .fld{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.pb .fld span{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.pb .fld input{height:32px;padding:0 10px;font-size:13.5px;font-family:inherit;color:var(--text);
+  background:var(--bg2);border:2px solid var(--bd2);box-shadow:var(--bevel-in);border-radius:2px;outline:none;
+  transition:border-color .15s,box-shadow .15s}
+.pb .fld input:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}
+.pb .hint{padding:8px 10px;font-size:11.5px;line-height:1.6;color:var(--muted);
+  background:var(--bg2);border:1px solid var(--bd);border-radius:2px;margin-top:6px}
+.pb .hint code{font-family:ui-monospace,Menlo,monospace;font-size:11px;padding:1px 5px;
+  background:var(--bg);border:1px solid var(--bd);border-radius:2px}
 .pfoot{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--bd);background:var(--bg2)}
 .pfoot .sp{flex:1}
 
-/* 响应式 */
+.field-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px dashed var(--bd);font-size:13px}
+.field-row:last-child{border-bottom:none}
+.field-row .fk{flex:1;font-weight:600;color:var(--muted);font-size:12px}
+.field-row .fv{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--ac);font-size:13.5px;font-variant-numeric:tabular-nums}
+
+.lightbox{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(0,0,0,.88);z-index:200;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s;cursor:zoom-out}
+.lightbox.show{opacity:1;visibility:visible}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.6);
+  animation:zoomIn .25s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes zoomIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+
+.toast{position:fixed;left:50%;bottom:20px;max-width:calc(100vw - 32px);padding:8px 16px;font-size:13px;
+  color:#e8ffd0;background:#2a3a1a;border:2px solid #4a4a3a;border-radius:2px;
+  box-shadow:2px 2px 0 rgba(0,0,0,.4);
+  opacity:0;transform:translateX(-50%) translateY(16px);
+  transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;z-index:210}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
 @media(max-width:760px){
   .board-head{grid-template-columns:36px 1fr 70px 140px 34px;padding:8px 10px;font-size:10.5px}
   .row{grid-template-columns:36px 1fr 70px 140px 34px;padding:8px 10px;gap:2px}
@@ -271,25 +358,30 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   .row .score-input{font-size:16px}
   .act{width:22px;height:22px;font-size:11px}
   .wrap{padding:60px 12px 40px}
+  .image-display{max-height:280px}
+  .player-card .pc-fields{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
 }
 @media(max-width:560px){
   .topbar .logo span:last-child{display:none}
+  .topbar .icon{padding:0 6px;font-size:12px}
   .board-head{grid-template-columns:28px 1fr 55px 118px 30px;padding:6px 8px;font-size:10px}
   .row{grid-template-columns:28px 1fr 55px 118px 30px;padding:6px 8px;gap:1px}
   .row .name{font-size:13px}
   .row .score{font-size:15px;padding:1px 2px}
   .act{width:20px;height:20px;font-size:10px}
   .row .acts{gap:2px}
-  .toolbar{padding:8px;gap:4px}
-  .btn{padding:4px 9px;font-size:12px}
+  .toolbar{padding:8px 10px;gap:8px}
+  .btn{padding:5px 11px;font-size:12.5px}
+  .toolbar .search{min-width:0;width:100%;flex-basis:100%}
+  .image-empty .ic{font-size:32px}
+  .image-empty .txt{font-size:12.5px}
 }
-@media print{.bg-decor,.topbar,.toolbar,.add-row,.act{display:none}.wrap{padding:0}.board{box-shadow:none}}
+@media print{.bg-decor,.topbar,.toolbar,.add-row,.act,.image-remove{display:none}.wrap{padding:0}.board{box-shadow:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
 
-<!-- 背景 -->
 <div class="bg-decor" aria-hidden="true">
   <div class="blob b1"></div>
   <div class="blob b2"></div>
@@ -298,13 +390,14 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   <canvas id="particles"></canvas>
 </div>
 
-<!-- 顶栏 -->
 <header class="topbar">
   <a class="logo" href="./index.html">
-    <span class="logo-icon">🧰</span>
-    <span>红石的小工具箱</span>
+    <span class="logo-icon">🏆</span>
+    <span>备份计分板</span>
   </a>
   <span class="sp"></span>
+  <button class="icon" id="btnLogin" title="管理员登录">🔑 管理员</button>
+  <button class="icon" id="btnLogout" title="退出登录" style="display:none">🚪 退出</button>
   <a class="icon" href="./index.html" title="返回工具箱">🏠</a>
 </header>
 
@@ -312,91 +405,133 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 
   <div class="page-head">
     <h1>🏆 备份计分板</h1>
-    <p class="sub">记录分数 · 一键导出备份 · 随时恢复</p>
+    <p class="sub">上传图片自动识别 · 提交申请等待管理员审核 · 批准后所有人可见</p>
   </div>
 
-  <!-- 统计 -->
   <div class="stats-bar" id="statsBar"></div>
 
-  <!-- 工具条 -->
-  <div class="toolbar">
-    <button class="btn sm" id="btnSortDesc">📊 按分数降序</button>
-    <button class="btn sm" id="btnSortAsc">📊 按分数升序</button>
-    <button class="btn sm" id="btnSortName">🔤 按名字</button>
-    <span class="sep"></span>
-    <button class="btn sm gold" id="btnExport">💾 导出备份</button>
-    <button class="btn sm" id="btnImport">📂 导入备份</button>
-    <span class="sep"></span>
-    <button class="btn sm" id="btnClearScores">🔄 分数清零</button>
-    <button class="btn sm d" id="btnResetAll">🗑 全部清空</button>
+  <div class="cloud-banner" id="cloudBanner">
+    <span class="cdot"></span>
+    <span id="cloudText">检查云端连接…</span>
+    <span class="sp"></span>
+    <button class="btn sm" id="btnRefresh">🔄 刷新</button>
   </div>
 
-  <!-- 计分板 -->
+  <div class="toolbar">
+    <button class="btn p" id="btnUploadImage">🖼️ 上传图片</button>
+    <div class="search" id="searchWrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+      </svg>
+      <input id="searchInput" type="search" placeholder="搜索玩家名…" autocomplete="off">
+      <button class="clear" id="searchClear" title="清空">✕</button>
+    </div>
+  </div>
+
+  <div class="image-panel" id="imagePanel">
+    <div class="image-empty" id="imageEmpty">
+      <span class="ic">🖼️</span>
+      <span class="txt">点上方按钮，或点这里上传图片</span>
+      <span class="hint">识别 TuberBF 后，逐行解析玩家名与 13 个字段并提交审核</span>
+    </div>
+    <img class="image-display" id="imageDisplay" alt="计分板图片">
+    <button class="image-remove" id="imageRemove" title="删除图片" hidden>✕</button>
+  </div>
+
+  <div class="ocr-panel" id="ocrPanel">
+    <div class="ocr-head">
+      <span class="status-dot" id="ocrDot"></span>
+      <span>🔍 图片识别</span>
+      <span class="sp"></span>
+      <button class="icon-x" id="ocrClose" title="关闭">✕</button>
+    </div>
+    <div class="ocr-body">
+      <div class="ocr-status" id="ocrStatus">准备中…</div>
+      <div class="ocr-progress" id="ocrProgressWrap" hidden>
+        <div class="ocr-progress-bar" id="ocrProgressBar"></div>
+      </div>
+      <div class="ocr-text" id="ocrText" hidden></div>
+      <div class="players-preview" id="playersPreview" hidden></div>
+      <div class="ocr-actions" id="ocrActions" hidden>
+        <button class="btn sm" id="ocrCopy">📋 复制识别文字</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-panel" id="adminPanel">
+    <div class="admin-head">
+      <span>🔑 管理员 · 待审核申请</span>
+      <span class="cnt" id="pendingCount">0</span>
+      <span class="sp"></span>
+      <button class="icon-x" id="adminRefresh" title="刷新">🔄</button>
+      <button class="icon-x" id="adminClose" title="收起">✕</button>
+    </div>
+    <div class="admin-body">
+      <div class="admin-pending-list" id="pendingList"></div>
+    </div>
+  </div>
+
   <div class="board">
     <div class="board-head">
       <div>#</div>
       <div>玩家 / 项目</div>
-      <div class="col-score">分数</div>
+      <div class="col-score">tuber</div>
       <div class="col-acts">操作</div>
       <div></div>
     </div>
     <div class="board-body" id="boardBody"></div>
   </div>
 
-  <!-- 添加行 -->
-  <div class="add-row">
-    <input id="newName" type="text" placeholder="输入玩家名或项目名…（回车添加）" autocomplete="off" maxlength="40">
+  <div class="add-row admin-only" id="addRow">
+    <input id="newName" type="text" placeholder="管理员手动添加玩家…（回车添加）" autocomplete="off" maxlength="40">
     <input id="newScore" class="num-input" type="number" placeholder="0" value="0">
     <button class="btn p" id="btnAdd">＋ 添加</button>
   </div>
 
 </div>
 
-<!-- 导出弹窗 -->
-<div class="ov" id="exportOv">
+<!-- 登录弹窗 -->
+<div class="ov" id="loginOv">
   <div class="pnl">
-    <div class="ph">
-      <strong>💾 导出备份</strong>
-      <span class="sp"></span>
-      <button class="icon" id="exportClose">✕</button>
+    <div class="ph gold">
+      <strong>🔑 管理员登录</strong>
+      <button class="icon" id="loginClose">✕</button>
     </div>
     <div class="pb">
-      <p>把下面的内容复制保存，或点「下载文件」保存为 <code>.json</code>：</p>
-      <textarea id="exportText" readonly></textarea>
-      <div class="hint" style="margin-top:10px">💡 备份内容包含所有玩家名和分数，导入时直接粘贴即可恢复。</div>
+      <div class="fld">
+        <span>邮箱</span>
+        <input id="loginEmail" type="email" placeholder="admin@example.com" autocomplete="email">
+      </div>
+      <div class="fld">
+        <span>密码</span>
+        <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="hint">只有配置了 Supabase 且创建了管理员账号才能登录。登录后可审核申请、编辑公共计分板。</div>
     </div>
     <div class="pfoot">
-      <button class="btn d" id="exportDownload">⬇ 下载文件</button>
-      <button class="btn" id="exportCopy">📋 复制</button>
       <span class="sp"></span>
-      <button class="btn p" id="exportOk">关闭</button>
+      <button class="btn" id="loginCancel">取消</button>
+      <button class="btn gold" id="loginSubmit">登录</button>
     </div>
   </div>
 </div>
 
-<!-- 导入弹窗 -->
-<div class="ov" id="importOv">
+<!-- 字段详情弹窗 -->
+<div class="ov" id="fieldsOv">
   <div class="pnl">
     <div class="ph">
-      <strong>📂 导入备份</strong>
-      <span class="sp"></span>
-      <button class="icon" id="importClose">✕</button>
+      <strong id="fieldsTitle">字段详情</strong>
+      <button class="icon" id="fieldsClose">✕</button>
     </div>
-    <div class="pb">
-      <p>粘贴之前导出的 JSON，或点「选择文件」：</p>
-      <textarea id="importText" placeholder='粘贴备份内容，或点下面按钮选择文件…'></textarea>
-      <div class="hint" style="margin-top:10px">⚠️ 导入会<strong>覆盖</strong>当前所有数据，请先导出备份。</div>
-    </div>
-    <div class="pfoot">
-      <button class="btn" id="importFile">📁 选择文件</button>
-      <span class="sp"></span>
-      <button class="btn" id="importCancel">取消</button>
-      <button class="btn p" id="importOk">确认导入</button>
-    </div>
+    <div class="pb" id="fieldsBody"></div>
   </div>
 </div>
 
-<input type="file" id="fileInput" accept=".json,application/json" hidden>
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg" alt="预览">
+</div>
+
+<input type="file" id="imageInput" accept="image/*" hidden>
 
 <div class="toast" id="toast"></div>
 
@@ -404,49 +539,67 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 (function(){
 'use strict';
 
-var K_DATA = 'scoreboard-data';
+/* ============================================================
+   ★★★ 配置区 —— 用户需要填这里 ★★★
+   如果你还没有 Supabase 账号，请参考代码后面的说明。
+   不配置的话，页面会自动降级为"纯本地模式"，只能本地记分。
+   ============================================================ */
+var SUPABASE_URL = 'https://ionliotsxprkoivjdnzg.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlvbmxpb3RzeHBya29pdmpkbnpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTI5NTMsImV4cCI6MjEwNTk4ODk1M30.rfRGd-mf8Edrf6jEE6Zcc8DTZWZI1VbLBNN8h8Q9-cU';  /* 例：'eyJhbGci...' */
+/* ============================================================ */
+
+var K_IMAGE = 'scoreboard-image';
+var MAX_IMAGE_SIZE = 3 * 1024 * 1024;
 
 /* ============================================================
-   数据
+   ★ 字段定义（严格按 titleraw JSON 顺序）
    ============================================================ */
-var players = [];  /* [{id, name, score}] */
-var sortMode = 'none';  /* none | desc | asc | name */
+var FIELD_DEFS = [
+  { key: 'tuber',   label: 'tuber'   },
+  { key: 'uid',     label: 'uid'     },
+  { key: 'kill',    label: 'kill'    },
+  { key: 'sp',      label: 'sp'      },
+  { key: 'qy_a',    label: 'qy.a'    },
+  { key: 'qy_b',    label: 'qy.b'    },
+  { key: 'qy_c',    label: 'qy.c'    },
+  { key: 'qy_d',    label: 'qy.d'    },
+  { key: 'dix1',    label: '地x①'   },
+  { key: 'dix2',    label: '地x②'   },
+  { key: 'zxsc',    label: 'zxsc'    },
+  { key: 'vip',     label: 'vip'     },
+  { key: 'mrjf',    label: 'mrjf'    }
+];
+var FIELD_COUNT = FIELD_DEFS.length;
 
-function loadData(){
-  try{
-    var raw = localStorage.getItem(K_DATA);
-    if(raw){
-      var parsed = JSON.parse(raw);
-      if(Array.isArray(parsed)){
-        players = parsed.filter(function(p){
-          return p && typeof p === 'object' && typeof p.name === 'string';
-        }).map(function(p){
-          return {
-            id: String(p.id || genId()),
-            name: String(p.name).slice(0, 40),
-            score: Number.isFinite(Number(p.score)) ? Math.round(Number(p.score)) : 0
-          };
-        });
-      }
-    }
-  }catch(e){
-    console.warn('读取数据失败', e);
-    players = [];
-  }
-}
+/* ============================================================
+   状态
+   ============================================================ */
+var sb = null;             /* Supabase 客户端 */
+var cloudReady = false;    /* 云端是否可用 */
+var isAdmin = false;       /* 当前是否管理员 */
+var players = [];          /* 从云端拉取的已批准玩家 */
+var pendingList = [];      /* 待审核列表（仅管理员可见） */
+var boardImage = '';
+var searchQuery = '';
+var ocrState = { running: false, text: '', players: [] };
+var realtimeChannel = null;
 
-function saveData(){
+/* ============================================================
+   初始化 Supabase
+   ============================================================ */
+function initSupabase(){
+  if(!SUPABASE_URL || SUPABASE_URL === 'YOUR_SUPABASE_URL') return false;
+  if(!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') return false;
+  if(typeof window.supabase === 'undefined') return false;
+
   try{
-    localStorage.setItem(K_DATA, JSON.stringify(players));
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    cloudReady = true;
     return true;
   }catch(e){
-    console.warn('保存失败', e);
+    console.warn('Supabase 初始化失败', e);
     return false;
   }
-}
-
-function genId(){
-  return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 /* ============================================================
@@ -459,22 +612,58 @@ var statsBar = $('statsBar');
 var newName = $('newName');
 var newScore = $('newScore');
 var btnAdd = $('btnAdd');
+var addRow = $('addRow');
 var toastEl = $('toast');
 
-var exportOv = $('exportOv');
-var exportText = $('exportText');
-var exportClose = $('exportClose');
-var exportOk = $('exportOk');
-var exportCopy = $('exportCopy');
-var exportDownload = $('exportDownload');
+var cloudBanner = $('cloudBanner');
+var cloudText = $('cloudText');
+var btnRefresh = $('btnRefresh');
 
-var importOv = $('importOv');
-var importText = $('importText');
-var importClose = $('importClose');
-var importCancel = $('importCancel');
-var importOk = $('importOk');
-var importFile = $('importFile');
-var fileInput = $('fileInput');
+var btnUploadImage = $('btnUploadImage');
+var imageInput = $('imageInput');
+var imagePanel = $('imagePanel');
+var imageEmpty = $('imageEmpty');
+var imageDisplay = $('imageDisplay');
+var imageRemove = $('imageRemove');
+
+var ocrPanel = $('ocrPanel');
+var ocrDot = $('ocrDot');
+var ocrStatus = $('ocrStatus');
+var ocrProgressWrap = $('ocrProgressWrap');
+var ocrProgressBar = $('ocrProgressBar');
+var ocrText = $('ocrText');
+var playersPreview = $('playersPreview');
+var ocrActions = $('ocrActions');
+var ocrClose = $('ocrClose');
+var ocrCopy = $('ocrCopy');
+
+var adminPanel = $('adminPanel');
+var adminRefresh = $('adminRefresh');
+var adminClose = $('adminClose');
+var pendingCount = $('pendingCount');
+var pendingListEl = $('pendingList');
+
+var btnLogin = $('btnLogin');
+var btnLogout = $('btnLogout');
+
+var loginOv = $('loginOv');
+var loginEmail = $('loginEmail');
+var loginPassword = $('loginPassword');
+var loginSubmit = $('loginSubmit');
+var loginCancel = $('loginCancel');
+var loginClose = $('loginClose');
+
+var fieldsOv = $('fieldsOv');
+var fieldsTitle = $('fieldsTitle');
+var fieldsBody = $('fieldsBody');
+var fieldsClose = $('fieldsClose');
+
+var lightbox = $('lightbox');
+var lightboxImg = $('lightboxImg');
+
+var searchWrap = $('searchWrap');
+var searchInput = $('searchInput');
+var searchClear = $('searchClear');
 
 /* ============================================================
    工具
@@ -485,51 +674,636 @@ function esc(s){
   });
 }
 
+function highlight(name, q){
+  if(!q) return esc(name);
+  var lower = name.toLowerCase();
+  var qLower = q.toLowerCase();
+  var idx = lower.indexOf(qLower);
+  if(idx === -1) return esc(name);
+  return esc(name.slice(0, idx)) + '<mark>' + esc(name.slice(idx, idx + q.length)) + '</mark>' + esc(name.slice(idx + q.length));
+}
+
 var toastTimer = null;
 function toast(msg){
   if(!toastEl) return;
   toastEl.textContent = msg;
   toastEl.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2000);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2400);
+}
+
+function formatSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+function formatTime(iso){
+  try{
+    var d = new Date(iso);
+    var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }catch(e){ return ''; }
 }
 
 /* ============================================================
-   渲染
+   云端状态 UI
    ============================================================ */
-function getSortedPlayers(){
-  var list = players.slice();
-  if(sortMode === 'desc'){
-    list.sort(function(a, b){ return b.score - a.score; });
-  } else if(sortMode === 'asc'){
-    list.sort(function(a, b){ return a.score - b.score; });
-  } else if(sortMode === 'name'){
-    list.sort(function(a, b){ return a.name.localeCompare(b.name, 'zh-CN'); });
-  }
-  return list;
+function setCloudBanner(state, text){
+  cloudBanner.classList.remove('online', 'offline', 'hidden');
+  if(state === 'online') cloudBanner.classList.add('online');
+  else if(state === 'offline') cloudBanner.classList.add('offline');
+  cloudText.innerHTML = text;
 }
 
+function updateCloudBanner(){
+  if(!cloudReady){
+    setCloudBanner('offline',
+      '⚠️ <strong>未配置云端</strong> · 当前为本地模式，数据仅自己可见。配置 Supabase 后可实现审核与共享。'
+    );
+    return;
+  }
+  if(isAdmin){
+    setCloudBanner('online', '✓ <strong>云端已连接</strong> · 管理员模式 · 可审核申请、编辑公共数据');
+  } else {
+    setCloudBanner('online', '✓ <strong>云端已连接</strong> · 访客模式 · 可上传图片提交申请，等待管理员审核');
+  }
+}
+
+/* ============================================================
+   ★ 云端数据操作
+   ============================================================ */
+
+/* 拉取已批准的玩家 */
+async function fetchApprovedPlayers(){
+  if(!cloudReady){ return; }
+  try{
+    var res = await sb.from('approved_players').select('*').order('score', { ascending: false });
+    if(res.error) throw res.error;
+    players = (res.data || []).map(function(p){
+      return {
+        id: p.id,
+        name: p.name,
+        score: p.score,
+        fields: p.fields || {},
+        cloud: true
+      };
+    });
+    render();
+  }catch(e){
+    console.warn('拉取失败', e);
+    toast('云端读取失败：' + (e.message || e));
+  }
+}
+
+/* 拉取待审核列表（仅管理员） */
+async function fetchPendingList(){
+  if(!cloudReady || !isAdmin) return;
+  try{
+    var res = await sb.from('pending_requests').select('*').order('created_at', { ascending: true });
+    if(res.error) throw res.error;
+    pendingList = res.data || [];
+    renderPending();
+  }catch(e){
+    console.warn('拉取待审核失败', e);
+  }
+}
+
+/* 提交申请（访客可用） */
+async function submitRequest(playerData){
+  if(!cloudReady){ toast('未配置云端，无法提交'); return false; }
+
+  var fields = {};
+  FIELD_DEFS.forEach(function(f, fi){
+    if(playerData.nums[fi] !== undefined) fields[f.key] = playerData.nums[fi];
+  });
+
+  var payload = {
+    name: playerData.name,
+    score: (playerData.nums[0] !== undefined) ? playerData.nums[0] : 0,
+    fields: fields
+  };
+
+  try{
+    var res = await sb.from('pending_requests').insert([payload]).select();
+    if(res.error) throw res.error;
+    return true;
+  }catch(e){
+    console.warn('提交失败', e);
+    alert('提交失败：' + (e.message || e));
+    return false;
+  }
+}
+
+/* 批准一个申请 */
+async function approveRequest(req){
+  if(!cloudReady || !isAdmin) return;
+  try{
+    /* 写入 approved_players（若同名已存在则更新） */
+    var existing = await sb.from('approved_players').select('id').eq('name', req.name).maybeSingle();
+    if(existing.data && existing.data.id){
+      var upd = await sb.from('approved_players').update({
+        score: req.score,
+        fields: req.fields,
+        approved_at: new Date().toISOString()
+      }).eq('id', existing.data.id);
+      if(upd.error) throw upd.error;
+    } else {
+      var ins = await sb.from('approved_players').insert([{
+        name: req.name,
+        score: req.score,
+        fields: req.fields
+      }]);
+      if(ins.error) throw ins.error;
+    }
+    /* 从 pending 删除 */
+    var del = await sb.from('pending_requests').delete().eq('id', req.id);
+    if(del.error) throw del.error;
+
+    toast('已批准「' + req.name + '」');
+    await fetchApprovedPlayers();
+    await fetchPendingList();
+  }catch(e){
+    console.warn('批准失败', e);
+    alert('批准失败：' + (e.message || e));
+  }
+}
+
+/* 拒绝一个申请 */
+async function rejectRequest(req){
+  if(!cloudReady || !isAdmin) return;
+  if(!confirm('确定拒绝「' + req.name + '」的申请吗？')) return;
+  try{
+    var del = await sb.from('pending_requests').delete().eq('id', req.id);
+    if(del.error) throw del.error;
+    toast('已拒绝「' + req.name + '」');
+    await fetchPendingList();
+  }catch(e){
+    console.warn('拒绝失败', e);
+    alert('拒绝失败：' + (e.message || e));
+  }
+}
+
+/* 更新玩家（管理员） */
+async function updatePlayer(id, patch){
+  if(!cloudReady || !isAdmin) return;
+  try{
+    var res = await sb.from('approved_players').update(patch).eq('id', id);
+    if(res.error) throw res.error;
+    var p = players.find(function(x){ return x.id === id; });
+    if(p) Object.assign(p, patch);
+    render();
+  }catch(e){
+    console.warn('更新失败', e);
+    toast('更新失败：' + (e.message || e));
+  }
+}
+
+/* 删除玩家（管理员） */
+async function removePlayer(id){
+  if(!cloudReady || !isAdmin) return;
+  try{
+    var res = await sb.from('approved_players').delete().eq('id', id);
+    if(res.error) throw res.error;
+    players = players.filter(function(x){ return x.id !== id; });
+    render();
+    toast('已删除');
+  }catch(e){
+    console.warn('删除失败', e);
+    alert('删除失败：' + (e.message || e));
+  }
+}
+
+/* 添加玩家（管理员） */
+async function addPlayerCloud(name, score){
+  if(!cloudReady || !isAdmin){ toast('需要管理员权限'); return; }
+  name = String(name || '').trim();
+  if(!name){ toast('请输入名字'); return; }
+  if(name.length > 40) name = name.slice(0, 40);
+  score = Number.isFinite(Number(score)) ? Math.round(Number(score)) : 0;
+
+  try{
+    var res = await sb.from('approved_players').insert([{
+      name: name, score: score, fields: { tuber: score }
+    }]).select();
+    if(res.error) throw res.error;
+    toast('已添加「' + name + '」');
+    await fetchApprovedPlayers();
+  }catch(e){
+    console.warn('添加失败', e);
+    alert('添加失败：' + (e.message || e));
+  }
+}
+
+/* ============================================================
+   Realtime 订阅
+   ============================================================ */
+function setupRealtime(){
+  if(!cloudReady) return;
+  try{
+    realtimeChannel = sb.channel('scoreboard-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'approved_players' }, function(){
+        fetchApprovedPlayers();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pending_requests' }, function(){
+        if(isAdmin) fetchPendingList();
+      })
+      .subscribe();
+  }catch(e){
+    console.warn('Realtime 订阅失败', e);
+  }
+}
+
+/* ============================================================
+   图片 UI
+   ============================================================ */
+function updateImageUI(){
+  if(!imagePanel) return;
+  if(boardImage){
+    imageEmpty.style.display = 'none';
+    imageDisplay.src = boardImage;
+    imageDisplay.style.display = 'block';
+    imageRemove.hidden = false;
+  }else{
+    imageEmpty.style.display = 'flex';
+    imageDisplay.removeAttribute('src');
+    imageDisplay.style.display = 'none';
+    imageRemove.hidden = true;
+  }
+}
+
+function handleImageUpload(file){
+  if(!file) return;
+  if(!file.type || file.type.indexOf('image/') !== 0){ alert('请选择图片文件'); return; }
+  if(file.size > MAX_IMAGE_SIZE){ alert('图片太大（' + formatSize(file.size) + '），请选择小于 3MB'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(){
+    var dataUrl = String(reader.result || '');
+    if(!dataUrl) return;
+    boardImage = dataUrl;
+    try{ localStorage.setItem(K_IMAGE, dataUrl); }catch(e){}
+    updateImageUI();
+    toast('图片已上传（' + formatSize(file.size) + '）');
+    setTimeout(function(){ runOCR(dataUrl); }, 300);
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(){
+  if(!boardImage) return;
+  if(!confirm('确定删除当前图片吗？')) return;
+  boardImage = '';
+  try{ localStorage.removeItem(K_IMAGE); }catch(e){}
+  updateImageUI();
+  closeOCRPanel();
+}
+
+function openLightbox(){
+  if(!boardImage) return;
+  lightboxImg.src = boardImage;
+  lightbox.classList.add('show');
+}
+function closeLightbox(){
+  lightbox.classList.remove('show');
+  setTimeout(function(){ lightboxImg.removeAttribute('src'); }, 200);
+}
+
+/* ============================================================
+   OCR
+   ============================================================ */
+function setOCRDot(cls){ if(ocrDot) ocrDot.className = 'status-dot' + (cls ? ' ' + cls : ''); }
+function openOCRPanel(){ if(ocrPanel) ocrPanel.classList.add('show'); }
+function closeOCRPanel(){ if(ocrPanel) ocrPanel.classList.remove('show'); }
+function updateOCRStatus(html){ if(ocrStatus) ocrStatus.innerHTML = html; }
+
+function runOCR(dataUrl){
+  if(!dataUrl) return;
+  openOCRPanel();
+
+  if(typeof Tesseract === 'undefined'){
+    setOCRDot('bad');
+    updateOCRStatus('<span class="badge bad">✕</span> 识别库未加载，请检查网络后刷新');
+    return;
+  }
+  if(ocrState.running) return;
+  ocrState.running = true;
+  ocrState.text = '';
+  ocrState.players = [];
+
+  setOCRDot('busy');
+  updateOCRStatus('<span class="badge">⏳</span> 正在加载识别引擎…');
+  ocrProgressWrap.hidden = false;
+  ocrProgressBar.style.width = '0%';
+  ocrText.hidden = true;
+  playersPreview.hidden = true;
+  ocrActions.hidden = true;
+
+  Tesseract.recognize(dataUrl, 'eng', {
+    logger: function(m){
+      if(!m) return;
+      if(m.status === 'loading tesseract core') updateOCRStatus('<span class="badge">⏳</span> 加载核心…');
+      else if(m.status === 'initializing tesseract') updateOCRStatus('<span class="badge">⏳</span> 初始化…');
+      else if(m.status === 'loading language traineddata'){
+        var p = Math.round((m.progress || 0) * 100);
+        updateOCRStatus('<span class="badge">⏳</span> 下载语言包… ' + p + '%');
+        ocrProgressBar.style.width = p + '%';
+      } else if(m.status === 'initializing api') updateOCRStatus('<span class="badge">⏳</span> 准备识别…');
+      else if(m.status === 'recognizing text'){
+        var p2 = Math.round((m.progress || 0) * 100);
+        updateOCRStatus('<span class="badge">⏳</span> 识别中… ' + p2 + '%');
+        ocrProgressBar.style.width = p2 + '%';
+      }
+    }
+  }).then(function(result){
+    ocrState.running = false;
+    var text = (result && result.data && result.data.text) || '';
+    ocrState.text = text;
+    processOCRResult(text);
+  }).catch(function(err){
+    ocrState.running = false;
+    console.warn('OCR 失败', err);
+    setOCRDot('bad');
+    updateOCRStatus('<span class="badge bad">✕</span> 识别失败：' + esc(err.message || err));
+    ocrProgressWrap.hidden = true;
+  });
+}
+
+function processOCRResult(text){
+  var normalized = String(text || '').replace(/\r/g, '').replace(/[ \t]+/g, ' ').trim();
+  if(!normalized){
+    setOCRDot('warn');
+    updateOCRStatus('<span class="badge">?</span> 没识别出任何文字，图片可能太模糊');
+    ocrProgressWrap.hidden = true;
+    return;
+  }
+
+  var kwPat = /tu\s*ber\s*b\s*f/i;
+  var m = kwPat.exec(normalized);
+  var highlighted;
+  if(m){
+    highlighted = esc(normalized.slice(0, m.index)) + '<mark class="gold">' + esc(normalized.slice(m.index, m.index + m[0].length)) + '</mark>' + esc(normalized.slice(m.index + m[0].length));
+  } else {
+    highlighted = esc(normalized);
+  }
+  ocrText.innerHTML = highlighted;
+  ocrText.hidden = false;
+  ocrProgressWrap.hidden = true;
+  ocrActions.hidden = false;
+
+  if(!m){
+    setOCRDot('warn');
+    updateOCRStatus('<span class="badge bad">✕</span> 未检测到关键字 <strong>TuberBF</strong>');
+    return;
+  }
+
+  var lines = normalized.split('\n');
+  var kwIdx = -1;
+  for(var i = 0; i < lines.length; i++){
+    if(kwPat.test(lines[i])){ kwIdx = i; break; }
+  }
+  if(kwIdx === -1){ setOCRDot('warn'); updateOCRStatus('<span class="badge bad">✕</span> 找不到 TuberBF 行'); return; }
+
+  var parsed = [];
+  var end = Math.min(lines.length, kwIdx + 81);
+  for(var j = kwIdx + 1; j < end; j++){
+    var line = lines[j].trim();
+    if(!line) continue;
+    if(kwPat.test(line)) break;
+    var p = parsePlayerLine(line);
+    if(p){
+      parsed.push({ name: p.name, nums: p.nums, submitting: false, submitted: false });
+      if(parsed.length >= 60) break;
+    }
+  }
+  ocrState.players = parsed;
+
+  if(parsed.length === 0){
+    setOCRDot('warn');
+    updateOCRStatus('<span class="badge gold">✓</span> 检测到 TuberBF，但下一行起没找到"名字 + 数字"结构');
+    return;
+  }
+
+  setOCRDot('ok');
+  updateOCRStatus('<span class="badge gold">✓</span> 解析出 <strong>' + parsed.length + '</strong> 个玩家 · 点「提交申请」送审');
+  renderPlayersPreview();
+}
+
+function parsePlayerLine(line){
+  var parts = line.split(/\s+/).filter(Boolean);
+  if(parts.length < 3) return null;
+  var nums = [];
+  var i = parts.length - 1;
+  while(i >= 0 && /^-?\d+$/.test(parts[i])){
+    nums.unshift(parseInt(parts[i], 10));
+    i--;
+  }
+  if(nums.length < 2) return null;
+  var name = parts.slice(0, i + 1).join(' ').trim();
+  if(!name) return null;
+  if(name.length > 40) name = name.slice(0, 40);
+  if(nums.length > FIELD_COUNT) nums = nums.slice(0, FIELD_COUNT);
+  return { name: name, nums: nums };
+}
+
+/* ============================================================
+   预览渲染
+   ============================================================ */
+function renderPlayersPreview(){
+  var list = ocrState.players;
+  if(!list || list.length === 0){ playersPreview.hidden = true; return; }
+
+  var html = '';
+  html += '<div class="pp-head">';
+  html += '<span>📋 解析结果</span>';
+  html += '<span class="count">' + list.length + ' 个玩家</span>';
+  html += '<span class="sp"></span>';
+  html += '</div>';
+
+  list.forEach(function(p, i){
+    html += '<div class="player-card" data-pidx="' + i + '">';
+    html += '<div class="pc-head">';
+    html += '<span class="pc-name"><span class="idx">#' + (i + 1) + '</span>' + esc(p.name) + '</span>';
+    if(p.submitted){
+      html += '<button class="pc-add added" disabled>✓ 已提交</button>';
+    } else if(p.submitting){
+      html += '<button class="pc-add submitting" disabled>⏳ 提交中</button>';
+    } else {
+      html += '<button class="pc-add gold" data-submit="' + i + '">📤 提交申请</button>';
+    }
+    html += '</div>';
+    html += '<div class="pc-fields">';
+    FIELD_DEFS.forEach(function(f, fi){
+      var v = p.nums[fi];
+      var cls = 'pc-field' + (v === undefined ? ' missing' : '');
+      var shown = v === undefined ? '—' : v;
+      html += '<div class="' + cls + '"><span class="fname">' + esc(f.label) + '</span><span class="fval">' + esc(shown) + '</span></div>';
+    });
+    html += '</div>';
+    html += '</div>';
+  });
+
+  html += '<div class="pp-actions">';
+  html += '<button class="btn p sm" id="ppSubmitAll">📤 全部提交申请</button>';
+  html += '</div>';
+
+  playersPreview.innerHTML = html;
+  playersPreview.hidden = false;
+}
+
+playersPreview.addEventListener('click', async function(e){
+  /* 单个提交 */
+  var subBtn = e.target.closest('[data-submit]');
+  if(subBtn){
+    var idx = parseInt(subBtn.getAttribute('data-submit'), 10);
+    var p = ocrState.players[idx];
+    if(!p || p.submitted || p.submitting) return;
+
+    if(!cloudReady){
+      alert('未配置云端。请先按照说明配置 Supabase。');
+      return;
+    }
+    p.submitting = true;
+    renderPlayersPreview();
+    var ok = await submitRequest(p);
+    p.submitting = false;
+    if(ok){
+      p.submitted = true;
+      toast('「' + p.name + '」已提交，等待管理员审核');
+    }
+    renderPlayersPreview();
+    return;
+  }
+
+  /* 全部提交 */
+  if(e.target.closest('#ppSubmitAll')){
+    var todo = ocrState.players.filter(function(x){ return !x.submitted && !x.submitting; });
+    if(todo.length === 0){ toast('都已经提交过了'); return; }
+    if(!cloudReady){ alert('未配置云端。请先配置 Supabase。'); return; }
+    if(!confirm('提交 ' + todo.length + ' 条申请？管理员审核通过后才会出现在计分板。')) return;
+
+    var okCount = 0;
+    for(var i = 0; i < todo.length; i++){
+      var item = todo[i];
+      item.submitting = true;
+      renderPlayersPreview();
+      var ok = await submitRequest(item);
+      item.submitting = false;
+      if(ok){ item.submitted = true; okCount++; }
+      renderPlayersPreview();
+    }
+    toast('已提交 ' + okCount + '/' + todo.length + ' 条申请');
+  }
+});
+
+ocrCopy.addEventListener('click', function(){
+  var text = ocrState.text || '';
+  if(!text){ toast('没有可复制的内容'); return; }
+  try{
+    navigator.clipboard.writeText(text).then(function(){ toast('已复制识别文字'); }).catch(function(){ fallbackCopy(text); });
+  }catch(e){ fallbackCopy(text); }
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast('已复制识别文字'); }catch(e){ alert('复制失败'); }
+  document.body.removeChild(ta);
+}
+ocrClose.addEventListener('click', closeOCRPanel);
+
+/* ============================================================
+   管理员面板渲染
+   ============================================================ */
+function renderPending(){
+  if(!pendingCount || !pendingListEl) return;
+  pendingCount.textContent = pendingList.length;
+
+  if(pendingList.length === 0){
+    pendingListEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12.5px">暂无待审核申请</div>';
+    return;
+  }
+
+  var html = '';
+  pendingList.forEach(function(req, i){
+    html += '<div class="pending-card" data-reqid="' + esc(req.id) + '">';
+    html += '<div class="pd-head">';
+    html += '<span class="pd-name">#' + (i + 1) + ' ' + esc(req.name) + '</span>';
+    html += '<span class="pd-score">tuber ' + (req.score || 0) + '</span>';
+    html += '<span class="pd-time">' + formatTime(req.created_at) + '</span>';
+    html += '</div>';
+    /* 字段预览 */
+    var fields = req.fields || {};
+    html += '<div class="pd-fields">';
+    FIELD_DEFS.forEach(function(f){
+      var v = fields[f.key];
+      html += '<div class="pd-f"><span class="k">' + esc(f.label) + '</span><span class="v">' + (v === undefined ? '—' : esc(v)) + '</span></div>';
+    });
+    html += '</div>';
+    html += '<div class="pd-acts">';
+    html += '<button class="btn p sm" data-approve="' + i + '">✓ 批准</button>';
+    html += '<button class="btn d sm" data-reject="' + i + '">✕ 拒绝</button>';
+    html += '</div>';
+    html += '</div>';
+  });
+  pendingListEl.innerHTML = html;
+}
+
+pendingListEl.addEventListener('click', async function(e){
+  var approveBtn = e.target.closest('[data-approve]');
+  if(approveBtn){
+    var ai = parseInt(approveBtn.getAttribute('data-approve'), 10);
+    var req = pendingList[ai];
+    if(req) await approveRequest(req);
+    return;
+  }
+  var rejectBtn = e.target.closest('[data-reject]');
+  if(rejectBtn){
+    var ri = parseInt(rejectBtn.getAttribute('data-reject'), 10);
+    var r = pendingList[ri];
+    if(r) await rejectRequest(r);
+  }
+});
+
+adminRefresh.addEventListener('click', function(){
+  fetchPendingList();
+  fetchApprovedPlayers();
+  toast('已刷新');
+});
+adminClose.addEventListener('click', function(){
+  adminPanel.classList.remove('show');
+});
+
+/* ============================================================
+   计分板渲染
+   ============================================================ */
 function renderStats(){
   if(!statsBar) return;
   var total = players.length;
-  var sum = 0, max = 0, min = 0;
-  players.forEach(function(p){
-    sum += p.score;
-    if(p.score > max) max = p.score;
-    if(p.score < min) min = p.score;
-  });
+  var sum = 0, max = 0;
+  players.forEach(function(p){ sum += p.score; if(p.score > max) max = p.score; });
   var avg = total > 0 ? Math.round(sum / total * 10) / 10 : 0;
-  var maxPlayer = null;
-  players.forEach(function(p){ if(!maxPlayer || p.score > maxPlayer.score) maxPlayer = p; });
+  var maxP = null;
+  players.forEach(function(p){ if(!maxP || p.score > maxP.score) maxP = p; });
 
   var html = '';
   html += '<div class="stat"><span>总人数</span><strong>' + total + '</strong></div>';
   if(total > 0){
-    html += '<div class="stat"><span>总分</span><strong>' + sum + '</strong></div>';
-    html += '<div class="stat"><span>平均分</span><strong>' + avg + '</strong></div>';
-    html += '<div class="stat gold"><span>👑 最高分</span><strong>' + esc(maxPlayer.name) + ' · ' + max + '</strong></div>';
+    html += '<div class="stat"><span>tuber 总和</span><strong>' + sum + '</strong></div>';
+    html += '<div class="stat"><span>平均</span><strong>' + avg + '</strong></div>';
+    html += '<div class="stat gold"><span>👑 最高</span><strong>' + esc(maxP.name) + ' · ' + max + '</strong></div>';
   }
   statsBar.innerHTML = html;
+}
+
+function getTop3Ids(){
+  var sorted = players.slice().sort(function(a, b){ return b.score - a.score; });
+  var t = {};
+  if(sorted[0]) t[sorted[0].id] = 1;
+  if(sorted[1]) t[sorted[1].id] = 2;
+  if(sorted[2]) t[sorted[2].id] = 3;
+  return t;
 }
 
 function renderBoard(){
@@ -538,124 +1312,117 @@ function renderBoard(){
   if(players.length === 0){
     boardBody.innerHTML =
       '<div class="empty">' +
-        '<span class="ic">🏆</span>' +
-        '<div class="lead">还没有任何玩家<br>在下面输入名字，点「＋ 添加」开始记分吧</div>' +
+        '<span class="ic">📭</span>' +
+        '<div class="lead">' +
+          (cloudReady
+            ? '还没有已批准的玩家<br>上传图片识别后提交申请，等待管理员审核'
+            : '未配置云端 · 上传图片或手动添加玩家') +
+        '</div>' +
       '</div>';
     return;
   }
 
-  var list = getSortedPlayers();
+  var q = searchQuery.trim().toLowerCase();
+  var visible = players;
+  if(q){
+    visible = players.filter(function(p){ return p.name.toLowerCase().indexOf(q) !== -1; });
+  }
+  if(visible.length === 0){
+    boardBody.innerHTML =
+      '<div class="empty"><span class="ic">🔍</span><div class="lead">没有匹配「' + esc(searchQuery) + '」的玩家</div></div>';
+    return;
+  }
+
+  var topIds = q ? {} : getTop3Ids();
+
   var html = '';
+  visible.forEach(function(p){
+    var rank = players.indexOf(p) + 1;
+    var rc = '';
+    var tr = topIds[p.id];
+    if(tr === 1) rc = 'top1';
+    else if(tr === 2) rc = 'top2';
+    else if(tr === 3) rc = 'top3';
 
-  list.forEach(function(p, i){
-    var rank = i + 1;
-    var rankClass = '';
-    if(sortMode === 'desc' || sortMode === 'none'){
-      /* 只有按分数降序或默认时才标记前三 */
-      var sorted = players.slice().sort(function(a, b){ return b.score - a.score; });
-      if(sorted.length > 0 && sorted[0].id === p.id) rankClass = 'top1';
-      else if(sorted.length > 1 && sorted[1].id === p.id) rankClass = 'top2';
-      else if(sorted.length > 2 && sorted[2].id === p.id) rankClass = 'top3';
+    var sc = p.score < 0 ? ' neg' : '';
+    var nameHtml = highlight(p.name, q);
+    var badge = (p.fields && Object.keys(p.fields).length > 0)
+      ? '<span class="fields-badge" data-fields="' + esc(p.id) + '" title="点击查看完整字段">13 项</span>'
+      : '';
+
+    html += '<div class="row ' + rc + '" data-id="' + esc(p.id) + '">';
+    html += '<div class="rank">' + rank + '</div>';
+    html += '<div class="name" data-action="edit-name" title="' + (isAdmin ? '点击编辑名字' : '') + '">';
+    html += '<span class="name-txt">' + nameHtml + '</span>' + badge;
+    html += '</div>';
+    html += '<div class="score' + sc + '" data-action="edit-score" title="' + (isAdmin ? '点击编辑分数' : '') + '">' + p.score + '</div>';
+
+    if(isAdmin){
+      html += '<div class="acts">';
+      html += '<button class="act minus" data-action="dec" title="减 1">−</button>';
+      html += '<button class="act plus" data-action="inc" title="加 1">＋</button>';
+      html += '<button class="act minus" data-action="dec5" title="减 5">−5</button>';
+      html += '<button class="act plus" data-action="inc5" title="加 5">+5</button>';
+      html += '</div>';
+      html += '<button class="act del" data-action="del" title="删除">✕</button>';
+    } else {
+      html += '<div class="acts readonly"><span style="font-size:11px;color:var(--muted)">只读</span></div>';
+      html += '<span></span>';
     }
-
-    var scoreClass = p.score < 0 ? ' neg' : '';
-
-    html +=
-      '<div class="row ' + rankClass + '" data-id="' + esc(p.id) + '">' +
-        '<div class="rank">' + rank + '</div>' +
-        '<div class="name" data-action="edit-name" title="点击编辑名字">' + esc(p.name) + '</div>' +
-        '<div class="score' + scoreClass + '" data-action="edit-score" title="点击编辑分数">' + p.score + '</div>' +
-        '<div class="acts">' +
-          '<button class="act minus" data-action="dec" title="减 1">−</button>' +
-          '<button class="act plus" data-action="inc" title="加 1">＋</button>' +
-          '<button class="act minus" data-action="dec5" title="减 5">−5</button>' +
-          '<button class="act plus" data-action="inc5" title="加 5">+5</button>' +
-        '</div>' +
-        '<button class="act del" data-action="del" title="删除">✕</button>' +
-      '</div>';
+    html += '</div>';
   });
 
   boardBody.innerHTML = html;
 }
 
-function render(){
-  renderBoard();
-  renderStats();
-}
+function render(){ renderBoard(); renderStats(); }
 
 /* ============================================================
-   操作
+   计分板操作（管理员）
    ============================================================ */
 function findPlayer(id){
-  for(var i = 0; i < players.length; i++){
-    if(players[i].id === id) return players[i];
-  }
+  for(var i = 0; i < players.length; i++) if(players[i].id === id) return players[i];
   return null;
 }
 
-function addPlayer(name, score){
-  name = String(name || '').trim();
-  if(!name){ toast('请输入名字'); return; }
-  if(name.length > 40) name = name.slice(0, 40);
-  score = Number.isFinite(Number(score)) ? Math.round(Number(score)) : 0;
-
-  /* 重名检查 */
-  for(var i = 0; i < players.length; i++){
-    if(players[i].name === name){
-      if(!confirm('已存在「' + name + '」，仍要添加吗？')) return;
-      break;
-    }
-  }
-
-  players.push({ id: genId(), name: name, score: score });
-  saveData();
-  render();
-  toast('已添加「' + name + '」');
-}
-
 function changeScore(id, delta){
+  if(!isAdmin){ toast('只有管理员能修改'); return; }
   var p = findPlayer(id);
   if(!p) return;
-  p.score += delta;
-  saveData();
-  render();
+  var newScore = p.score + delta;
+  var newFields = Object.assign({}, p.fields || {});
+  newFields.tuber = newScore;
+  updatePlayer(id, { score: newScore, fields: newFields });
 }
 
-function deletePlayer(id){
+function deletePlayerConfirm(id){
+  if(!isAdmin) return;
   var p = findPlayer(id);
   if(!p) return;
-  if(!confirm('确定删除「' + p.name + '」吗？')) return;
-  players = players.filter(function(x){ return x.id !== id; });
-  saveData();
-  render();
-  toast('已删除「' + p.name + '」');
+  if(!confirm('确定删除「' + p.name + '」吗？此操作对所有人生效。')) return;
+  removePlayer(id);
 }
 
 function editName(el, id){
+  if(!isAdmin) return;
   var p = findPlayer(id);
   if(!p || !el) return;
+  var nameTxt = el.querySelector('.name-txt');
+  if(!nameTxt) return;
+
   var oldName = p.name;
   var input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'name-input';
-  input.value = oldName;
-  input.maxLength = 40;
-  el.innerHTML = '';
-  el.appendChild(input);
-  input.focus();
-  input.select();
+  input.type = 'text'; input.className = 'name-input'; input.value = oldName; input.maxLength = 40;
+  nameTxt.innerHTML = ''; nameTxt.appendChild(input);
+  input.focus(); input.select();
 
   var done = false;
   function finish(save){
-    if(done) return;
-    done = true;
-    var newName = input.value.trim();
-    if(save && newName && newName !== oldName){
-      p.name = newName.slice(0, 40);
-      saveData();
-      toast('已重命名');
-    }
-    render();
+    if(done) return; done = true;
+    var n = input.value.trim();
+    if(save && n && n !== oldName){
+      updatePlayer(id, { name: n.slice(0, 40) });
+    } else render();
   }
   input.addEventListener('blur', function(){ finish(true); });
   input.addEventListener('keydown', function(e){
@@ -665,26 +1432,26 @@ function editName(el, id){
 }
 
 function editScore(el, id){
+  if(!isAdmin) return;
   var p = findPlayer(id);
   if(!p || !el) return;
   var oldVal = p.score;
   var input = document.createElement('input');
-  input.type = 'number';
-  input.className = 'score-input';
-  input.value = oldVal;
-  el.innerHTML = '';
-  el.appendChild(input);
-  input.focus();
-  input.select();
+  input.type = 'number'; input.className = 'score-input'; input.value = oldVal;
+  el.innerHTML = ''; el.appendChild(input);
+  input.focus(); input.select();
 
   var done = false;
   function finish(save){
-    if(done) return;
-    done = true;
+    if(done) return; done = true;
     if(save){
       var v = parseInt(input.value, 10);
-      if(!isNaN(v)) p.score = v;
-      saveData();
+      if(!isNaN(v)){
+        var f = Object.assign({}, p.fields || {});
+        f.tuber = v;
+        updatePlayer(id, { score: v, fields: f });
+        return;
+      }
     }
     render();
   }
@@ -696,220 +1463,149 @@ function editScore(el, id){
 }
 
 /* ============================================================
-   导出 / 导入
+   字段详情
    ============================================================ */
-function openExport(){
-  var data = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    players: players
-  };
-  exportText.value = JSON.stringify(data, null, 2);
-  exportOv.classList.add('show');
-}
-function closeExport(){
-  exportOv.classList.remove('show');
-}
-
-function downloadBackup(){
-  try{
-    var data = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      players: players
-    };
-    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'scoreboard-' + new Date().toISOString().slice(0, 10) + '.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-    toast('已下载备份文件');
-  }catch(e){
-    alert('下载失败：' + e.message);
-  }
-}
-
-function openImport(){
-  importText.value = '';
-  importOv.classList.add('show');
-}
-function closeImport(){
-  importOv.classList.remove('show');
-}
-
-function doImport(){
-  var txt = (importText.value || '').trim();
-  if(!txt){ toast('请先粘贴备份内容'); return; }
-
-  var parsed;
-  try{
-    parsed = JSON.parse(txt);
-  }catch(e){
-    alert('解析失败：不是有效的 JSON\n' + e.message);
-    return;
-  }
-
-  var list = null;
-  if(Array.isArray(parsed)){
-    list = parsed;
-  }else if(parsed && Array.isArray(parsed.players)){
-    list = parsed.players;
-  }
-
-  if(!list){ alert('格式不对：找不到 players 数组'); return; }
-
-  var cleaned = [];
-  var used = {};
-  list.forEach(function(p){
-    if(!p || typeof p !== 'object') return;
-    if(typeof p.name !== 'string' || !p.name.trim()) return;
-    var name = p.name.trim().slice(0, 40);
-    var id = String(p.id || genId());
-    /* id 冲突时重新生成 */
-    while(used[id]) id = genId();
-    used[id] = true;
-    cleaned.push({
-      id: id,
-      name: name,
-      score: Number.isFinite(Number(p.score)) ? Math.round(Number(p.score)) : 0
+function openFieldsDetail(player){
+  fieldsTitle.textContent = player.name + ' · 字段详情';
+  var html = '';
+  if(!player.fields || Object.keys(player.fields).length === 0){
+    html = '<p style="color:var(--muted);text-align:center;padding:20px">没有字段数据</p>';
+  } else {
+    FIELD_DEFS.forEach(function(f){
+      var v = player.fields[f.key];
+      html += '<div class="field-row"><span class="fk">' + esc(f.label) + '</span><span class="fv">' + (v === undefined ? '—' : esc(v)) + '</span></div>';
     });
-  });
-
-  if(cleaned.length === 0){ alert('没有有效的玩家数据'); return; }
-
-  if(!confirm('导入将覆盖当前的 ' + players.length + ' 条数据，继续吗？')) return;
-
-  players = cleaned;
-  saveData();
-  render();
-  closeImport();
-  toast('已导入 ' + cleaned.length + ' 条数据');
+  }
+  fieldsBody.innerHTML = html;
+  fieldsOv.classList.add('show');
 }
+function closeFieldsDetail(){ fieldsOv.classList.remove('show'); }
+fieldsClose.addEventListener('click', closeFieldsDetail);
+fieldsOv.addEventListener('click', function(e){ if(e.target === fieldsOv) closeFieldsDetail(); });
 
 /* ============================================================
    事件
    ============================================================ */
 btnAdd.addEventListener('click', function(){
-  addPlayer(newName.value, newScore.value);
-  newName.value = '';
-  newScore.value = '0';
-  newName.focus();
+  addPlayerCloud(newName.value, newScore.value);
+  newName.value = ''; newScore.value = '0';
 });
+newName.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); btnAdd.click(); } });
+newScore.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); btnAdd.click(); } });
 
-newName.addEventListener('keydown', function(e){
-  if(e.key === 'Enter'){
-    e.preventDefault();
-    btnAdd.click();
-  }
-});
-newScore.addEventListener('keydown', function(e){
-  if(e.key === 'Enter'){
-    e.preventDefault();
-    btnAdd.click();
-  }
-});
-
-/* 板内点击 */
 boardBody.addEventListener('click', function(e){
+  var badge = e.target.closest('[data-fields]');
+  if(badge){
+    e.stopPropagation();
+    var fid = badge.getAttribute('data-fields');
+    var fp = findPlayer(fid);
+    if(fp) openFieldsDetail(fp);
+    return;
+  }
   var row = e.target.closest('.row');
   if(!row) return;
   var id = row.getAttribute('data-id');
   if(!id) return;
-
   var act = e.target.closest('[data-action]');
   if(!act) return;
-  var action = act.getAttribute('data-action');
-
-  if(action === 'inc') changeScore(id, 1);
-  else if(action === 'dec') changeScore(id, -1);
-  else if(action === 'inc5') changeScore(id, 5);
-  else if(action === 'dec5') changeScore(id, -5);
-  else if(action === 'del') deletePlayer(id);
-  else if(action === 'edit-name') editName(act, id);
-  else if(action === 'edit-score') editScore(act, id);
+  var a = act.getAttribute('data-action');
+  if(a === 'inc') changeScore(id, 1);
+  else if(a === 'dec') changeScore(id, -1);
+  else if(a === 'inc5') changeScore(id, 5);
+  else if(a === 'dec5') changeScore(id, -5);
+  else if(a === 'del') deletePlayerConfirm(id);
+  else if(a === 'edit-name') editName(act, id);
+  else if(a === 'edit-score') editScore(act, id);
 });
 
-/* 工具条 */
-$('btnSortDesc').addEventListener('click', function(){ sortMode = 'desc'; render(); toast('已按分数降序'); });
-$('btnSortAsc').addEventListener('click', function(){ sortMode = 'asc'; render(); toast('已按分数升序'); });
-$('btnSortName').addEventListener('click', function(){ sortMode = 'name'; render(); toast('已按名字排序'); });
-
-$('btnClearScores').addEventListener('click', function(){
-  if(players.length === 0){ toast('还没有玩家'); return; }
-  if(!confirm('把所有玩家分数归零？（玩家名保留）')) return;
-  players.forEach(function(p){ p.score = 0; });
-  saveData();
-  render();
-  toast('所有分数已归零');
-});
-
-$('btnResetAll').addEventListener('click', function(){
-  if(players.length === 0){ toast('已经是空的了'); return; }
-  if(!confirm('清空所有玩家和分数？此操作不可撤销。')) return;
-  players = [];
-  saveData();
-  render();
-  toast('已全部清空');
-});
-
-$('btnExport').addEventListener('click', openExport);
-$('btnImport').addEventListener('click', openImport);
-
-exportClose.addEventListener('click', closeExport);
-exportOk.addEventListener('click', closeExport);
-exportCopy.addEventListener('click', function(){
-  exportText.select();
-  try{
-    document.execCommand('copy');
-    toast('已复制到剪贴板');
-  }catch(e){
-    try{
-      navigator.clipboard.writeText(exportText.value);
-      toast('已复制到剪贴板');
-    }catch(err){
-      alert('复制失败，请手动选择复制');
-    }
-  }
-});
-exportDownload.addEventListener('click', downloadBackup);
-
-importClose.addEventListener('click', closeImport);
-importCancel.addEventListener('click', closeImport);
-importOk.addEventListener('click', doImport);
-
-importFile.addEventListener('click', function(){ fileInput.click(); });
-fileInput.addEventListener('change', function(){
-  var f = fileInput.files && fileInput.files[0];
-  fileInput.value = '';
+btnUploadImage.addEventListener('click', function(){ imageInput.click(); });
+imageEmpty.addEventListener('click', function(){ imageInput.click(); });
+imageInput.addEventListener('change', function(){
+  var f = imageInput.files && imageInput.files[0];
+  imageInput.value = '';
   if(!f) return;
-  var reader = new FileReader();
-  reader.onload = function(){
-    importText.value = String(reader.result || '');
-    toast('已读取文件，点「确认导入」');
-  };
-  reader.onerror = function(){ alert('读取文件失败'); };
-  reader.readAsText(f, 'utf-8');
+  handleImageUpload(f);
+});
+imageRemove.addEventListener('click', function(e){ e.stopPropagation(); removeImage(); });
+imageDisplay.addEventListener('click', openLightbox);
+lightbox.addEventListener('click', closeLightbox);
+
+searchInput.addEventListener('input', function(){
+  searchQuery = searchInput.value || '';
+  searchWrap.classList.toggle('has-value', !!searchQuery);
+  renderBoard();
+});
+searchClear.addEventListener('click', function(){
+  searchInput.value = ''; searchQuery = '';
+  searchWrap.classList.remove('has-value');
+  renderBoard(); searchInput.focus();
 });
 
-/* 弹窗遮罩关闭 */
-[exportOv, importOv].forEach(function(ov){
-  ov.addEventListener('click', function(e){
-    if(e.target !== ov) return;
-    if(ov === exportOv) closeExport();
-    else if(ov === importOv) closeImport();
-  });
+btnRefresh.addEventListener('click', async function(){
+  toast('正在刷新…');
+  await fetchApprovedPlayers();
+  if(isAdmin) await fetchPendingList();
+  toast('已刷新');
 });
 
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape'){
-    if(exportOv.classList.contains('show')) closeExport();
-    else if(importOv.classList.contains('show')) closeImport();
+/* ============================================================
+   登录 / 登出
+   ============================================================ */
+function openLogin(){
+  loginOv.classList.add('show');
+  setTimeout(function(){ try{ loginEmail.focus(); }catch(e){} }, 100);
+}
+function closeLogin(){ loginOv.classList.remove('show'); }
+
+btnLogin.addEventListener('click', openLogin);
+loginCancel.addEventListener('click', closeLogin);
+loginClose.addEventListener('click', closeLogin);
+loginOv.addEventListener('click', function(e){ if(e.target === loginOv) closeLogin(); });
+
+loginSubmit.addEventListener('click', async function(){
+  if(!cloudReady){ alert('未配置云端，无法登录'); return; }
+  var email = loginEmail.value.trim();
+  var password = loginPassword.value;
+  if(!email || !password){ alert('请输入邮箱和密码'); return; }
+  loginSubmit.disabled = true;
+  loginSubmit.textContent = '登录中…';
+  try{
+    var res = await sb.auth.signInWithPassword({ email: email, password: password });
+    if(res.error) throw res.error;
+    toast('登录成功');
+    closeLogin();
+    /* 认证状态会自动触发 onAuthStateChange */
+  }catch(e){
+    console.warn('登录失败', e);
+    alert('登录失败：' + (e.message || e));
   }
+  loginSubmit.disabled = false;
+  loginSubmit.textContent = '登录';
 });
+
+btnLogout.addEventListener('click', async function(){
+  if(!cloudReady) return;
+  if(!confirm('退出管理员登录？')) return;
+  await sb.auth.signOut();
+});
+
+async function applyAdminState(admin){
+  isAdmin = !!admin;
+  btnLogin.style.display = isAdmin ? 'none' : 'grid';
+  btnLogout.style.display = isAdmin ? 'grid' : 'none';
+  addRow.classList.toggle('show', isAdmin);
+  adminPanel.classList.toggle('show', isAdmin);
+
+  updateCloudBanner();
+  render();
+
+  if(isAdmin){
+    await fetchPendingList();
+  } else {
+    pendingList = [];
+    renderPending();
+  }
+}
 
 /* ============================================================
    背景装饰
@@ -938,13 +1634,10 @@ function initParticles(){
   particles = [];
   for(var i = 0; i < count; i++){
     particles.push({
-      x: Math.random() * pW,
-      y: Math.random() * pH,
+      x: Math.random() * pW, y: Math.random() * pH,
       size: 4 + Math.random() * 9,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      rot: Math.random() * Math.PI * 2,
-      vr: (Math.random() - 0.5) * 0.014,
+      vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+      rot: Math.random() * Math.PI * 2, vr: (Math.random() - 0.5) * 0.014,
       alpha: 0.1 + Math.random() * 0.25,
       alphaPhase: Math.random() * Math.PI * 2,
       alphaSpeed: 0.008 + Math.random() * 0.016,
@@ -957,8 +1650,7 @@ function initParticles(){
 }
 
 function resizeCanvas(){
-  var canvas = document.getElementById('particles');
-  if(!canvas) return;
+  var canvas = document.getElementById('particles'); if(!canvas) return;
   pW = window.innerWidth; pH = window.innerHeight;
   canvas.width = pW * pDpr; canvas.height = pH * pDpr;
   canvas.style.width = pW + 'px'; canvas.style.height = pH + 'px';
@@ -973,42 +1665,34 @@ function drawParticles(){
     p.x += p.vx; p.y += p.vy; p.rot += p.vr;
     if(p.x < -40) p.x = pW + 40; else if(p.x > pW + 40) p.x = -40;
     if(p.y < -40) p.y = pH + 40; else if(p.y > pH + 40) p.y = -40;
-
     p.alphaPhase += p.alphaSpeed;
     var a = p.alpha * (0.55 + 0.45 * Math.sin(p.alphaPhase));
     a = Math.max(0.04, Math.min(0.5, a));
-
     var c1 = (themeColors[p.hueIdx] || themeColors[0]).split(',').map(function(n){ return parseInt(n, 10) || 0; });
     var c2 = (themeColors[(p.hueIdx + 1) % 4] || themeColors[0]).split(',').map(function(n){ return parseInt(n, 10) || 0; });
     var mix = p.hueMix;
     var r = Math.round(c1[0] * (1 - mix) + c2[0] * mix);
     var g = Math.round(c1[1] * (1 - mix) + c2[1] * mix);
     var b = Math.round(c1[2] * (1 - mix) + c2[2] * mix);
-
     particleCtx.save();
     particleCtx.translate(p.x, p.y);
     particleCtx.rotate(p.rot);
-
     if(p.glow){
       particleCtx.shadowBlur = 10;
       particleCtx.shadowColor = 'rgba(' + r + ',' + g + ',' + b + ',' + (a * 0.8) + ')';
     }
-
     var s = p.size, hs = s / 2, rad = Math.min(3, s / 3.5);
     var grad = particleCtx.createLinearGradient(-hs, -hs, hs, hs);
     grad.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')');
     grad.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',' + (a * 0.3) + ')');
     particleCtx.fillStyle = grad;
-
     particleCtx.beginPath();
     if(particleCtx.roundRect) particleCtx.roundRect(-hs, -hs, s, s, rad);
     else particleCtx.rect(-hs, -hs, s, s);
     particleCtx.fill();
-
     particleCtx.strokeStyle = 'rgba(255,255,255,' + (a * 0.2) + ')';
     particleCtx.lineWidth = 0.5;
     particleCtx.stroke();
-
     particleCtx.restore();
   }
   requestAnimationFrame(drawParticles);
@@ -1017,10 +1701,45 @@ function drawParticles(){
 /* ============================================================
    启动
    ============================================================ */
-function boot(){
-  loadData();
-  render();
+async function boot(){
+  /* 恢复上次上传的图片 */
+  try{
+    var img = localStorage.getItem(K_IMAGE);
+    if(img && img.indexOf('data:image/') === 0) boardImage = img;
+  }catch(e){}
+  updateImageUI();
   initParticles();
+
+  /* 初始化云端 */
+  initSupabase();
+  updateCloudBanner();
+
+  if(cloudReady){
+    /* 监听登录状态 */
+    sb.auth.onAuthStateChange(function(event, session){
+      applyAdminState(!!(session && session.user));
+    });
+    /* 检查当前会话 */
+    try{
+      var s = await sb.auth.getSession();
+      await applyAdminState(!!(s.data && s.data.session && s.data.session.user));
+    }catch(e){
+      await applyAdminState(false);
+    }
+    /* 拉取数据 */
+    await fetchApprovedPlayers();
+    /* Realtime 订阅 */
+    setupRealtime();
+  } else {
+    /* 未配置云端：只渲染空表 */
+    render();
+    applyAdminState(false);
+  }
+
+  /* 如果有已保存的图片，自动识别 */
+  if(boardImage){
+    setTimeout(function(){ runOCR(boardImage); }, 400);
+  }
 
   window.addEventListener('resize', function(){ resizeCanvas(); }, { passive: true });
   document.addEventListener('visibilitychange', function(){
@@ -1028,8 +1747,19 @@ function boot(){
     if(particleRunning) drawParticles();
   });
 
-  /* 首次进入聚焦输入框 */
-  setTimeout(function(){ try{ newName.focus(); }catch(e){} }, 300);
+  /* 快捷键 */
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      if(lightbox.classList.contains('show')){ closeLightbox(); return; }
+      if(fieldsOv.classList.contains('show')){ closeFieldsDetail(); return; }
+      if(loginOv.classList.contains('show')){ closeLogin(); return; }
+      if(document.activeElement === searchInput){ searchClear.click(); return; }
+    }
+    if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
+      e.preventDefault();
+      searchInput.focus(); searchInput.select();
+    }
+  });
 }
 
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
