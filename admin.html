@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分类管理 · 我的 Wiki</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{--bg:#fff;--bg2:#f6f8fa;--bgh:#eef1f4;--text:#1f2328;--muted:#59636e;--bd:#d1d9e0;--ac:#0969da;--acs:#ddf4ff;--dgr:#cf222e;--ok:#1a7f37;--warn:#d4a72c;--cbg:#f6f8fa;--sh:0 8px 24px rgba(31,35,40,.12);--r:8px}
+[data-theme=dark]{--bg:#0d1117;--bg2:#161b22;--bgh:#21262d;--text:#e6edf3;--muted:#9198a1;--bd:#30363d;--ac:#4493f8;--acs:#16233a;--dgr:#f85149;--ok:#3fb950;--warn:#d4a72c;--cbg:#161b22;--sh:0 8px 24px rgba(0,0,0,.5)}
+
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+
+.wrap{max-width:960px;margin:0 auto;padding:32px 24px 96px}
+
+header.head{display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+header.head h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
+header.head .sp{flex:1}
+header.head .back{font-size:14px;color:var(--ac);text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:gap .2s}
+header.head .back:hover{gap:8px}
+
+.lede{margin:0 0 28px;color:var(--muted);font-size:14px}
+
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:20px}
+.bar .status{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);min-width:0}
+.dot{width:8px;height:8px;flex:none;border-radius:50%;background:var(--muted);transition:background .3s}
+.dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(26,127,55,.18)}
+.dot.busy{background:var(--ac);box-shadow:0 0 0 3px var(--acs);animation:pls 1s infinite}
+.dot.warn{background:var(--warn);box-shadow:0 0 0 3px rgba(212,167,44,.22)}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.35}}
+.bar .sp{flex:1}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:13.5px;font-family:inherit;font-weight:600;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:6px;cursor:pointer;transition:background .15s,transform .15s,border-color .15s}
+.btn:hover:not(:disabled){background:var(--bgh);transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.p{color:#fff;background:var(--ac);border-color:var(--ac)}
+.btn.p:hover:not(:disabled){filter:brightness(1.08)}
+.btn.d{color:var(--dgr)}
+.btn.d:hover:not(:disabled){background:rgba(207,34,46,.1)}
+
+.cards{display:flex;flex-direction:column;gap:10px}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+
+.tag{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);transition:border-color .2s,transform .2s,box-shadow .2s}
+.tag:hover{border-color:var(--ac);transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.05)}
+[data-theme=dark] .tag:hover{box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.tag .grip{width:18px;height:18px;flex:none;color:var(--muted);cursor:grab;user-select:none;display:grid;place-items:center;font-size:15px;transition:color .2s}
+.tag .grip:hover{color:var(--ac)}
+.tag .grip:active{cursor:grabbing}
+.tag.dragging{opacity:.45}
+.tag.over{border-color:var(--ac);border-style:dashed;background:var(--acs)}
+
+.tag .idx{width:26px;height:26px;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg2);border-radius:6px;font-variant-numeric:tabular-nums}
+.tag .name{flex:1;min-width:0;font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;padding:2px 4px;border-radius:4px;transition:background .15s}
+.tag .name:hover{background:var(--bg2)}
+.tag .name input{width:100%;font:inherit;font-weight:600;color:var(--text);background:var(--bg);border:1px solid var(--ac);border-radius:4px;outline:none;padding:1px 5px;box-shadow:0 0 0 3px var(--acs)}
+.tag .count{flex:none;font-size:12px;color:var(--muted);padding:2px 8px;background:var(--bg2);border-radius:10px;font-variant-numeric:tabular-nums}
+.tag .acts{display:flex;gap:4px;flex:none}
+.tag .acts button{width:30px;height:30px;display:grid;place-items:center;font-size:14px;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:5px;cursor:pointer;transition:all .18s}
+.tag .acts button:hover{color:var(--ac);border-color:var(--bd);background:var(--bg2);transform:translateY(-1px)}
+.tag .acts button.del:hover{color:var(--dgr);border-color:var(--dgr);background:rgba(207,34,46,.08)}
+
+.help{margin-top:28px;padding:16px 20px;font-size:13.5px;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r)}
+.help h3{margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text)}
+.help ul{margin:0;padding-left:1.4em}
+.help li{margin:5px 0}
+.help kbd{padding:1px 5px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-bottom-width:2px;border-radius:4px}
+
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:100;opacity:0;visibility:hidden;transition:opacity .22s,visibility .22s}
+.ov.show{opacity:1;visibility:visible}
+.pnl{display:flex;flex-direction:column;width:100%;max-width:520px;max-height:calc(100vh - 48px);background:var(--bg);border:1px solid var(--bd);border-radius:12px;box-shadow:var(--sh);overflow:hidden;transform:translateY(20px) scale(.96);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.ov.show .pnl{transform:none}
+.ph{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--bd)}
+.ph strong{font-size:15px}
+.ph .sp{flex:1}
+.pb{padding:18px;overflow-y:auto}
+.pb p{margin:0 0 14px;font-size:14px;line-height:1.65}
+.pb .warn{color:var(--dgr);font-weight:600}
+.pb .hint{font-size:13px;color:var(--muted);padding:10px 12px;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;margin-top:10px}
+.pf{display:flex;align-items:center;gap:10px;padding:13px 18px;border-top:1px solid var(--bd)}
+.pf .sp{flex:1}
+
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.fld span{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fld input,.fld select{height:36px;padding:0 10px;font-size:14px;font-family:inherit;color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:6px;outline:none;transition:border-color .15s,box-shadow .15s}
+.fld input:focus,.fld select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+
+.x{width:30px;height:30px;display:grid;place-items:center;font-size:14px;color:var(--muted);background:transparent;border:none;border-radius:5px;cursor:pointer;transition:all .18s}
+.x:hover{color:var(--text);background:var(--bg2);transform:rotate(90deg)}
+
+.toast{position:fixed;left:50%;bottom:28px;max-width:calc(100vw - 40px);padding:10px 20px;font-size:14px;color:var(--bg);background:var(--text);border-radius:8px;box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(20px);transition:opacity .25s,transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:640px){
+  .wrap{padding:20px 14px 80px}
+  header.head h1{font-size:1.3rem}
+  .tag{flex-wrap:wrap;gap:8px}
+  .tag .grip{order:1}
+  .tag .idx{order:2}
+  .tag .name{order:3;flex-basis:calc(100% - 110px)}
+  .tag .count{order:4}
+  .tag .acts{order:5;width:100%;justify-content:flex-end}
+  .bar{padding:12px}
+  .bar .sp{display:none}
+  .bar .btn{flex:1;justify-content:center}
+  .pnl{max-width:100%;border-radius:10px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="head">
+    <h1>🏷️ 分类管理</h1>
+    <span class="sp"></span>
+    <a class="back" href="./index.html">← 返回 Wiki</a>
+  </header>
+
+  <p class="lede">
+    管理 Wiki 的所有分类标签。重命名、合并、删除、排序，改完点右上角「保存并推送」即可对所有访客生效。
+  </p>
+
+  <div class="bar">
+    <div class="status">
+      <span class="dot" id="dot"></span>
+      <span id="statusText">未连接</span>
+    </div>
+    <span class="sp"></span>
+    <button class="btn" id="btnConnect">🔑 连接 GitHub</button>
+    <button class="btn" id="btnReload" disabled>🔄 重新加载</button>
+    <button class="btn p" id="btnSave" disabled>💾 保存并推送</button>
+  </div>
+
+  <div class="cards" id="cards">
+    <div class="empty">先点上方「🔑 连接 GitHub」加载数据</div>
+  </div>
+
+  <div class="help">
+    <h3>操作说明</h3>
+    <ul>
+      <li><strong>重命名</strong>：点分类名，改完按回车或点其他地方保存</li>
+      <li><strong>合并</strong>：点 ⇄ 选目标分类，当前分类下所有条目会并入目标分类</li>
+      <li><strong>删除</strong>：点 🗑 会<strong style="color:var(--dgr)">连同该分类下所有条目一起删除</strong>，操作不可撤销</li>
+      <li><strong>排序</strong>：拖动左侧 ⠿ 手柄调整顺序，顺序决定 Wiki 侧栏的显示顺序</li>
+      <li>所有改动都先存在页面内，点右上角「💾 保存并推送」才真正写入仓库</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- 连接弹窗 -->
+<div class="ov" id="connOv">
+  <div class="pnl">
+    <div class="ph">
+      <strong>连接 GitHub</strong>
+      <span class="sp"></span>
+      <button class="x" id="connClose">✕</button>
+    </div>
+    <div class="pb">
+      <div class="fld">
+        <span>Personal Access Token</span>
+        <input id="ghToken" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false">
+      </div>
+      <div class="hint">
+        Token 需要 <strong>Contents: Read and write</strong> 权限。<br>
+        <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener" style="color:var(--ac)">github.com/settings/tokens</a>
+        → 生成新令牌 → 勾选本仓库 → 加 Contents 读写权限。<br>
+        Token 只存你本机浏览器，不上传。
+      </div>
+      <div class="fld" style="margin-top:14px">
+        <span>Owner / Repo</span>
+        <input id="ghOwner" type="text" placeholder="HSDL03">
+      </div>
+      <div class="fld">
+        <span>&nbsp;</span>
+        <input id="ghRepo" type="text" placeholder="HSwiki">
+      </div>
+      <div class="fld">
+        <span>数据文件路径</span>
+        <input id="ghPath" type="text" placeholder="wiki-data.json">
+      </div>
+      <div class="fld">
+        <span>分支</span>
+        <input id="ghBranch" type="text" placeholder="main">
+      </div>
+    </div>
+    <div class="pf">
+      <button class="btn d" id="connDisconn" hidden>断开</button>
+      <span class="sp"></span>
+      <button class="btn" id="connCancel">取消</button>
+      <button class="btn p" id="connSave">保存并连接</button>
+    </div>
+  </div>
+</div>
+
+<!-- 合并弹窗 -->
+<div class="ov" id="mergeOv">
+  <div class="pnl">
+    <div class="ph">
+      <strong>合并分类</strong>
+      <span class="sp"></span>
+      <button class="x" id="mergeClose">✕</button>
+    </div>
+    <div class="pb">
+      <p>把 <strong id="mergeFrom"></strong> 下的所有条目并入另一个分类：</p>
+      <div class="fld">
+        <span>目标分类</span>
+        <select id="mergeTarget"></select>
+      </div>
+      <div class="hint">合并后原分类会消失。此操作在页面内可撤销（刷新即还原），保存前请确认。</div>
+    </div>
+    <div class="pf">
+      <span class="sp"></span>
+      <button class="btn" id="mergeCancel">取消</button>
+      <button class="btn p" id="mergeOk">确认合并</button>
+    </div>
+  </div>
+</div>
+
+<!-- 删除弹窗 -->
+<div class="ov" id="delOv">
+  <div class="pnl">
+    <div class="ph">
+      <strong>删除分类</strong>
+      <span class="sp"></span>
+      <button class="x" id="delClose">✕</button>
+    </div>
+    <div class="pb">
+      <p>确定要删除 <strong id="delName"></strong> 吗？</p>
+      <p class="warn">该分类下的 <span id="delCount"></span> 个条目将一并被删除，且不可恢复。</p>
+      <div class="hint">如果只是想清理分类名，建议先用「合并」把条目移到其他分类。</div>
+    </div>
+    <div class="pf">
+      <span class="sp"></span>
+      <button class="btn" id="delCancel">取消</button>
+      <button class="btn d" id="delOk">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   配置
+   ============================================================ */
+var DEFAULT_OWNER = 'HSDL03';
+var DEFAULT_REPO  = 'HSwiki';
+var DEFAULT_PATH  = 'wiki-data.json';
+var DEFAULT_BRANCH = 'main';
+var K_GH = 'wiki-gh';
+
+window.addEventListener('error', function(e){ console.warn('[admin]', e.message || e.error); });
+window.addEventListener('unhandledrejection', function(e){ console.warn('[admin]', e.reason); });
+
+var storage = {
+  get: function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set: function(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } },
+  del: function(k){ try{ localStorage.removeItem(k); return true; }catch(e){ return false; } }
+};
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function b64enc(s){
+  var b = new TextEncoder().encode(String(s)), bin = '';
+  for (var i=0;i<b.length;i++) bin += String.fromCharCode(b[i]);
+  return btoa(bin);
+}
+function b64dec(b64){
+  var bin = atob(String(b64).replace(/\s/g,''));
+  var bytes = new Uint8Array(bin.length);
+  for (var i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+/* ============================================================
+   DOM
+   ============================================================ */
+var dotEl = $('dot');
+var statusTextEl = $('statusText');
+var btnConnect = $('btnConnect');
+var btnReload = $('btnReload');
+var btnSave = $('btnSave');
+var cardsEl = $('cards');
+var toastEl = $('toast');
+
+var connOv = $('connOv');
+var connClose = $('connClose');
+var connCancel = $('connCancel');
+var connSave = $('connSave');
+var connDisconn = $('connDisconn');
+var ghToken = $('ghToken');
+var ghOwner = $('ghOwner');
+var ghRepo = $('ghRepo');
+var ghPath = $('ghPath');
+var ghBranch = $('ghBranch');
+
+var mergeOv = $('mergeOv');
+var mergeClose = $('mergeClose');
+var mergeCancel = $('mergeCancel');
+var mergeOk = $('mergeOk');
+var mergeFrom = $('mergeFrom');
+var mergeTarget = $('mergeTarget');
+
+var delOv = $('delOv');
+var delClose = $('delClose');
+var delCancel = $('delCancel');
+var delOk = $('delOk');
+var delName = $('delName');
+var delCount = $('delCount');
+
+/* ============================================================
+   状态
+   ============================================================ */
+var gh = null;               /* {token, owner, repo, path, branch} */
+var articles = [];           /* 原始条目数组，保持不变 */
+var tags = [];               /* [{name, count}] 页面上编辑的分类顺序 */
+var originalSnapshot = '';   /* 用于判断是否有改动 */
+var busy = false;
+var dirty = false;
+var mergingFrom = null;
+var deletingName = null;
+
+/* ============================================================
+   Toast
+   ============================================================ */
+var toastTimer = null;
+function toast(m){
+  toastEl.textContent = m;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2400);
+}
+
+/* ============================================================
+   GitHub API
+   ============================================================ */
+function apiUrl(){
+  return 'https://api.github.com/repos/'
+    + encodeURIComponent(gh.owner) + '/'
+    + encodeURIComponent(gh.repo) + '/contents/'
+    + gh.path.split('/').map(encodeURIComponent).join('/');
+}
+function ghHeaders(){
+  return {
+    'Authorization': 'Bearer ' + gh.token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
+
+function loadFromGitHub(){
+  return fetch(apiUrl() + '?ref=' + encodeURIComponent(gh.branch), { headers: ghHeaders() })
+    .then(function(r){
+      if (r.status === 404) return [];
+      if (!r.ok) {
+        return r.json().catch(function(){return {};}).then(function(e){
+          throw new Error(e.message || ('HTTP ' + r.status));
+        });
+      }
+      return r.json();
+    })
+    .then(function(info){
+      if (Array.isArray(info)) return [];
+      var text = b64dec(info.content || '');
+      if (!text.trim()) return [];
+      var parsed = JSON.parse(text);
+      if (!Array.isArray(parsed)) throw new Error('数据格式不对，顶层不是数组');
+      return parsed;
+    });
+}
+
+function pushToGitHub(){
+  return fetch(apiUrl() + '?ref=' + encodeURIComponent(gh.branch), { headers: ghHeaders() })
+    .then(function(r){
+      if (r.status === 404) return null;
+      if (!r.ok) {
+        return r.json().catch(function(){return {};}).then(function(e){
+          throw new Error(e.message || ('HTTP ' + r.status));
+        });
+      }
+      return r.json();
+    })
+    .then(function(info){
+      var body = {
+        message: '整理分类 ' + new Date().toISOString().slice(0,19).replace('T',' '),
+        content: b64enc(JSON.stringify(articles, null, 2)),
+        branch: gh.branch
+      };
+      if (info && info.sha) body.sha = info.sha;
+      var h = ghHeaders();
+      h['Content-Type'] = 'application/json';
+      return fetch(apiUrl(), { method: 'PUT', headers: h, body: JSON.stringify(body) })
+        .then(function(r){
+          if (!r.ok) {
+            return r.json().catch(function(){return {};}).then(function(e){
+              throw new Error(e.message || ('HTTP ' + r.status));
+            });
+          }
+          return r.json();
+        });
+    });
+}
+
+/* ============================================================
+   状态 UI
+   ============================================================ */
+function setStatus(kind, text){
+  dotEl.className = 'dot';
+  if (kind === 'on') dotEl.classList.add('on');
+  else if (kind === 'busy') dotEl.classList.add('busy');
+  else if (kind === 'warn') dotEl.classList.add('warn');
+  statusTextEl.textContent = text;
+}
+
+function updateButtons(){
+  btnReload.disabled = !gh || busy;
+  btnSave.disabled = !gh || busy;
+  if (!gh) {
+    btnConnect.textContent = '🔑 连接 GitHub';
+    setStatus('', '未连接');
+  } else if (busy) {
+    setStatus('busy', '处理中…');
+  } else if (dirty) {
+    setStatus('warn', '有未保存的修改');
+  } else {
+    setStatus('on', '已连接 · ' + gh.owner + '/' + gh.repo);
+  }
+}
+
+/* ============================================================
+   构建分类列表
+   ============================================================ */
+function buildTags(){
+  var order = [];
+  var counts = {};
+  articles.forEach(function(a){
+    var c = a.category || '未分类';
+    if (counts[c] === undefined) {
+      counts[c] = 0;
+      order.push(c);
+    }
+    counts[c]++;
+  });
+  tags = order.map(function(name){
+    return { name: name, count: counts[name] };
+  });
+}
+
+function recomputeCounts(){
+  var counts = {};
+  articles.forEach(function(a){
+    var c = a.category || '未分类';
+    counts[c] = (counts[c] || 0) + 1;
+  });
+  tags.forEach(function(t){
+    t.count = counts[t.name] || 0;
+  });
+}
+
+function markDirty(){
+  var snap = JSON.stringify({
+    order: tags.map(function(t){ return t.name; }),
+    data: articles
+  });
+  dirty = (snap !== originalSnapshot);
+  updateButtons();
+}
+
+function takeSnapshot(){
+  originalSnapshot = JSON.stringify({
+    order: tags.map(function(t){ return t.name; }),
+    data: articles
+  });
+  dirty = false;
+  updateButtons();
+}
+
+/* ============================================================
+   渲染
+   ============================================================ */
+function render(){
+  if (!gh) {
+    cardsEl.innerHTML = '<div class="empty">先点上方「🔑 连接 GitHub」加载数据</div>';
+    return;
+  }
+  if (tags.length === 0) {
+    cardsEl.innerHTML = '<div class="empty">还没有任何分类。去 Wiki 里新建条目后，分类会自动出现在这里。</div>';
+    return;
+  }
+
+  var html = '';
+  tags.forEach(function(t, i){
+    html +=
+      '<div class="tag" draggable="true" data-name="' + esc(t.name) + '" data-idx="' + i + '">' +
+        '<span class="grip" title="拖动排序">⠿</span>' +
+        '<span class="idx">' + (i + 1) + '</span>' +
+        '<span class="name" data-action="rename" title="点击重命名">' + esc(t.name) + '</span>' +
+        '<span class="count">' + t.count + ' 条</span>' +
+        '<span class="acts">' +
+          '<button data-action="merge" title="合并到其他分类">⇄</button>' +
+          '<button data-action="delete" class="del" title="删除分类">🗑</button>' +
+        '</span>' +
+      '</div>';
+  });
+  cardsEl.innerHTML = html;
+}
+
+/* ============================================================
+   交互：重命名
+   ============================================================ */
+function startRename(nameEl){
+  var tagEl = nameEl.closest('.tag');
+  var oldName = tagEl.getAttribute('data-name');
+  var input = document.createElement('input');
+  input.type = 'text';
+  input.value = oldName;
+  nameEl.innerHTML = '';
+  nameEl.appendChild(input);
+  input.focus();
+  input.select();
+
+  function finish(save){
+    var newName = input.value.trim();
+    if (save && newName && newName !== oldName) {
+      if (tags.some(function(t){ return t.name === newName && t.name !== oldName; })) {
+        toast('已存在同名分类');
+        render();
+        return;
+      }
+      renameTag(oldName, newName);
+    } else {
+      render();
+    }
+  }
+
+  input.addEventListener('blur', function(){ finish(true); });
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') { e.preventDefault(); input.removeEventListener('blur', finish); finish(false); }
+  });
+}
+
+function renameTag(oldName, newName){
+  articles.forEach(function(a){
+    if ((a.category || '未分类') === oldName) a.category = newName;
+  });
+  tags.forEach(function(t){
+    if (t.name === oldName) t.name = newName;
+  });
+  render();
+  markDirty();
+  toast('已重命名为「' + newName + '」');
+}
+
+/* ============================================================
+   交互：合并
+   ============================================================ */
+function openMerge(name){
+  mergingFrom = name;
+  mergeFrom.textContent = '「' + name + '」';
+  var opts = tags.filter(function(t){ return t.name !== name; });
+  if (opts.length === 0) {
+    toast('只有一个分类，无法合并');
+    return;
+  }
+  mergeTarget.innerHTML = opts.map(function(t){
+    return '<option value="' + esc(t.name) + '">' + esc(t.name) + '（' + t.count + ' 条）</option>';
+  }).join('');
+  mergeOv.classList.add('show');
+}
+function closeMerge(){
+  mergeOv.classList.remove('show');
+  mergingFrom = null;
+}
+function doMerge(){
+  if (!mergingFrom) return;
+  var target = mergeTarget.value;
+  if (!target || target === mergingFrom) { closeMerge(); return; }
+
+  var moved = 0;
+  articles.forEach(function(a){
+    if ((a.category || '未分类') === mergingFrom) {
+      a.category = target;
+      moved++;
+    }
+  });
+  tags = tags.filter(function(t){ return t.name !== mergingFrom; });
+  recomputeCounts();
+  render();
+  markDirty();
+  closeMerge();
+  toast('已把 ' + moved + ' 条并入「' + target + '」');
+}
+
+/* ============================================================
+   交互：删除
+   ============================================================ */
+function openDelete(name){
+  var t = tags.find(function(x){ return x.name === name; });
+  if (!t) return;
+  deletingName = name;
+  delName.textContent = '「' + name + '」';
+  delCount.textContent = t.count;
+  delOv.classList.add('show');
+}
+function closeDelete(){
+  delOv.classList.remove('show');
+  deletingName = null;
+}
+function doDelete(){
+  if (!deletingName) return;
+  var before = articles.length;
+  articles = articles.filter(function(a){
+    return (a.category || '未分类') !== deletingName;
+  });
+  var removed = before - articles.length;
+  tags = tags.filter(function(t){ return t.name !== deletingName; });
+  render();
+  markDirty();
+  closeDelete();
+  toast('已删除分类，移除 ' + removed + ' 条');
+}
+
+/* ============================================================
+   交互：拖拽排序
+   ============================================================ */
+var dragName = null;
+
+function bindDrag(){
+  cardsEl.addEventListener('dragstart', function(e){
+    var tagEl = e.target.closest('.tag');
+    if (!tagEl) return;
+    dragName = tagEl.getAttribute('data-name');
+    tagEl.classList.add('dragging');
+    try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragName); } catch(err){}
+  });
+
+  cardsEl.addEventListener('dragend', function(e){
+    var tagEl = e.target.closest('.tag');
+    if (tagEl) tagEl.classList.remove('dragging');
+    var overs = cardsEl.querySelectorAll('.tag.over');
+    for (var i=0;i<overs.length;i++) overs[i].classList.remove('over');
+    dragName = null;
+  });
+
+  cardsEl.addEventListener('dragover', function(e){
+    var tagEl = e.target.closest('.tag');
+    if (!tagEl || !dragName) return;
+    if (tagEl.getAttribute('data-name') === dragName) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    var overs = cardsEl.querySelectorAll('.tag.over');
+    for (var i=0;i<overs.length;i++) overs[i].classList.remove('over');
+    tagEl.classList.add('over');
+  });
+
+  cardsEl.addEventListener('dragleave', function(e){
+    var tagEl = e.target.closest('.tag');
+    if (tagEl) tagEl.classList.remove('over');
+  });
+
+  cardsEl.addEventListener('drop', function(e){
+    var tagEl = e.target.closest('.tag');
+    if (!tagEl || !dragName) return;
+    e.preventDefault();
+    var targetName = tagEl.getAttribute('data-name');
+    if (targetName === dragName) return;
+
+    var fromIdx = -1, toIdx = -1;
+    for (var i=0;i<tags.length;i++) {
+      if (tags[i].name === dragName) fromIdx = i;
+      if (tags[i].name === targetName) toIdx = i;
+    }
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    var item = tags.splice(fromIdx, 1)[0];
+    tags.splice(toIdx, 0, item);
+
+    render();
+    markDirty();
+  });
+}
+
+/* ============================================================
+   点击卡片内的按钮
+   ============================================================ */
+function bindCards(){
+  cardsEl.addEventListener('click', function(e){
+    var tagEl = e.target.closest('.tag');
+    if (!tagEl) return;
+    var name = tagEl.getAttribute('data-name');
+
+    var actBtn = e.target.closest('[data-action]');
+    if (!actBtn) return;
+    var action = actBtn.getAttribute('data-action');
+
+    if (action === 'rename') {
+      startRename(actBtn);
+    } else if (action === 'merge') {
+      openMerge(name);
+    } else if (action === 'delete') {
+      openDelete(name);
+    }
+  });
+}
+
+/* ============================================================
+   连接管理
+   ============================================================ */
+function openConn(){
+  ghToken.value = gh ? gh.token : '';
+  ghOwner.value = gh ? gh.owner : DEFAULT_OWNER;
+  ghRepo.value  = gh ? gh.repo  : DEFAULT_REPO;
+  ghPath.value  = gh ? gh.path  : DEFAULT_PATH;
+  ghBranch.value = gh ? gh.branch : DEFAULT_BRANCH;
+  connDisconn.hidden = !gh;
+  connOv.classList.add('show');
+  setTimeout(function(){ try { ghToken.focus(); } catch(e){} }, 40);
+}
+function closeConn(){
+  connOv.classList.remove('show');
+}
+
+function doConnect(){
+  var token = ghToken.value.trim();
+  var owner = ghOwner.value.trim();
+  var repo  = ghRepo.value.trim();
+  var path  = ghPath.value.trim() || DEFAULT_PATH;
+  var branch = ghBranch.value.trim() || DEFAULT_BRANCH;
+
+  if (!token) { toast('请填 Token'); return; }
+  if (!owner || !repo) { toast('请填 Owner 和 Repo'); return; }
+
+  gh = { token: token, owner: owner, repo: repo, path: path, branch: branch };
+  storage.set(K_GH, JSON.stringify(gh));
+  closeConn();
+
+  busy = true;
+  updateButtons();
+  toast('正在加载数据…');
+  reload(true);
+}
+
+function doDisconnect(){
+  if (!confirm('断开连接？当前未保存的改动会丢失。')) return;
+  gh = null;
+  storage.del(K_GH);
+  articles = [];
+  tags = [];
+  originalSnapshot = '';
+  dirty = false;
+  closeConn();
+  render();
+  updateButtons();
+  toast('已断开');
+}
+
+/* ============================================================
+   加载 / 保存
+   ============================================================ */
+function reload(silent){
+  if (!gh) { toast('请先连接'); return Promise.resolve(); }
+  busy = true; updateButtons();
+  return loadFromGitHub()
+    .then(function(list){
+      articles = list.map(function(a){ return Object.assign({}, a); });
+      buildTags();
+      render();
+      takeSnapshot();
+      busy = false;
+      updateButtons();
+      if (!silent) toast('已加载 ' + articles.length + ' 条 · ' + tags.length + ' 个分类');
+    })
+    .catch(function(err){
+      busy = false;
+      updateButtons();
+      setStatus('warn', '加载失败');
+      toast('加载失败：' + err.message);
+    });
+}
+
+function save(){
+  if (!gh) { toast('请先连接'); return; }
+  if (!dirty) { toast('没有修改需要保存'); return; }
+  busy = true; updateButtons();
+  toast('正在推送到 GitHub…');
+  pushToGitHub()
+    .then(function(){
+      busy = false;
+      takeSnapshot();
+      updateButtons();
+      toast('已保存 · 所有访客可见');
+    })
+    .catch(function(err){
+      busy = false;
+      updateButtons();
+      toast('保存失败：' + err.message);
+    });
+}
+
+/* ============================================================
+   绑定
+   ============================================================ */
+function bind(){
+  btnConnect.addEventListener('click', openConn);
+  btnReload.addEventListener('click', function(){ reload(false); });
+  btnSave.addEventListener('click', save);
+
+  connClose.addEventListener('click', closeConn);
+  connCancel.addEventListener('click', closeConn);
+  connSave.addEventListener('click', doConnect);
+  connDisconn.addEventListener('click', doDisconnect);
+
+  mergeClose.addEventListener('click', closeMerge);
+  mergeCancel.addEventListener('click', closeMerge);
+  mergeOk.addEventListener('click', doMerge);
+
+  delClose.addEventListener('click', closeDelete);
+  delCancel.addEventListener('click', closeDelete);
+  delOk.addEventListener('click', doDelete);
+
+  [connOv, mergeOv, delOv].forEach(function(ov){
+    ov.addEventListener('click', function(e){
+      if (e.target === ov) {
+        if (ov === connOv) closeConn();
+        else if (ov === mergeOv) closeMerge();
+        else if (ov === delOv) closeDelete();
+      }
+    });
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') {
+      if (connOv.classList.contains('show')) closeConn();
+      else if (mergeOv.classList.contains('show')) closeMerge();
+      else if (delOv.classList.contains('show')) closeDelete();
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (gh && dirty && !busy) save();
+    }
+  });
+
+  window.addEventListener('beforeunload', function(e){
+    if (dirty) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  bindCards();
+  bindDrag();
+}
+
+/* ============================================================
+   启动
+   ============================================================ */
+function boot(){
+  bind();
+
+  var raw = storage.get(K_GH);
+  if (raw) {
+    try {
+      var c = JSON.parse(raw);
+      if (c && c.token) {
+        gh = c;
+        updateButtons();
+        reload(true);
+        return;
+      }
+    } catch(e){}
+  }
+  updateButtons();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+</script>
+</body>
+</html>
