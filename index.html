@@ -14,7 +14,6 @@
 html{background:var(--bg);scroll-behavior:smooth}
 body{margin:0;background:transparent;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-/* ============ 背景装饰 ============ */
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .blob{position:absolute;border-radius:50%;filter:blur(90px);will-change:transform}
 .b1{width:460px;height:460px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 28s ease-in-out infinite}
@@ -30,19 +29,18 @@ background-size:44px 44px;
 mask-image:radial-gradient(ellipse 90% 80% at 50% 40%,#000 20%,transparent 78%)}
 .star{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--ac);opacity:.22;animation:twinkle 4s ease-in-out infinite}
 @keyframes twinkle{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:.35;transform:scale(1.4)}}
+#particles{position:absolute;inset:0;width:100%;height:100%;display:block}
 
-/* ============ 阅读进度条 ============ */
 #progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:60;
 background:linear-gradient(90deg,var(--ac),#a371f7,#db7093);
 box-shadow:0 0 10px rgba(9,105,218,.5);
 transition:width .08s linear;border-radius:0 2px 2px 0}
 
-/* ============ 基础 ============ */
 #boot{padding:120px 24px;text-align:center;color:var(--muted);font-size:14px;position:relative;z-index:1}
 .spin{display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:-3px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 
-.topbar{position:fixed;top:0;left:0;right:0;height:var(--th);display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--bg);border-bottom:1px solid var(--bd);z-index:50;transition:box-shadow .25s,border-color .25s}
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--th);display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--bg);border-bottom:1px solid var(--bd);z-index:50;transition:box-shadow .25s}
 .topbar.scrolled{box-shadow:0 4px 20px rgba(0,0,0,.07)}
 [data-theme=dark] .topbar.scrolled{box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--text);text-decoration:none;white-space:nowrap;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
@@ -73,7 +71,7 @@ transition:width .08s linear;border-radius:0 2px 2px 0}
 .sidebar{position:fixed;top:var(--th);bottom:0;left:0;width:var(--sw);display:flex;flex-direction:column;padding:16px 12px 12px;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--bd);z-index:40}
 #navList{flex:1;min-height:0}
 .grp+.grp{margin-top:20px}
-.grp-t{padding:0 10px 6px;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);transition:color .2s}
+.grp-t{padding:0 10px 6px;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .nav-i{position:relative;display:block;padding:6px 10px 6px 14px;font-size:14px;color:var(--text);text-decoration:none;border-radius:6px;transition:background .18s,color .18s,transform .2s cubic-bezier(.34,1.56,.64,1)}
 .nav-i::before{content:"";position:absolute;left:2px;top:50%;width:3px;height:0;border-radius:2px;background:var(--ac);transform:translateY(-50%);transition:height .25s cubic-bezier(.34,1.56,.64,1)}
 .nav-i:hover{background:var(--bgh);transform:translateX(2px)}
@@ -89,6 +87,7 @@ transition:width .08s linear;border-radius:0 2px 2px 0}
 .dot{width:8px;height:8px;flex:none;border-radius:50%;background:var(--muted);transition:background .3s,box-shadow .3s}
 .dot.on{background:var(--ok);box-shadow:0 0 0 3px rgba(26,127,55,.18)}
 .dot.busy{background:var(--ac);box-shadow:0 0 0 3px var(--acs);animation:pls 1s infinite}
+.dot.cool{background:#d4a72c;box-shadow:0 0 0 3px rgba(212,167,44,.22)}
 @keyframes pls{0%,100%{opacity:1}50%{opacity:.35}}
 .cname{flex:1;min-width:0;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cx{width:22px;height:22px;flex:none;display:grid;place-items:center;font-size:12px;color:var(--muted);background:none;border:none;border-radius:4px;cursor:pointer;transition:background .18s,color .18s,transform .25s}
@@ -96,8 +95,10 @@ transition:width .08s linear;border-radius:0 2px 2px 0}
 .csub{margin-top:3px;font-size:11.5px;color:var(--muted)}
 .cacts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
 .cacts button{padding:5px 4px;font-size:11.5px;font-family:inherit;color:var(--muted);background:var(--bg);border:1px solid var(--bd);border-radius:5px;cursor:pointer;transition:all .18s}
-.cacts button:hover{color:var(--ac);border-color:var(--ac);background:var(--acs);transform:translateY(-1px)}
-.cacts button:active{transform:scale(.95)}
+.cacts button:hover:not(:disabled){color:var(--ac);border-color:var(--ac);background:var(--acs);transform:translateY(-1px)}
+.cacts button:active:not(:disabled){transform:scale(.95)}
+.cacts button:disabled{opacity:.6;cursor:not-allowed}
+.cacts button.cooling{color:#d4a72c;border-color:#d4a72c;background:rgba(212,167,44,.08);font-variant-numeric:tabular-nums}
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
 .tools button{padding:7px 4px;font-size:12px;font-family:inherit;color:var(--muted);background:transparent;border:1px solid var(--bd);border-radius:6px;cursor:pointer;transition:all .18s}
 .tools button:hover{color:var(--text);background:var(--bgh);border-color:var(--muted);transform:translateY(-1px)}
@@ -108,7 +109,7 @@ transition:width .08s linear;border-radius:0 2px 2px 0}
 .art h1{margin:0 0 6px;font-size:2rem;line-height:1.25;animation:fadeUp .45s cubic-bezier(.22,1,.36,1) both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .art .meta{margin-bottom:26px;padding-bottom:16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--bd);animation:fadeUp .45s .05s cubic-bezier(.22,1,.36,1) both}
-.art .meta .edit{float:right;color:var(--ac);cursor:pointer;text-decoration:none;transition:opacity .2s}
+.art .meta .edit{float:right;color:var(--ac);cursor:pointer;text-decoration:none}
 .art .meta .edit:hover{text-decoration:underline}
 .art .ab{animation:fadeUp .5s .1s cubic-bezier(.22,1,.36,1) both}
 .ab h2{margin:38px 0 14px;padding-bottom:7px;font-size:1.32rem;border-bottom:1px solid var(--bd)}
@@ -220,23 +221,18 @@ transition:width .08s linear;border-radius:0 2px 2px 0}
 </head>
 <body>
 
-<!-- 背景装饰 -->
 <div class="bg-decor" aria-hidden="true">
   <div class="blob b1"></div>
   <div class="blob b2"></div>
   <div class="blob b3"></div>
   <div class="grid-bg"></div>
+  <canvas id="particles"></canvas>
   <span class="star" style="top:12%;left:18%;animation-delay:0s"></span>
   <span class="star" style="top:26%;left:78%;animation-delay:1.2s"></span>
   <span class="star" style="top:58%;left:8%;animation-delay:2.4s"></span>
   <span class="star" style="top:72%;left:88%;animation-delay:.6s"></span>
-  <span class="star" style="top:44%;left:46%;animation-delay:1.8s"></span>
-  <span class="star" style="top:84%;left:32%;animation-delay:3s"></span>
-  <span class="star" style="top:8%;left:62%;animation-delay:2.1s"></span>
-  <span class="star" style="top:66%;left:66%;animation-delay:.9s"></span>
 </div>
 
-<!-- 阅读进度 -->
 <div id="progress"></div>
 
 <div id="boot"><span class="spin"></span>正在加载内容…</div>
@@ -255,7 +251,6 @@ transition:width .08s linear;border-radius:0 2px 2px 0}
 
 <aside class="sidebar" id="sidebar" hidden>
   <nav id="navList"></nav>
-
   <div class="card" id="cloudCard">
     <div class="row">
       <span class="dot" id="cloudDot"></span>
@@ -268,7 +263,6 @@ transition:width .08s linear;border-radius:0 2px 2px 0}
       <button id="btnPull">⬇ 拉取</button>
     </div>
   </div>
-
   <div class="tools">
     <button id="btnRefresh">🔄 重新加载</button>
     <button id="btnExport">⬇ 导出 JSON</button>
@@ -316,14 +310,11 @@ transition:width .08s linear;border-radius:0 2px 2px 0}
       <button class="icon" id="ghClose">✕</button>
     </div>
     <div class="ghb">
-      <div class="ghh" style="margin-top:0">
-        访客直接读取公开数据，无需任何配置。只有你想编辑时，才需要填 Token。
-      </div>
+      <div class="ghh" style="margin-top:0">访客直接读取公开数据，无需任何配置。只有你想编辑时，才需要填 Token。</div>
       <label class="fld"><span>Personal Access Token</span><input id="ghToken" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false"></label>
       <div class="ghh">
         <strong>Token 需要 Contents: Read and write 权限。</strong><br>
-        打开 <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">github.com/settings/tokens</a> 生成。
-        Token 只存你本机，不上传。
+        打开 <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">github.com/settings/tokens</a> 生成。Token 只存你本机，不上传。
       </div>
     </div>
     <div class="pfoot">
@@ -348,6 +339,11 @@ var GH_BRANCH = 'main';
 
 var K_GH = 'wiki-gh';
 var K_THEME = 'wiki-theme';
+
+/* 同步冷却：60 秒内只能推送一次 */
+var COOLDOWN_MS = 60000;
+var cooldownUntil = 0;
+var cooldownTimer = null;
 
 window.addEventListener('error', function(e){ console.warn('[wiki]', e.message || e.error); });
 window.addEventListener('unhandledrejection', function(e){ console.warn('[wiki]', e.reason); });
@@ -466,7 +462,142 @@ function toast(m){
 }
 
 /* ============================================================
-   滚动：进度条 + 顶栏阴影
+   背景：飞舞小方块
+   ============================================================ */
+function initParticles(){
+  var canvas = document.getElementById('particles');
+  if (!canvas || !canvas.getContext) return;
+
+  var ctx = canvas.getContext('2d');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W = 0, H = 0;
+  var particles = [];
+  var running = true;
+
+  function resize(){
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+
+  /* 数量按屏幕尺寸调整，小屏更少 */
+  var count = Math.max(12, Math.min(34, Math.floor((W * H) / 42000)));
+
+  for (var i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      size: 2 + Math.random() * 6,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.008,
+      alpha: 0.05 + Math.random() * 0.13,
+      hue: Math.random() < 0.5 ? 'accent' : 'purple'
+    });
+  }
+
+  function colorOf(p, isDark){
+    if (p.hue === 'purple') {
+      return isDark ? '163,113,247' : '124,58,237';
+    }
+    return isDark ? '230,237,243' : '31,35,40';
+  }
+
+  function draw(){
+    if (!running) return;
+
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    ctx.clearRect(0, 0, W, H);
+
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+
+      /* 环绕边界 */
+      if (p.x < -30) p.x = W + 30;
+      else if (p.x > W + 30) p.x = -30;
+      if (p.y < -30) p.y = H + 30;
+      else if (p.y > H + 30) p.y = -30;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = 'rgba(' + colorOf(p, isDark) + ',' + p.alpha + ')';
+
+      /* 圆角小方块：用极简的描边+填充，看起来更有质感 */
+      var s = p.size, hs = s / 2, r = Math.min(2, s / 3);
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(-hs, -hs, s, s, r);
+      } else {
+        ctx.rect(-hs, -hs, s, s);
+      }
+      ctx.fill();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize, { passive: true });
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) { running = false; }
+    else if (!running) { running = true; draw(); }
+  });
+
+  draw();
+}
+
+/* ============================================================
+   同步冷却
+   ============================================================ */
+function cooldownLeft(){
+  return Math.max(0, cooldownUntil - Date.now());
+}
+function inCooldown(){
+  return cooldownLeft() > 0;
+}
+function startCooldown(){
+  cooldownUntil = Date.now() + COOLDOWN_MS;
+  if (cooldownTimer) clearInterval(cooldownTimer);
+  updateCooldownUI();
+  cooldownTimer = setInterval(function(){
+    if (!inCooldown()) {
+      clearInterval(cooldownTimer);
+      cooldownTimer = null;
+    }
+    updateCooldownUI();
+  }, 500);
+}
+function updateCooldownUI(){
+  var left = cooldownLeft();
+  var secs = Math.ceil(left / 1000);
+
+  if (left > 0) {
+    btnPush.disabled = true;
+    btnPush.classList.add('cooling');
+    btnPush.textContent = '⏳ ' + secs + 's';
+    cloudDot.classList.add('cool');
+    if (!ghBusy) cloudSub.textContent = '冷却中 ' + secs + 's';
+  } else {
+    btnPush.disabled = ghBusy;
+    btnPush.classList.remove('cooling');
+    btnPush.textContent = '⬆ 推送';
+    if (!ghBusy) cloudDot.classList.remove('cool');
+  }
+}
+
+/* ============================================================
+   滚动 UI
    ============================================================ */
 var rafPending = false;
 function updateScrollUI(){
@@ -540,6 +671,16 @@ function loadAdmin(){
 
 function pushCloud(silent){
   if (!gh || !gh.token) { toast('请先进入管理员模式'); return Promise.resolve(false); }
+
+  /* 冷却期检查：手动点击时给出提示；自动同步时静默跳过 */
+  if (inCooldown()) {
+    if (!silent) {
+      var s = Math.ceil(cooldownLeft() / 1000);
+      toast('冷却中，请 ' + s + ' 秒后再试');
+    }
+    return Promise.resolve(false);
+  }
+
   if (ghBusy) return Promise.resolve(false);
   ghBusy = true; updateCloudUI();
 
@@ -565,8 +706,10 @@ function pushCloud(silent){
         });
     })
     .then(function(){
-      ghBusy = false; updateCloudUI();
-      if (!silent) toast('已同步到云端');
+      ghBusy = false;
+      startCooldown();          /* 成功推送后进入 60 秒冷却 */
+      updateCloudUI();
+      if (!silent) toast('已同步到云端 · 60 秒后可再次推送');
       return true;
     })
     .catch(function(err){
@@ -580,11 +723,19 @@ function updateCloudUI(){
   cloudDot.className = 'dot';
   if (isAdmin) {
     cloudName.textContent = GH_OWNER + '/' + GH_REPO;
-    cloudSub.textContent = ghBusy ? '同步中…' : '管理员 · 可编辑';
-    cloudDot.classList.add(ghBusy ? 'busy' : 'on');
+    if (ghBusy) {
+      cloudDot.classList.add('busy');
+      cloudSub.textContent = '同步中…';
+    } else if (inCooldown()) {
+      cloudDot.classList.add('cool');
+      cloudSub.textContent = '冷却中 ' + Math.ceil(cooldownLeft()/1000) + 's';
+    } else {
+      cloudDot.classList.add('on');
+      cloudSub.textContent = '管理员 · 可编辑';
+    }
     cloudActs.hidden = false;
-    btnPush.disabled = ghBusy;
     btnPull.disabled = ghBusy;
+    updateCooldownUI();
   } else {
     cloudName.textContent = GH_OWNER + '/' + GH_REPO;
     cloudSub.textContent = '已加载 · 只读';
@@ -830,8 +981,12 @@ function saveEditor(){
   else refreshCurrent();
   closeEditor();
   if (gh && gh.token) {
-    toast('正在同步到云端…');
-    pushCloud(false).then(function(ok){ if (ok) toast('已保存并同步'); });
+    if (inCooldown()) {
+      toast('已保存本地 · 冷却中，稍后手动推送');
+    } else {
+      toast('正在同步到云端…');
+      pushCloud(false).then(function(ok){ if (ok) toast('已保存并同步'); });
+    }
   }
 }
 
@@ -850,7 +1005,7 @@ function deleteCurrent(){
     var fb = articles[Math.min(idx, articles.length-1)];
     location.hash = '#' + encodeURIComponent(fb.id);
   }
-  if (gh && gh.token) pushCloud(false);
+  if (gh && gh.token && !inCooldown()) pushCloud(false);
 }
 
 function openGhModal(){
@@ -1061,6 +1216,7 @@ function boot(){
   bdEl.hidden = false;
 
   applyTheme(curTheme);
+  initParticles();
   buildToolbar();
   bind();
   applyMode();
