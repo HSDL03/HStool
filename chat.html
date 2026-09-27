@@ -564,7 +564,6 @@ html.dense .messages{padding:10px 4px 30px}
 .style-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 .style-foot .save:disabled{opacity:.5;cursor:not-allowed}
 
-/* 窄屏隐藏侧边面板 */
 @media(max-width:1320px){
   .side-note{display:none !important}
 }
@@ -678,7 +677,6 @@ html.dense .messages{padding:10px 4px 30px}
   </div>
 </main>
 
-<!-- ★ 电脑端左侧：操作说明 -->
 <aside class="side-note side-note-left" id="sideNoteLeft">
   <div class="sn-head">📖 操作说明</div>
   <div class="sn-item"><b>右键</b>消息 → 回复 / 表情 / 编辑 / 撤回</div>
@@ -689,7 +687,6 @@ html.dense .messages{padding:10px 4px 30px}
   <div class="sn-item"><b>↑↓</b> 在补全列表里选择</div>
 </aside>
 
-<!-- ★ 电脑端右侧：连接状态 -->
 <aside class="side-note side-note-right" id="sideNoteRight">
   <div class="sn-head">📡 连接状态</div>
   <div class="conn-sum-row">
@@ -861,7 +858,6 @@ html.dense .messages{padding:10px 4px 30px}
         </div>
       </div>
 
-      <!-- ★ 连接状态（手机端） -->
       <div class="settings-group">
         <div class="sg-label">连接状态</div>
         <div class="conn-sum-row">
@@ -871,7 +867,6 @@ html.dense .messages{padding:10px 4px 30px}
         <div class="conn-list" id="connListMobile"></div>
       </div>
 
-      <!-- ★ 操作说明（手机端） -->
       <div class="settings-group">
         <div class="sg-label">操作说明</div>
         <div class="settings-help">
@@ -900,7 +895,6 @@ html.dense .messages{padding:10px 4px 30px}
 
 <div class="toast" id="toast"></div>
 
-<!-- 右键上下文菜单 -->
 <div class="ctx-menu" id="ctxMenu">
   <button type="button" data-ctx="reply"><span class="ctx-ic">↩️</span><span class="ctx-tx">回复</span></button>
   <button type="button" data-ctx="react"><span class="ctx-ic">😊</span><span class="ctx-tx">表情回应</span></button>
@@ -1079,7 +1073,6 @@ function renderConnStatus(){
   else if(onCount === total){ sumCls = 'on'; sumTx = '全部正常'; }
   else { sumCls = ''; sumTx = '未连接'; }
 
-  /* 汇总圆点 + 文本（两侧 + 设置面板里都有） */
   var sumDots = document.querySelectorAll('[data-conn-sum]');
   for(var i=0;i<sumDots.length;i++) sumDots[i].className = 'conn-dot ' + sumCls;
   var sumTexts = document.querySelectorAll('[data-conn-sum-text]');
@@ -1088,7 +1081,6 @@ function renderConnStatus(){
     sumTexts[j].className = 'conn-sum-text ' + sumCls;
   }
 
-  /* 分项列表 */
   var html = '';
   keys.forEach(function(k){
     var st = connState[k];
@@ -1299,7 +1291,6 @@ window.addEventListener('online', function(){ toast('网络已恢复'); hideRetr
 window.addEventListener('offline', function(){
   toast('网络已断开');
   if(offlineMask){ $('offlineTitle').textContent = '网络已断开'; $('offlineSub').innerHTML = '等待网络恢复…'; offlineMask.classList.add('show'); }
-  /* 网络断开时，所有通道标红 */
   Object.keys(connState).forEach(function(k){ setConnState(k, 'err'); });
 });
 
@@ -1618,7 +1609,6 @@ function startChat(){
   updateSoundIcon();
   restoreDraft();
 
-  /* ★ 显示电脑端两侧面板 */
   var snl = $('sideNoteLeft'); if(snl) snl.classList.add('visible');
   var snr = $('sideNoteRight'); if(snr) snr.classList.add('visible');
   renderConnStatus();
@@ -1658,7 +1648,6 @@ inputEl.addEventListener('input', function(){
   saveDraft(); broadcastTyping(); checkMention();
 });
 
-/* @自动补全 */
 function checkMention(){
   var val=inputEl.value, pos=inputEl.selectionStart;
   if(pos<1 || val[pos-1]!=='@'){ if(mentionState.open) closeMentionPop(); return; }
@@ -2238,11 +2227,10 @@ editInput.addEventListener('keydown', function(e){
    ★ 右键上下文菜单
    ============================================================ */
 var ctxMenu = $('ctxMenu');
-var ctxTargetMsg = null;
 
 function openCtxMenu(x, y, msg){
   if(!ctxMenu || !msg) return;
-  ctxTargetMsg = msg;
+  ctxMenu.setAttribute('data-msg-id', String(msg.id));
 
   var canEdit   = !msg.__local && msg.uid===uid && (Date.now()-msg.ts) < EDIT_WINDOW;
   var canRecall = !msg.__local && msg.uid===uid && (Date.now()-msg.ts) < RECALL_WINDOW;
@@ -2270,36 +2258,45 @@ function openCtxMenu(x, y, msg){
 function closeCtxMenu(){
   if(!ctxMenu) return;
   ctxMenu.classList.remove('show');
-  ctxTargetMsg = null;
+  ctxMenu.removeAttribute('data-msg-id');
 }
 
 ctxMenu.addEventListener('click', function(e){
   var btn = e.target.closest('[data-ctx]');
-  if(!btn || !ctxTargetMsg) return;
+  if(!btn) return;
   var action = btn.getAttribute('data-ctx');
-  var target = ctxTargetMsg;
+  if(!action) return;
+
+  var msgId = ctxMenu.getAttribute('data-msg-id');
+  var target = msgId
+    ? allMessages.find(function(x){ return String(x.id) === String(msgId); })
+    : null;
 
   if(action === 'reply'){
     closeCtxMenu();
+    if(!target) return;
     setReply(target);
     return;
   }
   if(action === 'edit'){
     closeCtxMenu();
+    if(!target) return;
     openEditDialog(target);
     return;
   }
   if(action === 'copy'){
     closeCtxMenu();
+    if(!target) return;
     try{ navigator.clipboard.writeText(target.text); toast('已复制'); }
     catch(err){ toast('复制失败'); }
     return;
   }
   if(action === 'recall'){
     closeCtxMenu();
+    if(!target || target.__local) return;
     if(!confirm('撤回这条消息？')) return;
     sbQuery('撤回', function(){ return sb.from('messages').update({ recalled:true }).eq('id', target.id).eq('uid', uid); }, { max:2, silent:true }).then(function(r){
-      if(r.ok){ target.recalled=true; renderAll(); toast('已撤回'); }
+      if(r.ok){ target.recalled = true; renderAll(); toast('已撤回'); }
       else toast('撤回失败');
     });
     return;
@@ -2307,6 +2304,7 @@ ctxMenu.addEventListener('click', function(e){
   if(action === 'react'){
     var rect = btn.getBoundingClientRect();
     closeCtxMenu();
+    if(!target) return;
     showEmojiPopAt(rect.left, rect.bottom, target.id);
     return;
   }
@@ -2408,25 +2406,39 @@ messagesEl.addEventListener('click', function(e){
 });
 
 /* ============================================================
-   表情弹窗
+   ★ 表情弹窗（修复：监听器泄漏）
    ============================================================ */
-var emojiPopEl=null;
+var emojiPopEl = null;
+var emojiOutsideHandler = null;
+
 function closeEmojiPop(){
-  if(emojiPopEl && emojiPopEl.parentNode) emojiPopEl.parentNode.removeChild(emojiPopEl);
-  emojiPopEl=null;
+  if(emojiPopEl && emojiPopEl.parentNode){
+    emojiPopEl.parentNode.removeChild(emojiPopEl);
+  }
+  emojiPopEl = null;
+  if(emojiOutsideHandler){
+    document.removeEventListener('click', emojiOutsideHandler);
+    emojiOutsideHandler = null;
+  }
 }
+
 function showEmojiPopAt(anchorLeft, anchorBottom, msgId){
   closeEmojiPop();
-  var pop=document.createElement('div');
-  pop.className='emoji-pop';
+
+  var pop = document.createElement('div');
+  pop.className = 'emoji-pop';
   QUICK_EMOJIS.forEach(function(em){
-    var b=document.createElement('button');
-    b.type='button'; b.textContent=em;
-    b.addEventListener('click', function(){ toggleReaction(msgId, em); closeEmojiPop(); });
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = em;
+    b.addEventListener('click', function(){
+      toggleReaction(msgId, em);
+      closeEmojiPop();
+    });
     pop.appendChild(b);
   });
   document.body.appendChild(pop);
-  emojiPopEl=pop;
+  emojiPopEl = pop;
 
   var popW = pop.offsetWidth  || 200;
   var popH = pop.offsetHeight || 38;
@@ -2442,12 +2454,15 @@ function showEmojiPopAt(anchorLeft, anchorBottom, msgId){
   pop.style.top  = top  + 'px';
 
   setTimeout(function(){
-    document.addEventListener('click', function handler(ev){
-      if(emojiPopEl && !emojiPopEl.contains(ev.target)){
-        closeEmojiPop(); document.removeEventListener('click', handler);
+    if(!emojiPopEl) return;
+    emojiOutsideHandler = function(ev){
+      if(!emojiPopEl) return;
+      if(!emojiPopEl.contains(ev.target)){
+        closeEmojiPop();
       }
-    });
-  }, 10);
+    };
+    document.addEventListener('click', emojiOutsideHandler);
+  }, 0);
 }
 
 messagesEl.addEventListener('scroll', function(){
@@ -2644,7 +2659,7 @@ function openSettings(){
   $('animBtn').classList.toggle('active', noAnim);
   $('sendKeyBtn').textContent = sendKey==='ctrl-enter' ? 'Ctrl+Enter' : 'Enter';
   renderBlockList();
-  renderConnStatus();  /* ★ 打开设置时刷新一次连接状态 */
+  renderConnStatus();
   settingsOv.classList.add('show');
 }
 function closeSettings(){ settingsOv.classList.remove('show'); }
@@ -2890,7 +2905,7 @@ initParticles();
 autoResize();
 updateLoginBtn();
 updateSoundIcon();
-renderConnStatus();  /* ★ 首屏渲染一次连接状态 */
+renderConnStatus();
 
 (async function autoLogin(){
   var saved=storage.get(K_NICK);
