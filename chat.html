@@ -143,15 +143,7 @@ body{
   overflow:hidden;transition:background-color .3s,color .3s;
 }
 
-.offline-mask{
-  position:fixed;inset:0;z-index:150;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.55);
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-  opacity:0;visibility:hidden;
-  transition:opacity .25s, visibility .25s;
-  pointer-events:none;
-}
+.offline-mask{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:opacity .25s, visibility .25s;pointer-events:none}
 .offline-mask.show{opacity:1;visibility:visible;pointer-events:auto}
 .offline-card{max-width:340px;margin:20px;padding:24px 22px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel), 0 12px 32px rgba(0,0,0,.3);text-align:center}
 [data-theme^="mc-"] .offline-card{box-shadow:3px 3px 0 rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.3)}
@@ -222,6 +214,24 @@ body{
 
 .chat-wrap{position:relative;z-index:1;display:flex;flex-direction:column;height:calc(100vh - 46px);max-width:900px;margin:0 auto;padding:0 16px}
 .chat-wrap[hidden]{display:none}
+
+/* 顶部工具条：跳转时间 */
+.chat-toolbar{flex:none;display:flex;align-items:center;gap:8px;padding:8px 4px 0}
+.chat-toolbar .tb-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;
+  font-size:11.5px;font-family:inherit;font-weight:600;
+  color:var(--muted);
+  background:var(--bg2);
+  border:1px solid var(--bd);
+  border-radius:999px;
+  cursor:pointer;
+  transition:all .18s;
+}
+[data-theme^="mc-"] .chat-toolbar .tb-btn{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
+.chat-toolbar .tb-btn:hover{color:var(--ac);border-color:var(--ac);transform:translateY(-1px)}
+.chat-toolbar .sp{flex:1}
+
 .messages{flex:1;overflow-y:auto;padding:16px 4px 40px;scroll-behavior:smooth;overscroll-behavior:contain}
 .messages::-webkit-scrollbar{width:8px}
 .messages::-webkit-scrollbar-track{background:transparent}
@@ -252,6 +262,16 @@ body{
 .msg.failed .content{border-color:var(--dgr);box-shadow:var(--bevel),0 0 0 1px rgba(160,32,32,.3)}
 .msg.failed .status-tag{color:var(--dgr);font-weight:700;font-style:normal}
 .msg.failed .status-tag::before{content:"⚠ "}
+
+/* 跳转高亮 */
+.msg.highlight .content{
+  animation:highlightFlash 2.2s ease-out;
+}
+@keyframes highlightFlash{
+  0%{box-shadow:var(--bevel), 0 0 0 3px var(--ac);}
+  70%{box-shadow:var(--bevel), 0 0 0 3px var(--ac);}
+  100%{box-shadow:var(--bevel);}
+}
 
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;padding:40px 20px}
 .empty-state .ic{font-size:48px;opacity:.4;margin-bottom:12px}
@@ -326,6 +346,15 @@ body{
 .nick-ov-body input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
 .nick-ov-body .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
 .nick-ov-body .hint.err{color:var(--dgr);font-weight:600}
+.nick-ov-body .quota{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;
+  font-size:11px;
+  background:var(--acs);
+  color:var(--ac);
+  border-radius:999px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;
+}
 .nick-ov-foot{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd)}
 .nick-ov-foot button{padding:7px 16px;font-size:14px;font-family:inherit;font-weight:600;border-radius:var(--r);cursor:pointer;transition:all .15s}
 .nick-ov-foot .cancel{color:var(--text);background:var(--bg);border:1px solid var(--bd)}
@@ -333,6 +362,40 @@ body{
 .nick-ov-foot .save{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
 .nick-ov-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 .nick-ov-foot .save:disabled{opacity:.5;cursor:not-allowed}
+
+/* 跳转时间弹窗 */
+.jump-body{padding:18px}
+.jump-body label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
+.jump-body input[type=datetime-local]{
+  width:100%;height:42px;padding:0 12px;
+  font-family:inherit;font-size:15px;
+  color:var(--text);background:var(--bg2);
+  border:2px solid var(--bd2);border-radius:var(--r);
+  outline:none;
+}
+.jump-body input[type=datetime-local]:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.jump-body .quick{
+  display:flex;flex-wrap:wrap;gap:6px;
+  margin-top:12px;
+}
+.jump-body .quick button{
+  padding:4px 10px;
+  font-size:12px;font-family:inherit;
+  color:var(--muted);
+  background:var(--bg2);
+  border:1px solid var(--bd);
+  border-radius:999px;
+  cursor:pointer;
+  transition:all .15s;
+}
+[data-theme^="mc-"] .jump-body .quick button{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
+.jump-body .quick button:hover{color:var(--ac);border-color:var(--ac);transform:translateY(-1px)}
+.jump-foot{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd)}
+.jump-foot button{padding:7px 16px;font-size:14px;font-family:inherit;font-weight:600;border-radius:var(--r);cursor:pointer;transition:all .15s}
+.jump-foot .cancel{color:var(--text);background:var(--bg);border:1px solid var(--bd)}
+.jump-foot .cancel:hover{background:var(--bg3)}
+.jump-foot .go{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
+.jump-foot .go:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 
 @media(max-width:640px){
   .chat-wrap{padding:0 10px}
@@ -345,8 +408,9 @@ body{
   .chat-info .me-nick{max-width:80px}
   .login-card{padding:24px 20px}
   .refresh-pill{right:8px;bottom:8px;padding:5px 10px 5px 8px;font-size:10px;opacity:.65}
+  .chat-toolbar{padding:6px 2px 0}
 }
-@media print{.refresh-pill,.offline-mask{display:none}}
+@media print{.refresh-pill,.offline-mask,.chat-toolbar{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -406,7 +470,13 @@ body{
 </div>
 
 <main class="chat-wrap" id="chatWrap" hidden>
+  <div class="chat-toolbar">
+    <button class="tb-btn" id="jumpBtn" title="跳转到指定时间">📅 跳到时间</button>
+    <button class="tb-btn" id="jumpLatestBtn" title="回到最新消息">⬇ 回到最新</button>
+    <span class="sp"></span>
+  </div>
   <div class="messages" id="messages"></div>
+
   <div class="composer">
     <div class="input-wrap">
       <textarea id="input" rows="1" placeholder="说点什么…（Enter 发送，Shift+Enter 换行）" maxlength="500"></textarea>
@@ -428,11 +498,38 @@ body{
     <div class="nick-ov-body">
       <label>新昵称</label>
       <input id="nickInput" type="text" maxlength="20" placeholder="1-20 字" autocomplete="off" spellcheck="false">
-      <div class="hint" id="nickHint">改名后旧昵称会被释放，别人可以用了。</div>
+      <div class="hint" id="nickHint">
+        改名后旧昵称会被释放，别人可以用了。<br>
+        <span class="quota">今日还可改 <span id="nickQuotaLeft">5</span> / 5 次</span>
+      </div>
     </div>
     <div class="nick-ov-foot">
       <button class="cancel" id="nickCancel">取消</button>
       <button class="save" id="nickSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="jumpOv">
+  <div class="pnl">
+    <div class="ph"><strong>跳到指定时间</strong><span class="sp"></span><button class="icon" id="jumpClose">✕</button></div>
+    <div class="jump-body">
+      <label>日期时间</label>
+      <input id="jumpInput" type="datetime-local">
+      <div class="quick">
+        <button type="button" data-offset="3600000">1 小时前</button>
+        <button type="button" data-offset="21600000">6 小时前</button>
+        <button type="button" data-offset="43200000">12 小时前</button>
+        <button type="button" data-offset="86400000">1 天前</button>
+        <button type="button" data-offset="259200000">3 天前</button>
+      </div>
+      <div class="hint" style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.6">
+        会加载该时间点附近的 100 条消息。
+      </div>
+    </div>
+    <div class="jump-foot">
+      <button class="cancel" id="jumpCancel">取消</button>
+      <button class="go" id="jumpGo">跳转 →</button>
     </div>
   </div>
 </div>
@@ -473,6 +570,12 @@ var RETRY_BASE = 800;
 var RETRY_FACTOR = 2;
 var RETRY_MAX_DELAY = 12000;
 
+/* 业务规则 */
+var NICK_CHANGE_MAX_PER_DAY = 5;         /* 每天最多改 5 次 */
+var NICK_INACTIVE_DAYS = 3;              /* 昵称 3 天不用就释放 */
+var MSG_KEEP_DAYS = 5;                   /* 消息保留 5 天 */
+var CLEAN_INTERVAL = 30 * 60 * 1000;     /* 每 30 分钟清理一次 */
+
 /* ============================================================
    工具
    ============================================================ */
@@ -496,6 +599,13 @@ function fmtTime(ts){
   }
   return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
 }
+/* datetime-local 格式：YYYY-MM-DDTHH:mm */
+function toLocalInput(ts){
+  var d = new Date(ts);
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())
+    +'T'+pad2(d.getHours())+':'+pad2(d.getMinutes());
+}
+
 var storage={
   get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
   set:function(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}},
@@ -553,7 +663,8 @@ function withRetry(fn, opts){
   }
   return go();
 }
-function sbQuery(label, queryFn){
+function sbQuery(label, queryFn, options){
+  options = options || {};
   return withRetry(function(){
     return Promise.resolve().then(function(){ return queryFn(); }).then(function(res){
       if(res && res.error){
@@ -568,10 +679,11 @@ function sbQuery(label, queryFn){
     });
   }, {
     label: label,
+    max: options.max,
     shouldRetry: function(err){
       return err && (err.__isNetwork || /fetch|network|timeout|abort|connection/i.test(String(err.message||'')));
     },
-    onRetry: function(attempt, max, delay, label){
+    onRetry: options.silent ? null : function(attempt, max, delay, label){
       showRetryOverlay(attempt, max, label);
       setPillRetry(attempt, max);
     }
@@ -647,11 +759,62 @@ window.addEventListener('offline', function(){
 });
 
 /* ============================================================
+   自动清理
+   ============================================================ */
+async function autoClean(){
+  var now = Date.now();
+  var nickCutoff = now - NICK_INACTIVE_DAYS * 24 * 3600 * 1000;
+  var msgCutoff  = now - MSG_KEEP_DAYS * 24 * 3600 * 1000;
+  var changeCutoff = now - 24 * 3600 * 1000;
+
+  /* 清理超过 3 天未活跃的昵称 */
+  await sbQuery('清理过期昵称', function(){
+    return sb.from('nicknames').delete().lt('last_active', nickCutoff);
+  }, { max: 2, silent: true });
+
+  /* 清理超过 5 天的消息 */
+  await sbQuery('清理过期消息', function(){
+    return sb.from('messages').delete().lt('ts', msgCutoff);
+  }, { max: 2, silent: true });
+
+  /* 清理 24 小时前的改名记录 */
+  await sbQuery('清理改名记录', function(){
+    return sb.from('nick_changes').delete().lt('changed_at', changeCutoff);
+  }, { max: 2, silent: true });
+}
+
+async function updateActivity(){
+  if(!myNick) return;
+  await sbQuery('更新活跃', function(){
+    return sb.from('nicknames').update({ last_active: Date.now() }).eq('nick', myNick).eq('uid', uid);
+  }, { max: 2, silent: true });
+}
+
+/* ============================================================
+   改名次数限制
+   ============================================================ */
+async function getNickChangeQuota(){
+  var dayAgo = Date.now() - 24 * 3600 * 1000;
+  var r = await sbQuery('查询改名次数', function(){
+    return sb.from('nick_changes').select('id').eq('uid', uid).gte('changed_at', dayAgo);
+  }, { max: 2 });
+  if(!r.ok) return { ok:false, used:NICK_CHANGE_MAX_PER_DAY, left:0 };
+  var used = (r.data && r.data.data ? r.data.data.length : 0);
+  return { ok:true, used: used, left: Math.max(0, NICK_CHANGE_MAX_PER_DAY - used) };
+}
+
+async function logNickChange(){
+  await sbQuery('记录改名', function(){
+    return sb.from('nick_changes').insert({ uid: uid, changed_at: Date.now() });
+  }, { max: 2, silent: true });
+}
+
+/* ============================================================
    昵称
    ============================================================ */
 async function claimNick(nick){
   var r = await sbQuery('占用昵称', function(){
-    return sb.from('nicknames').insert({ nick: nick, uid: uid });
+    return sb.from('nicknames').insert({ nick: nick, uid: uid, last_active: Date.now() });
   });
 
   if(r.ok){
@@ -668,6 +831,8 @@ async function claimNick(nick){
     }
     var row = q.data && q.data.data;
     if(row && row.uid === uid){
+      /* 是自己的，更新活跃时间 */
+      await updateActivity();
       return { ok:true, mine:true };
     }
     return { ok:false, reason:'taken' };
@@ -680,6 +845,22 @@ async function releaseNick(nick){
   await sbQuery('释放昵称', function(){
     return sb.from('nicknames').delete().eq('nick', nick).eq('uid', uid);
   });
+}
+
+/* 改名后同步服务器和本地所有属于我的消息的 nick */
+async function syncMyMessagesNick(newNick){
+  var r = await sbQuery('同步消息昵称', function(){
+    return sb.from('messages').update({ nick: newNick }).eq('uid', uid);
+  }, { max: 2, silent: true });
+
+  if(!r.ok){
+    console.warn('同步消息昵称失败', r.err);
+  }
+
+  allMessages.forEach(function(m){
+    if(m.uid === uid) m.nick = newNick;
+  });
+  renderAll();
 }
 
 /* ============================================================
@@ -857,6 +1038,9 @@ async function tryLogin(){
   loginBtn.disabled = true;
   setLoginStatus('检查中…', 'busy');
 
+  /* 登录前顺手清理一次过期数据 */
+  autoClean();
+
   var r = await claimNick(nick);
   hideRetryOverlay();
 
@@ -892,6 +1076,10 @@ function startChat(){
     subscribeMessages();
     subscribePresence();
     startPolling();
+    /* 每 30 分钟自动清理一次 */
+    setInterval(autoClean, CLEAN_INTERVAL);
+    /* 每 60 秒更新一次活跃时间 */
+    setInterval(updateActivity, 60 * 1000);
   });
 
   setTimeout(function(){ try{ inputEl.focus(); }catch(e){} }, 100);
@@ -939,7 +1127,6 @@ async function doSend(){
   autoResize();
   sendBtn.disabled=true;
 
-  /* 本地占位：__local 标记，直到被真实记录替换 */
   var localId = 'local_' + now + '_' + Math.random().toString(36).slice(2,6);
   var localMsg = {
     id: localId,
@@ -969,16 +1156,15 @@ async function doSend(){
   if(idx < 0) return;
 
   if(r.ok){
-    /* 发送成功：标记 __sent，但保留 __local，等真实记录来替换 */
     allMessages[idx].__pending = false;
     allMessages[idx].__sent = true;
     renderAll();
     resetPollCountdown();
     setPillOK();
-    /* 主动拉一次，加快替换 */
     setTimeout(function(){ doPollNow(); }, 400);
+    /* 更新活跃时间 */
+    updateActivity();
   }else{
-    /* 发送失败 */
     allMessages[idx].__pending = false;
     allMessages[idx].__sent = false;
     allMessages[idx].__failed = true;
@@ -1013,8 +1199,8 @@ function renderMsg(m, prev){
   if(m.uid===uid)div.classList.add('self');
   if(m.__pending)div.classList.add('pending');
   if(m.__failed)div.classList.add('failed');
+  if(m.__highlight)div.classList.add('highlight');
 
-  /* 只有真实消息才参与 compact 合并 */
   if(!m.__local && prev && !prev.__local && prev.uid===m.uid && (m.ts-prev.ts)<3*60*1000){
     div.classList.add('compact');
   }
@@ -1040,6 +1226,8 @@ function renderMsg(m, prev){
       headHtml+
       '<div class="content">'+esc(m.text)+'</div>'+
     '</div>';
+
+  if(m.id) div.setAttribute('data-mid', m.id);
 
   return div;
 }
@@ -1076,7 +1264,6 @@ function renderAll(){
 }
 
 function updateLastTs(){
-  /* 只统计真实记录的 ts */
   for(var i=allMessages.length-1;i>=0;i--){
     var m = allMessages[i];
     if(!m.__local && typeof m.ts==='number' && m.ts>0){
@@ -1092,12 +1279,10 @@ function mergeNewMessages(newOnes){
   var changed = false;
 
   newOnes.forEach(function(n){
-    /* 已经是真实记录，跳过 */
     if(allMessages.some(function(x){ return !x.__local && String(x.id)===String(n.id); })){
       return;
     }
 
-    /* 尝试匹配本地占位：uid + nick + text + 时间接近 */
     var localIdx = allMessages.findIndex(function(x){
       return x.__local &&
         !x.__failed &&
@@ -1108,10 +1293,8 @@ function mergeNewMessages(newOnes){
     });
 
     if(localIdx >= 0){
-      /* 用真实记录替换本地占位 */
       allMessages[localIdx] = n;
     }else{
-      /* 新消息 */
       allMessages.push(n);
     }
     changed = true;
@@ -1158,7 +1341,6 @@ async function loadHistory(){
   var arr = data.map(normalizeMsg);
   arr.reverse();
 
-  /* 本地未确认的占位保留 */
   localPending.forEach(function(lp){
     if(!arr.some(function(x){ return x.uid===lp.uid && x.text===lp.text && Math.abs(x.ts-lp.ts)<5000; })){
       arr.push(lp);
@@ -1257,6 +1439,112 @@ function subscribePresence(){
 }
 
 /* ============================================================
+   跳转时间
+   ============================================================ */
+var jumpOv=$('jumpOv'), jumpInput=$('jumpInput');
+
+function openJumpDialog(){
+  var now = Date.now();
+  jumpInput.value = toLocalInput(now - 3600000);   /* 默认 1 小时前 */
+  jumpOv.classList.add('show');
+  setTimeout(function(){ try{ jumpInput.focus(); }catch(e){} }, 40);
+}
+function closeJumpDialog(){ jumpOv.classList.remove('show'); }
+
+async function jumpToTime(targetTs){
+  var r = await sbQuery('跳转查询', function(){
+    return sb.from('messages')
+      .select('*')
+      .lte('ts', targetTs)
+      .order('ts', { ascending: false })
+      .limit(100);
+  });
+
+  if(!r.ok){
+    toast('跳转失败：' + (r.err && r.err.message || '请重试'));
+    return;
+  }
+
+  var data = r.data && r.data.data;
+  if(!data || data.length === 0){
+    /* 该时间之前没数据，试试往后找最近的 */
+    var r2 = await sbQuery('往后查询', function(){
+      return sb.from('messages')
+        .select('*')
+        .gt('ts', targetTs)
+        .order('ts', { ascending: true })
+        .limit(100);
+    });
+    if(!r2.ok || !r2.data || !r2.data.data || r2.data.data.length === 0){
+      toast('该时间附近没有消息');
+      return;
+    }
+    data = r2.data.data.slice().reverse();
+  }
+
+  var arr = data.map(normalizeMsg).reverse();
+
+  /* 找到最接近 targetTs 的那条消息，做高亮 */
+  var bestIdx = 0;
+  var bestDist = Infinity;
+  arr.forEach(function(m, i){
+    var d = Math.abs(m.ts - targetTs);
+    if(d < bestDist){ bestDist = d; bestIdx = i; }
+  });
+
+  /* 全部清掉旧的高亮 */
+  arr.forEach(function(m){ m.__highlight = false; });
+  if(arr[bestIdx]) arr[bestIdx].__highlight = true;
+
+  allMessages = arr;
+  updateLastTs();
+  renderAll();
+
+  /* 滚到高亮那条 */
+  setTimeout(function(){
+    var target = arr[bestIdx];
+    if(!target) return;
+    var el = messagesEl.querySelector('[data-mid="' + target.id + '"]');
+    if(el){
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+      setTimeout(function(){ el.classList.remove('highlight'); }, 2500);
+    }else{
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+  }, 100);
+
+  toast('已跳到 ' + fmtTime(targetTs) + ' 附近');
+}
+
+$('jumpBtn').addEventListener('click', openJumpDialog);
+$('jumpClose').addEventListener('click', closeJumpDialog);
+$('jumpCancel').addEventListener('click', closeJumpDialog);
+jumpOv.addEventListener('click', function(e){ if(e.target===jumpOv) closeJumpDialog(); });
+
+document.querySelectorAll('.jump-body .quick button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var offset = parseInt(btn.getAttribute('data-offset'), 10);
+    jumpInput.value = toLocalInput(Date.now() - offset);
+  });
+});
+
+$('jumpGo').addEventListener('click', function(){
+  var v = jumpInput.value;
+  if(!v){ toast('请选择时间'); return; }
+  var targetTs = new Date(v.replace('T',' ')).getTime();
+  if(isNaN(targetTs)){ toast('时间格式不对'); return; }
+  closeJumpDialog();
+  jumpToTime(targetTs);
+});
+
+$('jumpLatestBtn').addEventListener('click', function(){
+  loadHistory().then(function(){
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    toast('已回到最新');
+  });
+});
+
+/* ============================================================
    右下角
    ============================================================ */
 var refreshPill = $('refreshPill');
@@ -1300,7 +1588,7 @@ function updateCdDisplay(){
   if(pillState !== 'ok') return;
   if(cdNum) cdNum.textContent = pollCountdown;
 }
-function setRpErr(){ /* 由 setPillErr 处理 */ }
+function setRpErr(){}
 function clearRpErr(){ setPillOK(); }
 function resetPollCountdown(){ pollCountdown = POLL_INTERVAL; updateCdDisplay(); }
 
@@ -1366,12 +1654,24 @@ setInterval(function(){
    修改昵称
    ============================================================ */
 var nickOv=$('nickOv'),nickInput=$('nickInput'),nickHint=$('nickHint');
-function openNickDialog(){
+var nickQuotaLeftEl = $('nickQuotaLeft');
+
+async function openNickDialog(){
   nickInput.value=myNick;
-  nickHint.textContent='改名后旧昵称会被释放，别人可以用了。';
-  nickHint.className='hint';
+  nickHint.innerHTML = '改名后旧昵称会被释放，别人可以用了。<br><span class="quota">今日还可改 <span id="nickQuotaLeft">?</span> / 5 次</span>';
+  nickQuotaLeftEl = $('nickQuotaLeft');
   nickOv.classList.add('show');
   setTimeout(function(){try{nickInput.focus();nickInput.select();}catch(e){}},40);
+
+  /* 异步查额度 */
+  var q = await getNickChangeQuota();
+  if(nickQuotaLeftEl){
+    nickQuotaLeftEl.textContent = q.ok ? q.left : '?';
+  }
+  if(q.ok && q.left <= 0){
+    $('nickSave').disabled = true;
+    nickHint.innerHTML = '今天已经改了 5 次了，明天再来吧。<br><span class="quota">今日还可改 0 / 5 次</span>';
+  }
 }
 function closeNickDialog(){ nickOv.classList.remove('show'); }
 
@@ -1385,13 +1685,27 @@ $('nickSave').addEventListener('click', async function(){
   if(v.length>20){ nickHint.textContent='最多 20 字'; nickHint.className='hint err'; return; }
   if(v===myNick){ closeNickDialog(); return; }
 
+  $('nickSave').disabled = true;
   nickHint.textContent='检查中…';
   nickHint.className='hint';
-  $('nickSave').disabled = true;
 
+  /* 检查额度 */
+  var quota = await getNickChangeQuota();
+  if(!quota.ok){
+    nickHint.textContent='网络异常，请重试';
+    nickHint.className='hint err';
+    $('nickSave').disabled = false;
+    return;
+  }
+  if(quota.left <= 0){
+    nickHint.innerHTML = '今天已经改了 5 次了，明天再来吧。<br><span class="quota">今日还可改 0 / 5 次</span>';
+    $('nickSave').disabled = false;
+    return;
+  }
+
+  /* 尝试占用新昵称 */
   var r = await claimNick(v);
   hideRetryOverlay();
-  $('nickSave').disabled = false;
 
   if(!r.ok){
     if(r.reason==='taken'){
@@ -1401,6 +1715,7 @@ $('nickSave').addEventListener('click', async function(){
       nickHint.textContent='网络异常：'+(r.msg||'请重试');
       nickHint.className='hint err';
     }
+    $('nickSave').disabled = false;
     return;
   }
 
@@ -1408,14 +1723,23 @@ $('nickSave').addEventListener('click', async function(){
   myNick = v;
   storage.set(K_NICK, myNick);
   $('meNick').textContent = myNick;
+
+  /* 记录改名 */
+  await logNickChange();
+
+  /* 释放旧昵称 */
   await releaseNick(oldNick);
 
+  /* 关键修复：同步所有历史消息的 nick */
+  await syncMyMessagesNick(myNick);
+
+  /* 更新在线状态 */
   try{
     if(presenceChannel) await presenceChannel.track({nick:myNick, online_at:Date.now()});
   }catch(e){}
 
   closeNickDialog();
-  toast('昵称已改为「'+myNick+'」');
+  toast('昵称已改为「'+myNick+'」（今日还剩 ' + (quota.left - 1) + ' 次）');
 });
 nickInput.addEventListener('keydown',function(e){
   if(e.key==='Enter'){e.preventDefault();$('nickSave').click();}
@@ -1442,6 +1766,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
     if(themeOv.classList.contains('show'))closeTheme();
     else if(nickOv.classList.contains('show'))closeNickDialog();
+    else if(jumpOv.classList.contains('show'))closeJumpDialog();
   }
 });
 
@@ -1454,6 +1779,7 @@ document.addEventListener('visibilitychange',function(){
     if(!chatWrap.hidden){
       doPollNow();
       resetPollCountdown();
+      updateActivity();
     }
     if(presenceChannel){
       try{ presenceChannel.track({nick:myNick, online_at: Date.now()}); }catch(e){}
@@ -1475,6 +1801,8 @@ updateLoginBtn();
   loginNick.value = saved;
   updateLoginBtn();
   setLoginStatus('正在恢复上次的昵称…', 'busy');
+
+  autoClean();
 
   var r = await claimNick(saved);
   hideRetryOverlay();
