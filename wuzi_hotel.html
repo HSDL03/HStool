@@ -217,13 +217,10 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .hero h1{margin:0 0 8px;font-size:clamp(1.9rem,4.5vw,2.8rem);font-weight:800;line-height:1.12;letter-spacing:-.03em;background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .hero-sub{margin:0 auto;max-width:460px;font-size:14px;color:var(--muted);line-height:1.65}
 
-/* 播报横幅 */
-.announce-banner{position:relative;overflow:hidden;margin-bottom:16px;padding:12px 16px;background:var(--ann-bg);color:var(--ann-fg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);display:none;animation:annIn .5s cubic-bezier(.22,1,.36,1)}
+.announce-banner{position:relative;overflow:hidden;margin-bottom:16px;padding:12px 16px;background:var(--ann-bg);color:var(--ann-fg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);display:none}
 [data-theme^="github-"] .announce-banner{border-width:1px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .announce-banner.show{display:flex;align-items:center;gap:10px}
-@keyframes annIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
-.announce-banner .ann-icon{font-size:20px;flex:none;line-height:1;animation:annIconPulse 2s ease-in-out infinite}
-@keyframes annIconPulse{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.15) rotate(8deg)}}
+.announce-banner .ann-icon{font-size:20px;flex:none;line-height:1}
 .announce-banner .ann-text{flex:1;min-width:0;font-size:14px;font-weight:700;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:1px 1px 0 rgba(0,0,0,.2)}
 .announce-banner .ann-text .ann-winner{font-weight:800;color:#fff}
 .announce-banner .ann-time{flex:none;font-size:11px;opacity:.8;font-variant-numeric:tabular-nums}
@@ -231,7 +228,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme^="mc-"] .announce-banner .ann-close{border-radius:2px}
 .announce-banner .ann-close:hover{background:rgba(255,255,255,.35)}
 
-/* 历史播报 */
 .ann-history{margin-bottom:16px;padding:10px 12px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);display:none}
 [data-theme^="github-"] .ann-history{border-width:1px;border-radius:8px}
 .ann-history.show{display:block}
@@ -264,9 +260,8 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .room-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 @media(max-width:700px){.room-list{grid-template-columns:1fr;gap:8px}}
 
-.room-card{position:relative;display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg));border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);cursor:pointer;overflow:hidden;transition:all .28s cubic-bezier(.34,1.56,.64,1);animation:cardIn .4s cubic-bezier(.22,1,.36,1) both}
+.room-card{position:relative;display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg));border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);cursor:pointer;overflow:hidden;transition:all .28s cubic-bezier(.34,1.56,.64,1)}
 [data-theme^="github-"] .room-card{border-width:1px;border-radius:10px;background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-@keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
 .room-card::before{content:"";position:absolute;inset:0;background:var(--tile-accent);opacity:0;transition:opacity .3s;pointer-events:none}
 .room-card:hover{transform:translateY(-3px);box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.35),0 12px 20px rgba(0,0,0,.12);border-color:var(--ac)}
 [data-theme^="mc-"] .room-card:hover{transform:none;box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.4),0 6px 14px rgba(0,0,0,.15)}
@@ -412,14 +407,12 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme="ocean"] .toast{background:#004890;color:#e0f0ff;border-color:#002040}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* 大号播报浮层（新对局结束，覆盖屏幕 3 秒） */
 .big-announce{position:fixed;inset:0;z-index:700;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
 .big-announce.show{opacity:1;visibility:visible}
 .big-announce .ba-card{max-width:520px;margin:20px;padding:28px 32px;text-align:center;background:var(--bg);border:3px solid var(--bd2);border-radius:calc(var(--r) + 4px);box-shadow:3px 3px 0 rgba(0,0,0,.3),0 20px 60px rgba(0,0,0,.4);transform:scale(.85);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
 .big-announce.show .ba-card{transform:scale(1)}
 [data-theme^="github-"] .big-announce .ba-card{border-width:2px;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.big-announce .ba-emoji{font-size:60px;line-height:1;margin-bottom:14px;display:block;animation:baBounce 1s cubic-bezier(.34,1.56,.64,1)}
-@keyframes baBounce{0%{transform:scale(.4) rotate(-15deg)}60%{transform:scale(1.15) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+.big-announce .ba-emoji{font-size:60px;line-height:1;margin-bottom:14px;display:block}
 .big-announce .ba-title{margin:0 0 10px;font-size:1.4rem;font-weight:800;line-height:1.25;color:var(--text)}
 .big-announce .ba-title .ba-winner{background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:900}
 .big-announce .ba-sub{font-size:13.5px;color:var(--muted);line-height:1.6;margin:0}
@@ -497,7 +490,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
     <p class="hero-sub">创建房间 · 等待对手 · 一局定胜负</p>
   </section>
 
-  <!-- 最新播报横幅 -->
   <div class="announce-banner" id="annBanner">
     <span class="ann-icon">🏆</span>
     <span class="ann-text" id="annText"></span>
@@ -505,7 +497,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
     <button class="ann-close" id="annClose" title="关闭">✕</button>
   </div>
 
-  <!-- 历史播报（最近 5 条） -->
   <div class="ann-history" id="annHistory">
     <div class="ah-head">📜 最近战报</div>
     <div class="ah-list" id="annHistoryList"></div>
@@ -542,7 +533,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   <span class="cp-text" id="connText">连接中…</span>
 </div>
 
-<!-- 昵称强制设置 -->
 <div class="nick-gate" id="nickGate">
   <div class="pnl">
     <div class="ph"><strong>起个昵称</strong><span class="sp"></span></div>
@@ -561,7 +551,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   </div>
 </div>
 
-<!-- 大号播报浮层 -->
 <div class="big-announce" id="bigAnn">
   <div class="ba-card">
     <span class="ba-emoji" id="bigAnnEmoji">🏆</span>
@@ -570,7 +559,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   </div>
 </div>
 
-<!-- 主题 -->
 <div class="ov" id="themeOv">
   <div class="pnl">
     <div class="ph"><strong>选择风格</strong><span class="sp"></span><button class="icon" id="themeClose">✕</button></div>
@@ -578,7 +566,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   </div>
 </div>
 
-<!-- 创建房间 -->
 <div class="ov" id="createOv">
   <div class="pnl">
     <div class="ph"><strong>创建房间</strong><span class="sp"></span><button class="icon" id="createClose">✕</button></div>
@@ -608,7 +595,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
           <button type="button" data-size="15" class="active">15×15</button>
           <button type="button" data-size="19">19×19</button>
         </div>
-        <div class="hint">每步 30 秒 · 整局 60 分钟 · 黑先</div>
+        <div class="hint">每步 30 秒 · 等待 120 秒自动关闭 · 黑先</div>
       </div>
     </div>
     <div class="form-foot">
@@ -618,7 +605,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   </div>
 </div>
 
-<!-- 输入房间码 -->
 <div class="ov" id="joinOv">
   <div class="pnl">
     <div class="ph"><strong>输入房间码</strong><span class="sp"></span><button class="icon" id="joinClose">✕</button></div>
@@ -636,7 +622,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   </div>
 </div>
 
-<!-- 修改昵称 -->
 <div class="ov" id="nickOv">
   <div class="pnl">
     <div class="ph"><strong>修改昵称</strong><span class="sp"></span><button class="icon" id="nickClose">✕</button></div>
@@ -668,9 +653,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 (function(){
 'use strict';
 
-/* ============================================================
-   配置
-   ============================================================ */
 var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 
@@ -686,9 +668,6 @@ var BOARD_SIZE_MIN = 5;
 var BOARD_SIZE_MAX = 50;
 var BOARD_SIZE_DEFAULT = 15;
 
-/* ============================================================
-   工具
-   ============================================================ */
 function $(id){return document.getElementById(id);}
 function esc(s){
   return String(s==null?'':s).replace(/[&<>"']/g,function(c){
@@ -739,9 +718,6 @@ function clampSize(n){
   return n;
 }
 
-/* ============================================================
-   身份
-   ============================================================ */
 var uid=(function(){
   var u=storage.get(K_UID);
   if(!u){ u='u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8); storage.set(K_UID,u); }
@@ -760,16 +736,10 @@ function renderMeChip(){
   if(nk){ nk.textContent=myNick; }
 }
 
-/* ============================================================
-   Supabase
-   ============================================================ */
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   realtime: { params: { eventsPerSecond: 5 } }
 });
 
-/* ============================================================
-   连接状态
-   ============================================================ */
 var connPill=$('connPill'), connText=$('connText');
 function setConn(state, text){
   if(!connPill) return;
@@ -777,9 +747,6 @@ function setConn(state, text){
   if(connText) connText.textContent = text;
 }
 
-/* ============================================================
-   昵称占用
-   ============================================================ */
 async function claimNick(nick){
   nick = String(nick||'').trim();
   if(!nick) return { ok:false, reason:'empty' };
@@ -1025,14 +992,57 @@ function onScroll(){
   });
 }
 
-/* ============================================================
-   房间码
-   ============================================================ */
 function genRoomCode(){
   var chars='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   var code='';
   for(var i=0;i<6;i++) code += chars.charAt(Math.floor(Math.random()*chars.length));
   return code;
+}
+
+/* ============================================================
+   ★ 去重：同一房主只保留最新的一个房间
+   ============================================================ */
+function dedupeAndCleanup(list){
+  /* 按 host_uid 分组 */
+  var byHost = {};
+  var toDelete = [];
+  list.forEach(function(r){
+    /* playing 中的对局不参与去重，避免误删正在玩的房间 */
+    if(r.status !== 'waiting') return;
+    var u = r.host_uid;
+    if(!u) return;
+    if(!byHost[u]){
+      byHost[u] = r;
+    } else {
+      /* 保留 created_at 最新的一个 */
+      if(parseInt(r.created_at, 10) > parseInt(byHost[u].created_at, 10)){
+        toDelete.push(byHost[u].code);
+        byHost[u] = r;
+      } else {
+        toDelete.push(r.code);
+      }
+    }
+  });
+
+  /* 从展示列表中移除重复的 waiting 房间 */
+  var keepCodes = {};
+  list.forEach(function(r){
+    if(r.status !== 'waiting'){ keepCodes[r.code] = 1; return; }
+    if(byHost[r.host_uid] && byHost[r.host_uid].code === r.code) keepCodes[r.code] = 1;
+  });
+  var cleaned = list.filter(function(r){ return keepCodes[r.code]; });
+
+  /* 后台静默删除 */
+  if(toDelete.length > 0){
+    sb.from('gomoku_rooms').delete().in('code', toDelete).eq('status','waiting')
+      .then(function(res){
+        if(!res.error){
+          console.log('🧹 清理了', toDelete.length, '个重复房间:', toDelete.join(','));
+        }
+      }).catch(function(){});
+  }
+
+  return cleaned;
 }
 
 /* ============================================================
@@ -1042,6 +1052,7 @@ var rooms=[];
 var roomsChannel=null;
 var pollTimer=null;
 var loadingRooms=false;
+var lastRoomsHtml = '__INIT__';  /* ★ 防闪缓存 */
 
 function loadRooms(silent){
   if(loadingRooms && !silent) return;
@@ -1061,9 +1072,18 @@ function loadRooms(silent){
       }
       setConn('on','已连接');
       var list = res.data || [];
-      rooms = list.filter(function(r){
-        return r.status === 'waiting' || r.status === 'playing';
+      /* 状态过滤 */
+      list = list.filter(function(r){
+        if(r.status === 'playing') return true;
+        if(r.status === 'waiting'){
+          var created = parseInt(r.created_at, 10) || 0;
+          return (Date.now() - created) < 120000;
+        }
+        return false;
       });
+      /* ★ 去重清理 */
+      list = dedupeAndCleanup(list);
+      rooms = list;
       renderRooms();
     })
     .catch(function(){
@@ -1079,6 +1099,8 @@ function renderRooms(){
   if(countEl) countEl.textContent = String(rooms.length);
 
   if(rooms.length === 0){
+    if(lastRoomsHtml === '__EMPTY__') return;
+    lastRoomsHtml = '__EMPTY__';
     listEl.innerHTML = '';
     if(emptyEl) emptyEl.hidden = false;
     return;
@@ -1086,7 +1108,7 @@ function renderRooms(){
   if(emptyEl) emptyEl.hidden = true;
 
   var html = '';
-  rooms.forEach(function(r, idx){
+  rooms.forEach(function(r){
     var hostNick = r.host_nick || '未知';
     var color = nickColor(hostNick);
     var avatar = esc(hostNick.charAt(0).toUpperCase());
@@ -1100,7 +1122,7 @@ function renderRooms(){
     var size = clampSize(r.board_size || BOARD_SIZE_DEFAULT);
 
     html +=
-      '<div class="room-card" data-code="'+esc(r.code)+'" style="animation-delay:'+Math.min(idx*40,400)+'ms">'+
+      '<div class="room-card" data-code="'+esc(r.code)+'">'+
         '<div class="rc-avatar" style="background:'+color+'">'+avatar+'</div>'+
         '<div class="rc-body">'+
           '<div class="rc-name">'+esc(r.name || '未命名房间')+(isMine?' <span style="font-size:11px;font-weight:600;color:var(--ac);background:var(--acs);padding:1px 6px;border-radius:999px;margin-left:4px">我的</span>':'')+'</div>'+
@@ -1116,6 +1138,10 @@ function renderRooms(){
         '<button class="rc-join" data-join="'+esc(r.code)+'"'+disabled+'>'+joinTxt+'</button>'+
       '</div>';
   });
+
+  /* ★ 关键：HTML 完全没变就跳过重绘，避免闪烁 */
+  if(html === lastRoomsHtml) return;
+  lastRoomsHtml = html;
   listEl.innerHTML = html;
 }
 
@@ -1143,7 +1169,10 @@ function subscribeRooms(){
   if(roomsChannel) return;
   setConn('busy','连接中…');
   roomsChannel = sb.channel('gomoku-rooms')
-    .on('postgres_changes', {event:'*', schema:'public', table:'gomoku_rooms'}, function(){
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'gomoku_rooms'}, function(){
+      loadRooms(true);
+    })
+    .on('postgres_changes', {event:'DELETE', schema:'public', table:'gomoku_rooms'}, function(){
       loadRooms(true);
     })
     .subscribe(function(status){
@@ -1159,7 +1188,7 @@ function subscribeRooms(){
 }
 
 /* ============================================================
-   播报系统
+   播报
    ============================================================ */
 var annBanner=$('annBanner'), annText=$('annText'), annTime=$('annTime'), annClose=$('annClose');
 var annHistory=$('annHistory'), annHistoryList=$('annHistoryList');
@@ -1169,9 +1198,6 @@ var lastAnnId = storage.get(K_LAST_ANN) || '';
 var bannerDismissed = false;
 var annList = [];
 
-function fmtAnnText(winner, loser){
-  return '🏆 ' + winner + ' vs ' + loser + ' — ' + winner + ' 胜出！';
-}
 function renderAnnList(){
   if(!annHistory || !annHistoryList) return;
   if(annList.length === 0){
@@ -1201,7 +1227,6 @@ if(annClose) annClose.addEventListener('click', function(){
   bannerDismissed = true;
 });
 
-/* 大号播报（新战报到来时弹出 3.5 秒） */
 var bigAnn=$('bigAnn'), bigAnnEmoji=$('bigAnnEmoji'), bigAnnTitle=$('bigAnnTitle'), bigAnnSub=$('bigAnnSub');
 var bigAnnTimer=null;
 function showBigAnnounce(a){
@@ -1229,23 +1254,17 @@ function loadAnnouncements(silent){
       var list = res.data || [];
       annList = list;
 
-      /* 横幅显示最新一条（除非用户手动关过） */
       if(list.length > 0 && !bannerDismissed){
         showBanner(list[0]);
       }
 
-      /* 检测是否有新战报（比 lastAnnId 新） */
       if(list.length > 0){
         var newestId = String(list[0].id);
         if(lastAnnId && lastAnnId !== newestId){
-          /* 有新的 */
           var idx = list.findIndex(function(a){ return String(a.id) === lastAnnId; });
-          /* idx === -1 说明上次记录已经不在了（被清理），弹所有新的 */
-          /* idx > 0 说明有 idx 条比上次新的 */
           var newOnes = idx === -1 ? [list[0]] : list.slice(0, idx);
           if(newOnes.length > 0){
             showBigAnnounce(newOnes[0]);
-            /* 用语音提示？不需要 */
           }
         }
         lastAnnId = newestId;
@@ -1260,8 +1279,7 @@ function loadAnnouncements(silent){
 function subscribeAnn(){
   if(annChannel) return;
   annChannel = sb.channel('gomoku-ann')
-    .on('postgres_changes', {event:'INSERT', schema:'public', table:'gomoku_announcements'}, function(payload){
-      /* 有新记录就重新加载 */
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'gomoku_announcements'}, function(){
       loadAnnouncements(false);
     })
     .subscribe(function(status){
@@ -1275,7 +1293,7 @@ function subscribeAnn(){
 }
 
 /* ============================================================
-   创建 / 加入房间
+   创建 / 加入
    ============================================================ */
 var createOv=$('createOv');
 var sizeRange=$('sizeRange'), sizeNum=$('sizeNum'), sizeDisplay=$('sizeDisplay');
@@ -1336,36 +1354,45 @@ if(createSave) createSave.addEventListener('click', function(){
   var now = Date.now();
   var size = clampSize(currentSize);
   var attempt = 0;
-  function tryInsert(){
-    attempt++;
-    sb.from('gomoku_rooms').insert({
-      code: code,
-      name: name,
-      host_uid: uid,
-      host_nick: myNick,
-      status: 'waiting',
-      board_size: size,
-      last_active: now,
-      created_at: now
-    }).then(function(res){
-      if(res.error){
-        if(res.error.code === '23505' && attempt < 5){
-          code = genRoomCode();
-          return tryInsert();
-        }
-        createSave.disabled = false;
-        toast('创建失败：' + res.error.message);
-        return;
+
+  /* ★ 先删掉自己之前遗留的 waiting 房间 */
+  sb.from('gomoku_rooms').delete().eq('host_uid', uid).eq('status', 'waiting')
+    .then(function(){
+      function tryInsert(){
+        attempt++;
+        sb.from('gomoku_rooms').insert({
+          code: code,
+          name: name,
+          host_uid: uid,
+          host_nick: myNick,
+          status: 'waiting',
+          board_size: size,
+          last_active: now,
+          created_at: now
+        }).then(function(res){
+          if(res.error){
+            if(res.error.code === '23505' && attempt < 5){
+              code = genRoomCode();
+              return tryInsert();
+            }
+            createSave.disabled = false;
+            toast('创建失败：' + res.error.message);
+            return;
+          }
+          createSave.disabled = false;
+          closeCreate();
+          gotoRoom(code);
+        }).catch(function(){
+          createSave.disabled = false;
+          toast('创建失败，请重试');
+        });
       }
-      createSave.disabled = false;
-      closeCreate();
-      gotoRoom(code);
-    }).catch(function(){
+      tryInsert();
+    })
+    .catch(function(){
       createSave.disabled = false;
       toast('创建失败，请重试');
     });
-  }
-  tryInsert();
 });
 
 function joinRoom(code){
@@ -1384,7 +1411,7 @@ function joinRoom(code){
       if(r.status !== 'waiting'){ toast('房间已满或已开局'); return; }
       if(r.host_uid === uid){ gotoRoom(code); return; }
       sb.from('gomoku_rooms')
-        .update({ guest_uid: uid, guest_nick: myNick, status: 'playing', last_active: Date.now(), game_started_at: Date.now() })
+        .update({ guest_uid: uid, guest_nick: myNick, status: 'playing', last_active: Date.now(), game_started_at: Date.now(), turn_started_at: Date.now() })
         .eq('code', code)
         .eq('status', 'waiting')
         .then(function(res2){
@@ -1532,6 +1559,7 @@ var refreshBtn=$('refreshBtn');
 if(refreshBtn) refreshBtn.addEventListener('click', function(){
   if(refreshBtn.classList.contains('spin')) return;
   refreshBtn.classList.add('spin');
+  lastRoomsHtml = '__INIT__';
   loadRooms(false);
   loadAnnouncements(true);
   setTimeout(function(){ refreshBtn.classList.remove('spin'); }, 500);
@@ -1552,9 +1580,6 @@ if(themeGrid) themeGrid.addEventListener('click', function(e){
   toast('已切换到 '+name);
 });
 
-/* ============================================================
-   Esc
-   ============================================================ */
 document.addEventListener('keydown', function(e){
   if(e.key === 'Escape'){
     if(themeOv && themeOv.classList.contains('show')) closeTheme();
@@ -1571,9 +1596,6 @@ document.addEventListener('visibilitychange', function(){
   if(particleRunning){ drawParticles(); loadRooms(true); loadAnnouncements(true); }
 });
 
-/* ============================================================
-   启动
-   ============================================================ */
 function boot(){
   applyTheme(curTheme);
   buildFloatDecor();
@@ -1582,7 +1604,6 @@ function boot(){
   setSize(BOARD_SIZE_DEFAULT);
   setConn('busy','连接中…');
 
-  /* 播报：不管有没有昵称都能看 */
   loadAnnouncements(true);
   subscribeAnn();
   annPollTimer = setInterval(function(){
