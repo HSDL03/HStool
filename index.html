@@ -166,7 +166,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .b3{width:340px;height:340px;background:var(--blob3);top:38%;left:52%;animation:drift3 42s ease-in-out infinite}
 @keyframes drift1{0%,100%{transform:translate(0,0) scale(1);opacity:.85}50%{transform:translate(50px,50px) scale(1.08);opacity:1}}
 @keyframes drift2{0%,100%{transform:translate(0,0) scale(1);opacity:.8}50%{transform:translate(-60px,-50px) scale(1.05);opacity:.95}}
-@keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50%,-60px) scale(1.1);opacity:.9}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50px,-60px) scale(1.1);opacity:.9}}
 .grid-bg{position:absolute;inset:0;
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:36px 36px;
@@ -324,10 +324,20 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   font-variant-numeric:tabular-nums;
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:0;
 }
-.status-pill .sp-sep{opacity:.35}
-.status-pill .sp-lat{color:var(--ac);font-weight:700}
+.status-pill .sp-sep{
+  opacity:.35;
+  margin:0 6px;
+  display:inline-block;
+}
+.status-pill .sp-lat{
+  color:var(--ac);
+  font-weight:700;
+  display:inline-block;
+  min-width:44px;
+  text-align:left;
+}
 .status-pill.err .sp-lat{color:var(--dgr)}
 @keyframes spPulse{0%,100%{opacity:1}50%{opacity:.3}}
 
@@ -424,8 +434,8 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <div class="status-pill" id="statusPill" title="点击立即刷新">
   <span class="sp-dot" id="spDot"></span>
   <span class="sp-text">
-    <span id="spTime" class="sp-hide-sm">--:--:--</span>
-    <span class="sp-sep sp-hide-sm">·</span>
+    <span id="spTime">--:--:--</span>
+    <span class="sp-sep">·</span>
     <span class="sp-lat" id="spLat">--ms</span>
   </span>
 </div>
@@ -446,7 +456,8 @@ var RAW_BASE = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO +
 var CDN_BASE = 'https://cdn.jsdelivr.net/gh/' + GH_OWNER + '/' + GH_REPO + '@' + GH_BRANCH + '/';
 
 var K_TOOLS_CACHE = 'tools-cache-v1';
-var REFRESH_MS = 120 * 1000;   /* 120 秒自动刷新 */
+var REFRESH_MS = 120 * 1000;   /* 120 秒自动刷新数据 */
+var LAT_PING_MS = 3 * 1000;    /* 3 秒 ping 一次更新延迟 */
 
 /* ============================================================
    默认工具（网络全挂时的兜底）
@@ -552,16 +563,18 @@ var spLat = $('spLat');
 
 function spSetBusy(){
   if(spPill) spPill.className = 'status-pill busy';
-  if(spLat) spLat.textContent = '...';
 }
 function spSetOK(ts, lat){
   if(spPill) spPill.className = 'status-pill';
   if(spTime) spTime.textContent = fmtTime(ts);
-  if(spLat) spLat.textContent = lat+'ms';
+  if(spLat) spLat.textContent = lat + 'ms';
 }
 function spSetErr(lat){
   if(spPill) spPill.className = 'status-pill err';
-  if(spLat) spLat.textContent = (lat?lat+'ms':'失败');
+  if(spLat) spLat.textContent = lat ? lat + 'ms' : '失败';
+}
+function spSetLat(lat){
+  if(spLat) spLat.textContent = lat >= 0 ? (lat + 'ms') : '超时';
 }
 
 /* ============================================================
@@ -614,7 +627,7 @@ function saveToolsCache(list){
 }
 
 /* ============================================================
-   远程加载（带延迟计时）
+   远程加载
    ============================================================ */
 function fetchJson(url){
   return fetch(url, { cache: 'no-store' })
@@ -653,6 +666,28 @@ function loadTools(){
       console.warn('[index] 远程加载失败，保持现状', err);
       spSetErr(lat);
       return { ok:false, lat:lat, err:true };
+    });
+}
+
+/* ============================================================
+   延迟 ping（只测速，不拉数据）
+   ============================================================ */
+function pingLatency(){
+  var t0 = Date.now();
+  var url = RAW_BASE + DATA_FILE + '?_=' + Date.now();
+  return fetch(url, { method:'HEAD', cache:'no-store' })
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return Date.now() - t0;
+    })
+    .catch(function(){
+      var url2 = CDN_BASE + DATA_FILE + '?_=' + Date.now();
+      return fetch(url2, { method:'HEAD', cache:'no-store' })
+        .then(function(r){
+          if(!r.ok) throw new Error('HTTP ' + r.status);
+          return Date.now() - t0;
+        })
+        .catch(function(){ return -1; });
     });
 }
 
@@ -949,10 +984,12 @@ function onScroll(){
 }
 
 /* ============================================================
-   自动刷新
+   定时任务：数据刷新 + 延迟 ping
    ============================================================ */
 var refreshTimer = null;
+var latPingTimer = null;
 var refreshing = false;
+var pinging = false;
 
 function silentRefresh(){
   if(refreshing) return;
@@ -966,12 +1003,27 @@ function silentRefresh(){
   });
 }
 
-function startAutoRefresh(){
-  stopAutoRefresh();
-  refreshTimer = setInterval(silentRefresh, REFRESH_MS);
+function doPing(){
+  if(pinging) return;
+  if(document.hidden) return;
+  pinging = true;
+  pingLatency().then(function(lat){
+    pinging = false;
+    spSetLat(lat);
+  }).catch(function(){
+    pinging = false;
+    spSetLat(-1);
+  });
 }
-function stopAutoRefresh(){
+
+function startTimers(){
+  stopTimers();
+  refreshTimer = setInterval(silentRefresh, REFRESH_MS);
+  latPingTimer = setInterval(doPing, LAT_PING_MS);
+}
+function stopTimers(){
   if(refreshTimer){ clearInterval(refreshTimer); refreshTimer = null; }
+  if(latPingTimer){ clearInterval(latPingTimer); latPingTimer = null; }
 }
 
 /* ============================================================
@@ -1013,6 +1065,7 @@ function bind(){
       toast('正在刷新…');
       loadTools().then(function(res){
         if(res && res.ok) renderIfChanged();
+        doPing();
       });
     });
   }
@@ -1029,9 +1082,10 @@ function bind(){
     if(particleRunning){
       drawParticles();
       silentRefresh();
-      startAutoRefresh();
+      doPing();
+      startTimers();
     }else{
-      stopAutoRefresh();
+      stopTimers();
     }
   });
 }
@@ -1042,7 +1096,7 @@ function bind(){
 function boot(){
   applyTheme(curTheme);
 
-  /* 1. 先用缓存（或默认）立即渲染，避免空白 */
+  /* 1. 先用缓存（或默认）立即渲染 */
   var cached = loadToolsCache();
   if(cached) TOOLS = cached;
   lastSignature = toolsSignature(TOOLS);
@@ -1054,13 +1108,14 @@ function boot(){
   bind();
   onScroll();
 
-  /* 3. 后台异步拉远程数据 */
+  /* 3. 首次拉数据 + 立即 ping 一次 */
   loadTools().then(function(res){
     if(res && res.ok) renderIfChanged();
   });
+  doPing();
 
-  /* 4. 启动 120 秒自动刷新 */
-  startAutoRefresh();
+  /* 4. 启动定时器 */
+  startTimers();
 }
 
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
