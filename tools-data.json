@@ -1,12 +1,12 @@
 [
   {
-    "id": "wiki",
-    "icon": "📚",
-    "name": "红石答辩wiki",
-    "desc": "暂时没用",
-    "tag": "已废弃",
-    "url": "./wiki.html",
-    "deprecated": true,
+    "id": "tool-mujch83r-f5qc",
+    "icon": "💬",
+    "name": "聊天室",
+    "desc": "和朋友们聊天",
+    "tag": "社交",
+    "url": "./chat.html",
+    "deprecated": false,
     "disabled": false,
     "hidden": false
   },
@@ -55,13 +55,13 @@
     "hidden": false
   },
   {
-    "id": "tool-mujch83r-f5qc",
-    "icon": "💬",
-    "name": "聊天室",
-    "desc": "和朋友们聊天",
-    "tag": "社交",
-    "url": "./chat.html",
-    "deprecated": false,
+    "id": "wiki",
+    "icon": "📚",
+    "name": "红石答辩wiki",
+    "desc": "暂时没用",
+    "tag": "已废弃",
+    "url": "./wiki.html",
+    "deprecated": true,
     "disabled": false,
     "hidden": false
   }
