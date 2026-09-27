@@ -456,8 +456,11 @@ var RAW_BASE = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO +
 var CDN_BASE = 'https://cdn.jsdelivr.net/gh/' + GH_OWNER + '/' + GH_REPO + '@' + GH_BRANCH + '/';
 
 var K_TOOLS_CACHE = 'tools-cache-v1';
-var REFRESH_MS = 120 * 1000;   /* 120 秒自动刷新数据 */
-var LAT_PING_MS = 3 * 1000;    /* 3 秒 ping 一次更新延迟 */
+
+/* 三个独立定时器 */
+var CLOCK_MS   = 1000;         /* 时钟：1 秒一跳 */
+var LAT_PING_MS = 3 * 1000;    /* 延迟：3 秒 ping 一次 */
+var REFRESH_MS = 120 * 1000;   /* 数据：120 秒拉一次 */
 
 /* ============================================================
    默认工具（网络全挂时的兜底）
@@ -550,7 +553,7 @@ function toast(msg){
   toastEl.textContent=msg;
   toastEl.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2000);
+  toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2400);
 }
 
 /* ============================================================
@@ -561,18 +564,9 @@ var spDot = $('spDot');
 var spTime = $('spTime');
 var spLat = $('spLat');
 
-function spSetBusy(){
-  if(spPill) spPill.className = 'status-pill busy';
-}
-function spSetOK(ts, lat){
-  if(spPill) spPill.className = 'status-pill';
-  if(spTime) spTime.textContent = fmtTime(ts);
-  if(spLat) spLat.textContent = lat + 'ms';
-}
-function spSetErr(lat){
-  if(spPill) spPill.className = 'status-pill err';
-  if(spLat) spLat.textContent = lat ? lat + 'ms' : '失败';
-}
+function spSetBusy(){ if(spPill) spPill.className = 'status-pill busy'; }
+function spSetOK(){ if(spPill) spPill.className = 'status-pill'; }
+function spSetErr(){ if(spPill) spPill.className = 'status-pill err'; }
 function spSetLat(lat){
   if(spLat) spLat.textContent = lat >= 0 ? (lat + 'ms') : '超时';
 }
@@ -627,6 +621,32 @@ function saveToolsCache(list){
 }
 
 /* ============================================================
+   数据变化对比
+   ============================================================ */
+function diffTools(oldList, newList){
+  var oldIds = {};
+  oldList.forEach(function(t){ oldIds[t.id] = true; });
+  var newIds = {};
+  newList.forEach(function(t){ newIds[t.id] = true; });
+
+  var added = newList.filter(function(t){ return !oldIds[t.id]; });
+  var removed = oldList.filter(function(t){ return !newIds[t.id]; });
+  var common = newList.filter(function(t){ return oldIds[t.id]; });
+
+  /* 检测同 id 字段变化 */
+  var edited = [];
+  common.forEach(function(n){
+    var o = oldList.find(function(x){ return x.id === n.id; });
+    if(!o) return;
+    var oldSig = [o.icon,o.name,o.desc,o.tag,o.url,o.deprecated,o.disabled,o.hidden].join('|');
+    var newSig = [n.icon,n.name,n.desc,n.tag,n.url,n.deprecated,n.disabled,n.hidden].join('|');
+    if(oldSig !== newSig) edited.push(n);
+  });
+
+  return { added:added, removed:removed, edited:edited };
+}
+
+/* ============================================================
    远程加载
    ============================================================ */
 function fetchJson(url){
@@ -636,6 +656,9 @@ function fetchJson(url){
       return r.json();
     });
 }
+
+var hasLoadedOnce = false;
+
 function loadTools(){
   var url1 = RAW_BASE + DATA_FILE + '?t=' + Date.now();
   var url2 = CDN_BASE + DATA_FILE + '?t=' + Date.now();
@@ -652,19 +675,30 @@ function loadTools(){
       if(Array.isArray(data) && data.length > 0){
         var list = normList(data);
         if(list.length > 0){
+          /* ★ 数据变化检测 */
+          if(hasLoadedOnce){
+            var d = diffTools(TOOLS, list);
+            var msgs = [];
+            if(d.added.length > 0) msgs.push('新增 ' + d.added.length + ' 个');
+            if(d.removed.length > 0) msgs.push('移除 ' + d.removed.length + ' 个');
+            if(d.edited.length > 0) msgs.push('更新 ' + d.edited.length + ' 个');
+            if(msgs.length > 0) toast('工具已同步：' + msgs.join(' · '));
+          }
+          hasLoadedOnce = true;
+
           TOOLS = list;
           saveToolsCache(list);
-          spSetOK(Date.now(), lat);
+          spSetOK();
           return { ok:true, lat:lat };
         }
       }
-      spSetOK(Date.now(), lat);
+      spSetOK();
       return { ok:false, lat:lat };
     })
     .catch(function(err){
       var lat = Date.now() - t0;
       console.warn('[index] 远程加载失败，保持现状', err);
-      spSetErr(lat);
+      spSetErr();
       return { ok:false, lat:lat, err:true };
     });
 }
@@ -984,13 +1018,28 @@ function onScroll(){
 }
 
 /* ============================================================
-   定时任务：数据刷新 + 延迟 ping
+   三个定时器：时钟 / 延迟 / 数据
    ============================================================ */
+var clockTimer = null;
+var latTimer = null;
 var refreshTimer = null;
-var latPingTimer = null;
 var refreshing = false;
 var pinging = false;
 
+/* 时钟：每秒更新 spTime */
+function startClock(){
+  stopClock();
+  var tick = function(){
+    if(spTime) spTime.textContent = fmtTime(Date.now());
+  };
+  tick();
+  clockTimer = setInterval(tick, CLOCK_MS);
+}
+function stopClock(){
+  if(clockTimer){ clearInterval(clockTimer); clockTimer = null; }
+}
+
+/* 数据刷新：每 120 秒 */
 function silentRefresh(){
   if(refreshing) return;
   if(document.hidden) return;
@@ -1003,6 +1052,7 @@ function silentRefresh(){
   });
 }
 
+/* 延迟 ping：每 3 秒 */
 function doPing(){
   if(pinging) return;
   if(document.hidden) return;
@@ -1018,12 +1068,14 @@ function doPing(){
 
 function startTimers(){
   stopTimers();
+  startClock();
   refreshTimer = setInterval(silentRefresh, REFRESH_MS);
-  latPingTimer = setInterval(doPing, LAT_PING_MS);
+  latTimer = setInterval(doPing, LAT_PING_MS);
 }
 function stopTimers(){
+  stopClock();
   if(refreshTimer){ clearInterval(refreshTimer); refreshTimer = null; }
-  if(latPingTimer){ clearInterval(latPingTimer); latPingTimer = null; }
+  if(latTimer){ clearInterval(latTimer); latTimer = null; }
 }
 
 /* ============================================================
@@ -1083,7 +1135,9 @@ function bind(){
       drawParticles();
       silentRefresh();
       doPing();
-      startTimers();
+      startClock();
+      if(!refreshTimer) refreshTimer = setInterval(silentRefresh, REFRESH_MS);
+      if(!latTimer) latTimer = setInterval(doPing, LAT_PING_MS);
     }else{
       stopTimers();
     }
@@ -1108,14 +1162,18 @@ function boot(){
   bind();
   onScroll();
 
-  /* 3. 首次拉数据 + 立即 ping 一次 */
+  /* 3. 立即启动时钟（每秒跳） */
+  startClock();
+
+  /* 4. 首次拉数据 + 首次 ping */
   loadTools().then(function(res){
     if(res && res.ok) renderIfChanged();
   });
   doPing();
 
-  /* 4. 启动定时器 */
-  startTimers();
+  /* 5. 启动数据刷新和延迟 ping 定时器 */
+  refreshTimer = setInterval(silentRefresh, REFRESH_MS);
+  latTimer = setInterval(doPing, LAT_PING_MS);
 }
 
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
