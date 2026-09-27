@@ -11,6 +11,10 @@
     var t=localStorage.getItem('wiki-theme');
     var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
     if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
+    if(localStorage.getItem('chat-dense')==='1')document.documentElement.classList.add('dense');
+    var fs=localStorage.getItem('chat-fontsize');
+    if(fs) document.documentElement.style.setProperty('--chat-fs', fs+'px');
+    if(localStorage.getItem('chat-noanim')==='1')document.documentElement.classList.add('noanim');
   }catch(e){}
 })();
 </script>
@@ -29,6 +33,7 @@
   --topbar-fg:#fff;--topbar-bd:#2a3a1a;
   --self-bg:linear-gradient(135deg,#7a9c3c,#3d521f);--self-fg:#fff;
   --other-bg:var(--bg2);--other-fg:var(--text);
+  --chat-fs:14px;
 }
 [data-theme="mc-night"]{
   --bg:#1a1a1a;--bg2:#242424;--bg3:#303030;--text:#e0e0e0;--muted:#909090;
@@ -134,6 +139,7 @@
   --other-bg:var(--bg2);--other-fg:var(--text);
 }
 *,*::before,*::after{box-sizing:border-box}
+html.noanim *,html.noanim *::before,html.noanim *::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
 html,body{height:100%}
 html{background:var(--bg);transition:background-color .3s}
 body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow:hidden;transition:background-color .3s,color .3s}
@@ -149,35 +155,28 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .offline-card .cnt{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--ac);font-weight:700}
 .offline-card .spin{display:inline-block;width:14px;height:14px;margin-right:6px;vertical-align:-2px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spinIcon .8s linear infinite}
 
-.topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50;transition:background .3s,color .3s}
+.topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50;transition:background .3s,color .3s}
 [data-theme^="mc-"] .topbar{border-bottom-width:2px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer}
 [data-theme^="mc-"] .logo{text-shadow:1px 1px 0 rgba(0,0,0,.4)}
-.logo-icon{display:inline-block;font-size:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.logo-icon{display:inline-block;font-size:16px}
 .logo:hover .logo-icon{transform:rotate(-8deg) scale(1.08)}
 .sp{flex:1}
 .chat-info{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--topbar-fg);opacity:.85}
 .chat-info .online{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(255,255,255,.15);border-radius:999px;font-variant-numeric:tabular-nums;cursor:pointer;transition:all .15s}
 .chat-info .online:hover{background:rgba(255,255,255,.28)}
 [data-theme="github-light"] .chat-info .online{background:rgba(0,0,0,.06)}
-[data-theme="github-light"] .chat-info .online:hover{background:rgba(0,0,0,.12)}
 .chat-info .online .live-dot{width:6px;height:6px;background:#4ade80;border-radius:50%;box-shadow:0 0 6px rgba(74,222,128,.7);animation:livePulse 2s ease-in-out infinite}
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
-.chat-info .me-nick{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.9;padding:2px 8px;background:rgba(255,255,255,.15);border-radius:999px;font-size:12px}
+.chat-info .me-nick{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.9;padding:2px 8px;background:rgba(255,255,255,.15);border-radius:999px;font-size:12px}
 [data-theme="github-light"] .chat-info .me-nick{background:rgba(0,0,0,.06)}
-.icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:var(--muted);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,color .15s,transform .2s;position:relative}
+.icon{display:grid;place-items:center;width:28px;height:28px;flex:none;font-size:13px;font-family:inherit;color:var(--muted);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,color .15s,transform .2s;position:relative}
 .icon:hover{background:var(--bg3);color:var(--text)}
 [data-theme^="mc-"] .icon,[data-theme="sakura"] .icon,[data-theme="ocean"] .icon{color:rgba(255,255,255,.85)}
 [data-theme^="mc-"] .icon:hover,[data-theme="sakura"] .icon:hover,[data-theme="ocean"] .icon:hover{background:rgba(0,0,0,.2);color:#fff}
 .icon:active{transform:scale(.92)}
-.icon .dot-badge{
-  position:absolute;top:-3px;right:-3px;
-  min-width:16px;height:16px;padding:0 4px;
-  font-size:10px;font-weight:700;line-height:16px;text-align:center;
-  color:#fff;background:var(--dgr);border-radius:999px;
-  box-shadow:0 0 0 2px var(--topbar-bg);
-  font-variant-numeric:tabular-nums;
-}
+.icon.active{background:var(--acs);color:var(--ac) !important}
+.icon .dot-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;padding:0 4px;font-size:10px;font-weight:700;line-height:16px;text-align:center;color:#fff;background:var(--dgr);border-radius:999px;box-shadow:0 0 0 2px var(--topbar-bg);font-variant-numeric:tabular-nums}
 
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform,opacity}
@@ -187,16 +186,11 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 @keyframes drift1{0%,100%{transform:translate(0,0) scale(1);opacity:.85}50%{transform:translate(50px,50px) scale(1.08);opacity:1}}
 @keyframes drift2{0%,100%{transform:translate(0,0) scale(1);opacity:.8}50%{transform:translate(-60px,-50px) scale(1.05);opacity:.95}}
 @keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50%,-60px) scale(1.1);opacity:.9}}
-.grid-bg{position:absolute;inset:0;
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:36px 36px;
-  -webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%);
-  mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
 #particles{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.6}
 
 .login-wrap{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;height:calc(100vh - 46px);padding:20px}
 .login-wrap[hidden]{display:none !important}
-
 .login-card{width:100%;max-width:420px;padding:32px 28px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 12px 32px rgba(0,0,0,.12);text-align:center;animation:heroIn .5s cubic-bezier(.22,1,.36,1) both}
 @keyframes heroIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 [data-theme^="mc-"] .login-card{box-shadow:3px 3px 0 rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.12)}
@@ -213,7 +207,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .login-card .status.busy{color:var(--ac);font-weight:600}
 .login-card .btn-main{width:100%;height:44px;font-size:15px;font-weight:700;font-family:inherit;color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;box-shadow:var(--bevel);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
 .login-card .btn-main:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
-.login-card .btn-main:active:not(:disabled){transform:translateY(0);box-shadow:inset 1px 1px 0 rgba(0,0,0,.2)}
 .login-card .btn-main:disabled{opacity:.5;cursor:not-allowed}
 .login-card .foot{margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6}
 .login-card .roll{color:var(--ac);text-decoration:none;font-weight:600;cursor:pointer;display:inline-block;margin-top:4px}
@@ -223,55 +216,18 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .chat-wrap[hidden]{display:none !important}
 
 .chat-toolbar{flex:none;display:flex;align-items:center;gap:8px;padding:8px 4px 0;flex-wrap:wrap}
-.chat-toolbar .tb-btn{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:4px 10px;
-  font-size:11.5px;font-family:inherit;font-weight:600;
-  color:var(--muted);
-  background:var(--bg2);
-  border:1px solid var(--bd);
-  border-radius:999px;
-  cursor:pointer;
-  transition:all .18s;
-}
+.chat-toolbar .tb-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:11.5px;font-family:inherit;font-weight:600;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:999px;cursor:pointer;transition:all .18s}
 [data-theme^="mc-"] .chat-toolbar .tb-btn{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
 .chat-toolbar .tb-btn:hover{color:var(--ac);border-color:var(--ac);transform:translateY(-1px)}
 .chat-toolbar .sp{flex:1}
-.chat-toolbar .search-inline{
-  flex:1;
-  min-width:120px;
-  max-width:260px;
-  height:28px;
-  padding:0 10px;
-  font-size:12.5px;font-family:inherit;
-  color:var(--text);
-  background:var(--bg2);
-  border:1px solid var(--bd);
-  border-radius:999px;
-  outline:none;
-  transition:all .2s;
-}
+.chat-toolbar .search-inline{flex:1;min-width:120px;max-width:260px;height:28px;padding:0 10px;font-size:12.5px;font-family:inherit;color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:999px;outline:none;transition:all .2s}
 [data-theme^="mc-"] .chat-toolbar .search-inline{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
 .chat-toolbar .search-inline:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
 
-.typing-bar{
-  flex:none;
-  height:0;
-  overflow:hidden;
-  padding:0 4px;
-  font-size:11.5px;
-  color:var(--muted);
-  transition:height .2s, padding .2s;
-}
-.typing-bar.show{
-  height:22px;
-  padding:4px 4px 0;
-}
+.typing-bar{flex:none;height:0;overflow:hidden;padding:0 4px;font-size:11.5px;color:var(--muted);transition:height .2s, padding .2s}
+.typing-bar.show{height:22px;padding:4px 4px 0}
 .typing-bar .who{font-weight:700;color:var(--ac)}
-.typing-bar .dots::after{
-  content:"…";
-  animation:typingDots 1.4s steps(4, end) infinite;
-}
+.typing-bar .dots::after{content:"…";animation:typingDots 1.4s steps(4, end) infinite}
 @keyframes typingDots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
 
 .messages{flex:1;overflow-y:auto;padding:16px 4px 40px;scroll-behavior:smooth;overscroll-behavior:contain;position:relative}
@@ -280,58 +236,52 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .messages::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
 .messages::-webkit-scrollbar-thumb:hover{background:var(--ac)}
 
+.load-more-hint{text-align:center;padding:6px 0 12px;font-size:11.5px;color:var(--muted)}
+.load-more-hint .btn-mini{padding:4px 12px;font-size:11.5px;font-family:inherit;font-weight:600;color:var(--ac);background:var(--bg2);border:1px solid var(--ac);border-radius:999px;cursor:pointer}
+[data-theme^="mc-"] .load-more-hint .btn-mini{border-radius:2px;border:2px solid var(--ac);box-shadow:var(--bevel)}
+.load-more-hint .btn-mini:hover{background:var(--acs)}
+
+/* 时间分组 */
+.time-divider{text-align:center;margin:16px 0 12px;position:relative}
+.time-divider .td-txt{display:inline-block;padding:2px 12px;font-size:11px;color:var(--muted);background:var(--bg);border:1px solid var(--bd);border-radius:999px;position:relative;z-index:1}
+[data-theme^="mc-"] .time-divider .td-txt{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
+
 .msg{display:flex;gap:10px;margin-bottom:12px;animation:msgIn .3s cubic-bezier(.22,1,.36,1) both;position:relative}
 @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.msg .avatar{flex:none;width:36px;height:36px;display:grid;place-items:center;border-radius:var(--r);font-size:14px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);user-select:none}
+.msg .avatar{flex:none;width:36px;height:36px;display:grid;place-items:center;border-radius:var(--r);font-size:14px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);user-select:none;cursor:pointer;transition:transform .2s}
+.msg .avatar:hover{transform:scale(1.05)}
 [data-theme^="github-"] .msg .avatar{border-radius:50%}
-.msg .avatar.empty{visibility:hidden}
+.msg .avatar.empty{visibility:hidden;pointer-events:none}
 .msg .body{flex:1;min-width:0;position:relative}
 .msg .head{display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-size:11px;flex-wrap:wrap}
 .msg .nick{font-weight:700;color:var(--text);font-size:12.5px}
-.msg .time{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11px}
-.msg .content{display:inline-block;max-width:100%;padding:7px 12px;font-size:14px;line-height:1.55;word-break:break-word;white-space:pre-wrap;background:var(--other-bg);color:var(--other-fg);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel)}
+.msg .time{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11px;cursor:help}
+.msg .edited-tag{font-size:10.5px;color:var(--muted);opacity:.75;font-style:italic}
+.msg .content{display:inline-block;max-width:100%;padding:7px 12px;font-size:var(--chat-fs);line-height:1.55;word-break:break-word;white-space:pre-wrap;background:var(--other-bg);color:var(--other-fg);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel)}
 [data-theme^="github-"] .msg .content{border-radius:12px}
+.msg .content a{color:var(--ac);text-decoration:underline;word-break:break-all}
+.msg .content code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em;padding:1px 5px;background:var(--bg3);border-radius:3px}
+.msg .content mark{background:rgba(255,220,0,.5);color:inherit;padding:0 2px;border-radius:2px}
+.msg .content strong{font-weight:700}
+.msg .content em{font-style:italic}
 .msg.self{flex-direction:row-reverse}
 .msg.self .body{display:flex;flex-direction:column;align-items:flex-end}
 .msg.self .head{flex-direction:row-reverse}
 .msg.self .content{background:var(--self-bg);color:var(--self-fg);border-color:transparent;text-shadow:0 1px 2px rgba(0,0,0,.15)}
 [data-theme="github-light"] .msg.self .content,[data-theme="github-dark"] .msg.self .content{text-shadow:none}
+.msg.self .content a{color:#fff}
+.msg.self .content code{background:rgba(0,0,0,.2);color:#fff}
 .msg.compact{margin-top:-6px}
 
-.msg .mention{
-  color:var(--ac);
-  font-weight:700;
-  padding:0 2px;
-  background:var(--acs);
-  border-radius:3px;
-}
-.msg.self .mention{
-  color:#fff;
-  background:rgba(255,255,255,.25);
-}
-.msg.mentioned .content{
-  border-color:var(--warn);
-  box-shadow:var(--bevel),0 0 0 2px rgba(176,136,0,.25);
-}
+html.dense .msg{margin-bottom:6px}
+html.dense .msg.compact{margin-top:-4px}
+html.dense .messages{padding:10px 4px 30px}
 
-/* 引用的消息 */
-.msg .reply-quote{
-  display:block;
-  margin-bottom:5px;
-  padding:4px 10px;
-  font-size:12px;
-  line-height:1.4;
-  color:var(--muted);
-  background:var(--bg2);
-  border-left:3px solid var(--ac);
-  border-radius:3px;
-  max-width:100%;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  cursor:pointer;
-  transition:background .15s;
-}
+.msg .mention{color:var(--ac);font-weight:700;padding:0 2px;background:var(--acs);border-radius:3px}
+.msg.self .mention{color:#fff;background:rgba(255,255,255,.25)}
+.msg.mentioned .content{border-color:var(--warn);box-shadow:var(--bevel),0 0 0 2px rgba(176,136,0,.25)}
+
+.msg .reply-quote{display:block;margin-bottom:5px;padding:4px 10px;font-size:12px;line-height:1.4;color:var(--muted);background:var(--bg2);border-left:3px solid var(--ac);border-radius:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;transition:background .15s}
 [data-theme^="mc-"] .msg .reply-quote{border-radius:2px}
 .msg .reply-quote:hover{background:var(--bg3)}
 .msg .reply-quote .rq-nick{font-weight:700;color:var(--ac);margin-right:4px}
@@ -339,98 +289,35 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .msg.self .reply-quote .rq-nick{color:#fff}
 .msg.self .reply-quote:hover{background:rgba(255,255,255,.25)}
 
-/* 删除状态 */
-.msg.deleted .content{
-  font-style:italic;
-  opacity:.55;
-  background:transparent;
-  border-style:dashed;
-}
+.msg.recalled .content,.msg.deleted .content{font-style:italic;opacity:.55;background:transparent;border-style:dashed}
 
-/* 悬浮工具栏 */
-.msg .hover-tools{
-  position:absolute;
-  top:0;
-  display:flex;
-  gap:3px;
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .18s, transform .18s;
-  z-index:5;
-}
+.msg .hover-tools{position:absolute;top:0;display:flex;gap:3px;opacity:0;pointer-events:none;transition:opacity .18s, transform .18s;z-index:5}
 .msg:not(.self) .hover-tools{left:calc(100% + 4px);transform:translateX(-4px)}
 .msg.self .hover-tools{right:calc(100% + 4px);transform:translateX(4px)}
 .msg:hover .hover-tools{opacity:1;pointer-events:auto;transform:translateX(0)}
-.msg .hover-tools button{
-  width:26px;height:26px;
-  display:grid;place-items:center;
-  font-size:12px;font-family:inherit;
-  color:var(--muted);
-  background:var(--bg2);
-  border:1px solid var(--bd);
-  border-radius:6px;
-  cursor:pointer;
-  transition:all .15s;
-}
+.msg .hover-tools button{width:26px;height:26px;display:grid;place-items:center;font-size:12px;font-family:inherit;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:6px;cursor:pointer;transition:all .15s}
 [data-theme^="mc-"] .msg .hover-tools button{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel);background:var(--bg)}
 .msg .hover-tools button:hover{color:var(--ac);border-color:var(--ac);background:var(--acs);transform:translateY(-1px)}
 
-/* 表情回应 */
-.msg .reactions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:4px;
-  margin-top:5px;
-}
+.msg .reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .msg.self .reactions{justify-content:flex-end}
-.msg .reactions .react{
-  display:inline-flex;align-items:center;gap:3px;
-  padding:2px 8px;
-  font-size:12px;
-  color:var(--muted);
-  background:var(--bg2);
-  border:1px solid var(--bd);
-  border-radius:999px;
-  cursor:pointer;
-  transition:all .15s;
-  font-variant-numeric:tabular-nums;
-}
+.msg .reactions .react{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:999px;cursor:pointer;transition:all .15s;font-variant-numeric:tabular-nums}
 [data-theme^="mc-"] .msg .reactions .react{border-radius:2px;box-shadow:var(--bevel)}
 .msg .reactions .react:hover{border-color:var(--ac);background:var(--acs)}
-.msg .reactions .react.mine{
-  background:var(--acs);
-  border-color:var(--ac);
-  color:var(--ac);
-  font-weight:700;
-}
+.msg .reactions .react.mine{background:var(--acs);border-color:var(--ac);color:var(--ac);font-weight:700}
 
-/* 表情选择器 */
-.emoji-pop{
-  position:absolute;
-  top:100%;
-  margin-top:4px;
-  padding:6px;
-  display:grid;
-  grid-template-columns:repeat(6, 1fr);
-  gap:2px;
-  background:var(--bg);
-  border:2px solid var(--bd2);
-  border-radius:var(--r);
-  box-shadow:var(--sh);
-  z-index:20;
-  animation:popIn .15s ease-out;
-}
+.emoji-pop{position:absolute;top:100%;margin-top:4px;padding:6px;display:grid;grid-template-columns:repeat(6, 1fr);gap:2px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);z-index:20;animation:popIn .15s ease-out}
 [data-theme^="mc-"] .emoji-pop{box-shadow:3px 3px 0 rgba(0,0,0,.3)}
 @keyframes popIn{from{opacity:0;transform:translateY(-4px) scale(.95)}to{opacity:1;transform:none}}
-.emoji-pop button{
-  width:26px;height:26px;
-  display:grid;place-items:center;
-  font-size:16px;font-family:inherit;
-  background:transparent;border:none;border-radius:4px;
-  cursor:pointer;
-  transition:background .12s, transform .12s;
-}
+.emoji-pop button{width:26px;height:26px;display:grid;place-items:center;font-size:16px;font-family:inherit;background:transparent;border:none;border-radius:4px;cursor:pointer;transition:background .12s, transform .12s}
 .emoji-pop button:hover{background:var(--acs);transform:scale(1.15)}
+
+/* @自动补全 */
+.mention-pop{position:absolute;left:0;right:0;bottom:calc(100% + 4px);max-height:200px;overflow-y:auto;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);z-index:30;animation:popIn .15s ease-out}
+[data-theme^="mc-"] .mention-pop{box-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.mention-pop .mp-item{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s}
+.mention-pop .mp-item:hover,.mention-pop .mp-item.selected{background:var(--acs)}
+.mention-pop .mp-avatar{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;font-size:12px;color:#fff;font-weight:700;flex:none}
 
 .msg .status-tag{display:inline-block;font-size:10.5px;color:var(--muted);font-style:italic;vertical-align:middle}
 .msg.pending .content{opacity:.55}
@@ -440,11 +327,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .msg.failed .status-tag::before{content:"⚠ "}
 
 .msg.highlight .content{animation:highlightFlash 2.2s ease-out}
-@keyframes highlightFlash{
-  0%{box-shadow:var(--bevel), 0 0 0 3px var(--ac);}
-  70%{box-shadow:var(--bevel), 0 0 0 3px var(--ac);}
-  100%{box-shadow:var(--bevel);}
-}
+@keyframes highlightFlash{0%{box-shadow:var(--bevel), 0 0 0 3px var(--ac);}70%{box-shadow:var(--bevel), 0 0 0 3px var(--ac);}100%{box-shadow:var(--bevel);}}
 
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;padding:40px 20px}
 .empty-state .ic{font-size:48px;opacity:.4;margin-bottom:12px}
@@ -454,71 +337,30 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .composer{flex:none;padding:12px 0 16px;background:var(--bg);border-top:1px solid var(--bd);display:flex;gap:8px;align-items:flex-end;position:relative}
 [data-theme^="mc-"] .composer{border-top-width:2px}
 
-.composer .reply-hint{
-  position:absolute;
-  top:-42px;left:0;right:0;
-  margin:0 4px;
-  padding:6px 12px;
-  display:flex;align-items:center;gap:8px;
-  font-size:12px;
-  color:var(--muted);
-  background:var(--bg2);
-  border:1px solid var(--bd);
-  border-bottom:none;
-  border-radius:var(--r) var(--r) 0 0;
-  box-shadow:var(--bevel);
-}
+/* ★ 修复：hidden 时强制隐藏 */
+.composer .reply-hint[hidden]{display:none !important}
+
+.composer .reply-hint{position:absolute;top:-42px;left:0;right:0;margin:0 4px;padding:6px 12px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-bottom:none;border-radius:var(--r) var(--r) 0 0;box-shadow:var(--bevel)}
 [data-theme^="mc-"] .composer .reply-hint{border:2px solid var(--bd2);border-bottom:none;border-radius:2px 2px 0 0}
 .composer .reply-hint .rh-nick{font-weight:700;color:var(--ac)}
 .composer .reply-hint .rh-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.85}
-.composer .reply-hint .rh-close{
-  flex:none;
-  width:20px;height:20px;
-  display:grid;place-items:center;
-  background:transparent;border:none;border-radius:4px;
-  cursor:pointer;color:var(--muted);font-size:14px;
-}
+.composer .reply-hint .rh-close{flex:none;width:20px;height:20px;display:grid;place-items:center;background:transparent;border:none;border-radius:4px;cursor:pointer;color:var(--muted);font-size:14px}
 .composer .reply-hint .rh-close:hover{background:var(--bg3);color:var(--dgr)}
 
-.composer .input-wrap{flex:1;display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.composer .input-wrap{flex:1;display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;transition:border-color .2s,box-shadow .2s;position:relative}
 [data-theme^="mc-"] .composer .input-wrap{border-width:2px;border-color:var(--bd2);box-shadow:var(--bevel)}
 .composer .input-wrap:focus-within{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}
-[data-theme^="mc-"] .composer .input-wrap:focus-within{box-shadow:0 0 0 2px var(--acs),0 0 8px rgba(var(--p1),.4)}
-.composer textarea{width:100%;min-height:38px;max-height:120px;padding:8px 12px;font-family:inherit;font-size:14px;line-height:1.5;color:var(--text);background:transparent;border:none;outline:none;resize:none;overflow-y:auto}
+.composer textarea{width:100%;min-height:38px;max-height:120px;padding:8px 12px;font-family:inherit;font-size:var(--chat-fs);line-height:1.5;color:var(--text);background:transparent;border:none;outline:none;resize:none;overflow-y:auto}
 .composer textarea::placeholder{color:var(--muted)}
 .composer .send{flex:none;min-width:64px;height:40px;padding:0 16px;font-size:14px;font-family:inherit;font-weight:700;color:#fff;background:var(--self-bg);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;box-shadow:var(--bevel);transition:all .15s}
 .composer .send:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
-.composer .send:active:not(:disabled){transform:translateY(0);box-shadow:inset 1px 1px 0 rgba(0,0,0,.2)}
 .composer .send:disabled{opacity:.5;cursor:not-allowed}
 
-/* 悬浮回到底部按钮 */
-.scroll-bottom-btn{
-  position:absolute;
-  right:16px;bottom:100px;
-  z-index:30;
-  display:inline-flex;align-items:center;gap:6px;
-  padding:8px 14px;
-  font-size:12.5px;font-weight:700;font-family:inherit;
-  color:#fff;
-  background:var(--self-bg);
-  border:2px solid var(--bd2);
-  border-radius:999px;
-  box-shadow:var(--sh);
-  cursor:pointer;
-  opacity:0;pointer-events:none;
-  transform:translateY(8px);
-  transition:all .25s cubic-bezier(.34,1.56,.64,1);
-}
+.scroll-bottom-btn{position:absolute;right:16px;bottom:100px;z-index:30;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;font-size:12.5px;font-weight:700;font-family:inherit;color:#fff;background:var(--self-bg);border:2px solid var(--bd2);border-radius:999px;box-shadow:var(--sh);cursor:pointer;opacity:0;pointer-events:none;transform:translateY(8px);transition:all .25s cubic-bezier(.34,1.56,.64,1)}
 [data-theme^="mc-"] .scroll-bottom-btn{border-radius:2px;box-shadow:3px 3px 0 rgba(0,0,0,.3)}
 .scroll-bottom-btn.show{opacity:1;pointer-events:auto;transform:none}
 .scroll-bottom-btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
-.scroll-bottom-btn .sb-count{
-  padding:1px 7px;
-  font-size:11px;
-  background:rgba(255,255,255,.3);
-  border-radius:999px;
-  font-variant-numeric:tabular-nums;
-}
+.scroll-bottom-btn .sb-count{padding:1px 7px;font-size:11px;background:rgba(255,255,255,.3);border-radius:999px;font-variant-numeric:tabular-nums}
 
 .ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
 .ov.show{opacity:1;visibility:visible}
@@ -547,24 +389,35 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .theme-name{font-size:12.5px;font-weight:700}
 .theme-desc{font-size:10.5px;color:var(--muted);margin-top:-3px}
 
-/* 在线列表面板 */
 .online-body{padding:14px}
 .online-list{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
-.online-item{
-  display:flex;align-items:center;gap:10px;
-  padding:8px 10px;
-  background:var(--bg2);
-  border:1px solid var(--bd);
-  border-radius:var(--r);
-  box-shadow:var(--bevel);
-}
+.online-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel)}
 [data-theme^="mc-"] .online-item{border:2px solid var(--bd2);border-radius:2px}
 .online-item .oa{flex:none;width:32px;height:32px;display:grid;place-items:center;border-radius:var(--r);font-size:14px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.3)}
 [data-theme^="github-"] .online-item .oa{border-radius:50%}
 .online-item .oi-name{flex:1;min-width:0;font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .online-item .oi-name .me-tag{font-size:10.5px;font-weight:600;color:var(--ac);background:var(--acs);padding:1px 6px;border-radius:999px;margin-left:6px}
 .online-item .oi-time{flex:none;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.online-item .oi-block{flex:none;padding:3px 8px;font-size:11px;font-family:inherit;color:var(--muted);background:transparent;border:1px solid var(--bd);border-radius:4px;cursor:pointer;transition:all .15s}
+.online-item .oi-block:hover{color:var(--dgr);border-color:var(--dgr)}
 .online-empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:13px}
+
+.user-card-body{padding:18px;text-align:center}
+.user-card-body .uc-avatar{width:64px;height:64px;margin:0 auto 12px;display:grid;place-items:center;border-radius:var(--r);font-size:28px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+[data-theme^="github-"] .user-card-body .uc-avatar{border-radius:50%}
+.user-card-body .uc-nick{font-size:16px;font-weight:800;margin-bottom:4px}
+.user-card-body .uc-meta{font-size:12px;color:var(--muted);margin-bottom:14px}
+.user-card-body .uc-stat{display:flex;justify-content:center;gap:20px;margin:14px 0;font-size:12.5px}
+.user-card-body .uc-stat div{display:flex;flex-direction:column;align-items:center}
+.user-card-body .uc-stat strong{font-size:18px;font-weight:800;color:var(--ac)}
+.user-card-body .uc-actions{display:flex;gap:8px;justify-content:center;margin-top:14px}
+.user-card-body .uc-actions button{padding:6px 14px;font-size:13px;font-family:inherit;font-weight:600;border-radius:var(--r);cursor:pointer;transition:all .15s}
+.user-card-body .uc-actions .btn-block{color:var(--dgr);background:transparent;border:1px solid var(--dgr)}
+.user-card-body .uc-actions .btn-block:hover{background:rgba(160,32,32,.1)}
+.user-card-body .uc-actions .btn-unblock{color:var(--ok);background:transparent;border:1px solid var(--ok)}
+.user-card-body .uc-actions .btn-unblock:hover{background:rgba(45,122,45,.1)}
+.user-card-body .uc-actions .btn-close{color:var(--text);background:var(--bg);border:1px solid var(--bd)}
+.user-card-body .uc-actions .btn-close:hover{background:var(--bg3)}
 
 .toast{position:fixed;left:50%;bottom:20px;max-width:calc(100vw - 32px);padding:8px 16px;font-size:13px;color:var(--bg);background:var(--text);border-radius:var(--r);box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(16px);transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:200}
 [data-theme^="mc-"] .toast{background:#2a3a1a;color:#e8ffd0;border:2px solid #4a4a3a;border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.4)}
@@ -618,7 +471,29 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .jump-foot .go{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
 .jump-foot .go:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 
-.style-body{padding:18px}
+/* 编辑弹窗 */
+.edit-body{padding:18px}
+.edit-body textarea{width:100%;min-height:80px;padding:10px 12px;font-family:inherit;font-size:14px;line-height:1.5;color:var(--text);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);outline:none;resize:vertical}
+.edit-body textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.edit-foot{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd)}
+.edit-foot button{padding:7px 16px;font-size:14px;font-family:inherit;font-weight:600;border-radius:var(--r);cursor:pointer;transition:all .15s}
+.edit-foot .cancel{color:var(--text);background:var(--bg);border:1px solid var(--bd)}
+.edit-foot .cancel:hover{background:var(--bg3)}
+.edit-foot .save{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
+.edit-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+
+/* 设置面板 */
+.settings-body{padding:14px}
+.settings-group{padding:10px 12px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px}
+[data-theme^="mc-"] .settings-group{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
+.settings-group .sg-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+.settings-row .sr-label{font-size:13px;color:var(--text)}
+.settings-row .sr-value{display:flex;align-items:center;gap:6px}
+.settings-row .sr-btn{padding:4px 10px;font-size:12px;font-family:inherit;font-weight:600;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:all .15s}
+.settings-row .sr-btn:hover{color:var(--ac);border-color:var(--ac)}
+.settings-row .sr-btn.active{color:var(--ac);background:var(--acs);border-color:var(--ac)}
+
 .style-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .style-row label{flex:none;width:100px;font-size:12px;font-weight:700;color:var(--muted)}
 .style-row input[type=color]{flex:1;height:36px;padding:2px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;outline:none}
@@ -627,23 +502,8 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .style-row .reset-one{flex:none;padding:5px 10px;font-size:11.5px;font-family:inherit;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:all .15s}
 .style-row .reset-one:hover{color:var(--ac);border-color:var(--ac)}
 
-/* Emoji 头像选择 */
-.emoji-grid{
-  display:grid;
-  grid-template-columns:repeat(10, 1fr);
-  gap:4px;
-  margin-top:6px;
-}
-.emoji-grid button{
-  aspect-ratio:1;
-  display:grid;place-items:center;
-  font-size:18px;
-  background:var(--bg2);
-  border:1px solid var(--bd);
-  border-radius:4px;
-  cursor:pointer;
-  transition:all .15s;
-}
+.emoji-grid{display:grid;grid-template-columns:repeat(10, 1fr);gap:4px;margin-top:6px}
+.emoji-grid button{aspect-ratio:1;display:grid;place-items:center;font-size:18px;background:var(--bg2);border:1px solid var(--bd);border-radius:4px;cursor:pointer;transition:all .15s}
 [data-theme^="mc-"] .emoji-grid button{border:2px solid var(--bd2);border-radius:2px}
 .emoji-grid button:hover{background:var(--acs);border-color:var(--ac);transform:scale(1.1)}
 .emoji-grid button.selected{border-color:var(--ac);background:var(--acs);box-shadow:0 0 0 2px var(--acs)}
@@ -667,18 +527,17 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   .chat-wrap{padding:0 10px}
   .messages{padding:10px 2px 36px}
   .msg .avatar{width:32px;height:32px;font-size:12px}
-  .msg .content{font-size:13.5px;padding:6px 10px}
+  .msg .content{font-size:13px;padding:6px 10px}
   .composer .send{min-width:56px;padding:0 12px}
   .logo span:last-child{display:none}
   .chat-info .online span:not(.live-dot){display:none}
-  .chat-info .me-nick{max-width:80px}
+  .chat-info .me-nick{max-width:70px}
   .login-card{padding:24px 20px}
   .refresh-pill{right:8px;bottom:8px;padding:5px 10px 5px 8px;font-size:10px;opacity:.65}
   .chat-toolbar{padding:6px 2px 0}
   .style-row label{width:80px;font-size:11px}
   .emoji-grid{grid-template-columns:repeat(7, 1fr)}
   .msg .hover-tools{display:none}
-  .msg.self .reactions,.msg .reactions{justify-content:flex-start}
   .scroll-bottom-btn{right:10px;bottom:90px;font-size:11.5px;padding:6px 12px}
 }
 @media print{.refresh-pill,.offline-mask,.chat-toolbar,.scroll-bottom-btn,.msg .hover-tools{display:none}}
@@ -698,6 +557,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
     <span class="me-nick" id="meNick" hidden></span>
   </div>
   <button class="icon" id="soundBtn" title="提示音" hidden>🔊</button>
+  <button class="icon" id="settingsBtn" title="界面设置" hidden>⚙️</button>
   <button class="icon" id="styleBtn" title="自定义颜色 / 头像" hidden>🖌️</button>
   <button class="icon" id="nickBtn" title="修改昵称" hidden>👤</button>
   <button class="icon" id="themeBtn" title="切换风格">🎨</button>
@@ -765,6 +625,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
       <button class="rh-close" id="rhClose" title="取消回复">✕</button>
     </div>
     <div class="input-wrap">
+      <div class="mention-pop" id="mentionPop" hidden></div>
       <textarea id="input" rows="1" placeholder="说点什么…（Enter 发送，Shift+Enter 换行）" maxlength="500"></textarea>
     </div>
     <button class="send" id="sendBtn" disabled>发送</button>
@@ -809,9 +670,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
         <button type="button" data-offset="86400000">1 天前</button>
         <button type="button" data-offset="259200000">3 天前</button>
       </div>
-      <div class="hint" style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.6">
-        会加载该时间点附近的 100 条消息。
-      </div>
     </div>
     <div class="jump-foot">
       <button class="cancel" id="jumpCancel">取消</button>
@@ -823,10 +681,10 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <div class="ov" id="styleOv">
   <div class="pnl">
     <div class="ph"><strong>自定义颜色 / 头像</strong><span class="sp"></span><button class="icon" id="styleClose">✕</button></div>
-    <div class="style-body">
+    <div class="style-body" style="padding:18px;overflow-y:auto">
       <div class="style-row">
         <label>Emoji 头像</label>
-        <button class="reset-one" id="emojiClearBtn">清除 emoji</button>
+        <button class="reset-one" id="emojiClearBtn">清除</button>
       </div>
       <div class="emoji-grid" id="emojiGrid"></div>
       <div class="style-row" style="margin-top:14px">
@@ -873,6 +731,85 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   </div>
 </div>
 
+<!-- 用户资料卡 -->
+<div class="ov" id="userCardOv">
+  <div class="pnl" style="max-width:360px">
+    <div class="ph"><strong>用户信息</strong><span class="sp"></span><button class="icon" id="userCardClose">✕</button></div>
+    <div class="user-card-body">
+      <div class="uc-avatar" id="ucAvatar"></div>
+      <div class="uc-nick" id="ucNick"></div>
+      <div class="uc-meta" id="ucMeta"></div>
+      <div class="uc-stat">
+        <div><strong id="ucMsgCount">0</strong><span>消息</span></div>
+        <div><strong id="ucJoinTime">-</strong><span>首次出现</span></div>
+      </div>
+      <div class="uc-actions" id="ucActions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑消息弹窗 -->
+<div class="ov" id="editOv">
+  <div class="pnl">
+    <div class="ph"><strong>编辑消息</strong><span class="sp"></span><button class="icon" id="editClose">✕</button></div>
+    <div class="edit-body">
+      <textarea id="editInput" maxlength="500"></textarea>
+    </div>
+    <div class="edit-foot">
+      <button class="cancel" id="editCancel">取消</button>
+      <button class="save" id="editSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置面板 -->
+<div class="ov" id="settingsOv">
+  <div class="pnl">
+    <div class="ph"><strong>界面设置</strong><span class="sp"></span><button class="icon" id="settingsClose">✕</button></div>
+    <div class="settings-body">
+      <div class="settings-group">
+        <div class="sg-label">显示</div>
+        <div class="settings-row">
+          <span class="sr-label">字体大小</span>
+          <div class="sr-value">
+            <button class="sr-btn" data-fontsize="-1">A-</button>
+            <span style="min-width:40px;text-align:center;font-family:ui-monospace,monospace;font-size:12px" id="fsDisplay">14</span>
+            <button class="sr-btn" data-fontsize="+1">A+</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="sr-label">密集模式</span>
+          <div class="sr-value">
+            <button class="sr-btn" id="denseBtn">切换</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="sr-label">关闭动画</span>
+          <div class="sr-value">
+            <button class="sr-btn" id="animBtn">切换</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="sr-label">发送快捷键</span>
+          <div class="sr-value">
+            <button class="sr-btn" id="sendKeyBtn">Enter</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-group">
+        <div class="sg-label">屏蔽用户</div>
+        <div id="blockListWrap" style="font-size:12.5px;color:var(--muted);line-height:1.8">
+          <div id="blockList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="style-foot">
+      <span class="sp"></span>
+      <button class="cancel" id="settingsOk">关闭</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="refresh-pill" id="refreshPill" hidden title="点击立即刷新">
@@ -900,6 +837,13 @@ var K_UID   = 'chat-uid';
 var K_THEME = 'wiki-theme';
 var K_STYLE = 'chat-style';
 var K_SOUND = 'chat-sound';
+var K_DRAFT = 'chat-draft';
+var K_BLOCK = 'chat-block';
+var K_FS    = 'chat-fontsize';
+var K_DENSE = 'chat-dense';
+var K_NOANIM= 'chat-noanim';
+var K_SENDKEY='chat-sendkey';
+var K_SCROLL_TOP = 'chat-scroll-top';
 
 var MSG_LIMIT = 200;
 var SEND_COOLDOWN = 2000;
@@ -917,6 +861,8 @@ var MSG_KEEP_DAYS = 5;
 var CLEAN_INTERVAL = 30 * 60 * 1000;
 
 var TYPING_TIMEOUT = 3000;
+var EDIT_WINDOW = 5 * 60 * 1000;
+var RECALL_WINDOW = 5 * 60 * 1000;
 
 var QUICK_EMOJIS = ['👍','❤️','😂','😮','😢','🎉'];
 var AVATAR_EMOJIS = ['😀','😎','🤖','👻','🐱','🐶','🦊','🐼','🐸','🐧','🦄','🐲','🌟','⚡','🔥','🌊','🌸','🍀','🎮','🎵','📚','🎨','🍕','🍺','☕','🍰','🚀','🏆','💎','🎯','🧠','🗿','👾','🐙','🦁','🐯','🐨','🐷','🐵','🦉'];
@@ -943,6 +889,22 @@ function fmtTime(ts){
     return pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes());
   }
   return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+}
+function fmtFullTime(ts){
+  var d=new Date(ts);
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '
+    +pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());
+}
+function fmtDay(ts){
+  var d=new Date(ts), now=new Date();
+  var y1=d.getFullYear(), m1=d.getMonth(), day1=d.getDate();
+  var y2=now.getFullYear(), m2=now.getMonth(), day2=now.getDate();
+  var t=new Date(y1,m1,day1), t2=new Date(y2,m2,day2);
+  var diffDays = Math.round((t2-t)/86400000);
+  if(diffDays===0) return '今天';
+  if(diffDays===1) return '昨天';
+  if(diffDays<7) return diffDays+'天前';
+  return y1+'年'+(m1+1)+'月'+day1+'日';
 }
 function toLocalInput(ts){
   var d = new Date(ts);
@@ -977,7 +939,23 @@ function toast(msg){
   toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2400);
 }
 
-/* ★ 提示音（Web Audio API，无需外部文件） */
+/* ============================================================
+   屏蔽用户
+   ============================================================ */
+var blockedUids = (function(){
+  try{
+    var raw = storage.get(K_BLOCK);
+    if(raw) return JSON.parse(raw) || {};
+  }catch(e){}
+  return {};
+})();
+function saveBlocked(){
+  try{ storage.set(K_BLOCK, JSON.stringify(blockedUids)); }catch(e){}
+}
+
+/* ============================================================
+   提示音
+   ============================================================ */
 var soundEnabled = storage.get(K_SOUND) !== 'off';
 var audioCtx = null;
 function playPing(){
@@ -986,18 +964,14 @@ function playPing(){
     if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     var t = audioCtx.currentTime;
-    /* 两个短音 滴-咚 */
-    var o1 = audioCtx.createOscillator();
-    var g1 = audioCtx.createGain();
+    var o1 = audioCtx.createOscillator(), g1 = audioCtx.createGain();
     o1.type='sine'; o1.frequency.value = 880;
     g1.gain.setValueAtTime(0.0001, t);
     g1.gain.exponentialRampToValueAtTime(0.15, t+0.01);
     g1.gain.exponentialRampToValueAtTime(0.0001, t+0.16);
     o1.connect(g1); g1.connect(audioCtx.destination);
     o1.start(t); o1.stop(t+0.18);
-
-    var o2 = audioCtx.createOscillator();
-    var g2 = audioCtx.createGain();
+    var o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
     o2.type='sine'; o2.frequency.value = 660;
     g2.gain.setValueAtTime(0.0001, t+0.12);
     g2.gain.exponentialRampToValueAtTime(0.12, t+0.13);
@@ -1070,14 +1044,11 @@ function sbQuery(label, queryFn, options){
    重试提示 UI
    ============================================================ */
 var offlineMask = $('offlineMask');
-var offlineTitle = $('offlineTitle');
-var offlineSub = $('offlineSub');
 var retryHideTimer = null;
-
 function showRetryOverlay(attempt, max, label){
   if(!offlineMask) return;
-  offlineTitle.textContent = '连接中断，正在重试…';
-  offlineSub.innerHTML = '<span class="spin"></span>第 <span class="cnt">' + attempt + '</span> / ' + max + ' 次重试 · ' + label;
+  $('offlineTitle').textContent = '连接中断，正在重试…';
+  $('offlineSub').innerHTML = '<span class="spin"></span>第 <span class="cnt">' + attempt + '</span> / ' + max + ' 次重试 · ' + label;
   offlineMask.classList.add('show');
   clearTimeout(retryHideTimer);
 }
@@ -1123,20 +1094,23 @@ var myStyle=(function(){
   }catch(e){}
   return { avatar:null, bubble:null, text:null, emoji:null };
 })();
-
 var styleMap={};
-/* msg_id -> [{uid, emoji}] */
 var reactionsMap={};
-
 function saveMyStyleLocal(){
   try{ storage.set(K_STYLE, JSON.stringify(myStyle)); }catch(e){}
 }
+
+/* 界面选项 */
+var chatFontSize = parseInt(storage.get(K_FS) || '14', 10);
+if(isNaN(chatFontSize) || chatFontSize < 12 || chatFontSize > 22) chatFontSize = 14;
+var denseMode = storage.get(K_DENSE) === '1';
+var noAnim = storage.get(K_NOANIM) === '1';
+var sendKey = storage.get(K_SENDKEY) || 'enter';
 
 /* ============================================================
    在线列表
    ============================================================ */
 var onlineUsers = [];
-
 function renderOnlineList(){
   var el = $('onlineList');
   if(!el) return;
@@ -1156,40 +1130,42 @@ function renderOnlineList(){
     var avatarColor = st.avatar || (u.uid===uid ? 'var(--ac)' : nickColor(u.nick||'?'));
     var isMe = u.uid === uid;
     var meTag = isMe ? '<span class="me-tag">我</span>' : '';
-    html +=
-      '<div class="online-item">'+
-        '<div class="oa" style="background:'+avatarColor+'">'+avatarContent+'</div>'+
-        '<div class="oi-name">'+esc(u.nick||'无名')+meTag+'</div>'+
-        '<div class="oi-time">'+ (u.joinedAt ? fmtTime(u.joinedAt) : '') +'</div>'+
-      '</div>';
+    var blockBtn = (!isMe) ? '<button class="oi-block" data-block-uid="'+esc(u.uid)+'">'+(blockedUids[u.uid]?'取消屏蔽':'屏蔽')+'</button>' : '';
+    html += '<div class="online-item">'+
+      '<div class="oa" style="background:'+avatarColor+'">'+avatarContent+'</div>'+
+      '<div class="oi-name">'+esc(u.nick||'无名')+meTag+'</div>'+
+      blockBtn+
+      '<div class="oi-time">'+(u.joinedAt ? fmtTime(u.joinedAt) : '')+'</div>'+
+    '</div>';
   });
   el.innerHTML = html;
 }
-
-function openOnlineDialog(){
-  renderOnlineList();
-  $('onlineOv').classList.add('show');
-}
+function openOnlineDialog(){ renderOnlineList(); $('onlineOv').classList.add('show'); }
 function closeOnlineDialog(){ $('onlineOv').classList.remove('show'); }
+
+$('onlineList').addEventListener('click', function(e){
+  var btn = e.target.closest('[data-block-uid]');
+  if(!btn) return;
+  var targetUid = btn.getAttribute('data-block-uid');
+  if(blockedUids[targetUid]){
+    delete blockedUids[targetUid];
+    toast('已取消屏蔽');
+  }else{
+    blockedUids[targetUid] = 1;
+    toast('已屏蔽，该用户的消息不再显示');
+  }
+  saveBlocked();
+  renderOnlineList();
+  renderAll();
+});
 
 /* ============================================================
    网络事件
    ============================================================ */
-window.addEventListener('online', function(){
-  toast('网络已恢复');
-  hideRetryOverlay();
-  if(!chatWrap.hidden){
-    doPollNow();
-    resetPollCountdown();
-  }
-});
+window.addEventListener('online', function(){ toast('网络已恢复'); hideRetryOverlay(); if(!chatWrap.hidden){ doPollNow(); resetPollCountdown(); } });
 window.addEventListener('offline', function(){
   toast('网络已断开');
-  if(offlineMask){
-    offlineTitle.textContent = '网络已断开';
-    offlineSub.innerHTML = '等待网络恢复…';
-    offlineMask.classList.add('show');
-  }
+  if(offlineMask){ $('offlineTitle').textContent = '网络已断开'; $('offlineSub').innerHTML = '等待网络恢复…'; offlineMask.classList.add('show'); }
 });
 
 /* ============================================================
@@ -1200,25 +1176,13 @@ async function autoClean(){
   var nickCutoff = now - NICK_INACTIVE_DAYS * 24 * 3600 * 1000;
   var msgCutoff  = now - MSG_KEEP_DAYS * 24 * 3600 * 1000;
   var changeCutoff = now - 24 * 3600 * 1000;
-
-  await sbQuery('清理过期昵称', function(){
-    return sb.from('nicknames').delete().lt('last_active', nickCutoff);
-  }, { max: 2, silent: true });
-
-  await sbQuery('清理过期消息', function(){
-    return sb.from('messages').delete().lt('ts', msgCutoff);
-  }, { max: 2, silent: true });
-
-  await sbQuery('清理改名记录', function(){
-    return sb.from('nick_changes').delete().lt('changed_at', changeCutoff);
-  }, { max: 2, silent: true });
+  await sbQuery('清理过期昵称', function(){ return sb.from('nicknames').delete().lt('last_active', nickCutoff); }, { max: 2, silent: true });
+  await sbQuery('清理过期消息', function(){ return sb.from('messages').delete().lt('ts', msgCutoff); }, { max: 2, silent: true });
+  await sbQuery('清理改名记录', function(){ return sb.from('nick_changes').delete().lt('changed_at', changeCutoff); }, { max: 2, silent: true });
 }
-
 async function updateActivity(){
   if(!myNick) return;
-  await sbQuery('更新活跃', function(){
-    return sb.from('nicknames').update({ last_active: Date.now() }).eq('nick', myNick).eq('uid', uid);
-  }, { max: 2, silent: true });
+  await sbQuery('更新活跃', function(){ return sb.from('nicknames').update({ last_active: Date.now() }).eq('nick', myNick).eq('uid', uid); }, { max: 2, silent: true });
 }
 
 /* ============================================================
@@ -1234,46 +1198,31 @@ async function getNickChangeQuota(){
   return { ok:true, used: used, left: Math.max(0, NICK_CHANGE_MAX_PER_DAY - used) };
 }
 async function logNickChange(){
-  await sbQuery('记录改名', function(){
-    return sb.from('nick_changes').insert({ uid: uid, changed_at: Date.now() });
-  }, { max: 2, silent: true });
+  await sbQuery('记录改名', function(){ return sb.from('nick_changes').insert({ uid: uid, changed_at: Date.now() }); }, { max: 2, silent: true });
 }
 
 /* ============================================================
    昵称
    ============================================================ */
 async function claimNick(nick){
-  var r = await sbQuery('占用昵称', function(){
-    return sb.from('nicknames').insert({ nick: nick, uid: uid, last_active: Date.now() });
-  });
-
+  var r = await sbQuery('占用昵称', function(){ return sb.from('nicknames').insert({ nick: nick, uid: uid, last_active: Date.now() }); });
   if(r.ok) return { ok:true, mine:true };
-
   var err = r.err;
   if(err && err.__res && err.__res.error && err.__res.error.code === '23505'){
-    var q = await sbQuery('查询昵称', function(){
-      return sb.from('nicknames').select('uid').eq('nick', nick).maybeSingle();
-    });
+    var q = await sbQuery('查询昵称', function(){ return sb.from('nicknames').select('uid').eq('nick', nick).maybeSingle(); });
     if(!q.ok) return { ok:false, reason:'net', msg:'查询失败，请重试' };
     var row = q.data && q.data.data;
-    if(row && row.uid === uid){
-      await updateActivity();
-      return { ok:true, mine:true };
-    }
+    if(row && row.uid === uid){ await updateActivity(); return { ok:true, mine:true }; }
     return { ok:false, reason:'taken' };
   }
   return { ok:false, reason:'net', msg:'网络异常，请重试' };
 }
 async function releaseNick(nick){
   if(!nick) return;
-  await sbQuery('释放昵称', function(){
-    return sb.from('nicknames').delete().eq('nick', nick).eq('uid', uid);
-  });
+  await sbQuery('释放昵称', function(){ return sb.from('nicknames').delete().eq('nick', nick).eq('uid', uid); });
 }
 async function syncMyMessagesNick(newNick){
-  var r = await sbQuery('同步消息昵称', function(){
-    return sb.from('messages').update({ nick: newNick }).eq('uid', uid);
-  }, { max: 2, silent: true });
+  var r = await sbQuery('同步消息昵称', function(){ return sb.from('messages').update({ nick: newNick }).eq('uid', uid); }, { max: 2, silent: true });
   if(!r.ok) console.warn('同步消息昵称失败', r.err);
   allMessages.forEach(function(m){ if(m.uid === uid) m.nick = newNick; });
   renderAll();
@@ -1284,15 +1233,11 @@ async function syncMyMessagesNick(newNick){
    ============================================================ */
 async function loadStylesFor(uids){
   if(!uids || uids.length === 0) return;
-  var uniq = [], seen = {};
+  var uniq=[], seen={};
   uids.forEach(function(u){ if(u && !seen[u]){ seen[u]=1; uniq.push(u); } });
   if(uniq.length === 0) return;
-
-  var r = await sbQuery('加载样式', function(){
-    return sb.from('user_styles').select('*').in('uid', uniq);
-  }, { max: 2, silent: true });
+  var r = await sbQuery('加载样式', function(){ return sb.from('user_styles').select('*').in('uid', uniq); }, { max: 2, silent: true });
   if(!r.ok) return;
-
   (r.data && r.data.data || []).forEach(function(s){
     styleMap[s.uid] = {
       avatar: isValidHex(s.avatar_color) ? s.avatar_color : null,
@@ -1333,9 +1278,7 @@ function getStyleFor(m){
    ============================================================ */
 async function loadReactionsFor(msgIds){
   if(!msgIds || msgIds.length === 0) return;
-  var r = await sbQuery('加载表情', function(){
-    return sb.from('reactions').select('*').in('msg_id', msgIds);
-  }, { max: 2, silent: true });
+  var r = await sbQuery('加载表情', function(){ return sb.from('reactions').select('*').in('msg_id', msgIds); }, { max: 2, silent: true });
   if(!r.ok) return;
   reactionsMap = {};
   (r.data && r.data.data || []).forEach(function(row){
@@ -1347,14 +1290,10 @@ async function toggleReaction(msgId, emoji){
   var list = reactionsMap[msgId] || [];
   var mine = list.find(function(x){ return x.uid === uid && x.emoji === emoji; });
   if(mine){
-    await sbQuery('取消表情', function(){
-      return sb.from('reactions').delete().eq('msg_id', msgId).eq('uid', uid).eq('emoji', emoji);
-    }, { max: 2, silent: true });
+    await sbQuery('取消表情', function(){ return sb.from('reactions').delete().eq('msg_id', msgId).eq('uid', uid).eq('emoji', emoji); }, { max: 2, silent: true });
     reactionsMap[msgId] = list.filter(function(x){ return !(x.uid===uid && x.emoji===emoji); });
   }else{
-    await sbQuery('添加表情', function(){
-      return sb.from('reactions').insert({ msg_id: msgId, uid: uid, emoji: emoji, created_at: Date.now() });
-    }, { max: 2, silent: true });
+    await sbQuery('添加表情', function(){ return sb.from('reactions').insert({ msg_id: msgId, uid: uid, emoji: emoji, created_at: Date.now() }); }, { max: 2, silent: true });
     reactionsMap[msgId] = list.concat([{ uid: uid, emoji: emoji }]);
   }
   renderAll();
@@ -1371,14 +1310,27 @@ function groupReactions(msgId){
 }
 
 /* ============================================================
-   @提及
+   文本渲染（链接、Markdown、@提及、高亮）
    ============================================================ */
-function renderTextWithMentions(text, myNickname){
+function renderRichText(text, myNickname, searchQ){
   var safe = esc(text);
-  /* 转义后 @昵称 依然是文本，直接替换成高亮 */
+  /* Markdown 简易 */
+  safe = safe.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  safe = safe.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  safe = safe.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  /* 链接识别 */
+  safe = safe.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  /* @提及 */
   safe = safe.replace(/@([\u4e00-\u9fa5\w\-]{1,20})/g, function(m, name){
     return '<span class="mention">@' + name + '</span>';
   });
+  /* 搜索高亮 */
+  if(searchQ){
+    try{
+      var re = new RegExp('(' + searchQ.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+      safe = safe.replace(re, '<mark>$1</mark>');
+    }catch(e){}
+  }
   return safe;
 }
 function isMentionedMe(text){
@@ -1457,12 +1409,10 @@ function initParticles(){
   particles=[];
   for(var i=0;i<count;i++){
     particles.push({
-      x:Math.random()*pW,y:Math.random()*pH,
-      size:4+Math.random()*8,
+      x:Math.random()*pW,y:Math.random()*pH,size:4+Math.random()*8,
       vx:(Math.random()-0.5)*0.35,vy:(Math.random()-0.5)*0.35,
       rot:Math.random()*Math.PI*2,vr:(Math.random()-0.5)*0.012,
-      alpha:0.10+Math.random()*0.20,
-      alphaPhase:Math.random()*Math.PI*2,
+      alpha:0.10+Math.random()*0.20,alphaPhase:Math.random()*Math.PI*2,
       alphaSpeed:0.008+Math.random()*0.014,
       hueIdx:Math.floor(Math.random()*4),hueMix:Math.random()
     });
@@ -1512,47 +1462,27 @@ function drawParticles(){
 /* ============================================================
    登录
    ============================================================ */
-var loginWrap=$('loginWrap');
-var loginNick=$('loginNick');
-var loginStatus=$('loginStatus');
-var loginBtn=$('loginBtn');
-
-function setLoginStatus(text, cls){
-  loginStatus.textContent = text||'';
-  loginStatus.className = 'status' + (cls ? ' ' + cls : '');
-}
-function updateLoginBtn(){
-  var v = loginNick.value.trim();
-  loginBtn.disabled = !v || v.length===0 || v.length>20;
-}
+var loginWrap=$('loginWrap'),loginNick=$('loginNick'),loginStatus=$('loginStatus'),loginBtn=$('loginBtn');
+function setLoginStatus(text, cls){ loginStatus.textContent = text||''; loginStatus.className = 'status' + (cls ? ' ' + cls : ''); }
+function updateLoginBtn(){ var v = loginNick.value.trim(); loginBtn.disabled = !v || v.length===0 || v.length>20; }
 loginNick.addEventListener('input', function(){ updateLoginBtn(); setLoginStatus(''); });
-loginNick.addEventListener('keydown', function(e){
-  if(e.key==='Enter' && !loginBtn.disabled){ e.preventDefault(); tryLogin(); }
-});
+loginNick.addEventListener('keydown', function(e){ if(e.key==='Enter' && !loginBtn.disabled){ e.preventDefault(); tryLogin(); } });
 function randomNick(){
   var a=['风','云','雷','雪','光','影','星','月','火','冰','暗','花','雾','山','海'];
   var b=['行者','旅人','术士','骑士','忍者','学者','猎人','诗者','匠人','旅者'];
   return a[Math.floor(Math.random()*a.length)] + b[Math.floor(Math.random()*b.length)] + '#' + Math.floor(100+Math.random()*900);
 }
 $('rollBtn').addEventListener('click', function(){
-  loginNick.value = randomNick();
-  updateLoginBtn(); loginNick.focus(); setLoginStatus('');
+  loginNick.value = randomNick(); updateLoginBtn(); loginNick.focus(); setLoginStatus('');
 });
 async function tryLogin(){
   var nick = loginNick.value.trim();
   if(!nick || nick.length>20){ setLoginStatus('名字得是 1-20 个字','err'); return; }
-  loginBtn.disabled = true;
-  setLoginStatus('检查中…','busy');
+  loginBtn.disabled = true; setLoginStatus('检查中…','busy');
   autoClean();
   var r = await claimNick(nick);
   hideRetryOverlay();
-  if(r.ok){
-    myNick = nick;
-    storage.set(K_NICK, myNick);
-    setLoginStatus('✓ 成功，正在进入…','ok');
-    startChat();
-    return;
-  }
+  if(r.ok){ myNick = nick; storage.set(K_NICK, myNick); setLoginStatus('✓ 成功，正在进入…','ok'); startChat(); return; }
   if(r.reason === 'taken') setLoginStatus('这个名字被占用了，换一个吧','err');
   else setLoginStatus('网络异常：' + (r.msg||'请重试'),'err');
   loginBtn.disabled = false;
@@ -1563,18 +1493,17 @@ loginBtn.addEventListener('click', tryLogin);
    进入聊天
    ============================================================ */
 function startChat(){
-  loginWrap.hidden = true;
-  loginWrap.style.display = 'none';
-  chatWrap.hidden = false;
-  chatWrap.style.display = '';
-
+  loginWrap.hidden = true; loginWrap.style.display = 'none';
+  chatWrap.hidden = false; chatWrap.style.display = '';
   $('onlineBadge').hidden = false;
   $('meNick').hidden = false;
   $('nickBtn').hidden = false;
   $('styleBtn').hidden = false;
+  $('settingsBtn').hidden = false;
   $('soundBtn').hidden = false;
   $('meNick').textContent = myNick;
   updateSoundIcon();
+  restoreDraft();
 
   loadHistory().then(function(){
     subscribeMessages();
@@ -1585,7 +1514,6 @@ function startChat(){
     setInterval(autoClean, CLEAN_INTERVAL);
     setInterval(updateActivity, 60 * 1000);
   });
-
   setTimeout(function(){ try{ inputEl.focus(); }catch(e){} }, 100);
 }
 
@@ -1608,24 +1536,123 @@ var lastTs=0;
 var replyingTo = null;
 var unreadCount = 0;
 var searchQuery = '';
+var mentionState = { open:false, start:-1, items:[], selected:0 };
 
-function autoResize(){
-  inputEl.style.height='auto';
-  inputEl.style.height=Math.min(inputEl.scrollHeight,120)+'px';
+function autoResize(){ inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,120)+'px'; }
+
+/* 草稿 */
+function saveDraft(){ storage.set(K_DRAFT, inputEl.value); }
+function restoreDraft(){
+  var d = storage.get(K_DRAFT);
+  if(d){ inputEl.value = d; autoResize(); sendBtn.disabled = !d.trim(); }
 }
-inputEl.addEventListener('input',function(){
+function clearDraft(){ storage.del(K_DRAFT); }
+
+inputEl.addEventListener('input', function(){
   autoResize();
   sendBtn.disabled = inputEl.value.trim().length === 0;
+  saveDraft();
   broadcastTyping();
+  checkMention();
+});
+
+/* @自动补全 */
+function checkMention(){
+  var val = inputEl.value;
+  var pos = inputEl.selectionStart;
+  if(pos < 1 || val[pos-1] !== '@'){
+    if(mentionState.open) closeMentionPop();
+    return;
+  }
+  var matches = onlineUsers.filter(function(u){
+    return u.uid !== uid && u.nick;
+  });
+  if(matches.length === 0){ closeMentionPop(); return; }
+  mentionState.open = true;
+  mentionState.start = pos;
+  mentionState.items = matches;
+  mentionState.selected = 0;
+  renderMentionPop();
+}
+function renderMentionPop(){
+  var pop = $('mentionPop');
+  if(!pop) return;
+  var html = '';
+  mentionState.items.forEach(function(u, i){
+    var st = styleMap[u.uid] || {};
+    var ac = st.avatar || nickColor(u.nick);
+    var av = st.emoji ? st.emoji : esc(u.nick.charAt(0).toUpperCase());
+    html += '<div class="mp-item'+(i===mentionState.selected?' selected':'')+'" data-mention-idx="'+i+'">'+
+      '<div class="mp-avatar" style="background:'+ac+'">'+av+'</div>'+
+      '<div>'+esc(u.nick)+'</div>'+
+    '</div>';
+  });
+  pop.innerHTML = html;
+  pop.hidden = false;
+}
+function closeMentionPop(){
+  mentionState.open = false;
+  var pop = $('mentionPop');
+  if(pop) pop.hidden = true;
+}
+function insertMention(nick){
+  var val = inputEl.value;
+  var start = mentionState.start;
+  var pos = inputEl.selectionStart;
+  var before = val.slice(0, start);
+  var after = val.slice(pos);
+  inputEl.value = before + '@' + nick + ' ' + after;
+  var newPos = start + nick.length + 2;
+  inputEl.setSelectionRange(newPos, newPos);
+  closeMentionPop();
+  inputEl.focus();
+  autoResize();
+  saveDraft();
+}
+$('mentionPop').addEventListener('click', function(e){
+  var item = e.target.closest('[data-mention-idx]');
+  if(!item) return;
+  var idx = parseInt(item.getAttribute('data-mention-idx'), 10);
+  var u = mentionState.items[idx];
+  if(u) insertMention(u.nick);
+});
+inputEl.addEventListener('keydown', function(e){
+  if(mentionState.open){
+    if(e.key === 'ArrowDown'){ e.preventDefault(); mentionState.selected = (mentionState.selected+1) % mentionState.items.length; renderMentionPop(); return; }
+    if(e.key === 'ArrowUp'){ e.preventDefault(); mentionState.selected = (mentionState.selected-1+mentionState.items.length) % mentionState.items.length; renderMentionPop(); return; }
+    if(e.key === 'Enter' || e.key === 'Tab'){
+      e.preventDefault();
+      var u = mentionState.items[mentionState.selected];
+      if(u) insertMention(u.nick);
+      return;
+    }
+    if(e.key === 'Escape'){ closeMentionPop(); return; }
+  }
+  /* ↑ 编辑自己最后一条消息 */
+  if(e.key === 'ArrowUp' && !inputEl.value.trim() && !replyingTo){
+    var last = null;
+    for(var i=allMessages.length-1;i>=0;i--){
+      var m = allMessages[i];
+      if(m.uid === uid && !m.__local && !m.recalled && !m.deleted && (Date.now()-m.ts) < EDIT_WINDOW){ last = m; break; }
+    }
+    if(last){ e.preventDefault(); openEditDialog(last); return; }
+  }
+  /* 发送键 */
+  var isEnter = e.key === 'Enter' && !e.shiftKey;
+  var isCtrlEnter = e.key === 'Enter' && (e.ctrlKey || e.metaKey);
+  if(sendKey === 'ctrl-enter'){
+    if(isCtrlEnter){ e.preventDefault(); if(!sendBtn.disabled) doSend(); }
+  }else{
+    if(isEnter && !e.ctrlKey && !e.metaKey){ e.preventDefault(); if(!sendBtn.disabled) doSend(); }
+  }
+  /* Esc 取消回复 */
+  if(e.key === 'Escape' && replyingTo){ e.preventDefault(); setReply(null); }
 });
 
 /* 回复 UI */
 function setReply(msg){
   replyingTo = msg;
-  if(!msg){
-    $('replyHint').hidden = true;
-    return;
-  }
+  if(!msg){ $('replyHint').hidden = true; return; }
   $('replyHint').hidden = false;
   $('rhNick').textContent = msg.nick + '：';
   $('rhText').textContent = msg.text.length > 60 ? msg.text.slice(0,60)+'…' : msg.text;
@@ -1639,11 +1666,7 @@ function broadcastTyping(){
   if(!typingChannel) return;
   if(typingBroadcastTimer) return;
   try{
-    typingChannel.send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { uid: uid, nick: myNick }
-    });
+    typingChannel.send({ type:'broadcast', event:'typing', payload:{ uid:uid, nick:myNick } });
   }catch(e){}
   typingBroadcastTimer = setTimeout(function(){ typingBroadcastTimer = null; }, 1500);
 }
@@ -1652,45 +1675,22 @@ function broadcastTyping(){
 async function doSend(){
   var text=inputEl.value.trim();
   if(!text)return;
-
   var now=Date.now();
-  var diff=now-lastSendTime;
-  if(diff<SEND_COOLDOWN){
-    toast('发得太快了，'+Math.ceil((SEND_COOLDOWN-diff)/1000)+' 秒后再试');
-    return;
-  }
-  if(text.length>MSG_MAXLEN){
-    toast('消息太长（最多 '+MSG_MAXLEN+' 字）');
-    return;
-  }
+  if(now-lastSendTime < SEND_COOLDOWN){ toast('发得太快了，'+Math.ceil((SEND_COOLDOWN-(now-lastSendTime))/1000)+' 秒后再试'); return; }
+  if(text.length>MSG_MAXLEN){ toast('消息太长（最多 '+MSG_MAXLEN+' 字）'); return; }
 
   lastSendTime=now;
   var replyTo = replyingTo ? replyingTo.id : null;
-  var replySnapshot = null;
-  if(replyingTo){
-    replySnapshot = {
-      id: replyingTo.id,
-      nick: replyingTo.nick,
-      text: replyingTo.text
-    };
-  }
+  var replySnap = null;
+  if(replyingTo){ replySnap = { id:replyingTo.id, nick:replyingTo.nick, text:replyingTo.text }; }
 
-  inputEl.value='';
-  autoResize();
-  sendBtn.disabled=true;
-  setReply(null);
+  inputEl.value=''; autoResize(); sendBtn.disabled=true; setReply(null);
+  clearDraft();
 
-  var localId = 'local_' + now + '_' + Math.random().toString(36).slice(2,6);
+  var localId = 'local_'+now+'_'+Math.random().toString(36).slice(2,6);
   var localMsg = {
-    id: localId,
-    uid: uid,
-    nick: myNick,
-    text: text,
-    ts: now,
-    reply_to: replyTo,
-    __reply: replySnapshot,
-    __local: true,
-    __pending: true
+    id:localId, uid:uid, nick:myNick, text:text, ts:now,
+    reply_to:replyTo, __reply:replySnap, __local:true, __pending:true
   };
   allMessages.push(localMsg);
   renderAll();
@@ -1698,14 +1698,9 @@ async function doSend(){
 
   var r = await sbQuery('发送消息', function(){
     return sb.from('messages').insert({
-      uid: uid,
-      nick: myNick,
-      text: text,
-      ts: now,
-      reply_to: replyTo
+      uid: uid, nick: myNick, text: text, ts: now, reply_to: replyTo
     });
   });
-
   hideRetryOverlay();
 
   var idx = allMessages.findIndex(function(x){ return x.id === localId; });
@@ -1728,41 +1723,36 @@ async function doSend(){
   }
 }
 sendBtn.addEventListener('click',doSend);
-inputEl.addEventListener('keydown',function(e){
-  if(e.key==='Enter' && !e.shiftKey){
-    e.preventDefault();
-    if(!sendBtn.disabled) doSend();
-  }
-});
 
 /* 数据规范化 */
 function normalizeMsg(m){
   return {
-    id: m.id,
-    uid: String(m.uid||''),
-    nick: String(m.nick||'无名'),
-    text: String(m.text||''),
-    ts: Number(m.ts||0),
-    reply_to: m.reply_to || null,
-    deleted: !!m.deleted
+    id: m.id, uid: String(m.uid||''), nick: String(m.nick||'无名'),
+    text: String(m.text||''), ts: Number(m.ts||0),
+    updated_at: m.updated_at ? Number(m.updated_at) : null,
+    recalled: !!m.recalled, deleted: !!m.deleted,
+    reply_to: m.reply_to || null
   };
 }
 
 /* 渲染单条 */
-function renderMsg(m, prev){
+function renderMsg(m, prev, dayStamp){
   var div=document.createElement('div');
   div.className='msg';
   if(m.uid===uid)div.classList.add('self');
   if(m.__pending)div.classList.add('pending');
   if(m.__failed)div.classList.add('failed');
   if(m.__highlight)div.classList.add('highlight');
-  if(m.deleted)div.classList.add('deleted');
+  if(m.recalled || m.deleted)div.classList.add('recalled');
   if(isMentionedMe(m.text) && m.uid !== uid)div.classList.add('mentioned');
 
   if(!m.__local && prev && !prev.__local && prev.uid===m.uid && (m.ts-prev.ts)<3*60*1000){
     div.classList.add('compact');
   }
   var isCompact=div.classList.contains('compact');
+
+  /* 屏蔽用户的头像和昵称用灰色 */
+  var isBlocked = blockedUids[m.uid];
 
   var st = getStyleFor(m) || {};
   var defaultAvatarColor = (m.uid===uid) ? 'var(--ac)' : nickColor(m.nick);
@@ -1771,46 +1761,45 @@ function renderMsg(m, prev){
 
   var avatarHtml=isCompact
     ? '<div class="avatar empty"></div>'
-    : '<div class="avatar" style="background:'+avatarColor+'">'+avatarContent+'</div>';
+    : '<div class="avatar" data-open-user="'+esc(m.uid)+'" style="background:'+avatarColor+'">'+avatarContent+'</div>';
 
   var statusTag = '';
   if(m.__pending) statusTag = '<span class="status-tag">发送中</span>';
   else if(m.__failed) statusTag = '<span class="status-tag">发送失败</span>';
 
+  var editedTag = m.updated_at && !m.recalled ? '<span class="edited-tag">(已编辑)</span>' : '';
+
   var headHtml=isCompact
     ? '<div class="head" style="visibility:hidden"><span class="nick">&nbsp;</span></div>'
-    : '<div class="head"><span class="nick">'+esc(m.nick)+'</span><span class="time">'+esc(fmtTime(m.ts))+'</span>'+statusTag+'</div>';
+    : '<div class="head"><span class="nick" data-open-user="'+esc(m.uid)+'" style="cursor:pointer">'+esc(m.nick)+'</span><span class="time" title="'+esc(fmtFullTime(m.ts))+'">'+esc(fmtTime(m.ts))+'</span>'+editedTag+statusTag+'</div>';
 
-  /* 引用的消息 */
+  /* 引用 */
   var replyHtml = '';
   var quoted = null;
-  if(m.__reply){
+  if(m.recalled){
+    /* 撤回的不显示引用 */
+  }else if(m.__reply){
     quoted = m.__reply;
   }else if(m.reply_to){
-    quoted = allMessages.find(function(x){
-      return !x.__local && String(x.id) === String(m.reply_to);
-    });
-    if(quoted) quoted = { id: quoted.id, nick: quoted.nick, text: quoted.text };
+    var q = allMessages.find(function(x){ return !x.__local && String(x.id) === String(m.reply_to); });
+    if(q) quoted = { id:q.id, nick:q.nick, text:q.recalled||q.deleted ? '[已撤回]' : q.text };
   }
   if(quoted){
     var quoteText = quoted.text.length > 50 ? quoted.text.slice(0,50)+'…' : quoted.text;
     replyHtml = '<div class="reply-quote" data-goto="'+esc(quoted.id)+'">'+
-      '<span class="rq-nick">'+esc(quoted.nick)+'</span>'+
-      esc(quoteText)+
+      '<span class="rq-nick">'+esc(quoted.nick)+'</span>'+esc(quoteText)+
     '</div>';
   }
 
-  /* 正文 */
-  var bodyText = m.deleted ? '这条消息已被删除' : m.text;
-  var bodyHtml = m.deleted ? esc(bodyText) : renderTextWithMentions(bodyText);
+  var bodyText = m.recalled ? (m.uid===uid?'你撤回了这条消息':(esc(m.nick)+' 撤回了一条消息')) : (m.deleted ? '这条消息已被删除' : m.text);
+  var bodyHtml = (m.recalled || m.deleted) ? bodyText : renderRichText(bodyText, myNick, searchQuery);
 
   var bubbleStyle = '';
-  if(!m.deleted && (st.bubble || st.text)){
+  if(!m.recalled && !m.deleted && (st.bubble || st.text)){
     if(m.uid === uid && st.bubble) bubbleStyle += 'background:'+st.bubble+';';
     if(st.text) bubbleStyle += 'color:'+st.text+';';
   }
 
-  /* 表情回应 */
   var groups = groupReactions(m.id);
   var reactionsHtml = '';
   var keys = Object.keys(groups);
@@ -1818,28 +1807,29 @@ function renderMsg(m, prev){
     reactionsHtml = '<div class="reactions">';
     keys.forEach(function(emoji){
       var g = groups[emoji];
-      reactionsHtml += '<span class="react'+(g.mine?' mine':'')+'" data-react-emoji="'+esc(emoji)+'" data-react-msg="'+esc(m.id)+'">'+
-        emoji+' '+g.count+
-      '</span>';
+      reactionsHtml += '<span class="react'+(g.mine?' mine':'')+'" data-react-emoji="'+esc(emoji)+'" data-react-msg="'+esc(m.id)+'">'+emoji+' '+g.count+'</span>';
     });
     reactionsHtml += '</div>';
   }
 
   /* 悬浮工具 */
   var toolsHtml = '';
-  if(!m.__local && !m.deleted && m.id){
+  if(!m.__local && m.id && !m.recalled && !m.deleted){
+    var canEdit = (m.uid === uid) && (Date.now() - m.ts) < EDIT_WINDOW;
+    var canRecall = (m.uid === uid) && (Date.now() - m.ts) < RECALL_WINDOW;
     toolsHtml = '<div class="hover-tools">'+
       '<button type="button" data-tool="reply" title="回复">↩️</button>'+
       '<button type="button" data-tool="react" title="表情">😊</button>'+
-      (m.uid===uid ? '<button type="button" data-tool="delete" title="删除">🗑</button>' : '')+
+      '<button type="button" data-tool="copy" title="复制">📋</button>'+
+      (canEdit ? '<button type="button" data-tool="edit" title="编辑">✏️</button>' : '')+
+      (canRecall ? '<button type="button" data-tool="recall" title="撤回">↺</button>' : '')+
     '</div>';
   }
 
   div.innerHTML=
     avatarHtml+
     '<div class="body">'+
-      replyHtml+
-      headHtml+
+      replyHtml+headHtml+
       '<div class="content" '+(bubbleStyle?'style="'+bubbleStyle+'"':'')+'>'+bodyHtml+'</div>'+
       reactionsHtml+
       toolsHtml+
@@ -1849,24 +1839,24 @@ function renderMsg(m, prev){
   return div;
 }
 
-function isAtBottom(){
-  return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 100;
-}
+function isAtBottom(){ return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 100; }
 
+/* 时间分组渲染 */
 function renderAll(){
   var atBottom=isAtBottom();
 
-  /* 搜索过滤 */
-  var list = allMessages;
-  if(searchQuery){
-    var q = searchQuery.toLowerCase();
-    list = allMessages.filter(function(m){
-      return !m.deleted && m.text.toLowerCase().indexOf(q) !== -1;
-    });
-  }
+  /* 过滤：屏蔽 + 搜索 */
+  var list = allMessages.filter(function(m){
+    if(blockedUids[m.uid] && m.uid !== uid) return false;
+    if(searchQuery){
+      if(m.recalled || m.deleted) return false;
+      if(m.text.toLowerCase().indexOf(searchQuery.toLowerCase()) === -1) return false;
+    }
+    return true;
+  });
 
   if(list.length===0){
-    messagesEl.innerHTML=
+    messagesEl.innerHTML =
       '<div class="empty-state">'+
         '<div class="ic">'+(searchQuery?'🔍':'💬')+'</div>'+
         '<div class="t">'+(searchQuery?'没有匹配的消息':'还没有人说话')+'</div>'+
@@ -1876,26 +1866,46 @@ function renderAll(){
   }
 
   var frag=document.createDocumentFragment();
-  var prev=null;
+
+  /* 加载更多按钮（在最顶部） */
+  if(hasMoreHistory){
+    var lm = document.createElement('div');
+    lm.className = 'load-more-hint';
+    lm.innerHTML = '<button type="button" class="btn-mini" id="loadMoreBtn">↑ 加载更早的消息</button>';
+    frag.appendChild(lm);
+  }
+
+  var prev=null, dayStamp=null;
   list.forEach(function(m){
-    frag.appendChild(renderMsg(m,prev));
-    if(!m.__local) prev=m;
+    /* 时间分组 */
+    var d = new Date(m.ts);
+    var today0 = new Date(); today0.setHours(0,0,0,0);
+    var dayKey = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    if(dayKey !== dayStamp){
+      dayStamp = dayKey;
+      var div = document.createElement('div');
+      div.className = 'time-divider';
+      div.innerHTML = '<span class="td-txt">'+esc(fmtDay(m.ts))+'</span>';
+      frag.appendChild(div);
+      prev = null; /* 跨日期断开合并 */
+    }
+    frag.appendChild(renderMsg(m, prev));
+    if(!m.__local) prev = m;
   });
-  messagesEl.innerHTML='';
+
+  messagesEl.innerHTML = '';
   messagesEl.appendChild(frag);
 
-  if(atBottom){
-    messagesEl.scrollTop=messagesEl.scrollHeight;
-  }
+  if(atBottom){ messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  var lmBtn = $('loadMoreBtn');
+  if(lmBtn) lmBtn.addEventListener('click', loadMoreHistory);
 }
 
 function updateLastTs(){
   for(var i=allMessages.length-1;i>=0;i--){
     var m = allMessages[i];
-    if(!m.__local && typeof m.ts==='number' && m.ts>0){
-      lastTs = m.ts;
-      return;
-    }
+    if(!m.__local && typeof m.ts==='number' && m.ts>0){ lastTs = m.ts; return; }
   }
   lastTs = 0;
 }
@@ -1906,9 +1916,7 @@ function collectUids(list){
 }
 function collectMsgIds(list){
   var seen={},out=[];
-  (list||[]).forEach(function(m){
-    if(m.id && !seen[m.id]){ seen[m.id]=1; out.push(m.id); }
-  });
+  (list||[]).forEach(function(m){ if(m.id && !seen[m.id]){ seen[m.id]=1; out.push(m.id); } });
   return out;
 }
 
@@ -1927,23 +1935,15 @@ function mergeNewMessages(newOnes){
     });
 
     if(localIdx >= 0){
-      /* 保留 __reply 快照 */
       var old = allMessages[localIdx];
       n.__reply = old.__reply;
       allMessages[localIdx] = n;
     }else{
       allMessages.push(n);
       if(!styleMap[n.uid]) needStyles = true;
-
-      /* 新消息的提示音 */
       if(n.uid !== uid){
-        /* 从实时或轮询触发，且不是自己发的 */
-        if(!document.hidden) playPing();
-        /* 未读数 */
-        if(!isAtBottom()){
-          unreadCount++;
-          updateUnreadBadge();
-        }
+        if(!document.hidden && !blockedUids[n.uid]) playPing();
+        if(!isAtBottom()){ unreadCount++; updateUnreadBadge(); }
       }
     }
     changed = true;
@@ -1952,17 +1952,13 @@ function mergeNewMessages(newOnes){
   if(!changed) return false;
 
   allMessages.sort(function(a,b){
-    var aL = a.__local ? 1 : 0, bL = b.__local ? 1 : 0;
-    if(aL !== bL) return aL - bL;
+    var aL=a.__local?1:0, bL=b.__local?1:0;
+    if(aL!==bL) return aL - bL;
     return a.ts - b.ts;
   });
-  if(allMessages.length > MSG_LIMIT){
-    allMessages = allMessages.slice(-MSG_LIMIT);
-  }
+  if(allMessages.length > MSG_LIMIT){ allMessages = allMessages.slice(-MSG_LIMIT); }
 
-  if(needStyles){
-    loadStylesFor(collectUids(allMessages)).then(function(){ renderAll(); });
-  }
+  if(needStyles){ loadStylesFor(collectUids(allMessages)).then(function(){ renderAll(); }); }
 
   renderAll();
   updateLastTs();
@@ -1976,23 +1972,64 @@ function updateUnreadBadge(){
   }else{
     scrollBottomBtn.classList.remove('show');
   }
+  /* 顶栏 badge */
+  var badge = $('unreadBadge');
+  if(badge){
+    if(unreadCount > 0 && document.hidden){
+      badge.hidden = false;
+      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    }else{
+      badge.hidden = true;
+    }
+  }
+}
+
+/* 加载更多历史 */
+var hasMoreHistory = false;
+async function loadMoreHistory(){
+  var oldestTs = null;
+  for(var i=0;i<allMessages.length;i++){
+    if(!allMessages[i].__local && typeof allMessages[i].ts === 'number'){ oldestTs = allMessages[i].ts; break; }
+  }
+  if(!oldestTs){ toast('没有更早的消息了'); return; }
+
+  var r = await sbQuery('加载更早', function(){
+    return sb.from('messages').select('*').lt('ts', oldestTs).order('ts', { ascending:false }).limit(50);
+  }, { max: 2, silent: true });
+  if(!r.ok){ toast('加载失败'); return; }
+  var data = r.data && r.data.data;
+  if(!Array.isArray(data) || data.length === 0){
+    hasMoreHistory = false;
+    toast('没有更早的消息了');
+    renderAll();
+    return;
+  }
+  data.reverse();
+  var more = data.map(normalizeMsg);
+  /* 合并 */
+  var seen = {};
+  allMessages.forEach(function(m){ if(!m.__local) seen[m.id]=1; });
+  more.forEach(function(m){ if(!seen[m.id]){ allMessages.unshift(m); seen[m.id]=1; } });
+  hasMoreHistory = data.length >= 50;
+
+  await loadStylesFor(collectUids(more));
+  await loadReactionsFor(collectMsgIds(more));
+
+  /* 保存滚动位置 */
+  var oldTop = messagesEl.scrollTop;
+  var oldHeight = messagesEl.scrollHeight;
+  renderAll();
+  var newHeight = messagesEl.scrollHeight;
+  messagesEl.scrollTop = oldTop + (newHeight - oldHeight);
 }
 
 /* 主数据加载 */
 async function loadHistory(){
   var r = await sbQuery('加载历史', function(){
-    return sb.from('messages')
-      .select('*')
-      .order('ts', { ascending: false })
-      .limit(MSG_LIMIT);
+    return sb.from('messages').select('*').order('ts', { ascending: false }).limit(MSG_LIMIT);
   });
-  if(!r.ok){
-    setPillErr();
-    setTimeout(function(){ loadHistory(); }, 5000);
-    return;
-  }
-  hideRetryOverlay();
-  setPillOK();
+  if(!r.ok){ setPillErr(); setTimeout(loadHistory, 5000); return; }
+  hideRetryOverlay(); setPillOK();
 
   var data = r.data && r.data.data;
   if(!Array.isArray(data)) return;
@@ -2000,16 +2037,14 @@ async function loadHistory(){
   var localPending = allMessages.filter(function(x){ return x.__local; });
   var arr = data.map(normalizeMsg);
   arr.reverse();
-
   localPending.forEach(function(lp){
     if(!arr.some(function(x){ return x.uid===lp.uid && x.text===lp.text && Math.abs(x.ts-lp.ts)<5000; })){
       arr.push(lp);
     }
   });
-
   allMessages = arr;
+  hasMoreHistory = data.length >= MSG_LIMIT;
   updateLastTs();
-
   await loadStylesFor(collectUids(allMessages));
   await loadReactionsFor(collectMsgIds(allMessages));
   renderAll();
@@ -2018,18 +2053,12 @@ async function loadHistory(){
 
 async function pollNewMessages(){
   var q = sb.from('messages').select('*');
-  if(lastTs > 0){
-    q = q.gt('ts', lastTs).order('ts', { ascending: true }).limit(MSG_LIMIT);
-  }else{
-    q = q.order('ts', { ascending: false }).limit(MSG_LIMIT);
-  }
+  if(lastTs > 0) q = q.gt('ts', lastTs).order('ts', { ascending:true }).limit(MSG_LIMIT);
+  else q = q.order('ts', { ascending:false }).limit(MSG_LIMIT);
+
   var r = await sbQuery('轮询消息', function(){ return q; });
-  if(!r.ok){
-    setPillErr();
-    return;
-  }
-  hideRetryOverlay();
-  setPillOK();
+  if(!r.ok){ setPillErr(); return; }
+  hideRetryOverlay(); setPillOK();
 
   var data = r.data && r.data.data;
   if(!Array.isArray(data)) return;
@@ -2041,47 +2070,33 @@ async function pollNewMessages(){
 function subscribeMessages(){
   if(msgChannel) return;
   msgChannel = sb.channel('chat-messages')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function(payload){
-      var m = payload.new;
-      if(!m) return;
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, function(payload){
+      var m = payload.new; if(!m) return;
       mergeNewMessages([normalizeMsg(m)]);
     })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, function(payload){
-      var m = payload.new;
-      if(!m) return;
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'messages' }, function(payload){
+      var m = payload.new; if(!m) return;
       var idx = allMessages.findIndex(function(x){ return String(x.id) === String(m.id); });
-      if(idx >= 0){
-        allMessages[idx] = normalizeMsg(m);
-        renderAll();
-      }
+      if(idx >= 0){ allMessages[idx] = normalizeMsg(m); renderAll(); }
     })
     .subscribe(function(status, err){
-      if(status==='SUBSCRIBED'){
-        console.log('[chat] 实时已连接');
-        setPillOK();
-      }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
+      if(status==='SUBSCRIBED'){ setPillOK(); }
+      else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
         setPillErr();
         setTimeout(function(){
           try{ if(msgChannel) sb.removeChannel(msgChannel); }catch(e){}
-          msgChannel = null;
-          subscribeMessages();
+          msgChannel = null; subscribeMessages();
         }, 5000);
       }
     });
 }
-
 function subscribeReactions(){
   if(reactionChannel) return;
   reactionChannel = sb.channel('chat-reactions')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, function(payload){
-      var row = payload.new || payload.old;
-      if(!row) return;
-      var msgId = row.msg_id;
-      if(!msgId) return;
-      /* 重新拉一次该消息的表情 */
-      sbQuery('重载表情', function(){
-        return sb.from('reactions').select('*').eq('msg_id', msgId);
-      }, { max:1, silent:true }).then(function(r){
+    .on('postgres_changes', { event:'*', schema:'public', table:'reactions' }, function(payload){
+      var row = payload.new || payload.old; if(!row) return;
+      var msgId = row.msg_id; if(!msgId) return;
+      sbQuery('重载表情', function(){ return sb.from('reactions').select('*').eq('msg_id', msgId); }, { max:1, silent:true }).then(function(r){
         if(!r.ok) return;
         var list = (r.data && r.data.data || []).map(function(x){ return { uid:x.uid, emoji:x.emoji }; });
         reactionsMap[msgId] = list;
@@ -2091,59 +2106,42 @@ function subscribeReactions(){
     .subscribe(function(status){ if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
       setTimeout(function(){
         try{ if(reactionChannel) sb.removeChannel(reactionChannel); }catch(e){}
-        reactionChannel = null;
-        subscribeReactions();
+        reactionChannel = null; subscribeReactions();
       }, 5000);
     }});
 }
-
-/* 在线 + 打字 */
 function subscribePresence(){
   if(presenceChannel) return;
-  presenceChannel = sb.channel('online-users', {
-    config: { presence: { key: uid } }
-  });
+  presenceChannel = sb.channel('online-users', { config:{ presence:{ key: uid } } });
   presenceChannel
-    .on('presence', { event: 'sync' }, function(){
+    .on('presence', { event:'sync' }, function(){
       var state = presenceChannel.presenceState();
       var arr = [];
       Object.keys(state).forEach(function(k){
-        (state[k]||[]).forEach(function(p){
-          arr.push({ uid: k, nick: p.nick, joinedAt: p.joinedAt });
-        });
+        (state[k]||[]).forEach(function(p){ arr.push({ uid:k, nick:p.nick, joinedAt:p.joinedAt }); });
       });
       onlineUsers = arr;
       onlineNum.textContent = arr.length;
-      /* 如果弹窗开着，实时刷新 */
       if($('onlineOv').classList.contains('show')) renderOnlineList();
     })
     .subscribe(async function(status){
-      if(status==='SUBSCRIBED'){
-        try{
-          await presenceChannel.track({ nick: myNick, joinedAt: Date.now() });
-        }catch(e){}
-      }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
+      if(status==='SUBSCRIBED'){ try{ await presenceChannel.track({ nick:myNick, joinedAt: Date.now() }); }catch(e){} }
+      else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
         setTimeout(function(){
           try{ if(presenceChannel) sb.removeChannel(presenceChannel); }catch(e){}
-          presenceChannel = null;
-          subscribePresence();
+          presenceChannel = null; subscribePresence();
         }, 5000);
       }
     });
 }
-
 var typingUsers = {};
-var typingTimer = null;
 function updateTypingBar(){
   var now = Date.now();
   var names = [];
   Object.keys(typingUsers).forEach(function(k){
     var u = typingUsers[k];
-    if(now - u.ts < TYPING_TIMEOUT){
-      names.push(u.nick);
-    }else{
-      delete typingUsers[k];
-    }
+    if(now - u.ts < TYPING_TIMEOUT) names.push(u.nick);
+    else delete typingUsers[k];
   });
   if(names.length > 0){
     typingBar.classList.add('show');
@@ -2154,24 +2152,137 @@ function updateTypingBar(){
 }
 function subscribeTyping(){
   if(typingChannel) return;
-  typingChannel = sb.channel('chat-typing', {
-    config: { broadcast: { self: false } }
-  });
-  typingChannel
-    .on('broadcast', { event: 'typing' }, function(payload){
-      var p = payload.payload || {};
-      if(!p.uid || p.uid === uid) return;
-      typingUsers[p.uid] = { nick: p.nick, ts: Date.now() };
-      updateTypingBar();
-    })
-    .subscribe(function(status){});
+  typingChannel = sb.channel('chat-typing', { config:{ broadcast:{ self:false } } });
+  typingChannel.on('broadcast', { event:'typing' }, function(payload){
+    var p = payload.payload || {};
+    if(!p.uid || p.uid === uid) return;
+    typingUsers[p.uid] = { nick:p.nick, ts: Date.now() };
+    updateTypingBar();
+  }).subscribe(function(){});
   setInterval(updateTypingBar, 800);
 }
 
 /* ============================================================
-   消息事件（回复/表情/删除/跳转）
+   用户资料卡
+   ============================================================ */
+async function openUserCard(targetUid){
+  if(!targetUid) return;
+  var u = onlineUsers.find(function(x){ return x.uid === targetUid; });
+  var nick = u ? u.nick : '';
+  if(!nick){
+    /* 从消息里找 */
+    var m = allMessages.find(function(x){ return x.uid === targetUid; });
+    if(m) nick = m.nick;
+  }
+  if(!nick) nick = '未知用户';
+
+  var st = styleMap[targetUid] || {};
+  var ac = st.avatar || (targetUid===uid ? 'var(--ac)' : nickColor(nick));
+  var av = st.emoji ? st.emoji : esc(nick.charAt(0).toUpperCase());
+
+  $('ucAvatar').style.background = ac;
+  $('ucAvatar').textContent = av;
+  $('ucNick').textContent = nick;
+  $('ucMeta').textContent = targetUid === uid ? '这是你' : 'UID: ' + targetUid.slice(0,12);
+
+  /* 统计 */
+  var myMsgs = allMessages.filter(function(x){ return x.uid === targetUid && !x.recalled && !x.deleted; });
+  $('ucMsgCount').textContent = myMsgs.length;
+  var first = myMsgs[0];
+  $('ucJoinTime').textContent = first ? fmtDay(first.ts) : '-';
+
+  /* 操作按钮 */
+  var actHtml = '';
+  if(targetUid === uid){
+    actHtml = '<button class="btn-close" data-uc-close>关闭</button>';
+  }else{
+    if(blockedUids[targetUid]){
+      actHtml = '<button class="btn-unblock" data-uc-unblock="'+esc(targetUid)+'">取消屏蔽</button>';
+    }else{
+      actHtml = '<button class="btn-block" data-uc-block="'+esc(targetUid)+'">屏蔽此人</button>';
+    }
+    actHtml += '<button class="btn-close" data-uc-close>关闭</button>';
+  }
+  $('ucActions').innerHTML = actHtml;
+
+  $('userCardOv').classList.add('show');
+}
+function closeUserCard(){ $('userCardOv').classList.remove('show'); }
+
+$('userCardClose').addEventListener('click', closeUserCard);
+$('userCardOv').addEventListener('click', function(e){ if(e.target === $('userCardOv')) closeUserCard(); });
+$('ucActions').addEventListener('click', function(e){
+  if(e.target.closest('[data-uc-close]')){ closeUserCard(); return; }
+  var b = e.target.closest('[data-uc-block]');
+  if(b){
+    blockedUids[b.getAttribute('data-uc-block')] = 1;
+    saveBlocked();
+    closeUserCard();
+    renderAll();
+    toast('已屏蔽');
+    return;
+  }
+  var ub = e.target.closest('[data-uc-unblock]');
+  if(ub){
+    delete blockedUids[ub.getAttribute('data-uc-unblock')];
+    saveBlocked();
+    closeUserCard();
+    renderAll();
+    toast('已取消屏蔽');
+    return;
+  }
+});
+
+/* ============================================================
+   编辑消息
+   ============================================================ */
+var editOv=$('editOv'), editInput=$('editInput');
+var editingMsg = null;
+function openEditDialog(m){
+  if(!m) return;
+  editingMsg = m;
+  editInput.value = m.text;
+  editOv.classList.add('show');
+  setTimeout(function(){ try{ editInput.focus(); editInput.select(); }catch(e){} }, 40);
+}
+function closeEditDialog(){ editOv.classList.remove('show'); editingMsg = null; }
+
+$('editClose').addEventListener('click', closeEditDialog);
+$('editCancel').addEventListener('click', closeEditDialog);
+editOv.addEventListener('click', function(e){ if(e.target === editOv) closeEditDialog(); });
+$('editSave').addEventListener('click', async function(){
+  if(!editingMsg) return;
+  var newText = editInput.value.trim();
+  if(!newText){ toast('内容不能为空'); return; }
+  if(newText.length > MSG_MAXLEN){ toast('太长了'); return; }
+  if(newText === editingMsg.text){ closeEditDialog(); return; }
+
+  var r = await sbQuery('编辑消息', function(){
+    return sb.from('messages').update({ text:newText, updated_at: Date.now() }).eq('id', editingMsg.id).eq('uid', uid);
+  }, { max: 2 });
+  if(!r.ok){ toast('编辑失败'); return; }
+  editingMsg.text = newText;
+  editingMsg.updated_at = Date.now();
+  renderAll();
+  closeEditDialog();
+  toast('已编辑');
+});
+editInput.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){ e.preventDefault(); closeEditDialog(); }
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); $('editSave').click(); }
+});
+
+/* ============================================================
+   消息事件
    ============================================================ */
 messagesEl.addEventListener('click', function(e){
+  /* 点头像/昵称 → 资料卡 */
+  var openU = e.target.closest('[data-open-user]');
+  if(openU && !e.target.closest('[data-tool]')){
+    openUserCard(openU.getAttribute('data-open-user'));
+    return;
+  }
+
   /* 引用跳转 */
   var quote = e.target.closest('.reply-quote[data-goto]');
   if(quote){
@@ -2194,16 +2305,14 @@ messagesEl.addEventListener('click', function(e){
     return;
   }
 
-  /* 点击回应 */
+  /* 表情回应 */
   var react = e.target.closest('[data-react-emoji]');
   if(react){
-    var emoji = react.getAttribute('data-react-emoji');
-    var msgId = react.getAttribute('data-react-msg');
-    toggleReaction(msgId, emoji);
+    toggleReaction(react.getAttribute('data-react-msg'), react.getAttribute('data-react-emoji'));
     return;
   }
 
-  /* 悬浮工具按钮 */
+  /* 悬浮工具 */
   var tool = e.target.closest('[data-tool]');
   if(tool){
     var toolName = tool.getAttribute('data-tool');
@@ -2213,29 +2322,23 @@ messagesEl.addEventListener('click', function(e){
     var target2 = allMessages.find(function(x){ return String(x.id) === String(msgId2); });
     if(!target2) return;
 
-    if(toolName === 'reply'){
-      setReply(target2);
+    if(toolName === 'reply'){ setReply(target2); return; }
+    if(toolName === 'edit'){ openEditDialog(target2); return; }
+    if(toolName === 'copy'){
+      try{ navigator.clipboard.writeText(target2.text); toast('已复制'); }catch(err){ toast('复制失败'); }
       return;
     }
-    if(toolName === 'delete'){
-      if(!confirm('删除这条消息？')) return;
-      sbQuery('删除消息', function(){
-        return sb.from('messages').update({ deleted: true }).eq('id', msgId2).eq('uid', uid);
-      }, { max: 2, silent: true }).then(function(r){
-        if(r.ok){
-          target2.deleted = true;
-          renderAll();
-          toast('已删除');
-        }else{
-          toast('删除失败');
-        }
+    if(toolName === 'recall'){
+      if(!confirm('撤回这条消息？')) return;
+      sbQuery('撤回', function(){
+        return sb.from('messages').update({ recalled:true }).eq('id', msgId2).eq('uid', uid);
+      }, { max:2, silent:true }).then(function(r){
+        if(r.ok){ target2.recalled = true; renderAll(); toast('已撤回'); }
+        else toast('撤回失败');
       });
       return;
     }
-    if(toolName === 'react'){
-      showEmojiPop(tool, msgId2);
-      return;
-    }
+    if(toolName === 'react'){ showEmojiPop(tool, msgId2); return; }
   }
 });
 
@@ -2251,39 +2354,27 @@ function showEmojiPop(anchor, msgId){
   pop.className = 'emoji-pop';
   QUICK_EMOJIS.forEach(function(em){
     var b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = em;
-    b.addEventListener('click', function(){
-      toggleReaction(msgId, em);
-      closeEmojiPop();
-    });
+    b.type = 'button'; b.textContent = em;
+    b.addEventListener('click', function(){ toggleReaction(msgId, em); closeEmojiPop(); });
     pop.appendChild(b);
   });
   var parent = anchor.parentNode;
   parent.appendChild(pop);
   emojiPopEl = pop;
-
-  /* 定位 */
   var btnRect = anchor.getBoundingClientRect();
   var parentRect = parent.getBoundingClientRect();
   pop.style.left = (btnRect.left - parentRect.left) + 'px';
-
   setTimeout(function(){
     document.addEventListener('click', function handler(ev){
       if(emojiPopEl && !emojiPopEl.contains(ev.target) && !anchor.contains(ev.target)){
-        closeEmojiPop();
-        document.removeEventListener('click', handler);
+        closeEmojiPop(); document.removeEventListener('click', handler);
       }
     });
   }, 10);
 }
 
-/* 滚动到底部监听未读 */
 messagesEl.addEventListener('scroll', function(){
-  if(isAtBottom()){
-    unreadCount = 0;
-    updateUnreadBadge();
-  }
+  if(isAtBottom()){ unreadCount = 0; updateUnreadBadge(); }
 });
 scrollBottomBtn.addEventListener('click', function(){
   messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -2307,91 +2398,69 @@ function openJumpDialog(){
   setTimeout(function(){ try{ jumpInput.focus(); }catch(e){} }, 40);
 }
 function closeJumpDialog(){ jumpOv.classList.remove('show'); }
-
 async function jumpToTime(targetTs){
   var r = await sbQuery('跳转查询', function(){
-    return sb.from('messages').select('*').lte('ts', targetTs).order('ts', { ascending: false }).limit(100);
-  }, { max: 2, silent: true });
-  if(!r.ok){ toast('跳转失败：' + (r.err && r.err.message || '请重试')); return; }
+    return sb.from('messages').select('*').lte('ts', targetTs).order('ts', { ascending:false }).limit(100);
+  }, { max:2, silent:true });
+  if(!r.ok){ toast('跳转失败'); return; }
   var data = r.data && r.data.data;
   if(!data || data.length === 0){
     var r2 = await sbQuery('往后查询', function(){
-      return sb.from('messages').select('*').gt('ts', targetTs).order('ts', { ascending: true }).limit(100);
-    }, { max: 2, silent: true });
-    if(!r2.ok || !r2.data || !r2.data.data || r2.data.data.length === 0){
-      toast('该时间附近没有消息');
-      return;
-    }
+      return sb.from('messages').select('*').gt('ts', targetTs).order('ts', { ascending:true }).limit(100);
+    }, { max:2, silent:true });
+    if(!r2.ok || !r2.data || !r2.data.data || r2.data.data.length === 0){ toast('该时间附近没有消息'); return; }
     data = r2.data.data.slice().reverse();
   }
   var arr = data.map(normalizeMsg).reverse();
   var bestIdx = 0, bestDist = Infinity;
-  arr.forEach(function(m, i){
-    var d = Math.abs(m.ts - targetTs);
-    if(d < bestDist){ bestDist = d; bestIdx = i; }
-  });
+  arr.forEach(function(m, i){ var d = Math.abs(m.ts - targetTs); if(d < bestDist){ bestDist = d; bestIdx = i; } });
   arr.forEach(function(m){ m.__highlight = false; });
   if(arr[bestIdx]) arr[bestIdx].__highlight = true;
-
   allMessages = arr;
   updateLastTs();
+  hasMoreHistory = true;
   await loadStylesFor(collectUids(allMessages));
   await loadReactionsFor(collectMsgIds(allMessages));
   renderAll();
-
   setTimeout(function(){
-    var target = arr[bestIdx];
-    if(!target) return;
+    var target = arr[bestIdx]; if(!target) return;
     var el = messagesEl.querySelector('[data-mid="' + target.id + '"]');
     if(el){
       var elRect = el.getBoundingClientRect();
       var wrapRect = messagesEl.getBoundingClientRect();
       var offsetInWrap = elRect.top - wrapRect.top + messagesEl.scrollTop;
-      messagesEl.scrollTop = offsetInWrap - (wrapRect.height - elRect.height) / 2;
+      messagesEl.scrollTop = offsetInWrap - (wrapRect.height - elRect.height)/2;
       setTimeout(function(){ el.classList.remove('highlight'); }, 2500);
-    }else{
-      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
   }, 100);
-
   toast('已跳到 ' + fmtTime(targetTs) + ' 附近');
 }
-
 $('jumpBtn').addEventListener('click', openJumpDialog);
 $('jumpClose').addEventListener('click', closeJumpDialog);
 $('jumpCancel').addEventListener('click', closeJumpDialog);
 jumpOv.addEventListener('click', function(e){ if(e.target===jumpOv) closeJumpDialog(); });
 document.querySelectorAll('.jump-body .quick button').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    var offset = parseInt(btn.getAttribute('data-offset'), 10);
-    jumpInput.value = toLocalInput(Date.now() - offset);
-  });
+  btn.addEventListener('click', function(){ jumpInput.value = toLocalInput(Date.now() - parseInt(btn.getAttribute('data-offset'),10)); });
 });
 $('jumpGo').addEventListener('click', function(){
-  var v = jumpInput.value;
-  if(!v){ toast('请选择时间'); return; }
+  var v = jumpInput.value; if(!v){ toast('请选择时间'); return; }
   var targetTs = new Date(v.replace('T',' ')).getTime();
   if(isNaN(targetTs)){ toast('时间格式不对'); return; }
-  closeJumpDialog();
-  jumpToTime(targetTs);
+  closeJumpDialog(); jumpToTime(targetTs);
 });
 $('jumpLatestBtn').addEventListener('click', function(){
-  loadHistory().then(function(){
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-    toast('已回到最新');
-  });
+  loadHistory().then(function(){ messagesEl.scrollTop = messagesEl.scrollHeight; toast('已回到最新'); });
 });
 
 /* ============================================================
-   自定义颜色 / 头像
+   自定义颜色
    ============================================================ */
 var styleOv=$('styleOv');
 var cAvatar=$('cAvatar'), cBubble=$('cBubble'), cText=$('cText');
 var pvAvatar=$('pvAvatar'), pvBubble=$('pvBubble');
-
 function getThemeDefaultColors(){
   var cs = getComputedStyle(document.documentElement);
-  function pick(name){ return cs.getPropertyValue(name).trim() || '#3d521f'; }
+  function pick(n){ return cs.getPropertyValue(n).trim() || '#3d521f'; }
   var ac = pick('--ac'), selfFg = pick('--self-fg');
   var bubbleBg = ac;
   if(bubbleBg.indexOf('linear-gradient') !== -1) bubbleBg = '#3d521f';
@@ -2405,10 +2474,8 @@ function getThemeDefaultColors(){
   if(!/^#[0-9a-fA-F]{6}$/.test(text)) text = '#ffffff';
   return { avatar: avatar, bubble: bubbleBg, text: text };
 }
-
 function buildEmojiGrid(){
-  var grid = $('emojiGrid');
-  if(!grid) return;
+  var grid = $('emojiGrid'); if(!grid) return;
   var html = '';
   AVATAR_EMOJIS.forEach(function(em){
     var sel = (myStyle.emoji === em) ? ' selected' : '';
@@ -2416,25 +2483,17 @@ function buildEmojiGrid(){
   });
   grid.innerHTML = html;
 }
-
 function updatePreview(){
-  var a = cAvatar.value || '#3d521f';
-  var b = cBubble.value || '#7a9c3c';
-  var t = cText.value || '#ffffff';
+  var a = cAvatar.value || '#3d521f', b = cBubble.value || '#7a9c3c', t = cText.value || '#ffffff';
   pvAvatar.style.background = a;
   pvAvatar.textContent = myStyle.emoji || '我';
   pvBubble.style.background = b;
   pvBubble.style.color = t;
 }
-
-[cAvatar, cBubble, cText].forEach(function(el){
-  el.addEventListener('input', updatePreview);
-});
-
+[cAvatar, cBubble, cText].forEach(function(el){ el.addEventListener('input', updatePreview); });
 document.querySelectorAll('.style-row .reset-one').forEach(function(btn){
   btn.addEventListener('click', function(){
-    var target = btn.getAttribute('data-target');
-    if(!target) return;
+    var target = btn.getAttribute('data-target'); if(!target) return;
     var defs = getThemeDefaultColors();
     if(target === 'avatar') cAvatar.value = defs.avatar;
     else if(target === 'bubble') cBubble.value = defs.bubble;
@@ -2442,54 +2501,36 @@ document.querySelectorAll('.style-row .reset-one').forEach(function(btn){
     updatePreview();
   });
 });
-
-$('emojiClearBtn').addEventListener('click', function(){
-  myStyle.emoji = null;
-  buildEmojiGrid();
-  updatePreview();
-});
-
+$('emojiClearBtn').addEventListener('click', function(){ myStyle.emoji = null; buildEmojiGrid(); updatePreview(); });
 $('emojiGrid').addEventListener('click', function(e){
-  var btn = e.target.closest('button[data-emoji]');
-  if(!btn) return;
+  var btn = e.target.closest('button[data-emoji]'); if(!btn) return;
   var em = btn.getAttribute('data-emoji');
-  if(myStyle.emoji === em) myStyle.emoji = null;
-  else myStyle.emoji = em;
-  buildEmojiGrid();
-  updatePreview();
+  myStyle.emoji = (myStyle.emoji === em) ? null : em;
+  buildEmojiGrid(); updatePreview();
 });
-
 function openStyleDialog(){
   var defs = getThemeDefaultColors();
   cAvatar.value = myStyle.avatar || defs.avatar;
   cBubble.value = myStyle.bubble || defs.bubble;
   cText.value = myStyle.text || defs.text;
-  buildEmojiGrid();
-  updatePreview();
+  buildEmojiGrid(); updatePreview();
   styleOv.classList.add('show');
 }
 function closeStyleDialog(){ styleOv.classList.remove('show'); }
-
 $('styleBtn').addEventListener('click', openStyleDialog);
 $('styleClose').addEventListener('click', closeStyleDialog);
 $('styleCancel').addEventListener('click', closeStyleDialog);
 styleOv.addEventListener('click', function(e){ if(e.target===styleOv) closeStyleDialog(); });
 $('styleResetAll').addEventListener('click', function(){
   var defs = getThemeDefaultColors();
-  cAvatar.value = defs.avatar;
-  cBubble.value = defs.bubble;
-  cText.value = defs.text;
-  myStyle.emoji = null;
-  buildEmojiGrid();
-  updatePreview();
+  cAvatar.value = defs.avatar; cBubble.value = defs.bubble; cText.value = defs.text;
+  myStyle.emoji = null; buildEmojiGrid(); updatePreview();
 });
-
 $('styleSave').addEventListener('click', async function(){
   var defs = getThemeDefaultColors();
   var newAvatar = (cAvatar.value === defs.avatar) ? null : cAvatar.value;
   var newBubble = (cBubble.value === defs.bubble) ? null : cBubble.value;
   var newText   = (cText.value === defs.text)   ? null : cText.value;
-
   myStyle = {
     avatar: isValidHex(newAvatar) ? newAvatar : null,
     bubble: isValidHex(newBubble) ? newBubble : null,
@@ -2499,21 +2540,19 @@ $('styleSave').addEventListener('click', async function(){
   saveMyStyleLocal();
   styleMap[uid] = myStyle;
   renderAll();
-
   $('styleSave').disabled = true;
   var ok = await saveMyStyle();
   $('styleSave').disabled = false;
   closeStyleDialog();
-  if(ok) toast('已保存');
-  else toast('已应用到本地，服务器同步失败');
+  toast(ok ? '已保存' : '已应用到本地，服务器同步失败');
 });
 
 /* ============================================================
-   提示音开关
+   提示音
    ============================================================ */
 function updateSoundIcon(){
   $('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
-  $('soundBtn').title = soundEnabled ? '提示音已开（点击关闭）' : '提示音已关（点击开启）';
+  $('soundBtn').title = soundEnabled ? '提示音已开' : '提示音已关';
 }
 $('soundBtn').addEventListener('click', function(){
   soundEnabled = !soundEnabled;
@@ -2524,18 +2563,87 @@ $('soundBtn').addEventListener('click', function(){
 });
 
 /* ============================================================
+   设置面板
+   ============================================================ */
+var settingsOv=$('settingsOv');
+function openSettings(){
+  $('fsDisplay').textContent = chatFontSize;
+  $('denseBtn').classList.toggle('active', denseMode);
+  $('animBtn').classList.toggle('active', noAnim);
+  $('sendKeyBtn').textContent = sendKey === 'ctrl-enter' ? 'Ctrl+Enter' : 'Enter';
+  renderBlockList();
+  settingsOv.classList.add('show');
+}
+function closeSettings(){ settingsOv.classList.remove('show'); }
+function renderBlockList(){
+  var el = $('blockList'); if(!el) return;
+  var list = Object.keys(blockedUids);
+  if(list.length === 0){ el.innerHTML = '<span style="opacity:.6">没有屏蔽任何人</span>'; return; }
+  var html = '';
+  list.forEach(function(blockUid){
+    var u = onlineUsers.find(function(x){ return x.uid === blockUid; });
+    var nick = u ? u.nick : '未知';
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:3px 0">'+
+      '<span style="flex:1">'+esc(nick)+'</span>'+
+      '<button class="sr-btn" data-unblock="'+esc(blockUid)+'">取消</button>'+
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+$('settingsBtn').addEventListener('click', openSettings);
+$('settingsClose').addEventListener('click', closeSettings);
+$('settingsOk').addEventListener('click', closeSettings);
+settingsOv.addEventListener('click', function(e){ if(e.target === settingsOv) closeSettings(); });
+
+$('settingsOv').addEventListener('click', function(e){
+  var fs = e.target.closest('[data-fontsize]');
+  if(fs){
+    var delta = parseInt(fs.getAttribute('data-fontsize'), 10);
+    chatFontSize = Math.max(12, Math.min(22, chatFontSize + delta));
+    document.documentElement.style.setProperty('--chat-fs', chatFontSize + 'px');
+    storage.set(K_FS, String(chatFontSize));
+    $('fsDisplay').textContent = chatFontSize;
+    return;
+  }
+  if(e.target.closest('#denseBtn')){
+    denseMode = !denseMode;
+    document.documentElement.classList.toggle('dense', denseMode);
+    storage.set(K_DENSE, denseMode ? '1' : '0');
+    $('denseBtn').classList.toggle('active', denseMode);
+    return;
+  }
+  if(e.target.closest('#animBtn')){
+    noAnim = !noAnim;
+    document.documentElement.classList.toggle('noanim', noAnim);
+    storage.set(K_NOANIM, noAnim ? '1' : '0');
+    $('animBtn').classList.toggle('active', noAnim);
+    return;
+  }
+  if(e.target.closest('#sendKeyBtn')){
+    sendKey = sendKey === 'enter' ? 'ctrl-enter' : 'enter';
+    storage.set(K_SENDKEY, sendKey);
+    $('sendKeyBtn').textContent = sendKey === 'ctrl-enter' ? 'Ctrl+Enter' : 'Enter';
+    return;
+  }
+  var ub = e.target.closest('[data-unblock]');
+  if(ub){
+    delete blockedUids[ub.getAttribute('data-unblock')];
+    saveBlocked(); renderBlockList(); renderAll();
+    return;
+  }
+});
+
+/* ============================================================
    修改昵称
    ============================================================ */
 var nickOv=$('nickOv'),nickInput=$('nickInput'),nickHint=$('nickHint');
 var nickQuotaLeftEl = $('nickQuotaLeft');
-
 async function openNickDialog(){
   nickInput.value=myNick;
   nickHint.innerHTML = '改名后旧昵称会被释放，别人可以用了。<br><span class="quota">今日还可改 <span id="nickQuotaLeft">?</span> / 5 次</span>';
   nickQuotaLeftEl = $('nickQuotaLeft');
   nickOv.classList.add('show');
   setTimeout(function(){try{nickInput.focus();nickInput.select();}catch(e){}},40);
-
   var q = await getNickChangeQuota();
   if(nickQuotaLeftEl) nickQuotaLeftEl.textContent = q.ok ? q.left : '?';
   if(q.ok && q.left <= 0){
@@ -2546,54 +2654,38 @@ async function openNickDialog(){
   }
 }
 function closeNickDialog(){ nickOv.classList.remove('show'); }
-
 $('nickBtn').addEventListener('click',openNickDialog);
 $('nickClose').addEventListener('click',closeNickDialog);
 $('nickCancel').addEventListener('click',closeNickDialog);
-
 $('nickSave').addEventListener('click', async function(){
   var v = nickInput.value.trim();
   if(!v){ nickHint.textContent='昵称不能为空'; nickHint.className='hint err'; return; }
   if(v.length>20){ nickHint.textContent='最多 20 字'; nickHint.className='hint err'; return; }
   if(v===myNick){ closeNickDialog(); return; }
-
   $('nickSave').disabled = true;
   nickHint.textContent='检查中…'; nickHint.className='hint';
-
   var quota = await getNickChangeQuota();
-  if(!quota.ok){ nickHint.textContent='网络异常，请重试'; nickHint.className='hint err'; $('nickSave').disabled=false; return; }
-  if(quota.left <= 0){
-    nickHint.innerHTML = '今天已经改了 5 次了，明天再来吧。<br><span class="quota">今日还可改 0 / 5 次</span>';
-    $('nickSave').disabled = false;
-    return;
-  }
-
+  if(!quota.ok){ nickHint.textContent='网络异常'; nickHint.className='hint err'; $('nickSave').disabled=false; return; }
+  if(quota.left <= 0){ nickHint.innerHTML = '今天已经改了 5 次了。<br><span class="quota">0 / 5</span>'; $('nickSave').disabled=false; return; }
   var r = await claimNick(v);
   hideRetryOverlay();
   if(!r.ok){
-    if(r.reason==='taken'){ nickHint.textContent='这个名字被占用了，换一个吧'; nickHint.className='hint err'; }
-    else { nickHint.textContent='网络异常：'+(r.msg||'请重试'); nickHint.className='hint err'; }
-    $('nickSave').disabled = false;
-    return;
+    if(r.reason==='taken'){ nickHint.textContent='这个名字被占用了'; nickHint.className='hint err'; }
+    else { nickHint.textContent='网络异常'; nickHint.className='hint err'; }
+    $('nickSave').disabled = false; return;
   }
-
   var oldNick = myNick;
   myNick = v;
   storage.set(K_NICK, myNick);
   $('meNick').textContent = myNick;
-
   await logNickChange();
   await releaseNick(oldNick);
   await syncMyMessagesNick(myNick);
-
   try{ if(presenceChannel) await presenceChannel.track({nick:myNick, joinedAt:Date.now()}); }catch(e){}
-
   closeNickDialog();
-  toast('昵称已改为「'+myNick+'」（今日还剩 ' + (quota.left - 1) + ' 次）');
+  toast('昵称已改为「'+myNick+'」（还剩 ' + (quota.left - 1) + ' 次）');
 });
-nickInput.addEventListener('keydown',function(e){
-  if(e.key==='Enter'){e.preventDefault();$('nickSave').click();}
-});
+nickInput.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();$('nickSave').click();} });
 
 /* ============================================================
    主题绑定
@@ -2602,17 +2694,13 @@ themeBtn.addEventListener('click',openTheme);
 themeClose.addEventListener('click',closeTheme);
 themeOv.addEventListener('click',function(e){if(e.target===themeOv)closeTheme();});
 themeGrid.addEventListener('click',function(e){
-  var card=e.target.closest('[data-theme-val]');
-  if(!card)return;
+  var card=e.target.closest('[data-theme-val]'); if(!card)return;
   var id=card.getAttribute('data-theme-val');
-  applyTheme(id);
-  closeTheme();
+  applyTheme(id); closeTheme();
   var name=id;
   for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===id)name=THEMES[i].name;
   toast('已切换到 '+name);
 });
-
-/* 在线列表弹窗 */
 $('onlineBadge').addEventListener('click', openOnlineDialog);
 $('onlineClose').addEventListener('click', closeOnlineDialog);
 $('onlineOv').addEventListener('click', function(e){ if(e.target===$('onlineOv')) closeOnlineDialog(); });
@@ -2624,23 +2712,20 @@ document.addEventListener('keydown',function(e){
     else if(jumpOv.classList.contains('show'))closeJumpDialog();
     else if(styleOv.classList.contains('show'))closeStyleDialog();
     else if($('onlineOv').classList.contains('show'))closeOnlineDialog();
+    else if($('userCardOv').classList.contains('show'))closeUserCard();
+    else if(editOv.classList.contains('show'))closeEditDialog();
+    else if(settingsOv.classList.contains('show'))closeSettings();
   }
 });
 
 window.addEventListener('resize',resizeCanvas,{passive:true});
-
 document.addEventListener('visibilitychange',function(){
   particleRunning = !document.hidden;
   if(particleRunning){
     drawParticles();
-    if(!chatWrap.hidden){
-      doPollNow();
-      resetPollCountdown();
-      updateActivity();
-    }
-    if(presenceChannel){
-      try{ presenceChannel.track({nick:myNick, joinedAt:Date.now()}); }catch(e){}
-    }
+    if(!chatWrap.hidden){ doPollNow(); resetPollCountdown(); updateActivity(); }
+    if(presenceChannel){ try{ presenceChannel.track({nick:myNick, joinedAt:Date.now()}); }catch(e){} }
+    unreadCount = 0; updateUnreadBadge();
   }
 });
 
@@ -2675,22 +2760,15 @@ function setPillOK(){
 }
 function setPillErr(){
   pillState = 'err';
-  if(refreshPill){
-    refreshPill.classList.remove('retry','loading');
-    refreshPill.classList.add('err');
-  }
+  if(refreshPill){ refreshPill.classList.remove('retry','loading'); refreshPill.classList.add('err'); }
   if(rpIcon) rpIcon.textContent = '⚠';
   var txt = refreshPill && refreshPill.querySelector('.rp-text');
   if(txt) txt.innerHTML = '连接失败';
 }
-function updateCdDisplay(){
-  if(pillState !== 'ok') return;
-  if(cdNum) cdNum.textContent = pollCountdown;
-}
+function updateCdDisplay(){ if(pillState !== 'ok') return; if(cdNum) cdNum.textContent = pollCountdown; }
 function setRpErr(){}
 function clearRpErr(){ setPillOK(); }
 function resetPollCountdown(){ pollCountdown = POLL_INTERVAL; updateCdDisplay(); }
-
 function doPollNow(){
   if(refreshPill) refreshPill.classList.add('loading');
   if(rpIcon) rpIcon.textContent = '🔄';
@@ -2701,12 +2779,9 @@ function doPollNow(){
     }, 400);
   });
 }
-
 function startPolling(){
-  stopPolling();
-  resetPollCountdown();
+  stopPolling(); resetPollCountdown();
   if(refreshPill) refreshPill.hidden = false;
-
   countdownTimer = setInterval(function(){
     if(document.hidden) return;
     if(pillState !== 'ok') return;
@@ -2716,20 +2791,16 @@ function startPolling(){
         refreshPill.classList.add('tick');
         setTimeout(function(){ refreshPill.classList.remove('tick'); }, 400);
       }
-      doPollNow();
-      pollCountdown = POLL_INTERVAL;
+      doPollNow(); pollCountdown = POLL_INTERVAL;
     }
     updateCdDisplay();
   }, 1000);
 }
-function stopPolling(){
-  if(countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
-}
+function stopPolling(){ if(countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; } }
 if(refreshPill){
   refreshPill.addEventListener('click', function(){
     if(refreshPill.classList.contains('loading')) return;
-    doPollNow();
-    resetPollCountdown();
+    doPollNow(); resetPollCountdown();
   });
 }
 
@@ -2738,11 +2809,7 @@ setInterval(function(){
   var real = allMessages.filter(function(m){ return !m.__local; });
   var els = messagesEl.querySelectorAll('.msg .time');
   var i = 0;
-  real.forEach(function(m){
-    var t = els[i];
-    if(t) t.textContent = fmtTime(m.ts);
-    i++;
-  });
+  real.forEach(function(m){ var t = els[i]; if(t) t.textContent = fmtTime(m.ts); i++; });
 },30000);
 
 /* ============================================================
@@ -2760,20 +2827,12 @@ updateSoundIcon();
   loginNick.value = saved;
   updateLoginBtn();
   setLoginStatus('正在恢复上次的昵称…', 'busy');
-
   autoClean();
   var r = await claimNick(saved);
   hideRetryOverlay();
-  if(r.ok){
-    myNick = saved;
-    setLoginStatus('✓ 欢迎回来', 'ok');
-    startChat();
-  }else if(r.reason==='taken'){
-    setLoginStatus('上次用的名字现在被占了，换一个吧', 'err');
-    storage.del(K_NICK);
-  }else{
-    setLoginStatus('网络异常，可重试', 'err');
-  }
+  if(r.ok){ myNick = saved; setLoginStatus('✓ 欢迎回来', 'ok'); startChat(); }
+  else if(r.reason==='taken'){ setLoginStatus('上次用的名字现在被占了，换一个吧', 'err'); storage.del(K_NICK); }
+  else setLoginStatus('网络异常，可重试', 'err');
 })();
 
 })();
