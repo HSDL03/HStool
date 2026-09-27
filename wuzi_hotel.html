@@ -464,7 +464,6 @@ function nickColor(nick){var h=0;for(var i=0;i<nick.length;i++){h=(h*31+nick.cha
 function randomNick(){var a=['风','云','雷','雪','光','影','星','月','火','冰','暗','花','雾','山','海','棋','石','墨','白','黑'];var b=['行者','旅人','术士','骑士','忍者','学者','猎人','棋手','弈者','落子','闲人'];return a[Math.floor(Math.random()*a.length)]+b[Math.floor(Math.random()*b.length)]+Math.floor(10+Math.random()*90);}
 function clampSize(n){n=parseInt(n,10);if(isNaN(n))n=BOARD_SIZE_DEFAULT;if(n<BOARD_SIZE_MIN)n=BOARD_SIZE_MIN;if(n>BOARD_SIZE_MAX)n=BOARD_SIZE_MAX;return n;}
 
-/* ★ 分配局域网昵称：1号/2号/3号 */
 function getNextLanNick(){
   var cached=sessionStorage.getItem('gomoku-lan-nick');
   if(cached) return cached;
@@ -476,7 +475,6 @@ function getNextLanNick(){
   return nk;
 }
 
-/* uid 用 sessionStorage，多标签页独立 */
 var uid=(function(){
   var u=sessionStorage.getItem(K_UID);
   if(!u){u='u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);sessionStorage.setItem(K_UID,u);}
@@ -500,9 +498,7 @@ function setConn(state,text){
   if(connText) connText.textContent=text;
 }
 
-/* ============================================================
-   ★ 局域网模式
-   ============================================================ */
+/* 局域网模式 */
 var LAN_MODE=false;
 var lanChannel=null;
 var lanRooms={};
@@ -564,7 +560,6 @@ function saveLanRooms(){try{localStorage.setItem('gomoku-lan-rooms',JSON.stringi
 function enterLanMode(reason){
   if(LAN_MODE) return;
   LAN_MODE=true;
-  /* 局域网模式必须有昵称：没昵称自动分配 1号/2号 */
   if(!myNick){
     var auto=getNextLanNick();
     myNick=auto;
@@ -616,14 +611,13 @@ function joinLanRoom(code){
   }
   if(room.host_uid===uid){location.href='./wuzi_game.html?lan=1&room='+encodeURIComponent(code);return;}
   room.guest_uid=uid;room.guest_nick=myNick;room.status='playing';
-  room.game_started_at=Date.now();room.turn_started_at=Date.now();room.last_active=Date.now();
+  room.game_started_at=Date.now();room.last_active=Date.now();
   lanRooms[code]=room;
   saveLanRooms();
   if(lanChannel) lanChannel.postMessage({type:'room-created',room:room});
   location.href='./wuzi_game.html?lan=1&room='+encodeURIComponent(code);
 }
 
-/* ★ 局域网全局空置清理 */
 function lanCleanup(){
   if(!LAN_MODE) return;
   var dirty=false;
@@ -641,8 +635,6 @@ function lanCleanup(){
     renderRooms();
   }
 }
-
-/* ★ 服务器模式全局清理 */
 function serverCleanup(){
   if(LAN_MODE||!sb) return;
   var cutoff=Date.now()-ROOM_IDLE_MS;
@@ -653,7 +645,6 @@ function serverCleanup(){
       sb.from('gomoku_rooms').delete().in('code',codes).then(function(){});
     }).catch(function(){});
 }
-
 var cleanupTimer=null;
 function startCleanup(){
   if(cleanupTimer) return;
@@ -691,7 +682,6 @@ async function claimNick(nick){
   return {ok:true};
 }
 
-/* 主题 */
 var THEMES=[
   {id:'mc-wiki',name:'🟩 MC Wiki',desc:'我的世界中文 Wiki',colors:['#3d521f','#fffdf5','#56682c']},
   {id:'mc-night',name:'⬛ MC 夜晚',desc:'Minecraft 夜间模式',colors:['#8ec44a','#1a1a1a','#3d521f']},
@@ -725,7 +715,6 @@ var themeOv=$('themeOv'),themeGrid=$('themeGrid'),themeBtn=$('themeBtn'),themeCl
 function openTheme(){buildThemeGrid();themeOv.classList.add('show');}
 function closeTheme(){themeOv.classList.remove('show');}
 
-/* 粒子 */
 function buildFloatDecor(){
   var wrap=$('floatDecor');if(!wrap)return;
   wrap.innerHTML='';
@@ -867,7 +856,6 @@ function loadRooms(silent){
       setConn('on','已连接');
       var list=res.data||[];
       var now=Date.now();
-      /* ★ 先清理超时空置房间 */
       var idleCodes=[];
       list.forEach(function(r){
         var la=parseInt(r.last_active,10)||0;
@@ -876,7 +864,6 @@ function loadRooms(silent){
       if(idleCodes.length>0){
         sb.from('gomoku_rooms').delete().in('code',idleCodes).then(function(){}).catch(function(){});
       }
-      /* 过滤显示 */
       list=list.filter(function(r){
         var la=parseInt(r.last_active,10)||0;
         if(now-la>ROOM_IDLE_MS) return false;
@@ -983,7 +970,6 @@ function subscribeRooms(){
     });
 }
 
-/* 播报 */
 var annBanner=$('annBanner'),annText=$('annText'),annTime=$('annTime'),annClose=$('annClose');
 var annHistory=$('annHistory'),annHistoryList=$('annHistoryList');
 var annChannel=null,annPollTimer=null;
@@ -1060,7 +1046,6 @@ function subscribeAnn(){
     });
 }
 
-/* 创建房间 */
 var createOv=$('createOv');
 var sizeRange=$('sizeRange'),sizeNum=$('sizeNum'),sizeDisplay=$('sizeDisplay'),sizePresets=$('sizePresets');
 var currentSize=BOARD_SIZE_DEFAULT;
@@ -1202,7 +1187,8 @@ function joinRoom(code){
       if(!r){toast('房间不存在或已关闭');return;}
       if(r.status!=='waiting'){toast('房间已满或已开局');return;}
       if(r.host_uid===uid){gotoRoom(code);return;}
-      sb.from('gomoku_rooms').update({guest_uid:uid,guest_nick:myNick,status:'playing',last_active:Date.now(),game_started_at:Date.now(),turn_started_at:Date.now()})
+      /* ★ 不再写 turn_started_at，避免跨时钟 */
+      sb.from('gomoku_rooms').update({guest_uid:uid,guest_nick:myNick,status:'playing',last_active:Date.now(),game_started_at:Date.now()})
         .eq('code',code).eq('status','waiting').then(function(res2){
           if(res2.error){toast('加入失败：'+res2.error.message);return;}
           gotoRoom(code);
@@ -1217,7 +1203,6 @@ function joinRoom(code){
 
 function gotoRoom(code){location.href='./wuzi_game.html?room='+encodeURIComponent(code);}
 
-/* 输入房间码 */
 var joinOv=$('joinOv'),joinBtn=$('joinByCodeBtn'),joinClose=$('joinClose'),joinCancel=$('joinCancel'),joinSave=$('joinSave'),joinInput=$('joinCodeInput');
 function openJoin(){
   if(!myNick){toast('请先设置昵称');openGate();return;}
@@ -1238,7 +1223,6 @@ if(joinSave) joinSave.addEventListener('click',function(){
 });
 if(joinInput) joinInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();joinSave.click();}});
 
-/* 昵称 */
 var nickGate=$('nickGate'),gateInput=$('gateInput'),gateStatus=$('gateStatus'),gateBtn=$('gateBtn'),gateRandom=$('gateRandom'),gateLanBtn=$('gateLanBtn');
 function setGateStatus(text,cls){if(!gateStatus)return;gateStatus.textContent=text||'';gateStatus.className='gate-status'+(cls?' '+cls:'');}
 function updateGateBtn(){var v=gateInput?gateInput.value.trim():'';if(gateBtn)gateBtn.disabled=!v||v.length>12;}
@@ -1254,7 +1238,6 @@ if(gateInput) gateInput.addEventListener('input',function(){updateGateBtn();setG
 if(gateInput) gateInput.addEventListener('keydown',function(e){if(e.key==='Enter'&&!gateBtn.disabled){e.preventDefault();submitGate();}});
 if(gateRandom) gateRandom.addEventListener('click',function(){if(gateInput){gateInput.value=randomNick();updateGateBtn();setGateStatus('');}});
 
-/* ★ 直接用局域网模式 */
 if(gateLanBtn) gateLanBtn.addEventListener('click',function(){
   var auto=getNextLanNick();
   myNick=auto;
@@ -1283,7 +1266,6 @@ async function submitGate(){
 }
 if(gateBtn) gateBtn.addEventListener('click',submitGate);
 
-/* 修改昵称 */
 var nickOv=$('nickOv'),nickInput=$('nickInput'),nickHint=$('nickHint');
 function openNick(){
   if(!myNick){openGate();return;}
