@@ -11,6 +11,17 @@
     "hidden": false
   },
   {
+    "id": "tool-mujq8js1-nyf7",
+    "icon": "🧰",
+    "name": "五子棋",
+    "desc": "博弈",
+    "tag": "游戏",
+    "url": "./wuzi_hotel.html",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
     "id": "download",
     "icon": "📥",
     "name": "下载站",
