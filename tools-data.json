@@ -42,5 +42,16 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mujaf3w7-bq61",
+    "icon": "🏷️",
+    "name": "admin",
+    "desc": "菜单嗯对",
+    "tag": "管理",
+    "url": "./admin.html",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]
