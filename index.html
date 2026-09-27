@@ -166,7 +166,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .b3{width:340px;height:340px;background:var(--blob3);top:38%;left:52%;animation:drift3 42s ease-in-out infinite}
 @keyframes drift1{0%,100%{transform:translate(0,0) scale(1);opacity:.85}50%{transform:translate(50px,50px) scale(1.08);opacity:1}}
 @keyframes drift2{0%,100%{transform:translate(0,0) scale(1);opacity:.8}50%{transform:translate(-60px,-50px) scale(1.05);opacity:.95}}
-@keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50px,-60px) scale(1.1);opacity:.9}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50%,-60px) scale(1.1);opacity:.9}}
 .grid-bg{position:absolute;inset:0;
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:36px 36px;
@@ -279,6 +279,69 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme^="github-"] .tc-icon{border-width:1px;border-radius:10px}
 [data-theme^="github-"] .empty-col{border-radius:10px}
 [data-theme^="github-"] .section-title::before{border-radius:2px}
+
+/* ==================== 角落状态指示器 ==================== */
+.status-pill{
+  position:fixed;
+  right:14px;
+  bottom:14px;
+  z-index:80;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px 6px 8px;
+  font-size:11px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;
+  color:var(--muted);
+  background:var(--bg2);
+  border:1px solid var(--bd);
+  border-radius:999px;
+  box-shadow:var(--bevel);
+  cursor:pointer;
+  user-select:none;
+  transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  opacity:.75;
+}
+[data-theme^="mc-"] .status-pill{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
+.status-pill:hover{
+  opacity:1;
+  transform:translateY(-2px);
+  color:var(--text);
+  border-color:var(--ac);
+}
+.status-pill:active{transform:translateY(0) scale(.97)}
+.status-pill .sp-dot{
+  width:8px;height:8px;flex:none;border-radius:50%;
+  background:var(--ok);
+  box-shadow:0 0 0 2px rgba(45,122,45,.15);
+  transition:background .3s,box-shadow .3s;
+}
+[data-theme^="mc-"] .status-pill .sp-dot{border-radius:0}
+.status-pill.busy .sp-dot{background:var(--ac);box-shadow:0 0 0 2px var(--acs);animation:spPulse 1s infinite}
+.status-pill.err .sp-dot{background:var(--dgr);box-shadow:0 0 0 2px rgba(160,32,32,.2)}
+.status-pill .sp-text{
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.status-pill .sp-sep{opacity:.35}
+.status-pill .sp-lat{color:var(--ac);font-weight:700}
+.status-pill.err .sp-lat{color:var(--dgr)}
+@keyframes spPulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+@media(max-width:640px){
+  .status-pill{
+    right:8px;bottom:8px;
+    padding:5px 8px 5px 7px;
+    font-size:10px;
+    opacity:.65;
+  }
+  .status-pill .sp-text .sp-hide-sm{display:none}
+}
+@media print{.status-pill{display:none}}
+
 @media(max-width:900px){
   .columns{grid-template-columns:1fr;gap:32px}
   .tool-grid.deprecated{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
@@ -357,6 +420,16 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 
 <div class="toast" id="toast"></div>
 
+<!-- 角落状态指示器 -->
+<div class="status-pill" id="statusPill" title="点击立即刷新">
+  <span class="sp-dot" id="spDot"></span>
+  <span class="sp-text">
+    <span id="spTime" class="sp-hide-sm">--:--:--</span>
+    <span class="sp-sep sp-hide-sm">·</span>
+    <span class="sp-lat" id="spLat">--ms</span>
+  </span>
+</div>
+
 <script>
 (function(){
 'use strict';
@@ -394,6 +467,12 @@ function escapeHtml(s){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
+function pad2(n){return n<10?'0'+n:''+n;}
+function fmtTime(ts){
+  var d = new Date(ts);
+  return pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());
+}
+
 var storage={
   get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
   set:function(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
@@ -464,6 +543,28 @@ function toast(msg){
 }
 
 /* ============================================================
+   角落指示器
+   ============================================================ */
+var spPill = $('statusPill');
+var spDot = $('spDot');
+var spTime = $('spTime');
+var spLat = $('spLat');
+
+function spSetBusy(){
+  if(spPill) spPill.className = 'status-pill busy';
+  if(spLat) spLat.textContent = '...';
+}
+function spSetOK(ts, lat){
+  if(spPill) spPill.className = 'status-pill';
+  if(spTime) spTime.textContent = fmtTime(ts);
+  if(spLat) spLat.textContent = lat+'ms';
+}
+function spSetErr(lat){
+  if(spPill) spPill.className = 'status-pill err';
+  if(spLat) spLat.textContent = (lat?lat+'ms':'失败');
+}
+
+/* ============================================================
    数据规范化
    ============================================================ */
 function normTool(t, i){
@@ -492,7 +593,7 @@ function normList(arr){
 }
 
 /* ============================================================
-   localStorage 缓存兜底
+   localStorage 缓存
    ============================================================ */
 function loadToolsCache(){
   try{
@@ -513,7 +614,7 @@ function saveToolsCache(list){
 }
 
 /* ============================================================
-   远程加载（raw 优先，CDN 兜底）
+   远程加载（带延迟计时）
    ============================================================ */
 function fetchJson(url){
   return fetch(url, { cache: 'no-store' })
@@ -526,24 +627,32 @@ function loadTools(){
   var url1 = RAW_BASE + DATA_FILE + '?t=' + Date.now();
   var url2 = CDN_BASE + DATA_FILE + '?t=' + Date.now();
 
+  var t0 = Date.now();
+  spSetBusy();
+
   return fetchJson(url1)
     .catch(function(){
       return fetchJson(url2);
     })
     .then(function(data){
+      var lat = Date.now() - t0;
       if(Array.isArray(data) && data.length > 0){
         var list = normList(data);
         if(list.length > 0){
           TOOLS = list;
           saveToolsCache(list);
-          return true;
+          spSetOK(Date.now(), lat);
+          return { ok:true, lat:lat };
         }
       }
-      return false;
+      spSetOK(Date.now(), lat);
+      return { ok:false, lat:lat };
     })
     .catch(function(err){
+      var lat = Date.now() - t0;
       console.warn('[index] 远程加载失败，保持现状', err);
-      return false;
+      spSetErr(lat);
+      return { ok:false, lat:lat, err:true };
     });
 }
 
@@ -621,14 +730,12 @@ function renderTools(){
   }
 }
 
-/* 判断列表是否变化（避免无意义重渲染闪屏） */
 function toolsSignature(list){
   return list.map(function(t){
     return [t.id, t.icon, t.name, t.desc, t.tag, t.url, t.deprecated, t.disabled, t.hidden].join('|');
   }).join('||');
 }
 var lastSignature = '';
-
 function renderIfChanged(){
   var sig = toolsSignature(TOOLS);
   if(sig === lastSignature) return false;
@@ -851,9 +958,9 @@ function silentRefresh(){
   if(refreshing) return;
   if(document.hidden) return;
   refreshing = true;
-  loadTools().then(function(ok){
+  loadTools().then(function(res){
     refreshing = false;
-    if(ok) renderIfChanged();
+    if(res && res.ok) renderIfChanged();
   }).catch(function(){
     refreshing = false;
   });
@@ -891,10 +998,21 @@ function bind(){
       if(reloadBtn.classList.contains('spin-anim'))return;
       reloadBtn.classList.add('spin-anim');
       toast('正在刷新…');
-      loadTools().then(function(ok){
-        lastSignature = '';      /* 强制重渲染 */
+      loadTools().then(function(res){
+        lastSignature = '';
         renderTools();
         setTimeout(function(){reloadBtn.classList.remove('spin-anim');},400);
+      });
+    });
+  }
+
+  /* 角落指示器点击刷新 */
+  if(spPill){
+    spPill.addEventListener('click',function(){
+      if(refreshing)return;
+      toast('正在刷新…');
+      loadTools().then(function(res){
+        if(res && res.ok) renderIfChanged();
       });
     });
   }
@@ -906,12 +1024,11 @@ function bind(){
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',function(){resizeCanvas();onScroll();},{passive:true});
 
-  /* 页面可见性：隐藏时暂停刷新和粒子，可见时立即刷一次 */
   document.addEventListener('visibilitychange',function(){
     particleRunning = !document.hidden;
     if(particleRunning){
       drawParticles();
-      silentRefresh();          /* 回来时立刻拉一次 */
+      silentRefresh();
       startAutoRefresh();
     }else{
       stopAutoRefresh();
@@ -937,9 +1054,9 @@ function boot(){
   bind();
   onScroll();
 
-  /* 3. 后台异步拉远程数据，成功后覆盖 */
-  loadTools().then(function(ok){
-    if(ok) renderIfChanged();
+  /* 3. 后台异步拉远程数据 */
+  loadTools().then(function(res){
+    if(res && res.ok) renderIfChanged();
   });
 
   /* 4. 启动 120 秒自动刷新 */
