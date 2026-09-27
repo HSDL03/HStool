@@ -562,8 +562,8 @@ body{
 /* ═══════════════════════════════════════════════════════════
    Supabase 配置
    ═══════════════════════════════════════════════════════════ */
-var SUPABASE_URL = 'https://ctdkxnjccaowerkfssac.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0ZGt4bmpjY2Fvd2Vya2Zzc2FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzQ2ODgsImV4cCI6MjEwNjA1MDY4OH0.HFBGDeChv-n_BPlE1z6wXwTC4_rKzFcbkXUVCOctVqM';
+var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 
 /* ============================================================
    常量
@@ -575,7 +575,7 @@ var K_THEME = 'wiki-theme';
 var MSG_LIMIT = 200;
 var SEND_COOLDOWN = 2000;
 var MSG_MAXLEN = 500;
-var POLL_INTERVAL = 5;      /* 5 秒轮询一次 */
+var POLL_INTERVAL = 5;
 
 /* ============================================================
    工具
@@ -649,15 +649,19 @@ var msgChannel=null;
    昵称占用
    ============================================================ */
 async function claimNick(nick){
-  var ins = await sb.from('nicknames').insert({ nick: nick, uid: uid });
-  if(!ins.error) return { ok:true, mine:true };
-  if(ins.error.code === '23505'){
-    var q = await sb.from('nicknames').select('uid').eq('nick', nick).maybeSingle();
-    if(q.error) return { ok:false, reason:'net', msg:q.error.message };
-    if(q.data && q.data.uid === uid) return { ok:true, mine:true };
-    return { ok:false, reason:'taken' };
+  try{
+    var ins = await sb.from('nicknames').insert({ nick: nick, uid: uid });
+    if(!ins.error) return { ok:true, mine:true };
+    if(ins.error.code === '23505'){
+      var q = await sb.from('nicknames').select('uid').eq('nick', nick).maybeSingle();
+      if(q.error) return { ok:false, reason:'net', msg:q.error.message };
+      if(q.data && q.data.uid === uid) return { ok:true, mine:true };
+      return { ok:false, reason:'taken' };
+    }
+    return { ok:false, reason:'net', msg:ins.error.message };
+  }catch(e){
+    return { ok:false, reason:'net', msg: e.message || 'Failed to fetch' };
   }
-  return { ok:false, reason:'net', msg:ins.error.message };
 }
 async function releaseNick(nick){
   if(!nick) return;
@@ -920,18 +924,22 @@ async function doSend(){
   autoResize();
   sendBtn.disabled=true;
 
-  var res = await sb.from('messages').insert({
-    uid: uid,
-    nick: myNick,
-    text: text,
-    ts: now
-  });
-  if(res.error){
-    toast('发送失败：'+res.error.message);
+  try{
+    var res = await sb.from('messages').insert({
+      uid: uid,
+      nick: myNick,
+      text: text,
+      ts: now
+    });
+    if(res.error){
+      toast('发送失败：'+res.error.message);
+      lastSendTime=0;
+    }else{
+      resetPollCountdown();
+    }
+  }catch(e){
+    toast('发送失败：'+(e.message||'网络异常'));
     lastSendTime=0;
-  }else{
-    /* 发送后立刻重置倒计时 */
-    resetPollCountdown();
   }
 }
 
@@ -1022,7 +1030,6 @@ function updateLastTs(){
   }
 }
 
-/* 合并新消息 */
 function mergeNewMessages(newOnes){
   if(newOnes.length === 0) return false;
   var changed = false;
@@ -1042,26 +1049,28 @@ function mergeNewMessages(newOnes){
   return true;
 }
 
-/* 首次加载历史 */
 async function loadHistory(){
-  var res = await sb
-    .from('messages')
-    .select('*')
-    .order('ts', { ascending: false })
-    .limit(MSG_LIMIT);
+  try{
+    var res = await sb
+      .from('messages')
+      .select('*')
+      .order('ts', { ascending: false })
+      .limit(MSG_LIMIT);
 
-  if(res.error){
-    console.warn('加载失败', res.error);
-    return;
+    if(res.error){
+      console.warn('加载失败', res.error);
+      return;
+    }
+    var arr = (res.data||[]).map(normalizeMsg);
+    arr.reverse();
+    allMessages = arr;
+    updateLastTs();
+    renderAll();
+  }catch(e){
+    console.warn('加载异常', e);
   }
-  var arr = (res.data||[]).map(normalizeMsg);
-  arr.reverse();
-  allMessages = arr;
-  updateLastTs();
-  renderAll();
 }
 
-/* 增量拉新消息 */
 async function pollNewMessages(){
   try{
     var res;
@@ -1092,7 +1101,6 @@ async function pollNewMessages(){
   }
 }
 
-/* Realtime 订阅 */
 function subscribeMessages(){
   if(msgChannel) return;
   msgChannel = sb.channel('chat-messages')
@@ -1122,7 +1130,6 @@ function subscribeMessages(){
     });
 }
 
-/* 在线人数 */
 function subscribePresence(){
   if(presenceChannel) return;
   presenceChannel = sb.channel('online-users', {
@@ -1139,10 +1146,12 @@ function subscribePresence(){
     })
     .subscribe(async function(status){
       if(status==='SUBSCRIBED'){
-        await presenceChannel.track({
-          nick: myNick,
-          online_at: Date.now()
-        });
+        try{
+          await presenceChannel.track({
+            nick: myNick,
+            online_at: Date.now()
+          });
+        }catch(e){}
       }
     });
 }
@@ -1190,7 +1199,6 @@ function startPolling(){
     if(document.hidden) return;
     pollCountdown--;
     if(pollCountdown <= 0){
-      /* 触发刷新 + 图标转一下 */
       if(refreshPill){
         refreshPill.classList.add('tick');
         setTimeout(function(){ refreshPill.classList.remove('tick'); }, 400);
@@ -1205,7 +1213,6 @@ function stopPolling(){
   if(countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
 }
 
-/* 点击胶囊 → 立即刷新 */
 if(refreshPill){
   refreshPill.addEventListener('click', function(){
     if(refreshPill.classList.contains('loading')) return;
@@ -1313,7 +1320,6 @@ document.addEventListener('keydown',function(e){
 
 window.addEventListener('resize',resizeCanvas,{passive:true});
 
-/* 页面可见性：隐藏时暂停轮询，回来时立刻刷一次 */
 document.addEventListener('visibilitychange',function(){
   particleRunning = !document.hidden;
   if(particleRunning){
@@ -1336,7 +1342,6 @@ initParticles();
 autoResize();
 updateLoginBtn();
 
-/* 自动登录 */
 (async function autoLogin(){
   var saved = storage.get(K_NICK);
   if(!saved) return;
