@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>废弃了嗯对</title>
+<title>红石的小工具箱</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
 <style>
 :root{
   --bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;
-  --bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;--dgr:#a02020;
-  --ok:#2d7a2d;--warn:#b08800;
+  --bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;
+  --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
   --sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;
   --bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);
   --bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);
@@ -18,14 +18,12 @@
   --grid:rgba(61,82,31,.04);
   --p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;
   --hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);
-  --tile-accent:linear-gradient(135deg,#7a9c3c,#3d521f);
-  color-scheme:light;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--bg);scroll-behavior:smooth}
 body{margin:0;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-/* ============ 背景装饰 ============ */
+/* 背景装饰 */
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform,opacity}
 .b1{width:420px;height:420px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 30s ease-in-out infinite}
@@ -39,7 +37,6 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   background-size:36px 36px;
   -webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%);
   mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
-
 .float-decor{position:absolute;inset:0}
 .fd{position:absolute;pointer-events:none;opacity:.22}
 .fd.ring{border:2px solid var(--ac);border-radius:50%;opacity:.14}
@@ -58,10 +55,10 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 #particles{position:absolute;inset:0;width:100%;height:100%;display:block}
 
 /* ============ 主布局 ============ */
-.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:80px 24px 80px}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:80px 24px 80px}
 
 /* Hero */
-.hero{text-align:center;padding:24px 0 40px;animation:heroIn .7s cubic-bezier(.22,1,.36,1) both}
+.hero{text-align:center;padding:24px 0 44px;animation:heroIn .7s cubic-bezier(.22,1,.36,1) both}
 @keyframes heroIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
 
 .hero-badge{
@@ -110,21 +107,42 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   letter-spacing:.02em;
 }
 
-/* 分区标题 */
+/* 两栏布局 */
+.columns{
+  display:grid;
+  grid-template-columns:1fr 320px;
+  gap:24px;
+  align-items:start;
+}
+.column{min-width:0}
+
 .section-title{
   display:flex;align-items:center;gap:8px;
-  margin:24px 0 14px;
+  margin:0 0 14px;
   font-size:13px;font-weight:700;
   letter-spacing:.08em;text-transform:uppercase;
   color:var(--muted);
 }
 .section-title::before{content:"";display:inline-block;width:8px;height:8px;background:var(--ac);box-shadow:var(--bevel)}
+.section-title.deprecated::before{background:var(--muted);opacity:.5}
+.section-title .count{
+  font-size:11px;padding:1px 8px;background:var(--bg2);
+  border:1px solid var(--bd);border-radius:10px;
+  letter-spacing:0;text-transform:none;
+  font-weight:600;
+}
 
 /* 工具卡片网格 */
 .tool-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
   gap:14px;
+}
+
+/* 右侧已废弃栏 - 单列 */
+.tool-grid.deprecated{
+  grid-template-columns:1fr;
+  gap:12px;
 }
 
 .tool-card{
@@ -143,7 +161,7 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 }
 .tool-card::before{
   content:"";position:absolute;inset:0;
-  background:var(--tile-accent);
+  background:linear-gradient(135deg,#7a9c3c,#3d521f);
   opacity:0;transition:opacity .3s;
   pointer-events:none;
 }
@@ -154,8 +172,6 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 }
 .tool-card:hover::before{opacity:.08}
 .tool-card:active{transform:translateY(-1px) scale(.99)}
-.tool-card.disabled{cursor:not-allowed;opacity:.55}
-.tool-card.disabled:hover{transform:none;box-shadow:var(--bevel)}
 
 @keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
 
@@ -196,11 +212,6 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   border:1px solid var(--ac);
   color:var(--ac);
 }
-.tool-card.disabled .tc-tag{
-  background:var(--bg3);
-  border-color:var(--bd);
-  color:var(--muted);
-}
 
 .tc-arrow{
   flex:none;
@@ -211,11 +222,57 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   transition:all .3s cubic-bezier(.34,1.56,.64,1);
 }
 .tool-card:hover .tc-arrow{opacity:1;transform:translateX(0)}
-.tool-card.disabled .tc-arrow{display:none}
+
+/* 已废弃卡片特殊样式 */
+.tool-card.deprecated{
+  border-color:var(--bd);
+  border-style:dashed;
+  opacity:.7;
+  filter:grayscale(.35);
+}
+.tool-card.deprecated:hover{
+  opacity:1;
+  filter:none;
+  border-style:solid;
+}
+.tool-card.deprecated .tc-name{color:var(--muted)}
+.tool-card.deprecated:hover .tc-name{color:#1a2a0a}
+.tool-card.deprecated .tc-tag{
+  background:transparent;
+  border-color:var(--bd);
+  color:var(--muted);
+}
+
+/* 空状态 */
+.empty-col{
+  padding:60px 24px;
+  text-align:center;
+  background:var(--bg2);
+  border:2px dashed var(--bd);
+  border-radius:2px;
+  color:var(--muted);
+}
+.empty-col .ic{
+  font-size:48px;
+  opacity:.35;
+  margin-bottom:12px;
+  display:block;
+  line-height:1;
+}
+.empty-col .title{
+  font-size:14px;font-weight:700;
+  color:var(--text);
+  margin-bottom:6px;
+}
+.empty-col .sub{
+  font-size:12.5px;
+  color:var(--muted);
+  line-height:1.7;
+}
 
 /* 页脚 */
 .foot{
-  margin-top:56px;
+  margin-top:64px;
   padding-top:20px;
   text-align:center;
   border-top:1px dashed var(--bd);
@@ -226,6 +283,10 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 .foot .heart{color:#a02020}
 
 /* 响应式 */
+@media(max-width:900px){
+  .columns{grid-template-columns:1fr;gap:32px}
+  .tool-grid.deprecated{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+}
 @media(max-width:640px){
   .wrap{padding:56px 16px 60px}
   .hero{padding:12px 0 28px}
@@ -260,8 +321,27 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
     <span class="hero-line">🛠️ 轻量 · 无依赖 · 即开即用</span>
   </div>
 
-  <div class="section-title">全部工具</div>
-  <div class="tool-grid" id="toolGrid"></div>
+  <div class="columns">
+
+    <!-- 左侧：可用工具 -->
+    <div class="column">
+      <div class="section-title">
+        可用工具
+        <span class="count" id="activeCount">0</span>
+      </div>
+      <div class="tool-grid" id="activeGrid"></div>
+    </div>
+
+    <!-- 右侧：已废弃 -->
+    <div class="column">
+      <div class="section-title deprecated">
+        已废弃
+        <span class="count" id="deprecatedCount">0</span>
+      </div>
+      <div class="tool-grid deprecated" id="deprecatedGrid"></div>
+    </div>
+
+  </div>
 
   <div class="foot">
     红石的小工具箱 · 用 <span class="heart">♥</span> 打造
@@ -274,70 +354,106 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 'use strict';
 
 /* ============================================================
-   ★ 工具列表 —— 在这里增删工具
-   每个工具需要：icon(emoji) / name / desc / tag / url
-   disabled: true 表示"开发中"，点击无效
+   ★ 工具列表
    ============================================================ */
 var TOOLS = [
+  /* --- 已废弃 --- */
   {
     icon: '📚',
     name: '红石答辩wiki',
-    desc: '轻量知识库 · 记录一切',
-    tag: '知识库',
-    url: './wiki.html'
-  },
-  {
-    icon: '🏆',
-    name: '备份计分板',
-    desc: '记分 · 导出备份 · 一键恢复',
-    tag: '工具',
-    url: './scoreboard.html'
+    desc: '轻量知识库 · 已停止维护',
+    tag: '已废弃',
+    url: './wiki.html',
+    deprecated: true
   }
+
+  /* --- 可用工具（在这里添加新工具） --- */
+  // {
+  //   icon: '🎨',
+  //   name: '配色工具',
+  //   desc: '调色板 · 色阶生成',
+  //   tag: '设计',
+  //   url: './colors.html'
+  // },
 ];
 
-/* ============ 渲染工具卡片 ============ */
-function renderTools(){
-  var grid = document.getElementById('toolGrid');
-  if(!grid) return;
-
-  var html = '';
-  TOOLS.forEach(function(t, i){
-    var cls = 'tool-card' + (t.disabled ? ' disabled' : '');
-    var href = t.disabled ? 'javascript:void(0)' : t.url;
-    var delay = Math.min(i * 50, 500);
-
-    html += '<a class="'+cls+'" href="'+href+'" style="animation-delay:'+delay+'ms" data-idx="'+i+'">' +
-      '<div class="tc-icon">' + t.icon + '</div>' +
-      '<div class="tc-info">' +
-        '<div class="tc-name">' + escapeHtml(t.name) + '</div>' +
-        '<div class="tc-desc">' + escapeHtml(t.desc) + '</div>' +
-        '<span class="tc-tag">' + escapeHtml(t.tag) + '</span>' +
-      '</div>' +
-      '<div class="tc-arrow">→</div>' +
-    '</a>';
-  });
-  grid.innerHTML = html;
-
-  // 拦截 disabled 卡片点击
-  grid.addEventListener('click', function(e){
-    var card = e.target.closest('.tool-card');
-    if(!card) return;
-    var idx = parseInt(card.getAttribute('data-idx'), 10);
-    var t = TOOLS[idx];
-    if(!t) return;
-    if(t.disabled){
-      e.preventDefault();
-      card.style.animation = 'none';
-      void card.offsetWidth;
-      card.style.animation = 'shake .35s';
-      setTimeout(function(){ card.style.animation = ''; }, 400);
-    }
-  });
-}
-
+/* ============================================================
+   渲染
+   ============================================================ */
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function renderCard(t, delay){
+  var cls = 'tool-card' + (t.deprecated ? ' deprecated' : '');
+  var href = t.disabled ? 'javascript:void(0)' : t.url;
+  return '<a class="' + cls + '" href="' + escapeHtml(href) + '"'
+    + ' style="animation-delay:' + delay + 'ms"'
+    + ' data-url="' + escapeHtml(t.url || '') + '"'
+    + (t.disabled ? ' data-disabled="1"' : '') + '>'
+    + '<div class="tc-icon">' + t.icon + '</div>'
+    + '<div class="tc-info">'
+    +   '<div class="tc-name">' + escapeHtml(t.name) + '</div>'
+    +   '<div class="tc-desc">' + escapeHtml(t.desc) + '</div>'
+    +   '<span class="tc-tag">' + escapeHtml(t.tag || '工具') + '</span>'
+    + '</div>'
+    + '<div class="tc-arrow">→</div>'
+    + '</a>';
+}
+
+function renderTools(){
+  var activeGrid = document.getElementById('activeGrid');
+  var deprecatedGrid = document.getElementById('deprecatedGrid');
+  var activeCount = document.getElementById('activeCount');
+  var deprecatedCount = document.getElementById('deprecatedCount');
+
+  var active = TOOLS.filter(function(t){ return !t.deprecated; });
+  var deprecated = TOOLS.filter(function(t){ return t.deprecated; });
+
+  /* 左侧 */
+  if (active.length === 0) {
+    activeGrid.innerHTML =
+      '<div class="empty-col">' +
+        '<span class="ic">🧰</span>' +
+        '<div class="title">还没有可用工具</div>' +
+        '<div class="sub">后续会陆续添加</div>' +
+      '</div>';
+  } else {
+    var activeHtml = '';
+    active.forEach(function(t, i){
+      activeHtml += renderCard(t, Math.min(i * 50, 500));
+    });
+    activeGrid.innerHTML = activeHtml;
+  }
+  activeCount.textContent = active.length;
+
+  /* 右侧 */
+  if (deprecated.length === 0) {
+    deprecatedGrid.innerHTML =
+      '<div class="empty-col">' +
+        '<span class="ic">🗂</span>' +
+        '<div class="title">暂无已废弃条目</div>' +
+      '</div>';
+  } else {
+    var depHtml = '';
+    deprecated.forEach(function(t, i){
+      depHtml += renderCard(t, Math.min(i * 50, 500));
+    });
+    deprecatedGrid.innerHTML = depHtml;
+  }
+  deprecatedCount.textContent = deprecated.length;
+
+  /* 拦截 disabled 卡片 */
+  document.querySelectorAll('.tool-card[data-disabled="1"]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'shake .35s';
+      setTimeout(function(){ el.style.animation = ''; }, 400);
+    });
   });
 }
 
@@ -346,7 +462,9 @@ var styleEl = document.createElement('style');
 styleEl.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}';
 document.head.appendChild(styleEl);
 
-/* ============ 浮动几何装饰 ============ */
+/* ============================================================
+   浮动几何装饰
+   ============================================================ */
 function buildFloatDecor(){
   var wrap = document.getElementById('floatDecor');
   if(!wrap) return;
@@ -371,7 +489,9 @@ function buildFloatDecor(){
   wrap.innerHTML = html;
 }
 
-/* ============ 粒子系统 — 渐变小方块 ============ */
+/* ============================================================
+   粒子系统
+   ============================================================ */
 var particleCtx = null, particles = [], particleRunning = true, pW = 0, pH = 0, pDpr = 1;
 var themeColors = ['61,82,31','106,140,60','140,180,60','180,150,80'];
 
@@ -434,7 +554,7 @@ function drawParticles(){
 
     p.alphaPhase += p.alphaSpeed;
     var a = p.alpha * (0.55 + 0.45 * Math.sin(p.alphaPhase));
-    a = Math.max(0.04, Math.min(0.55, a));
+    a = Math.max(0.04, Math.min(0.5, a));
 
     var c1 = (themeColors[p.hueIdx] || themeColors[0]).split(',').map(function(n){ return parseInt(n, 10) || 0; });
     var c2 = (themeColors[(p.hueIdx + 1) % 4] || themeColors[0]).split(',').map(function(n){ return parseInt(n, 10) || 0; });
@@ -472,16 +592,15 @@ function drawParticles(){
   requestAnimationFrame(drawParticles);
 }
 
-/* ============ 启动 ============ */
+/* ============================================================
+   启动
+   ============================================================ */
 function boot(){
   renderTools();
   buildFloatDecor();
   initParticles();
 
-  window.addEventListener('resize', function(){
-    resizeCanvas();
-  }, { passive: true });
-
+  window.addEventListener('resize', resizeCanvas, { passive: true });
   document.addEventListener('visibilitychange', function(){
     particleRunning = !document.hidden;
     if(particleRunning) drawParticles();
