@@ -53,5 +53,16 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mujch83r-f5qc",
+    "icon": "💬",
+    "name": "聊天室",
+    "desc": "和朋友们聊天",
+    "tag": "社交",
+    "url": "./chat.html",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]
