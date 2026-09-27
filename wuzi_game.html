@@ -292,7 +292,6 @@ var toastEl=$('toast'),toastTimer=null;
 function toast(msg){if(!toastEl)return;toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);}
 function nickColor(nick){var h=0;for(var i=0;i<nick.length;i++){h=(h*31+nick.charCodeAt(i))>>>0;}var p=['#e57373','#f06292','#ba68c8','#9575cd','#7986cb','#64b5f6','#4fc3f7','#4dd0e1','#4db6ac','#81c784','#aed581','#dce775','#ffd54f','#ffb74d','#ff8a65','#a1887f','#90a4ae','#e91e63','#9c27b0','#2196f3'];return p[h%p.length];}
 
-/* ★ 局域网自动分配昵称 */
 function getNextLanNick(){
   var cached=sessionStorage.getItem('gomoku-lan-nick');
   if(cached) return cached;
@@ -310,7 +309,6 @@ function getQuery(name){var m=location.search.match(new RegExp('[?&]'+name+'=([^
 var roomCode=getQuery('room').toUpperCase().trim();
 var LAN_MODE=getQuery('lan')==='1';
 
-/* ★ 局域网模式：如果没昵称，自动分配 1号/2号 */
 if(LAN_MODE&&!myNick){
   myNick=getNextLanNick();
   storage.set(K_NICK,myNick);
@@ -331,7 +329,7 @@ var state={
 };
 
 /* ============================================================
-   ★ 局域网模式
+   局域网模式
    ============================================================ */
 var lanChannel=null;
 
@@ -405,7 +403,7 @@ function reloadLanRoom(){
       state.turnStartedAt=Date.now();
       toast('对手已加入，对局开始！');
     }
-    if(r.turn_started_at) state.turnStartedAt=parseInt(r.turn_started_at,10)||Date.now();
+    /* ★ 不再读 r.turn_started_at，纯本地计时 */
     updateUI();
   }catch(e){}
 }
@@ -435,18 +433,14 @@ function saveLanRoom(){
   }catch(e){}
 }
 
-/* ============================================================
-   UI 缓存
-   ============================================================ */
+/* UI 缓存 */
 var uiSnap={};
 function setText(el,txt){if(!el)return;if(el.textContent===txt)return;el.textContent=txt;}
 function setHTML(el,html){if(!el)return;var key=el.id||'';if(uiSnap[key]===html)return;uiSnap[key]=html;el.innerHTML=html;}
 function setClass(el,cls){if(!el)return;if(el.className===cls)return;el.className=cls;}
 function setBg(el,val){if(!el)return;if(el.style.background===val)return;el.style.background=val;}
 
-/* ============================================================
-   Canvas
-   ============================================================ */
+/* Canvas */
 var canvas,ctx,dpr=1,cssW=0,cssH=0,padding=0,cell=0,stoneR=0;
 
 function initCanvas(){
@@ -638,8 +632,8 @@ function tryPlace(x,y){
       var oppNick=state.myColor==='black'?state.room.guest_nick:state.room.host_nick;
       finishGame(uid,myNick,oppNick,'five');
     } else {
+      /* ★ 局域网也只用本地时间戳 */
       state.turnStartedAt=Date.now();
-      state.room.turn_started_at=state.turnStartedAt;
       state.room.last_active=Date.now();
       saveLanRoom();
       updateUI();
@@ -664,8 +658,9 @@ function tryPlace(x,y){
       var oppNick=state.myColor==='black'?state.room.guest_nick:state.room.host_nick;
       finishGame(uid,myNick,oppNick,'five');
     } else {
+      /* ★ 只更新 last_active，不写 turn_started_at */
       state.turnStartedAt=Date.now();
-      sb.from('gomoku_rooms').update({turn_started_at:state.turnStartedAt,last_active:Date.now()}).eq('code',roomCode);
+      sb.from('gomoku_rooms').update({last_active:Date.now()}).eq('code',roomCode);
       updateUI();
     }
   }).catch(function(err){
@@ -839,6 +834,7 @@ function tick(){
   if(state.room.status!=='playing'){updateTimers(null);return;}
   if(state.gameOver){updateTimers(null);return;}
   var cur=currentTurnColor();
+  /* ★ 纯本地计时：从 turnStartedAt 开始算 */
   var startAt=state.turnStartedAt||Date.now();
   var elapsed=Date.now()-startAt;
   var remain=TURN_LIMIT_MS-elapsed;
@@ -895,9 +891,6 @@ function updateTimers(info){
   else{setText(tW,txt);setClass(tW,cls);setText(tB,'--');setClass(tB,'pc-timer');}
 }
 
-/* ============================================================
-   数据加载
-   ============================================================ */
 var roomsChannel=null,movesChannel=null,heartbeatTimer=null;
 
 function loadRoom(){
@@ -915,8 +908,9 @@ function loadRoom(){
       if(res.data.host_uid===uid) state.myColor='black';
       else if(res.data.guest_uid===uid) state.myColor='white';
       else state.myColor=null;
+      /* ★ 不写 turn_started_at */
       if(state.myColor==='white'&&res.data.status==='waiting'){
-        sb.from('gomoku_rooms').update({status:'playing',game_started_at:Date.now(),turn_started_at:Date.now(),last_active:Date.now()}).eq('code',roomCode);
+        sb.from('gomoku_rooms').update({status:'playing',game_started_at:Date.now(),last_active:Date.now()}).eq('code',roomCode);
       }
     });
 }
@@ -943,7 +937,7 @@ function subscribeRoom(){
       else if(r.guest_uid===uid) state.myColor='white';
       else state.myColor=null;
       if(oldStatus==='waiting'&&r.status==='playing'){state.turnStartedAt=Date.now();toast('对手已加入，对局开始！');}
-      if(r.turn_started_at) state.turnStartedAt=parseInt(r.turn_started_at,10);
+      /* ★ 不再读 r.turn_started_at */
       if(r.status==='finished'&&!state.finished){
         state.finished=true;state.gameOver=true;
         state.winnerUid=r.winner_uid;state.winnerNick=r.winner_nick;state.loserNick=r.loser_nick;
@@ -971,8 +965,9 @@ function subscribeMoves(){
       var mv={x:x,y:y,color:m.color,uid:m.uid,seq:parseInt(m.seq,10),ts:parseInt(m.ts,10)};
       state.moves.push(mv);rebuildBoard();
       if(!state.gameOver){var line=checkWin(mv.x,mv.y,mv.color);if(line){state.winLine=line;state.gameOver=true;}}
-      updateUI();
+      /* ★ 收到对方落子，本地重置计时 */
       if(mv.uid!==uid) state.turnStartedAt=Date.now();
+      updateUI();
     })
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
@@ -981,7 +976,6 @@ function subscribeMoves(){
     });
 }
 
-/* ★ 心跳 + 房间空置清理 */
 function startHeartbeat(){
   if(heartbeatTimer) return;
   heartbeatTimer=setInterval(function(){
@@ -1067,9 +1061,7 @@ function globalCleanup(){
     .then(function(res){
       if(res.error||!res.data||res.data.length===0) return;
       var codes=res.data.map(function(r){return r.code;});
-      sb.from('gomoku_rooms').delete().in('code',codes).then(function(){
-        console.log('🧹 清理空置房间：',codes.join(','));
-      });
+      sb.from('gomoku_rooms').delete().in('code',codes).then(function(){});
     }).catch(function(){});
 }
 
@@ -1092,7 +1084,7 @@ function startPollingFallback(){
         else if(r.guest_uid===uid) state.myColor='white';
         else state.myColor=null;
         if(oldStatus==='waiting'&&r.status==='playing'){state.turnStartedAt=Date.now();toast('对手已加入，对局开始！');}
-        if(r.turn_started_at) state.turnStartedAt=parseInt(r.turn_started_at,10);
+        /* ★ 不再读 r.turn_started_at */
         if(r.status==='finished'&&!state.finished){
           state.finished=true;state.gameOver=true;
           state.winnerUid=r.winner_uid;state.winnerNick=r.winner_nick;state.loserNick=r.loser_nick;
@@ -1124,6 +1116,7 @@ function startPollingFallback(){
             var line=checkWin(mv.x,mv.y,mv.color);
             if(line){state.winLine=line;state.gameOver=true;}
           }
+          /* ★ 收到新落子，本地重置计时 */
           if(mv.uid!==uid) state.turnStartedAt=Date.now();
           added=true;
         });
@@ -1133,7 +1126,6 @@ function startPollingFallback(){
   },POLL_MS);
 }
 
-/* 认输/退出 */
 var resignBtn=$('resignBtn');
 if(resignBtn){
   resignBtn.addEventListener('click',function(){
@@ -1173,7 +1165,6 @@ if(exitBtn) exitBtn.addEventListener('click',exitRoom);
 var leaveBtn=$('leaveBtn');
 if(leaveBtn) leaveBtn.addEventListener('click',exitRoom);
 
-/* Canvas 交互 */
 function onCanvasClick(e){var p=getPointFromEvent(e);if(!p) return;tryPlace(p.x,p.y);}
 function onCanvasMove(e){
   var p=getPointFromEvent(e);
@@ -1204,7 +1195,6 @@ if(hintCode) hintCode.addEventListener('click',function(){
   try{navigator.clipboard.writeText(roomCode);toast('已复制');}catch(e){}
 });
 
-/* 主题 */
 var THEMES=[
   {id:'mc-wiki',name:'🟩 MC Wiki',desc:'我的世界中文 Wiki',colors:['#3d521f','#fffdf5','#56682c']},
   {id:'mc-night',name:'⬛ MC 夜晚',desc:'Minecraft 夜间模式',colors:['#8ec44a','#1a1a1a','#3d521f']},
@@ -1243,7 +1233,6 @@ if(themeGrid) themeGrid.addEventListener('click',function(e){
   applyTheme(id);themeOv.classList.remove('show');
 });
 
-/* 粒子 */
 var particleCtx=null,particles=[],particleRunning=true,pW=0,pH=0,pDpr=1;
 var themeColors=['61,82,31','106,140,60','140,180,60','180,150,80'];
 function readThemeColors(){
@@ -1358,6 +1347,8 @@ async function boot(){
     hideLoading();
     resizeCanvas();
     bindCanvas();
+    /* ★ 开局时初始化计时起点 */
+    state.turnStartedAt=Date.now();
     updateUI();
     startTick();
     startHeartbeat();
@@ -1370,7 +1361,6 @@ async function boot(){
     return;
   }
 
-  /* 服务器模式 */
   if(!sb){
     showLoadError('Supabase 未加载，请刷新页面');
     setTimeout(function(){location.href='./wuzi_hotel.html';},2500);
@@ -1417,12 +1407,8 @@ async function boot(){
   startPollingFallback();
   startRoomCleanup();
 
-  if(state.room.status==='playing'&&!state.room.turn_started_at){
-    state.turnStartedAt=Date.now();
-    try{sb.from('gomoku_rooms').update({turn_started_at:state.turnStartedAt}).eq('code',roomCode);}catch(e){}
-  } else if(state.room.turn_started_at){
-    state.turnStartedAt=parseInt(state.room.turn_started_at,10)||Date.now();
-  }
+  /* ★ 关键修复：纯本地计时，不依赖服务器时间戳 */
+  state.turnStartedAt = Date.now();
 
   if(state.room.status==='playing'){
     toast('对局开始，'+(state.myColor==='black'?'你执黑先行':'你执白后手'));
