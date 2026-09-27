@@ -241,7 +241,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme^="mc-"] .load-more-hint .btn-mini{border-radius:2px;border:2px solid var(--ac);box-shadow:var(--bevel)}
 .load-more-hint .btn-mini:hover{background:var(--acs)}
 
-/* 时间分组 */
 .time-divider{text-align:center;margin:16px 0 12px;position:relative}
 .time-divider .td-txt{display:inline-block;padding:2px 12px;font-size:11px;color:var(--muted);background:var(--bg);border:1px solid var(--bd);border-radius:999px;position:relative;z-index:1}
 [data-theme^="mc-"] .time-divider .td-txt{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
@@ -306,15 +305,16 @@ html.dense .messages{padding:10px 4px 30px}
 .msg .reactions .react:hover{border-color:var(--ac);background:var(--acs)}
 .msg .reactions .react.mine{background:var(--acs);border-color:var(--ac);color:var(--ac);font-weight:700}
 
-.emoji-pop{position:absolute;top:100%;margin-top:4px;padding:6px;display:grid;grid-template-columns:repeat(6, 1fr);gap:2px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);z-index:20;animation:popIn .15s ease-out}
+/* ★ 修复：emoji 弹窗改成 fixed */
+.emoji-pop{position:fixed;padding:6px;display:grid;grid-template-columns:repeat(6, 1fr);gap:2px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);z-index:200;animation:popIn .15s ease-out}
 [data-theme^="mc-"] .emoji-pop{box-shadow:3px 3px 0 rgba(0,0,0,.3)}
 @keyframes popIn{from{opacity:0;transform:translateY(-4px) scale(.95)}to{opacity:1;transform:none}}
 .emoji-pop button{width:26px;height:26px;display:grid;place-items:center;font-size:16px;font-family:inherit;background:transparent;border:none;border-radius:4px;cursor:pointer;transition:background .12s, transform .12s}
 .emoji-pop button:hover{background:var(--acs);transform:scale(1.15)}
 
-/* @自动补全 */
 .mention-pop{position:absolute;left:0;right:0;bottom:calc(100% + 4px);max-height:200px;overflow-y:auto;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);z-index:30;animation:popIn .15s ease-out}
 [data-theme^="mc-"] .mention-pop{box-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.mention-pop[hidden]{display:none !important}
 .mention-pop .mp-item{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s}
 .mention-pop .mp-item:hover,.mention-pop .mp-item.selected{background:var(--acs)}
 .mention-pop .mp-avatar{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;font-size:12px;color:#fff;font-weight:700;flex:none}
@@ -337,7 +337,6 @@ html.dense .messages{padding:10px 4px 30px}
 .composer{flex:none;padding:12px 0 16px;background:var(--bg);border-top:1px solid var(--bd);display:flex;gap:8px;align-items:flex-end;position:relative}
 [data-theme^="mc-"] .composer{border-top-width:2px}
 
-/* ★ 修复：hidden 时强制隐藏 */
 .composer .reply-hint[hidden]{display:none !important}
 
 .composer .reply-hint{position:absolute;top:-42px;left:0;right:0;margin:0 4px;padding:6px 12px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-bottom:none;border-radius:var(--r) var(--r) 0 0;box-shadow:var(--bevel)}
@@ -471,7 +470,6 @@ html.dense .messages{padding:10px 4px 30px}
 .jump-foot .go{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
 .jump-foot .go:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 
-/* 编辑弹窗 */
 .edit-body{padding:18px}
 .edit-body textarea{width:100%;min-height:80px;padding:10px 12px;font-family:inherit;font-size:14px;line-height:1.5;color:var(--text);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);outline:none;resize:vertical}
 .edit-body textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
@@ -482,7 +480,6 @@ html.dense .messages{padding:10px 4px 30px}
 .edit-foot .save{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
 .edit-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 
-/* 设置面板 */
 .settings-body{padding:14px}
 .settings-group{padding:10px 12px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px}
 [data-theme^="mc-"] .settings-group{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
@@ -731,7 +728,6 @@ html.dense .messages{padding:10px 4px 30px}
   </div>
 </div>
 
-<!-- 用户资料卡 -->
 <div class="ov" id="userCardOv">
   <div class="pnl" style="max-width:360px">
     <div class="ph"><strong>用户信息</strong><span class="sp"></span><button class="icon" id="userCardClose">✕</button></div>
@@ -748,7 +744,6 @@ html.dense .messages{padding:10px 4px 30px}
   </div>
 </div>
 
-<!-- 编辑消息弹窗 -->
 <div class="ov" id="editOv">
   <div class="pnl">
     <div class="ph"><strong>编辑消息</strong><span class="sp"></span><button class="icon" id="editClose">✕</button></div>
@@ -762,7 +757,6 @@ html.dense .messages{padding:10px 4px 30px}
   </div>
 </div>
 
-<!-- 设置面板 -->
 <div class="ov" id="settingsOv">
   <div class="pnl">
     <div class="ph"><strong>界面设置</strong><span class="sp"></span><button class="icon" id="settingsClose">✕</button></div>
@@ -843,7 +837,6 @@ var K_FS    = 'chat-fontsize';
 var K_DENSE = 'chat-dense';
 var K_NOANIM= 'chat-noanim';
 var K_SENDKEY='chat-sendkey';
-var K_SCROLL_TOP = 'chat-scroll-top';
 
 var MSG_LIMIT = 200;
 var SEND_COOLDOWN = 2000;
@@ -940,18 +933,13 @@ function toast(msg){
 }
 
 /* ============================================================
-   屏蔽用户
+   屏蔽
    ============================================================ */
 var blockedUids = (function(){
-  try{
-    var raw = storage.get(K_BLOCK);
-    if(raw) return JSON.parse(raw) || {};
-  }catch(e){}
+  try{ var raw = storage.get(K_BLOCK); if(raw) return JSON.parse(raw) || {}; }catch(e){}
   return {};
 })();
-function saveBlocked(){
-  try{ storage.set(K_BLOCK, JSON.stringify(blockedUids)); }catch(e){}
-}
+function saveBlocked(){ try{ storage.set(K_BLOCK, JSON.stringify(blockedUids)); }catch(e){} }
 
 /* ============================================================
    提示音
@@ -1001,13 +989,9 @@ function withRetry(fn, opts){
       .then(function(){ return fn(); })
       .then(function(res){ return { ok:true, data:res, attempts:attempt }; })
       .catch(function(err){
-        if(attempt >= max || !shouldRetry(err)){
-          return { ok:false, err:err, attempts:attempt };
-        }
+        if(attempt >= max || !shouldRetry(err)){ return { ok:false, err:err, attempts:attempt }; }
         var delay = calcDelay(attempt);
-        if(opts.onRetry){
-          try{ opts.onRetry(attempt+1, max, delay, label); }catch(e){}
-        }
+        if(opts.onRetry){ try{ opts.onRetry(attempt+1, max, delay, label); }catch(e){} }
         return sleep(delay).then(go);
       });
   }
@@ -1020,10 +1004,7 @@ function sbQuery(label, queryFn, options){
       if(res && res.error){
         var msg = String(res.error.message || res.error || '');
         var isNetwork = /fetch|network|timeout|abort|connection/i.test(msg);
-        var e = new Error(msg);
-        e.__isNetwork = isNetwork;
-        e.__res = res;
-        throw e;
+        var e = new Error(msg); e.__isNetwork = isNetwork; e.__res = res; throw e;
       }
       return res;
     });
@@ -1041,7 +1022,7 @@ function sbQuery(label, queryFn, options){
 }
 
 /* ============================================================
-   重试提示 UI
+   重试提示
    ============================================================ */
 var offlineMask = $('offlineMask');
 var retryHideTimer = null;
@@ -1058,7 +1039,7 @@ function hideRetryOverlay(){
 }
 
 /* ============================================================
-   Supabase 初始化
+   Supabase
    ============================================================ */
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   realtime: { params: { eventsPerSecond: 10 } }
@@ -1066,18 +1047,12 @@ var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 var uid=(function(){
   var u=storage.get(K_UID);
-  if(!u){
-    u='u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
-    storage.set(K_UID,u);
-  }
+  if(!u){ u='u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8); storage.set(K_UID,u); }
   return u;
 })();
 
 var myNick='';
-var presenceChannel=null;
-var msgChannel=null;
-var reactionChannel=null;
-var typingChannel=null;
+var presenceChannel=null, msgChannel=null, reactionChannel=null, typingChannel=null;
 
 var myStyle=(function(){
   try{
@@ -1096,11 +1071,8 @@ var myStyle=(function(){
 })();
 var styleMap={};
 var reactionsMap={};
-function saveMyStyleLocal(){
-  try{ storage.set(K_STYLE, JSON.stringify(myStyle)); }catch(e){}
-}
+function saveMyStyleLocal(){ try{ storage.set(K_STYLE, JSON.stringify(myStyle)); }catch(e){} }
 
-/* 界面选项 */
 var chatFontSize = parseInt(storage.get(K_FS) || '14', 10);
 if(isNaN(chatFontSize) || chatFontSize < 12 || chatFontSize > 22) chatFontSize = 14;
 var denseMode = storage.get(K_DENSE) === '1';
@@ -1108,16 +1080,12 @@ var noAnim = storage.get(K_NOANIM) === '1';
 var sendKey = storage.get(K_SENDKEY) || 'enter';
 
 /* ============================================================
-   在线列表
+   在线
    ============================================================ */
 var onlineUsers = [];
 function renderOnlineList(){
-  var el = $('onlineList');
-  if(!el) return;
-  if(onlineUsers.length === 0){
-    el.innerHTML = '<div class="online-empty">只有你一个</div>';
-    return;
-  }
+  var el = $('onlineList'); if(!el) return;
+  if(onlineUsers.length === 0){ el.innerHTML = '<div class="online-empty">只有你一个</div>'; return; }
   var sorted = onlineUsers.slice().sort(function(a,b){
     if(a.uid===uid) return -1;
     if(b.uid===uid) return 1;
@@ -1142,25 +1110,16 @@ function renderOnlineList(){
 }
 function openOnlineDialog(){ renderOnlineList(); $('onlineOv').classList.add('show'); }
 function closeOnlineDialog(){ $('onlineOv').classList.remove('show'); }
-
 $('onlineList').addEventListener('click', function(e){
-  var btn = e.target.closest('[data-block-uid]');
-  if(!btn) return;
+  var btn = e.target.closest('[data-block-uid]'); if(!btn) return;
   var targetUid = btn.getAttribute('data-block-uid');
-  if(blockedUids[targetUid]){
-    delete blockedUids[targetUid];
-    toast('已取消屏蔽');
-  }else{
-    blockedUids[targetUid] = 1;
-    toast('已屏蔽，该用户的消息不再显示');
-  }
-  saveBlocked();
-  renderOnlineList();
-  renderAll();
+  if(blockedUids[targetUid]){ delete blockedUids[targetUid]; toast('已取消屏蔽'); }
+  else{ blockedUids[targetUid] = 1; toast('已屏蔽'); }
+  saveBlocked(); renderOnlineList(); renderAll();
 });
 
 /* ============================================================
-   网络事件
+   网络
    ============================================================ */
 window.addEventListener('online', function(){ toast('网络已恢复'); hideRetryOverlay(); if(!chatWrap.hidden){ doPollNow(); resetPollCountdown(); } });
 window.addEventListener('offline', function(){
@@ -1169,61 +1128,58 @@ window.addEventListener('offline', function(){
 });
 
 /* ============================================================
-   自动清理
+   清理
    ============================================================ */
 async function autoClean(){
   var now = Date.now();
-  var nickCutoff = now - NICK_INACTIVE_DAYS * 24 * 3600 * 1000;
-  var msgCutoff  = now - MSG_KEEP_DAYS * 24 * 3600 * 1000;
-  var changeCutoff = now - 24 * 3600 * 1000;
-  await sbQuery('清理过期昵称', function(){ return sb.from('nicknames').delete().lt('last_active', nickCutoff); }, { max: 2, silent: true });
-  await sbQuery('清理过期消息', function(){ return sb.from('messages').delete().lt('ts', msgCutoff); }, { max: 2, silent: true });
-  await sbQuery('清理改名记录', function(){ return sb.from('nick_changes').delete().lt('changed_at', changeCutoff); }, { max: 2, silent: true });
+  await sbQuery('清理过期昵称', function(){ return sb.from('nicknames').delete().lt('last_active', now - NICK_INACTIVE_DAYS*24*3600*1000); }, { max:2, silent:true });
+  await sbQuery('清理过期消息', function(){ return sb.from('messages').delete().lt('ts', now - MSG_KEEP_DAYS*24*3600*1000); }, { max:2, silent:true });
+  await sbQuery('清理改名记录', function(){ return sb.from('nick_changes').delete().lt('changed_at', now - 24*3600*1000); }, { max:2, silent:true });
 }
 async function updateActivity(){
   if(!myNick) return;
-  await sbQuery('更新活跃', function(){ return sb.from('nicknames').update({ last_active: Date.now() }).eq('nick', myNick).eq('uid', uid); }, { max: 2, silent: true });
+  await sbQuery('更新活跃', function(){ return sb.from('nicknames').update({ last_active: Date.now() }).eq('nick', myNick).eq('uid', uid); }, { max:2, silent:true });
 }
 
 /* ============================================================
    改名次数
    ============================================================ */
 async function getNickChangeQuota(){
-  var dayAgo = Date.now() - 24 * 3600 * 1000;
+  var dayAgo = Date.now() - 24*3600*1000;
   var r = await sbQuery('查询改名次数', function(){
     return sb.from('nick_changes').select('id').eq('uid', uid).gte('changed_at', dayAgo);
-  }, { max: 2, silent: true });
+  }, { max:2, silent:true });
   if(!r.ok) return { ok:false, used:NICK_CHANGE_MAX_PER_DAY, left:0 };
   var used = (r.data && r.data.data ? r.data.data.length : 0);
-  return { ok:true, used: used, left: Math.max(0, NICK_CHANGE_MAX_PER_DAY - used) };
+  return { ok:true, used:used, left: Math.max(0, NICK_CHANGE_MAX_PER_DAY - used) };
 }
 async function logNickChange(){
-  await sbQuery('记录改名', function(){ return sb.from('nick_changes').insert({ uid: uid, changed_at: Date.now() }); }, { max: 2, silent: true });
+  await sbQuery('记录改名', function(){ return sb.from('nick_changes').insert({ uid:uid, changed_at:Date.now() }); }, { max:2, silent:true });
 }
 
 /* ============================================================
    昵称
    ============================================================ */
 async function claimNick(nick){
-  var r = await sbQuery('占用昵称', function(){ return sb.from('nicknames').insert({ nick: nick, uid: uid, last_active: Date.now() }); });
+  var r = await sbQuery('占用昵称', function(){ return sb.from('nicknames').insert({ nick:nick, uid:uid, last_active:Date.now() }); });
   if(r.ok) return { ok:true, mine:true };
   var err = r.err;
   if(err && err.__res && err.__res.error && err.__res.error.code === '23505'){
     var q = await sbQuery('查询昵称', function(){ return sb.from('nicknames').select('uid').eq('nick', nick).maybeSingle(); });
-    if(!q.ok) return { ok:false, reason:'net', msg:'查询失败，请重试' };
+    if(!q.ok) return { ok:false, reason:'net', msg:'查询失败' };
     var row = q.data && q.data.data;
     if(row && row.uid === uid){ await updateActivity(); return { ok:true, mine:true }; }
     return { ok:false, reason:'taken' };
   }
-  return { ok:false, reason:'net', msg:'网络异常，请重试' };
+  return { ok:false, reason:'net', msg:'网络异常' };
 }
 async function releaseNick(nick){
   if(!nick) return;
   await sbQuery('释放昵称', function(){ return sb.from('nicknames').delete().eq('nick', nick).eq('uid', uid); });
 }
 async function syncMyMessagesNick(newNick){
-  var r = await sbQuery('同步消息昵称', function(){ return sb.from('messages').update({ nick: newNick }).eq('uid', uid); }, { max: 2, silent: true });
-  if(!r.ok) console.warn('同步消息昵称失败', r.err);
+  var r = await sbQuery('同步昵称', function(){ return sb.from('messages').update({ nick:newNick }).eq('uid', uid); }, { max:2, silent:true });
+  if(!r.ok) console.warn('同步昵称失败', r.err);
   allMessages.forEach(function(m){ if(m.uid === uid) m.nick = newNick; });
   renderAll();
 }
@@ -1236,7 +1192,7 @@ async function loadStylesFor(uids){
   var uniq=[], seen={};
   uids.forEach(function(u){ if(u && !seen[u]){ seen[u]=1; uniq.push(u); } });
   if(uniq.length === 0) return;
-  var r = await sbQuery('加载样式', function(){ return sb.from('user_styles').select('*').in('uid', uniq); }, { max: 2, silent: true });
+  var r = await sbQuery('加载样式', function(){ return sb.from('user_styles').select('*').in('uid', uniq); }, { max:2, silent:true });
   if(!r.ok) return;
   (r.data && r.data.data || []).forEach(function(s){
     styleMap[s.uid] = {
@@ -1250,14 +1206,10 @@ async function loadStylesFor(uids){
 async function saveMyStyle(){
   var r = await sbQuery('保存样式', function(){
     return sb.from('user_styles').upsert({
-      uid: uid,
-      avatar_color: myStyle.avatar,
-      bubble_bg: myStyle.bubble,
-      text_color: myStyle.text,
-      avatar_emoji: myStyle.emoji,
-      updated_at: Date.now()
-    }, { onConflict: 'uid' });
-  }, { max: 3 });
+      uid:uid, avatar_color:myStyle.avatar, bubble_bg:myStyle.bubble,
+      text_color:myStyle.text, avatar_emoji:myStyle.emoji, updated_at:Date.now()
+    }, { onConflict:'uid' });
+  }, { max:3 });
   return r.ok;
 }
 function getStyleFor(m){
@@ -1274,27 +1226,27 @@ function getStyleFor(m){
 }
 
 /* ============================================================
-   表情回应
+   表情
    ============================================================ */
 async function loadReactionsFor(msgIds){
   if(!msgIds || msgIds.length === 0) return;
-  var r = await sbQuery('加载表情', function(){ return sb.from('reactions').select('*').in('msg_id', msgIds); }, { max: 2, silent: true });
+  var r = await sbQuery('加载表情', function(){ return sb.from('reactions').select('*').in('msg_id', msgIds); }, { max:2, silent:true });
   if(!r.ok) return;
   reactionsMap = {};
   (r.data && r.data.data || []).forEach(function(row){
     if(!reactionsMap[row.msg_id]) reactionsMap[row.msg_id] = [];
-    reactionsMap[row.msg_id].push({ uid: row.uid, emoji: row.emoji });
+    reactionsMap[row.msg_id].push({ uid:row.uid, emoji:row.emoji });
   });
 }
 async function toggleReaction(msgId, emoji){
   var list = reactionsMap[msgId] || [];
   var mine = list.find(function(x){ return x.uid === uid && x.emoji === emoji; });
   if(mine){
-    await sbQuery('取消表情', function(){ return sb.from('reactions').delete().eq('msg_id', msgId).eq('uid', uid).eq('emoji', emoji); }, { max: 2, silent: true });
+    await sbQuery('取消表情', function(){ return sb.from('reactions').delete().eq('msg_id', msgId).eq('uid', uid).eq('emoji', emoji); }, { max:2, silent:true });
     reactionsMap[msgId] = list.filter(function(x){ return !(x.uid===uid && x.emoji===emoji); });
   }else{
-    await sbQuery('添加表情', function(){ return sb.from('reactions').insert({ msg_id: msgId, uid: uid, emoji: emoji, created_at: Date.now() }); }, { max: 2, silent: true });
-    reactionsMap[msgId] = list.concat([{ uid: uid, emoji: emoji }]);
+    await sbQuery('添加表情', function(){ return sb.from('reactions').insert({ msg_id:msgId, uid:uid, emoji:emoji, created_at:Date.now() }); }, { max:2, silent:true });
+    reactionsMap[msgId] = list.concat([{ uid:uid, emoji:emoji }]);
   }
   renderAll();
 }
@@ -1310,21 +1262,15 @@ function groupReactions(msgId){
 }
 
 /* ============================================================
-   文本渲染（链接、Markdown、@提及、高亮）
+   富文本
    ============================================================ */
-function renderRichText(text, myNickname, searchQ){
+function renderRichText(text, searchQ){
   var safe = esc(text);
-  /* Markdown 简易 */
   safe = safe.replace(/`([^`\n]+)`/g, '<code>$1</code>');
   safe = safe.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
   safe = safe.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
-  /* 链接识别 */
   safe = safe.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-  /* @提及 */
-  safe = safe.replace(/@([\u4e00-\u9fa5\w\-]{1,20})/g, function(m, name){
-    return '<span class="mention">@' + name + '</span>';
-  });
-  /* 搜索高亮 */
+  safe = safe.replace(/@([\u4e00-\u9fa5\w\-]{1,20})/g, function(m, name){ return '<span class="mention">@' + name + '</span>'; });
   if(searchQ){
     try{
       var re = new RegExp('(' + searchQ.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
@@ -1359,10 +1305,8 @@ var curTheme=(function(){
 })();
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
-  storage.set(K_THEME,t);
-  curTheme=t;
-  buildThemeGrid();
-  readThemeColors();
+  storage.set(K_THEME,t); curTheme=t;
+  buildThemeGrid(); readThemeColors();
 }
 function buildThemeGrid(){
   var grid=$('themeGrid');if(!grid)return;
@@ -1399,12 +1343,10 @@ function readThemeColors(){
   ];
 }
 function initParticles(){
-  var canvas=$('particles');
-  if(!canvas||!canvas.getContext)return;
+  var canvas=$('particles'); if(!canvas||!canvas.getContext) return;
   particleCtx=canvas.getContext('2d');
   pDpr=Math.min(window.devicePixelRatio||1,2);
-  resizeCanvas();
-  readThemeColors();
+  resizeCanvas(); readThemeColors();
   var count=Math.max(10,Math.min(20,Math.floor((pW*pH)/60000)));
   particles=[];
   for(var i=0;i<count;i++){
@@ -1463,29 +1405,27 @@ function drawParticles(){
    登录
    ============================================================ */
 var loginWrap=$('loginWrap'),loginNick=$('loginNick'),loginStatus=$('loginStatus'),loginBtn=$('loginBtn');
-function setLoginStatus(text, cls){ loginStatus.textContent = text||''; loginStatus.className = 'status' + (cls ? ' ' + cls : ''); }
-function updateLoginBtn(){ var v = loginNick.value.trim(); loginBtn.disabled = !v || v.length===0 || v.length>20; }
+function setLoginStatus(text, cls){ loginStatus.textContent=text||''; loginStatus.className='status'+(cls?' '+cls:''); }
+function updateLoginBtn(){ var v=loginNick.value.trim(); loginBtn.disabled = !v || v.length===0 || v.length>20; }
 loginNick.addEventListener('input', function(){ updateLoginBtn(); setLoginStatus(''); });
-loginNick.addEventListener('keydown', function(e){ if(e.key==='Enter' && !loginBtn.disabled){ e.preventDefault(); tryLogin(); } });
+loginNick.addEventListener('keydown', function(e){ if(e.key==='Enter'&&!loginBtn.disabled){ e.preventDefault(); tryLogin(); } });
 function randomNick(){
   var a=['风','云','雷','雪','光','影','星','月','火','冰','暗','花','雾','山','海'];
   var b=['行者','旅人','术士','骑士','忍者','学者','猎人','诗者','匠人','旅者'];
   return a[Math.floor(Math.random()*a.length)] + b[Math.floor(Math.random()*b.length)] + '#' + Math.floor(100+Math.random()*900);
 }
-$('rollBtn').addEventListener('click', function(){
-  loginNick.value = randomNick(); updateLoginBtn(); loginNick.focus(); setLoginStatus('');
-});
+$('rollBtn').addEventListener('click', function(){ loginNick.value=randomNick(); updateLoginBtn(); loginNick.focus(); setLoginStatus(''); });
 async function tryLogin(){
   var nick = loginNick.value.trim();
   if(!nick || nick.length>20){ setLoginStatus('名字得是 1-20 个字','err'); return; }
-  loginBtn.disabled = true; setLoginStatus('检查中…','busy');
+  loginBtn.disabled=true; setLoginStatus('检查中…','busy');
   autoClean();
   var r = await claimNick(nick);
   hideRetryOverlay();
-  if(r.ok){ myNick = nick; storage.set(K_NICK, myNick); setLoginStatus('✓ 成功，正在进入…','ok'); startChat(); return; }
-  if(r.reason === 'taken') setLoginStatus('这个名字被占用了，换一个吧','err');
-  else setLoginStatus('网络异常：' + (r.msg||'请重试'),'err');
-  loginBtn.disabled = false;
+  if(r.ok){ myNick=nick; storage.set(K_NICK,myNick); setLoginStatus('✓ 成功，正在进入…','ok'); startChat(); return; }
+  if(r.reason==='taken') setLoginStatus('这个名字被占用了，换一个吧','err');
+  else setLoginStatus('网络异常：'+(r.msg||'请重试'),'err');
+  loginBtn.disabled=false;
 }
 loginBtn.addEventListener('click', tryLogin);
 
@@ -1493,26 +1433,19 @@ loginBtn.addEventListener('click', tryLogin);
    进入聊天
    ============================================================ */
 function startChat(){
-  loginWrap.hidden = true; loginWrap.style.display = 'none';
-  chatWrap.hidden = false; chatWrap.style.display = '';
-  $('onlineBadge').hidden = false;
-  $('meNick').hidden = false;
-  $('nickBtn').hidden = false;
-  $('styleBtn').hidden = false;
-  $('settingsBtn').hidden = false;
-  $('soundBtn').hidden = false;
-  $('meNick').textContent = myNick;
+  loginWrap.hidden=true; loginWrap.style.display='none';
+  chatWrap.hidden=false; chatWrap.style.display='';
+  $('onlineBadge').hidden=false; $('meNick').hidden=false;
+  $('nickBtn').hidden=false; $('styleBtn').hidden=false;
+  $('settingsBtn').hidden=false; $('soundBtn').hidden=false;
+  $('meNick').textContent=myNick;
   updateSoundIcon();
   restoreDraft();
-
   loadHistory().then(function(){
-    subscribeMessages();
-    subscribePresence();
-    subscribeReactions();
-    subscribeTyping();
+    subscribeMessages(); subscribePresence(); subscribeReactions(); subscribeTyping();
     startPolling();
     setInterval(autoClean, CLEAN_INTERVAL);
-    setInterval(updateActivity, 60 * 1000);
+    setInterval(updateActivity, 60*1000);
   });
   setTimeout(function(){ try{ inputEl.focus(); }catch(e){} }, 100);
 }
@@ -1520,223 +1453,158 @@ function startChat(){
 /* ============================================================
    聊天
    ============================================================ */
-var messagesEl=$('messages');
-var inputEl=$('input');
-var sendBtn=$('sendBtn');
-var chatWrap=$('chatWrap');
-var onlineNum=$('onlineNum');
-var typingBar=$('typingBar');
-var typingWho=$('typingWho');
-var scrollBottomBtn=$('scrollBottomBtn');
-var unreadCountEl=$('unreadCount');
+var messagesEl=$('messages'), inputEl=$('input'), sendBtn=$('sendBtn'), chatWrap=$('chatWrap');
+var onlineNum=$('onlineNum'), typingBar=$('typingBar'), typingWho=$('typingWho');
+var scrollBottomBtn=$('scrollBottomBtn'), unreadCountEl=$('unreadCount');
 
-var allMessages=[];
-var lastSendTime=0;
-var lastTs=0;
-var replyingTo = null;
-var unreadCount = 0;
-var searchQuery = '';
-var mentionState = { open:false, start:-1, items:[], selected:0 };
+var allMessages=[], lastSendTime=0, lastTs=0;
+var replyingTo=null, unreadCount=0, searchQuery='';
+var mentionState={ open:false, start:-1, items:[], selected:0 };
+var hasMoreHistory=false;
 
 function autoResize(){ inputEl.style.height='auto'; inputEl.style.height=Math.min(inputEl.scrollHeight,120)+'px'; }
-
-/* 草稿 */
 function saveDraft(){ storage.set(K_DRAFT, inputEl.value); }
 function restoreDraft(){
-  var d = storage.get(K_DRAFT);
-  if(d){ inputEl.value = d; autoResize(); sendBtn.disabled = !d.trim(); }
+  var d=storage.get(K_DRAFT);
+  if(d){ inputEl.value=d; autoResize(); sendBtn.disabled=!d.trim(); }
 }
 function clearDraft(){ storage.del(K_DRAFT); }
 
 inputEl.addEventListener('input', function(){
   autoResize();
   sendBtn.disabled = inputEl.value.trim().length === 0;
-  saveDraft();
-  broadcastTyping();
-  checkMention();
+  saveDraft(); broadcastTyping(); checkMention();
 });
 
 /* @自动补全 */
 function checkMention(){
-  var val = inputEl.value;
-  var pos = inputEl.selectionStart;
-  if(pos < 1 || val[pos-1] !== '@'){
-    if(mentionState.open) closeMentionPop();
-    return;
-  }
-  var matches = onlineUsers.filter(function(u){
-    return u.uid !== uid && u.nick;
-  });
-  if(matches.length === 0){ closeMentionPop(); return; }
-  mentionState.open = true;
-  mentionState.start = pos;
-  mentionState.items = matches;
-  mentionState.selected = 0;
+  var val=inputEl.value, pos=inputEl.selectionStart;
+  if(pos<1 || val[pos-1]!=='@'){ if(mentionState.open) closeMentionPop(); return; }
+  var matches = onlineUsers.filter(function(u){ return u.uid!==uid && u.nick; });
+  if(matches.length===0){ closeMentionPop(); return; }
+  mentionState.open=true; mentionState.start=pos; mentionState.items=matches; mentionState.selected=0;
   renderMentionPop();
 }
 function renderMentionPop(){
-  var pop = $('mentionPop');
-  if(!pop) return;
-  var html = '';
-  mentionState.items.forEach(function(u, i){
-    var st = styleMap[u.uid] || {};
-    var ac = st.avatar || nickColor(u.nick);
-    var av = st.emoji ? st.emoji : esc(u.nick.charAt(0).toUpperCase());
-    html += '<div class="mp-item'+(i===mentionState.selected?' selected':'')+'" data-mention-idx="'+i+'">'+
+  var pop=$('mentionPop'); if(!pop) return;
+  var html='';
+  mentionState.items.forEach(function(u,i){
+    var st=styleMap[u.uid]||{};
+    var ac=st.avatar||nickColor(u.nick);
+    var av=st.emoji?st.emoji:esc(u.nick.charAt(0).toUpperCase());
+    html+='<div class="mp-item'+(i===mentionState.selected?' selected':'')+'" data-mention-idx="'+i+'">'+
       '<div class="mp-avatar" style="background:'+ac+'">'+av+'</div>'+
       '<div>'+esc(u.nick)+'</div>'+
     '</div>';
   });
-  pop.innerHTML = html;
-  pop.hidden = false;
+  pop.innerHTML=html; pop.hidden=false;
 }
-function closeMentionPop(){
-  mentionState.open = false;
-  var pop = $('mentionPop');
-  if(pop) pop.hidden = true;
-}
+function closeMentionPop(){ mentionState.open=false; var pop=$('mentionPop'); if(pop) pop.hidden=true; }
 function insertMention(nick){
-  var val = inputEl.value;
-  var start = mentionState.start;
-  var pos = inputEl.selectionStart;
-  var before = val.slice(0, start);
-  var after = val.slice(pos);
+  var val=inputEl.value, start=mentionState.start, pos=inputEl.selectionStart;
+  var before=val.slice(0,start), after=val.slice(pos);
   inputEl.value = before + '@' + nick + ' ' + after;
   var newPos = start + nick.length + 2;
-  inputEl.setSelectionRange(newPos, newPos);
-  closeMentionPop();
-  inputEl.focus();
-  autoResize();
-  saveDraft();
+  inputEl.setSelectionRange(newPos,newPos);
+  closeMentionPop(); inputEl.focus(); autoResize(); saveDraft();
 }
 $('mentionPop').addEventListener('click', function(e){
-  var item = e.target.closest('[data-mention-idx]');
-  if(!item) return;
-  var idx = parseInt(item.getAttribute('data-mention-idx'), 10);
-  var u = mentionState.items[idx];
-  if(u) insertMention(u.nick);
+  var item=e.target.closest('[data-mention-idx]'); if(!item) return;
+  var idx=parseInt(item.getAttribute('data-mention-idx'),10);
+  var u=mentionState.items[idx]; if(u) insertMention(u.nick);
 });
+
 inputEl.addEventListener('keydown', function(e){
   if(mentionState.open){
-    if(e.key === 'ArrowDown'){ e.preventDefault(); mentionState.selected = (mentionState.selected+1) % mentionState.items.length; renderMentionPop(); return; }
-    if(e.key === 'ArrowUp'){ e.preventDefault(); mentionState.selected = (mentionState.selected-1+mentionState.items.length) % mentionState.items.length; renderMentionPop(); return; }
-    if(e.key === 'Enter' || e.key === 'Tab'){
+    if(e.key==='ArrowDown'){ e.preventDefault(); mentionState.selected=(mentionState.selected+1)%mentionState.items.length; renderMentionPop(); return; }
+    if(e.key==='ArrowUp'){ e.preventDefault(); mentionState.selected=(mentionState.selected-1+mentionState.items.length)%mentionState.items.length; renderMentionPop(); return; }
+    if(e.key==='Enter'||e.key==='Tab'){
       e.preventDefault();
-      var u = mentionState.items[mentionState.selected];
+      var u=mentionState.items[mentionState.selected];
       if(u) insertMention(u.nick);
       return;
     }
-    if(e.key === 'Escape'){ closeMentionPop(); return; }
+    if(e.key==='Escape'){ closeMentionPop(); return; }
   }
-  /* ↑ 编辑自己最后一条消息 */
-  if(e.key === 'ArrowUp' && !inputEl.value.trim() && !replyingTo){
-    var last = null;
+  if(e.key==='ArrowUp' && !inputEl.value.trim() && !replyingTo){
+    var last=null;
     for(var i=allMessages.length-1;i>=0;i--){
-      var m = allMessages[i];
-      if(m.uid === uid && !m.__local && !m.recalled && !m.deleted && (Date.now()-m.ts) < EDIT_WINDOW){ last = m; break; }
+      var m=allMessages[i];
+      if(m.uid===uid && !m.__local && !m.recalled && !m.deleted && (Date.now()-m.ts)<EDIT_WINDOW){ last=m; break; }
     }
     if(last){ e.preventDefault(); openEditDialog(last); return; }
   }
-  /* 发送键 */
-  var isEnter = e.key === 'Enter' && !e.shiftKey;
-  var isCtrlEnter = e.key === 'Enter' && (e.ctrlKey || e.metaKey);
-  if(sendKey === 'ctrl-enter'){
+  var isEnter = e.key==='Enter' && !e.shiftKey;
+  var isCtrlEnter = e.key==='Enter' && (e.ctrlKey||e.metaKey);
+  if(sendKey==='ctrl-enter'){
     if(isCtrlEnter){ e.preventDefault(); if(!sendBtn.disabled) doSend(); }
   }else{
     if(isEnter && !e.ctrlKey && !e.metaKey){ e.preventDefault(); if(!sendBtn.disabled) doSend(); }
   }
-  /* Esc 取消回复 */
-  if(e.key === 'Escape' && replyingTo){ e.preventDefault(); setReply(null); }
+  if(e.key==='Escape' && replyingTo){ e.preventDefault(); setReply(null); }
 });
 
-/* 回复 UI */
 function setReply(msg){
-  replyingTo = msg;
-  if(!msg){ $('replyHint').hidden = true; return; }
-  $('replyHint').hidden = false;
+  replyingTo=msg;
+  if(!msg){ $('replyHint').hidden=true; return; }
+  $('replyHint').hidden=false;
   $('rhNick').textContent = msg.nick + '：';
-  $('rhText').textContent = msg.text.length > 60 ? msg.text.slice(0,60)+'…' : msg.text;
+  $('rhText').textContent = msg.text.length>60 ? msg.text.slice(0,60)+'…' : msg.text;
   try{ inputEl.focus(); }catch(e){}
 }
 $('rhClose').addEventListener('click', function(){ setReply(null); });
 
-/* 打字广播 */
-var typingBroadcastTimer = null;
+var typingBroadcastTimer=null;
 function broadcastTyping(){
   if(!typingChannel) return;
   if(typingBroadcastTimer) return;
-  try{
-    typingChannel.send({ type:'broadcast', event:'typing', payload:{ uid:uid, nick:myNick } });
-  }catch(e){}
-  typingBroadcastTimer = setTimeout(function(){ typingBroadcastTimer = null; }, 1500);
+  try{ typingChannel.send({ type:'broadcast', event:'typing', payload:{ uid:uid, nick:myNick } }); }catch(e){}
+  typingBroadcastTimer=setTimeout(function(){ typingBroadcastTimer=null; }, 1500);
 }
 
-/* 发送 */
 async function doSend(){
-  var text=inputEl.value.trim();
-  if(!text)return;
+  var text=inputEl.value.trim(); if(!text) return;
   var now=Date.now();
   if(now-lastSendTime < SEND_COOLDOWN){ toast('发得太快了，'+Math.ceil((SEND_COOLDOWN-(now-lastSendTime))/1000)+' 秒后再试'); return; }
-  if(text.length>MSG_MAXLEN){ toast('消息太长（最多 '+MSG_MAXLEN+' 字）'); return; }
-
+  if(text.length>MSG_MAXLEN){ toast('消息太长'); return; }
   lastSendTime=now;
   var replyTo = replyingTo ? replyingTo.id : null;
   var replySnap = null;
   if(replyingTo){ replySnap = { id:replyingTo.id, nick:replyingTo.nick, text:replyingTo.text }; }
-
   inputEl.value=''; autoResize(); sendBtn.disabled=true; setReply(null);
   clearDraft();
-
-  var localId = 'local_'+now+'_'+Math.random().toString(36).slice(2,6);
-  var localMsg = {
-    id:localId, uid:uid, nick:myNick, text:text, ts:now,
-    reply_to:replyTo, __reply:replySnap, __local:true, __pending:true
-  };
-  allMessages.push(localMsg);
-  renderAll();
-  inputEl.focus();
-
+  var localId='local_'+now+'_'+Math.random().toString(36).slice(2,6);
+  var localMsg={ id:localId, uid:uid, nick:myNick, text:text, ts:now, reply_to:replyTo, __reply:replySnap, __local:true, __pending:true };
+  allMessages.push(localMsg); renderAll(); inputEl.focus();
   var r = await sbQuery('发送消息', function(){
-    return sb.from('messages').insert({
-      uid: uid, nick: myNick, text: text, ts: now, reply_to: replyTo
-    });
+    return sb.from('messages').insert({ uid:uid, nick:myNick, text:text, ts:now, reply_to:replyTo });
   });
   hideRetryOverlay();
-
-  var idx = allMessages.findIndex(function(x){ return x.id === localId; });
-  if(idx < 0) return;
-
+  var idx = allMessages.findIndex(function(x){ return x.id===localId; });
+  if(idx<0) return;
   if(r.ok){
-    allMessages[idx].__pending = false;
-    allMessages[idx].__sent = true;
-    renderAll();
-    resetPollCountdown();
-    setPillOK();
+    allMessages[idx].__pending=false; allMessages[idx].__sent=true;
+    renderAll(); resetPollCountdown(); setPillOK();
     setTimeout(function(){ doPollNow(); }, 400);
     updateActivity();
   }else{
-    allMessages[idx].__pending = false;
-    allMessages[idx].__failed = true;
-    renderAll();
-    toast('发送失败，已重试 ' + RETRY_MAX + ' 次');
-    setPillErr();
+    allMessages[idx].__pending=false; allMessages[idx].__failed=true;
+    renderAll(); toast('发送失败，已重试 '+RETRY_MAX+' 次'); setPillErr();
   }
 }
-sendBtn.addEventListener('click',doSend);
+sendBtn.addEventListener('click', doSend);
 
-/* 数据规范化 */
 function normalizeMsg(m){
   return {
-    id: m.id, uid: String(m.uid||''), nick: String(m.nick||'无名'),
-    text: String(m.text||''), ts: Number(m.ts||0),
+    id:m.id, uid:String(m.uid||''), nick:String(m.nick||'无名'),
+    text:String(m.text||''), ts:Number(m.ts||0),
     updated_at: m.updated_at ? Number(m.updated_at) : null,
     recalled: !!m.recalled, deleted: !!m.deleted,
     reply_to: m.reply_to || null
   };
 }
 
-/* 渲染单条 */
-function renderMsg(m, prev, dayStamp){
+function renderMsg(m, prev){
   var div=document.createElement('div');
   div.className='msg';
   if(m.uid===uid)div.classList.add('self');
@@ -1751,72 +1619,66 @@ function renderMsg(m, prev, dayStamp){
   }
   var isCompact=div.classList.contains('compact');
 
-  /* 屏蔽用户的头像和昵称用灰色 */
-  var isBlocked = blockedUids[m.uid];
-
   var st = getStyleFor(m) || {};
   var defaultAvatarColor = (m.uid===uid) ? 'var(--ac)' : nickColor(m.nick);
   var avatarColor = st.avatar || defaultAvatarColor;
   var avatarContent = st.emoji ? st.emoji : esc(m.nick.charAt(0).toUpperCase());
 
-  var avatarHtml=isCompact
+  var avatarHtml = isCompact
     ? '<div class="avatar empty"></div>'
     : '<div class="avatar" data-open-user="'+esc(m.uid)+'" style="background:'+avatarColor+'">'+avatarContent+'</div>';
 
-  var statusTag = '';
-  if(m.__pending) statusTag = '<span class="status-tag">发送中</span>';
-  else if(m.__failed) statusTag = '<span class="status-tag">发送失败</span>';
+  var statusTag='';
+  if(m.__pending) statusTag='<span class="status-tag">发送中</span>';
+  else if(m.__failed) statusTag='<span class="status-tag">发送失败</span>';
 
   var editedTag = m.updated_at && !m.recalled ? '<span class="edited-tag">(已编辑)</span>' : '';
 
-  var headHtml=isCompact
+  var headHtml = isCompact
     ? '<div class="head" style="visibility:hidden"><span class="nick">&nbsp;</span></div>'
     : '<div class="head"><span class="nick" data-open-user="'+esc(m.uid)+'" style="cursor:pointer">'+esc(m.nick)+'</span><span class="time" title="'+esc(fmtFullTime(m.ts))+'">'+esc(fmtTime(m.ts))+'</span>'+editedTag+statusTag+'</div>';
 
-  /* 引用 */
-  var replyHtml = '';
-  var quoted = null;
-  if(m.recalled){
-    /* 撤回的不显示引用 */
-  }else if(m.__reply){
-    quoted = m.__reply;
-  }else if(m.reply_to){
-    var q = allMessages.find(function(x){ return !x.__local && String(x.id) === String(m.reply_to); });
-    if(q) quoted = { id:q.id, nick:q.nick, text:q.recalled||q.deleted ? '[已撤回]' : q.text };
+  var replyHtml='';
+  var quoted=null;
+  if(m.recalled){ /* 撤回不显示引用 */ }
+  else if(m.__reply){ quoted=m.__reply; }
+  else if(m.reply_to){
+    var q = allMessages.find(function(x){ return !x.__local && String(x.id)===String(m.reply_to); });
+    if(q) quoted={ id:q.id, nick:q.nick, text:(q.recalled||q.deleted)?'[已撤回]':q.text };
   }
   if(quoted){
-    var quoteText = quoted.text.length > 50 ? quoted.text.slice(0,50)+'…' : quoted.text;
+    var quoteText = quoted.text.length>50 ? quoted.text.slice(0,50)+'…' : quoted.text;
     replyHtml = '<div class="reply-quote" data-goto="'+esc(quoted.id)+'">'+
       '<span class="rq-nick">'+esc(quoted.nick)+'</span>'+esc(quoteText)+
     '</div>';
   }
 
-  var bodyText = m.recalled ? (m.uid===uid?'你撤回了这条消息':(esc(m.nick)+' 撤回了一条消息')) : (m.deleted ? '这条消息已被删除' : m.text);
-  var bodyHtml = (m.recalled || m.deleted) ? bodyText : renderRichText(bodyText, myNick, searchQuery);
+  var bodyText = m.recalled ? (m.uid===uid?'你撤回了这条消息':(esc(m.nick)+' 撤回了一条消息'))
+                : (m.deleted ? '这条消息已被删除' : m.text);
+  var bodyHtml = (m.recalled||m.deleted) ? bodyText : renderRichText(bodyText, searchQuery);
 
-  var bubbleStyle = '';
+  var bubbleStyle='';
   if(!m.recalled && !m.deleted && (st.bubble || st.text)){
-    if(m.uid === uid && st.bubble) bubbleStyle += 'background:'+st.bubble+';';
+    if(m.uid===uid && st.bubble) bubbleStyle += 'background:'+st.bubble+';';
     if(st.text) bubbleStyle += 'color:'+st.text+';';
   }
 
   var groups = groupReactions(m.id);
-  var reactionsHtml = '';
+  var reactionsHtml='';
   var keys = Object.keys(groups);
-  if(keys.length > 0){
-    reactionsHtml = '<div class="reactions">';
+  if(keys.length>0){
+    reactionsHtml='<div class="reactions">';
     keys.forEach(function(emoji){
-      var g = groups[emoji];
+      var g=groups[emoji];
       reactionsHtml += '<span class="react'+(g.mine?' mine':'')+'" data-react-emoji="'+esc(emoji)+'" data-react-msg="'+esc(m.id)+'">'+emoji+' '+g.count+'</span>';
     });
-    reactionsHtml += '</div>';
+    reactionsHtml+='</div>';
   }
 
-  /* 悬浮工具 */
-  var toolsHtml = '';
+  var toolsHtml='';
   if(!m.__local && m.id && !m.recalled && !m.deleted){
-    var canEdit = (m.uid === uid) && (Date.now() - m.ts) < EDIT_WINDOW;
-    var canRecall = (m.uid === uid) && (Date.now() - m.ts) < RECALL_WINDOW;
+    var canEdit = (m.uid===uid) && (Date.now()-m.ts)<EDIT_WINDOW;
+    var canRecall = (m.uid===uid) && (Date.now()-m.ts)<RECALL_WINDOW;
     toolsHtml = '<div class="hover-tools">'+
       '<button type="button" data-tool="reply" title="回复">↩️</button>'+
       '<button type="button" data-tool="react" title="表情">😊</button>'+
@@ -1826,13 +1688,10 @@ function renderMsg(m, prev, dayStamp){
     '</div>';
   }
 
-  div.innerHTML=
-    avatarHtml+
-    '<div class="body">'+
-      replyHtml+headHtml+
+  div.innerHTML = avatarHtml+
+    '<div class="body">'+ replyHtml + headHtml +
       '<div class="content" '+(bubbleStyle?'style="'+bubbleStyle+'"':'')+'>'+bodyHtml+'</div>'+
-      reactionsHtml+
-      toolsHtml+
+      reactionsHtml + toolsHtml +
     '</div>';
 
   if(m.id) div.setAttribute('data-mid', m.id);
@@ -1841,73 +1700,62 @@ function renderMsg(m, prev, dayStamp){
 
 function isAtBottom(){ return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 100; }
 
-/* 时间分组渲染 */
 function renderAll(){
   var atBottom=isAtBottom();
-
-  /* 过滤：屏蔽 + 搜索 */
   var list = allMessages.filter(function(m){
-    if(blockedUids[m.uid] && m.uid !== uid) return false;
+    if(blockedUids[m.uid] && m.uid!==uid) return false;
     if(searchQuery){
       if(m.recalled || m.deleted) return false;
-      if(m.text.toLowerCase().indexOf(searchQuery.toLowerCase()) === -1) return false;
+      if(m.text.toLowerCase().indexOf(searchQuery.toLowerCase())===-1) return false;
     }
     return true;
   });
 
   if(list.length===0){
-    messagesEl.innerHTML =
-      '<div class="empty-state">'+
-        '<div class="ic">'+(searchQuery?'🔍':'💬')+'</div>'+
-        '<div class="t">'+(searchQuery?'没有匹配的消息':'还没有人说话')+'</div>'+
-        '<div class="s">'+(searchQuery?'换个关键词试试':'发第一条消息打个招呼吧')+'</div>'+
-      '</div>';
+    messagesEl.innerHTML='<div class="empty-state">'+
+      '<div class="ic">'+(searchQuery?'🔍':'💬')+'</div>'+
+      '<div class="t">'+(searchQuery?'没有匹配的消息':'还没有人说话')+'</div>'+
+      '<div class="s">'+(searchQuery?'换个关键词试试':'发第一条消息打个招呼吧')+'</div>'+
+    '</div>';
     return;
   }
 
   var frag=document.createDocumentFragment();
-
-  /* 加载更多按钮（在最顶部） */
   if(hasMoreHistory){
-    var lm = document.createElement('div');
-    lm.className = 'load-more-hint';
-    lm.innerHTML = '<button type="button" class="btn-mini" id="loadMoreBtn">↑ 加载更早的消息</button>';
+    var lm=document.createElement('div');
+    lm.className='load-more-hint';
+    lm.innerHTML='<button type="button" class="btn-mini" id="loadMoreBtn">↑ 加载更早的消息</button>';
     frag.appendChild(lm);
   }
-
   var prev=null, dayStamp=null;
   list.forEach(function(m){
-    /* 时间分组 */
-    var d = new Date(m.ts);
-    var today0 = new Date(); today0.setHours(0,0,0,0);
-    var dayKey = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    if(dayKey !== dayStamp){
-      dayStamp = dayKey;
-      var div = document.createElement('div');
-      div.className = 'time-divider';
-      div.innerHTML = '<span class="td-txt">'+esc(fmtDay(m.ts))+'</span>';
-      frag.appendChild(div);
-      prev = null; /* 跨日期断开合并 */
+    var d=new Date(m.ts);
+    var dayKey=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+    if(dayKey!==dayStamp){
+      dayStamp=dayKey;
+      var dv=document.createElement('div');
+      dv.className='time-divider';
+      dv.innerHTML='<span class="td-txt">'+esc(fmtDay(m.ts))+'</span>';
+      frag.appendChild(dv);
+      prev=null;
     }
     frag.appendChild(renderMsg(m, prev));
-    if(!m.__local) prev = m;
+    if(!m.__local) prev=m;
   });
-
-  messagesEl.innerHTML = '';
+  messagesEl.innerHTML='';
   messagesEl.appendChild(frag);
+  if(atBottom) messagesEl.scrollTop=messagesEl.scrollHeight;
 
-  if(atBottom){ messagesEl.scrollTop = messagesEl.scrollHeight; }
-
-  var lmBtn = $('loadMoreBtn');
+  var lmBtn=$('loadMoreBtn');
   if(lmBtn) lmBtn.addEventListener('click', loadMoreHistory);
 }
 
 function updateLastTs(){
   for(var i=allMessages.length-1;i>=0;i--){
-    var m = allMessages[i];
-    if(!m.__local && typeof m.ts==='number' && m.ts>0){ lastTs = m.ts; return; }
+    var m=allMessages[i];
+    if(!m.__local && typeof m.ts==='number' && m.ts>0){ lastTs=m.ts; return; }
   }
-  lastTs = 0;
+  lastTs=0;
 }
 function collectUids(list){
   var seen={},out=[];
@@ -1921,921 +1769,36 @@ function collectMsgIds(list){
 }
 
 function mergeNewMessages(newOnes){
-  if(!newOnes || newOnes.length === 0) return false;
-  var changed = false;
-  var needStyles = false;
-
+  if(!newOnes || newOnes.length===0) return false;
+  var changed=false, needStyles=false;
   newOnes.forEach(function(n){
     if(allMessages.some(function(x){ return !x.__local && String(x.id)===String(n.id); })) return;
-
     var localIdx = allMessages.findIndex(function(x){
       return x.__local && !x.__failed &&
-        x.uid === n.uid && x.nick === n.nick && x.text === n.text &&
-        Math.abs(x.ts - n.ts) < 5000;
+        x.uid===n.uid && x.nick===n.nick && x.text===n.text &&
+        Math.abs(x.ts-n.ts)<5000;
     });
-
-    if(localIdx >= 0){
-      var old = allMessages[localIdx];
-      n.__reply = old.__reply;
-      allMessages[localIdx] = n;
+    if(localIdx>=0){
+      var old=allMessages[localIdx];
+      n.__reply=old.__reply;
+      allMessages[localIdx]=n;
     }else{
       allMessages.push(n);
-      if(!styleMap[n.uid]) needStyles = true;
-      if(n.uid !== uid){
+      if(!styleMap[n.uid]) needStyles=true;
+      if(n.uid!==uid){
         if(!document.hidden && !blockedUids[n.uid]) playPing();
         if(!isAtBottom()){ unreadCount++; updateUnreadBadge(); }
       }
     }
-    changed = true;
+    changed=true;
   });
-
   if(!changed) return false;
-
   allMessages.sort(function(a,b){
     var aL=a.__local?1:0, bL=b.__local?1:0;
-    if(aL!==bL) return aL - bL;
-    return a.ts - b.ts;
+    if(aL!==bL) return aL-bL;
+    return a.ts-b.ts;
   });
-  if(allMessages.length > MSG_LIMIT){ allMessages = allMessages.slice(-MSG_LIMIT); }
-
+  if(allMessages.length>MSG_LIMIT) allMessages=allMessages.slice(-MSG_LIMIT);
   if(needStyles){ loadStylesFor(collectUids(allMessages)).then(function(){ renderAll(); }); }
-
-  renderAll();
-  updateLastTs();
-  return true;
-}
-
-function updateUnreadBadge(){
-  if(unreadCount > 0 && !isAtBottom()){
-    scrollBottomBtn.classList.add('show');
-    unreadCountEl.textContent = unreadCount > 99 ? '99+' : unreadCount;
-  }else{
-    scrollBottomBtn.classList.remove('show');
-  }
-  /* 顶栏 badge */
-  var badge = $('unreadBadge');
-  if(badge){
-    if(unreadCount > 0 && document.hidden){
-      badge.hidden = false;
-      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-    }else{
-      badge.hidden = true;
-    }
-  }
-}
-
-/* 加载更多历史 */
-var hasMoreHistory = false;
-async function loadMoreHistory(){
-  var oldestTs = null;
-  for(var i=0;i<allMessages.length;i++){
-    if(!allMessages[i].__local && typeof allMessages[i].ts === 'number'){ oldestTs = allMessages[i].ts; break; }
-  }
-  if(!oldestTs){ toast('没有更早的消息了'); return; }
-
-  var r = await sbQuery('加载更早', function(){
-    return sb.from('messages').select('*').lt('ts', oldestTs).order('ts', { ascending:false }).limit(50);
-  }, { max: 2, silent: true });
-  if(!r.ok){ toast('加载失败'); return; }
-  var data = r.data && r.data.data;
-  if(!Array.isArray(data) || data.length === 0){
-    hasMoreHistory = false;
-    toast('没有更早的消息了');
-    renderAll();
-    return;
-  }
-  data.reverse();
-  var more = data.map(normalizeMsg);
-  /* 合并 */
-  var seen = {};
-  allMessages.forEach(function(m){ if(!m.__local) seen[m.id]=1; });
-  more.forEach(function(m){ if(!seen[m.id]){ allMessages.unshift(m); seen[m.id]=1; } });
-  hasMoreHistory = data.length >= 50;
-
-  await loadStylesFor(collectUids(more));
-  await loadReactionsFor(collectMsgIds(more));
-
-  /* 保存滚动位置 */
-  var oldTop = messagesEl.scrollTop;
-  var oldHeight = messagesEl.scrollHeight;
-  renderAll();
-  var newHeight = messagesEl.scrollHeight;
-  messagesEl.scrollTop = oldTop + (newHeight - oldHeight);
-}
-
-/* 主数据加载 */
-async function loadHistory(){
-  var r = await sbQuery('加载历史', function(){
-    return sb.from('messages').select('*').order('ts', { ascending: false }).limit(MSG_LIMIT);
-  });
-  if(!r.ok){ setPillErr(); setTimeout(loadHistory, 5000); return; }
-  hideRetryOverlay(); setPillOK();
-
-  var data = r.data && r.data.data;
-  if(!Array.isArray(data)) return;
-
-  var localPending = allMessages.filter(function(x){ return x.__local; });
-  var arr = data.map(normalizeMsg);
-  arr.reverse();
-  localPending.forEach(function(lp){
-    if(!arr.some(function(x){ return x.uid===lp.uid && x.text===lp.text && Math.abs(x.ts-lp.ts)<5000; })){
-      arr.push(lp);
-    }
-  });
-  allMessages = arr;
-  hasMoreHistory = data.length >= MSG_LIMIT;
-  updateLastTs();
-  await loadStylesFor(collectUids(allMessages));
-  await loadReactionsFor(collectMsgIds(allMessages));
-  renderAll();
-  updateUnreadBadge();
-}
-
-async function pollNewMessages(){
-  var q = sb.from('messages').select('*');
-  if(lastTs > 0) q = q.gt('ts', lastTs).order('ts', { ascending:true }).limit(MSG_LIMIT);
-  else q = q.order('ts', { ascending:false }).limit(MSG_LIMIT);
-
-  var r = await sbQuery('轮询消息', function(){ return q; });
-  if(!r.ok){ setPillErr(); return; }
-  hideRetryOverlay(); setPillOK();
-
-  var data = r.data && r.data.data;
-  if(!Array.isArray(data)) return;
-  if(lastTs === 0) data.reverse();
-  var newOnes = data.map(normalizeMsg);
-  mergeNewMessages(newOnes);
-}
-
-function subscribeMessages(){
-  if(msgChannel) return;
-  msgChannel = sb.channel('chat-messages')
-    .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, function(payload){
-      var m = payload.new; if(!m) return;
-      mergeNewMessages([normalizeMsg(m)]);
-    })
-    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'messages' }, function(payload){
-      var m = payload.new; if(!m) return;
-      var idx = allMessages.findIndex(function(x){ return String(x.id) === String(m.id); });
-      if(idx >= 0){ allMessages[idx] = normalizeMsg(m); renderAll(); }
-    })
-    .subscribe(function(status, err){
-      if(status==='SUBSCRIBED'){ setPillOK(); }
-      else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
-        setPillErr();
-        setTimeout(function(){
-          try{ if(msgChannel) sb.removeChannel(msgChannel); }catch(e){}
-          msgChannel = null; subscribeMessages();
-        }, 5000);
-      }
-    });
-}
-function subscribeReactions(){
-  if(reactionChannel) return;
-  reactionChannel = sb.channel('chat-reactions')
-    .on('postgres_changes', { event:'*', schema:'public', table:'reactions' }, function(payload){
-      var row = payload.new || payload.old; if(!row) return;
-      var msgId = row.msg_id; if(!msgId) return;
-      sbQuery('重载表情', function(){ return sb.from('reactions').select('*').eq('msg_id', msgId); }, { max:1, silent:true }).then(function(r){
-        if(!r.ok) return;
-        var list = (r.data && r.data.data || []).map(function(x){ return { uid:x.uid, emoji:x.emoji }; });
-        reactionsMap[msgId] = list;
-        renderAll();
-      });
-    })
-    .subscribe(function(status){ if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
-      setTimeout(function(){
-        try{ if(reactionChannel) sb.removeChannel(reactionChannel); }catch(e){}
-        reactionChannel = null; subscribeReactions();
-      }, 5000);
-    }});
-}
-function subscribePresence(){
-  if(presenceChannel) return;
-  presenceChannel = sb.channel('online-users', { config:{ presence:{ key: uid } } });
-  presenceChannel
-    .on('presence', { event:'sync' }, function(){
-      var state = presenceChannel.presenceState();
-      var arr = [];
-      Object.keys(state).forEach(function(k){
-        (state[k]||[]).forEach(function(p){ arr.push({ uid:k, nick:p.nick, joinedAt:p.joinedAt }); });
-      });
-      onlineUsers = arr;
-      onlineNum.textContent = arr.length;
-      if($('onlineOv').classList.contains('show')) renderOnlineList();
-    })
-    .subscribe(async function(status){
-      if(status==='SUBSCRIBED'){ try{ await presenceChannel.track({ nick:myNick, joinedAt: Date.now() }); }catch(e){} }
-      else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
-        setTimeout(function(){
-          try{ if(presenceChannel) sb.removeChannel(presenceChannel); }catch(e){}
-          presenceChannel = null; subscribePresence();
-        }, 5000);
-      }
-    });
-}
-var typingUsers = {};
-function updateTypingBar(){
-  var now = Date.now();
-  var names = [];
-  Object.keys(typingUsers).forEach(function(k){
-    var u = typingUsers[k];
-    if(now - u.ts < TYPING_TIMEOUT) names.push(u.nick);
-    else delete typingUsers[k];
-  });
-  if(names.length > 0){
-    typingBar.classList.add('show');
-    typingWho.textContent = names.slice(0,2).join('、') + (names.length>2?(' 等 '+names.length+' 人'):'');
-  }else{
-    typingBar.classList.remove('show');
-  }
-}
-function subscribeTyping(){
-  if(typingChannel) return;
-  typingChannel = sb.channel('chat-typing', { config:{ broadcast:{ self:false } } });
-  typingChannel.on('broadcast', { event:'typing' }, function(payload){
-    var p = payload.payload || {};
-    if(!p.uid || p.uid === uid) return;
-    typingUsers[p.uid] = { nick:p.nick, ts: Date.now() };
-    updateTypingBar();
-  }).subscribe(function(){});
-  setInterval(updateTypingBar, 800);
-}
-
-/* ============================================================
-   用户资料卡
-   ============================================================ */
-async function openUserCard(targetUid){
-  if(!targetUid) return;
-  var u = onlineUsers.find(function(x){ return x.uid === targetUid; });
-  var nick = u ? u.nick : '';
-  if(!nick){
-    /* 从消息里找 */
-    var m = allMessages.find(function(x){ return x.uid === targetUid; });
-    if(m) nick = m.nick;
-  }
-  if(!nick) nick = '未知用户';
-
-  var st = styleMap[targetUid] || {};
-  var ac = st.avatar || (targetUid===uid ? 'var(--ac)' : nickColor(nick));
-  var av = st.emoji ? st.emoji : esc(nick.charAt(0).toUpperCase());
-
-  $('ucAvatar').style.background = ac;
-  $('ucAvatar').textContent = av;
-  $('ucNick').textContent = nick;
-  $('ucMeta').textContent = targetUid === uid ? '这是你' : 'UID: ' + targetUid.slice(0,12);
-
-  /* 统计 */
-  var myMsgs = allMessages.filter(function(x){ return x.uid === targetUid && !x.recalled && !x.deleted; });
-  $('ucMsgCount').textContent = myMsgs.length;
-  var first = myMsgs[0];
-  $('ucJoinTime').textContent = first ? fmtDay(first.ts) : '-';
-
-  /* 操作按钮 */
-  var actHtml = '';
-  if(targetUid === uid){
-    actHtml = '<button class="btn-close" data-uc-close>关闭</button>';
-  }else{
-    if(blockedUids[targetUid]){
-      actHtml = '<button class="btn-unblock" data-uc-unblock="'+esc(targetUid)+'">取消屏蔽</button>';
-    }else{
-      actHtml = '<button class="btn-block" data-uc-block="'+esc(targetUid)+'">屏蔽此人</button>';
-    }
-    actHtml += '<button class="btn-close" data-uc-close>关闭</button>';
-  }
-  $('ucActions').innerHTML = actHtml;
-
-  $('userCardOv').classList.add('show');
-}
-function closeUserCard(){ $('userCardOv').classList.remove('show'); }
-
-$('userCardClose').addEventListener('click', closeUserCard);
-$('userCardOv').addEventListener('click', function(e){ if(e.target === $('userCardOv')) closeUserCard(); });
-$('ucActions').addEventListener('click', function(e){
-  if(e.target.closest('[data-uc-close]')){ closeUserCard(); return; }
-  var b = e.target.closest('[data-uc-block]');
-  if(b){
-    blockedUids[b.getAttribute('data-uc-block')] = 1;
-    saveBlocked();
-    closeUserCard();
-    renderAll();
-    toast('已屏蔽');
-    return;
-  }
-  var ub = e.target.closest('[data-uc-unblock]');
-  if(ub){
-    delete blockedUids[ub.getAttribute('data-uc-unblock')];
-    saveBlocked();
-    closeUserCard();
-    renderAll();
-    toast('已取消屏蔽');
-    return;
-  }
-});
-
-/* ============================================================
-   编辑消息
-   ============================================================ */
-var editOv=$('editOv'), editInput=$('editInput');
-var editingMsg = null;
-function openEditDialog(m){
-  if(!m) return;
-  editingMsg = m;
-  editInput.value = m.text;
-  editOv.classList.add('show');
-  setTimeout(function(){ try{ editInput.focus(); editInput.select(); }catch(e){} }, 40);
-}
-function closeEditDialog(){ editOv.classList.remove('show'); editingMsg = null; }
-
-$('editClose').addEventListener('click', closeEditDialog);
-$('editCancel').addEventListener('click', closeEditDialog);
-editOv.addEventListener('click', function(e){ if(e.target === editOv) closeEditDialog(); });
-$('editSave').addEventListener('click', async function(){
-  if(!editingMsg) return;
-  var newText = editInput.value.trim();
-  if(!newText){ toast('内容不能为空'); return; }
-  if(newText.length > MSG_MAXLEN){ toast('太长了'); return; }
-  if(newText === editingMsg.text){ closeEditDialog(); return; }
-
-  var r = await sbQuery('编辑消息', function(){
-    return sb.from('messages').update({ text:newText, updated_at: Date.now() }).eq('id', editingMsg.id).eq('uid', uid);
-  }, { max: 2 });
-  if(!r.ok){ toast('编辑失败'); return; }
-  editingMsg.text = newText;
-  editingMsg.updated_at = Date.now();
-  renderAll();
-  closeEditDialog();
-  toast('已编辑');
-});
-editInput.addEventListener('keydown', function(e){
-  if(e.key === 'Escape'){ e.preventDefault(); closeEditDialog(); }
-  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); $('editSave').click(); }
-});
-
-/* ============================================================
-   消息事件
-   ============================================================ */
-messagesEl.addEventListener('click', function(e){
-  /* 点头像/昵称 → 资料卡 */
-  var openU = e.target.closest('[data-open-user]');
-  if(openU && !e.target.closest('[data-tool]')){
-    openUserCard(openU.getAttribute('data-open-user'));
-    return;
-  }
-
-  /* 引用跳转 */
-  var quote = e.target.closest('.reply-quote[data-goto]');
-  if(quote){
-    var gotoId = quote.getAttribute('data-goto');
-    var target = allMessages.find(function(x){ return String(x.id) === String(gotoId); });
-    if(target){
-      target.__highlight = true;
-      renderAll();
-      setTimeout(function(){
-        var el = messagesEl.querySelector('[data-mid="' + gotoId + '"]');
-        if(el){
-          var elRect = el.getBoundingClientRect();
-          var wrapRect = messagesEl.getBoundingClientRect();
-          var offsetInWrap = elRect.top - wrapRect.top + messagesEl.scrollTop;
-          messagesEl.scrollTop = offsetInWrap - (wrapRect.height - elRect.height)/2;
-          setTimeout(function(){ target.__highlight = false; }, 2500);
-        }
-      }, 100);
-    }
-    return;
-  }
-
-  /* 表情回应 */
-  var react = e.target.closest('[data-react-emoji]');
-  if(react){
-    toggleReaction(react.getAttribute('data-react-msg'), react.getAttribute('data-react-emoji'));
-    return;
-  }
-
-  /* 悬浮工具 */
-  var tool = e.target.closest('[data-tool]');
-  if(tool){
-    var toolName = tool.getAttribute('data-tool');
-    var msgEl = tool.closest('.msg');
-    var msgId2 = msgEl ? msgEl.getAttribute('data-mid') : null;
-    if(!msgId2) return;
-    var target2 = allMessages.find(function(x){ return String(x.id) === String(msgId2); });
-    if(!target2) return;
-
-    if(toolName === 'reply'){ setReply(target2); return; }
-    if(toolName === 'edit'){ openEditDialog(target2); return; }
-    if(toolName === 'copy'){
-      try{ navigator.clipboard.writeText(target2.text); toast('已复制'); }catch(err){ toast('复制失败'); }
-      return;
-    }
-    if(toolName === 'recall'){
-      if(!confirm('撤回这条消息？')) return;
-      sbQuery('撤回', function(){
-        return sb.from('messages').update({ recalled:true }).eq('id', msgId2).eq('uid', uid);
-      }, { max:2, silent:true }).then(function(r){
-        if(r.ok){ target2.recalled = true; renderAll(); toast('已撤回'); }
-        else toast('撤回失败');
-      });
-      return;
-    }
-    if(toolName === 'react'){ showEmojiPop(tool, msgId2); return; }
-  }
-});
-
-/* 表情选择器 */
-var emojiPopEl = null;
-function closeEmojiPop(){
-  if(emojiPopEl && emojiPopEl.parentNode) emojiPopEl.parentNode.removeChild(emojiPopEl);
-  emojiPopEl = null;
-}
-function showEmojiPop(anchor, msgId){
-  closeEmojiPop();
-  var pop = document.createElement('div');
-  pop.className = 'emoji-pop';
-  QUICK_EMOJIS.forEach(function(em){
-    var b = document.createElement('button');
-    b.type = 'button'; b.textContent = em;
-    b.addEventListener('click', function(){ toggleReaction(msgId, em); closeEmojiPop(); });
-    pop.appendChild(b);
-  });
-  var parent = anchor.parentNode;
-  parent.appendChild(pop);
-  emojiPopEl = pop;
-  var btnRect = anchor.getBoundingClientRect();
-  var parentRect = parent.getBoundingClientRect();
-  pop.style.left = (btnRect.left - parentRect.left) + 'px';
-  setTimeout(function(){
-    document.addEventListener('click', function handler(ev){
-      if(emojiPopEl && !emojiPopEl.contains(ev.target) && !anchor.contains(ev.target)){
-        closeEmojiPop(); document.removeEventListener('click', handler);
-      }
-    });
-  }, 10);
-}
-
-messagesEl.addEventListener('scroll', function(){
-  if(isAtBottom()){ unreadCount = 0; updateUnreadBadge(); }
-});
-scrollBottomBtn.addEventListener('click', function(){
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-  unreadCount = 0;
-  updateUnreadBadge();
-});
-
-/* 搜索 */
-$('searchInput').addEventListener('input', function(e){
-  searchQuery = (e.target.value || '').trim();
-  renderAll();
-});
-
-/* ============================================================
-   跳转时间
-   ============================================================ */
-var jumpOv=$('jumpOv'), jumpInput=$('jumpInput');
-function openJumpDialog(){
-  jumpInput.value = toLocalInput(Date.now() - 3600000);
-  jumpOv.classList.add('show');
-  setTimeout(function(){ try{ jumpInput.focus(); }catch(e){} }, 40);
-}
-function closeJumpDialog(){ jumpOv.classList.remove('show'); }
-async function jumpToTime(targetTs){
-  var r = await sbQuery('跳转查询', function(){
-    return sb.from('messages').select('*').lte('ts', targetTs).order('ts', { ascending:false }).limit(100);
-  }, { max:2, silent:true });
-  if(!r.ok){ toast('跳转失败'); return; }
-  var data = r.data && r.data.data;
-  if(!data || data.length === 0){
-    var r2 = await sbQuery('往后查询', function(){
-      return sb.from('messages').select('*').gt('ts', targetTs).order('ts', { ascending:true }).limit(100);
-    }, { max:2, silent:true });
-    if(!r2.ok || !r2.data || !r2.data.data || r2.data.data.length === 0){ toast('该时间附近没有消息'); return; }
-    data = r2.data.data.slice().reverse();
-  }
-  var arr = data.map(normalizeMsg).reverse();
-  var bestIdx = 0, bestDist = Infinity;
-  arr.forEach(function(m, i){ var d = Math.abs(m.ts - targetTs); if(d < bestDist){ bestDist = d; bestIdx = i; } });
-  arr.forEach(function(m){ m.__highlight = false; });
-  if(arr[bestIdx]) arr[bestIdx].__highlight = true;
-  allMessages = arr;
-  updateLastTs();
-  hasMoreHistory = true;
-  await loadStylesFor(collectUids(allMessages));
-  await loadReactionsFor(collectMsgIds(allMessages));
-  renderAll();
-  setTimeout(function(){
-    var target = arr[bestIdx]; if(!target) return;
-    var el = messagesEl.querySelector('[data-mid="' + target.id + '"]');
-    if(el){
-      var elRect = el.getBoundingClientRect();
-      var wrapRect = messagesEl.getBoundingClientRect();
-      var offsetInWrap = elRect.top - wrapRect.top + messagesEl.scrollTop;
-      messagesEl.scrollTop = offsetInWrap - (wrapRect.height - elRect.height)/2;
-      setTimeout(function(){ el.classList.remove('highlight'); }, 2500);
-    }
-  }, 100);
-  toast('已跳到 ' + fmtTime(targetTs) + ' 附近');
-}
-$('jumpBtn').addEventListener('click', openJumpDialog);
-$('jumpClose').addEventListener('click', closeJumpDialog);
-$('jumpCancel').addEventListener('click', closeJumpDialog);
-jumpOv.addEventListener('click', function(e){ if(e.target===jumpOv) closeJumpDialog(); });
-document.querySelectorAll('.jump-body .quick button').forEach(function(btn){
-  btn.addEventListener('click', function(){ jumpInput.value = toLocalInput(Date.now() - parseInt(btn.getAttribute('data-offset'),10)); });
-});
-$('jumpGo').addEventListener('click', function(){
-  var v = jumpInput.value; if(!v){ toast('请选择时间'); return; }
-  var targetTs = new Date(v.replace('T',' ')).getTime();
-  if(isNaN(targetTs)){ toast('时间格式不对'); return; }
-  closeJumpDialog(); jumpToTime(targetTs);
-});
-$('jumpLatestBtn').addEventListener('click', function(){
-  loadHistory().then(function(){ messagesEl.scrollTop = messagesEl.scrollHeight; toast('已回到最新'); });
-});
-
-/* ============================================================
-   自定义颜色
-   ============================================================ */
-var styleOv=$('styleOv');
-var cAvatar=$('cAvatar'), cBubble=$('cBubble'), cText=$('cText');
-var pvAvatar=$('pvAvatar'), pvBubble=$('pvBubble');
-function getThemeDefaultColors(){
-  var cs = getComputedStyle(document.documentElement);
-  function pick(n){ return cs.getPropertyValue(n).trim() || '#3d521f'; }
-  var ac = pick('--ac'), selfFg = pick('--self-fg');
-  var bubbleBg = ac;
-  if(bubbleBg.indexOf('linear-gradient') !== -1) bubbleBg = '#3d521f';
-  if(bubbleBg[0] !== '#') bubbleBg = '#3d521f';
-  if(!/^#[0-9a-fA-F]{6}$/.test(bubbleBg)) bubbleBg = '#3d521f';
-  var avatar = ac;
-  if(avatar[0] !== '#') avatar = '#3d521f';
-  if(!/^#[0-9a-fA-F]{6}$/.test(avatar)) avatar = '#3d521f';
-  var text = selfFg;
-  if(text[0] !== '#') text = '#ffffff';
-  if(!/^#[0-9a-fA-F]{6}$/.test(text)) text = '#ffffff';
-  return { avatar: avatar, bubble: bubbleBg, text: text };
-}
-function buildEmojiGrid(){
-  var grid = $('emojiGrid'); if(!grid) return;
-  var html = '';
-  AVATAR_EMOJIS.forEach(function(em){
-    var sel = (myStyle.emoji === em) ? ' selected' : '';
-    html += '<button type="button" data-emoji="'+em+'" class="'+sel.trim()+'">'+em+'</button>';
-  });
-  grid.innerHTML = html;
-}
-function updatePreview(){
-  var a = cAvatar.value || '#3d521f', b = cBubble.value || '#7a9c3c', t = cText.value || '#ffffff';
-  pvAvatar.style.background = a;
-  pvAvatar.textContent = myStyle.emoji || '我';
-  pvBubble.style.background = b;
-  pvBubble.style.color = t;
-}
-[cAvatar, cBubble, cText].forEach(function(el){ el.addEventListener('input', updatePreview); });
-document.querySelectorAll('.style-row .reset-one').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    var target = btn.getAttribute('data-target'); if(!target) return;
-    var defs = getThemeDefaultColors();
-    if(target === 'avatar') cAvatar.value = defs.avatar;
-    else if(target === 'bubble') cBubble.value = defs.bubble;
-    else if(target === 'text') cText.value = defs.text;
-    updatePreview();
-  });
-});
-$('emojiClearBtn').addEventListener('click', function(){ myStyle.emoji = null; buildEmojiGrid(); updatePreview(); });
-$('emojiGrid').addEventListener('click', function(e){
-  var btn = e.target.closest('button[data-emoji]'); if(!btn) return;
-  var em = btn.getAttribute('data-emoji');
-  myStyle.emoji = (myStyle.emoji === em) ? null : em;
-  buildEmojiGrid(); updatePreview();
-});
-function openStyleDialog(){
-  var defs = getThemeDefaultColors();
-  cAvatar.value = myStyle.avatar || defs.avatar;
-  cBubble.value = myStyle.bubble || defs.bubble;
-  cText.value = myStyle.text || defs.text;
-  buildEmojiGrid(); updatePreview();
-  styleOv.classList.add('show');
-}
-function closeStyleDialog(){ styleOv.classList.remove('show'); }
-$('styleBtn').addEventListener('click', openStyleDialog);
-$('styleClose').addEventListener('click', closeStyleDialog);
-$('styleCancel').addEventListener('click', closeStyleDialog);
-styleOv.addEventListener('click', function(e){ if(e.target===styleOv) closeStyleDialog(); });
-$('styleResetAll').addEventListener('click', function(){
-  var defs = getThemeDefaultColors();
-  cAvatar.value = defs.avatar; cBubble.value = defs.bubble; cText.value = defs.text;
-  myStyle.emoji = null; buildEmojiGrid(); updatePreview();
-});
-$('styleSave').addEventListener('click', async function(){
-  var defs = getThemeDefaultColors();
-  var newAvatar = (cAvatar.value === defs.avatar) ? null : cAvatar.value;
-  var newBubble = (cBubble.value === defs.bubble) ? null : cBubble.value;
-  var newText   = (cText.value === defs.text)   ? null : cText.value;
-  myStyle = {
-    avatar: isValidHex(newAvatar) ? newAvatar : null,
-    bubble: isValidHex(newBubble) ? newBubble : null,
-    text:   isValidHex(newText)   ? newText   : null,
-    emoji:  myStyle.emoji || null
-  };
-  saveMyStyleLocal();
-  styleMap[uid] = myStyle;
-  renderAll();
-  $('styleSave').disabled = true;
-  var ok = await saveMyStyle();
-  $('styleSave').disabled = false;
-  closeStyleDialog();
-  toast(ok ? '已保存' : '已应用到本地，服务器同步失败');
-});
-
-/* ============================================================
-   提示音
-   ============================================================ */
-function updateSoundIcon(){
-  $('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
-  $('soundBtn').title = soundEnabled ? '提示音已开' : '提示音已关';
-}
-$('soundBtn').addEventListener('click', function(){
-  soundEnabled = !soundEnabled;
-  storage.set(K_SOUND, soundEnabled ? 'on' : 'off');
-  updateSoundIcon();
-  toast(soundEnabled ? '提示音已开' : '提示音已关');
-  if(soundEnabled) playPing();
-});
-
-/* ============================================================
-   设置面板
-   ============================================================ */
-var settingsOv=$('settingsOv');
-function openSettings(){
-  $('fsDisplay').textContent = chatFontSize;
-  $('denseBtn').classList.toggle('active', denseMode);
-  $('animBtn').classList.toggle('active', noAnim);
-  $('sendKeyBtn').textContent = sendKey === 'ctrl-enter' ? 'Ctrl+Enter' : 'Enter';
-  renderBlockList();
-  settingsOv.classList.add('show');
-}
-function closeSettings(){ settingsOv.classList.remove('show'); }
-function renderBlockList(){
-  var el = $('blockList'); if(!el) return;
-  var list = Object.keys(blockedUids);
-  if(list.length === 0){ el.innerHTML = '<span style="opacity:.6">没有屏蔽任何人</span>'; return; }
-  var html = '';
-  list.forEach(function(blockUid){
-    var u = onlineUsers.find(function(x){ return x.uid === blockUid; });
-    var nick = u ? u.nick : '未知';
-    html += '<div style="display:flex;align-items:center;gap:8px;padding:3px 0">'+
-      '<span style="flex:1">'+esc(nick)+'</span>'+
-      '<button class="sr-btn" data-unblock="'+esc(blockUid)+'">取消</button>'+
-    '</div>';
-  });
-  el.innerHTML = html;
-}
-$('settingsBtn').addEventListener('click', openSettings);
-$('settingsClose').addEventListener('click', closeSettings);
-$('settingsOk').addEventListener('click', closeSettings);
-settingsOv.addEventListener('click', function(e){ if(e.target === settingsOv) closeSettings(); });
-
-$('settingsOv').addEventListener('click', function(e){
-  var fs = e.target.closest('[data-fontsize]');
-  if(fs){
-    var delta = parseInt(fs.getAttribute('data-fontsize'), 10);
-    chatFontSize = Math.max(12, Math.min(22, chatFontSize + delta));
-    document.documentElement.style.setProperty('--chat-fs', chatFontSize + 'px');
-    storage.set(K_FS, String(chatFontSize));
-    $('fsDisplay').textContent = chatFontSize;
-    return;
-  }
-  if(e.target.closest('#denseBtn')){
-    denseMode = !denseMode;
-    document.documentElement.classList.toggle('dense', denseMode);
-    storage.set(K_DENSE, denseMode ? '1' : '0');
-    $('denseBtn').classList.toggle('active', denseMode);
-    return;
-  }
-  if(e.target.closest('#animBtn')){
-    noAnim = !noAnim;
-    document.documentElement.classList.toggle('noanim', noAnim);
-    storage.set(K_NOANIM, noAnim ? '1' : '0');
-    $('animBtn').classList.toggle('active', noAnim);
-    return;
-  }
-  if(e.target.closest('#sendKeyBtn')){
-    sendKey = sendKey === 'enter' ? 'ctrl-enter' : 'enter';
-    storage.set(K_SENDKEY, sendKey);
-    $('sendKeyBtn').textContent = sendKey === 'ctrl-enter' ? 'Ctrl+Enter' : 'Enter';
-    return;
-  }
-  var ub = e.target.closest('[data-unblock]');
-  if(ub){
-    delete blockedUids[ub.getAttribute('data-unblock')];
-    saveBlocked(); renderBlockList(); renderAll();
-    return;
-  }
-});
-
-/* ============================================================
-   修改昵称
-   ============================================================ */
-var nickOv=$('nickOv'),nickInput=$('nickInput'),nickHint=$('nickHint');
-var nickQuotaLeftEl = $('nickQuotaLeft');
-async function openNickDialog(){
-  nickInput.value=myNick;
-  nickHint.innerHTML = '改名后旧昵称会被释放，别人可以用了。<br><span class="quota">今日还可改 <span id="nickQuotaLeft">?</span> / 5 次</span>';
-  nickQuotaLeftEl = $('nickQuotaLeft');
-  nickOv.classList.add('show');
-  setTimeout(function(){try{nickInput.focus();nickInput.select();}catch(e){}},40);
-  var q = await getNickChangeQuota();
-  if(nickQuotaLeftEl) nickQuotaLeftEl.textContent = q.ok ? q.left : '?';
-  if(q.ok && q.left <= 0){
-    $('nickSave').disabled = true;
-    nickHint.innerHTML = '今天已经改了 5 次了，明天再来吧。<br><span class="quota">今日还可改 0 / 5 次</span>';
-  }else{
-    $('nickSave').disabled = false;
-  }
-}
-function closeNickDialog(){ nickOv.classList.remove('show'); }
-$('nickBtn').addEventListener('click',openNickDialog);
-$('nickClose').addEventListener('click',closeNickDialog);
-$('nickCancel').addEventListener('click',closeNickDialog);
-$('nickSave').addEventListener('click', async function(){
-  var v = nickInput.value.trim();
-  if(!v){ nickHint.textContent='昵称不能为空'; nickHint.className='hint err'; return; }
-  if(v.length>20){ nickHint.textContent='最多 20 字'; nickHint.className='hint err'; return; }
-  if(v===myNick){ closeNickDialog(); return; }
-  $('nickSave').disabled = true;
-  nickHint.textContent='检查中…'; nickHint.className='hint';
-  var quota = await getNickChangeQuota();
-  if(!quota.ok){ nickHint.textContent='网络异常'; nickHint.className='hint err'; $('nickSave').disabled=false; return; }
-  if(quota.left <= 0){ nickHint.innerHTML = '今天已经改了 5 次了。<br><span class="quota">0 / 5</span>'; $('nickSave').disabled=false; return; }
-  var r = await claimNick(v);
-  hideRetryOverlay();
-  if(!r.ok){
-    if(r.reason==='taken'){ nickHint.textContent='这个名字被占用了'; nickHint.className='hint err'; }
-    else { nickHint.textContent='网络异常'; nickHint.className='hint err'; }
-    $('nickSave').disabled = false; return;
-  }
-  var oldNick = myNick;
-  myNick = v;
-  storage.set(K_NICK, myNick);
-  $('meNick').textContent = myNick;
-  await logNickChange();
-  await releaseNick(oldNick);
-  await syncMyMessagesNick(myNick);
-  try{ if(presenceChannel) await presenceChannel.track({nick:myNick, joinedAt:Date.now()}); }catch(e){}
-  closeNickDialog();
-  toast('昵称已改为「'+myNick+'」（还剩 ' + (quota.left - 1) + ' 次）');
-});
-nickInput.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();$('nickSave').click();} });
-
-/* ============================================================
-   主题绑定
-   ============================================================ */
-themeBtn.addEventListener('click',openTheme);
-themeClose.addEventListener('click',closeTheme);
-themeOv.addEventListener('click',function(e){if(e.target===themeOv)closeTheme();});
-themeGrid.addEventListener('click',function(e){
-  var card=e.target.closest('[data-theme-val]'); if(!card)return;
-  var id=card.getAttribute('data-theme-val');
-  applyTheme(id); closeTheme();
-  var name=id;
-  for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===id)name=THEMES[i].name;
-  toast('已切换到 '+name);
-});
-$('onlineBadge').addEventListener('click', openOnlineDialog);
-$('onlineClose').addEventListener('click', closeOnlineDialog);
-$('onlineOv').addEventListener('click', function(e){ if(e.target===$('onlineOv')) closeOnlineDialog(); });
-
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){
-    if(themeOv.classList.contains('show'))closeTheme();
-    else if(nickOv.classList.contains('show'))closeNickDialog();
-    else if(jumpOv.classList.contains('show'))closeJumpDialog();
-    else if(styleOv.classList.contains('show'))closeStyleDialog();
-    else if($('onlineOv').classList.contains('show'))closeOnlineDialog();
-    else if($('userCardOv').classList.contains('show'))closeUserCard();
-    else if(editOv.classList.contains('show'))closeEditDialog();
-    else if(settingsOv.classList.contains('show'))closeSettings();
-  }
-});
-
-window.addEventListener('resize',resizeCanvas,{passive:true});
-document.addEventListener('visibilitychange',function(){
-  particleRunning = !document.hidden;
-  if(particleRunning){
-    drawParticles();
-    if(!chatWrap.hidden){ doPollNow(); resetPollCountdown(); updateActivity(); }
-    if(presenceChannel){ try{ presenceChannel.track({nick:myNick, joinedAt:Date.now()}); }catch(e){} }
-    unreadCount = 0; updateUnreadBadge();
-  }
-});
-
-/* ============================================================
-   右下角
-   ============================================================ */
-var refreshPill = $('refreshPill');
-var cdNum = $('cdNum');
-var rpIcon = $('rpIcon');
-var pollCountdown = POLL_INTERVAL;
-var countdownTimer = null;
-var pillState = 'ok';
-
-function setPillRetry(attempt, max){
-  pillState = 'retry';
-  if(refreshPill){
-    refreshPill.classList.remove('err','loading');
-    refreshPill.classList.add('retry');
-    var txt = refreshPill.querySelector('.rp-text');
-    if(txt) txt.innerHTML = '<span id="cdNum">' + attempt + '</span>/' + max + ' 重试中';
-    cdNum = $('cdNum');
-  }
-  if(rpIcon) rpIcon.textContent = '⏳';
-}
-function setPillOK(){
-  pillState = 'ok';
-  if(refreshPill) refreshPill.classList.remove('err','retry');
-  if(rpIcon) rpIcon.textContent = '🔄';
-  var txt = refreshPill && refreshPill.querySelector('.rp-text');
-  if(txt) txt.innerHTML = '<span id="cdNum">' + pollCountdown + '</span> 秒后刷新';
-  cdNum = $('cdNum');
-}
-function setPillErr(){
-  pillState = 'err';
-  if(refreshPill){ refreshPill.classList.remove('retry','loading'); refreshPill.classList.add('err'); }
-  if(rpIcon) rpIcon.textContent = '⚠';
-  var txt = refreshPill && refreshPill.querySelector('.rp-text');
-  if(txt) txt.innerHTML = '连接失败';
-}
-function updateCdDisplay(){ if(pillState !== 'ok') return; if(cdNum) cdNum.textContent = pollCountdown; }
-function setRpErr(){}
-function clearRpErr(){ setPillOK(); }
-function resetPollCountdown(){ pollCountdown = POLL_INTERVAL; updateCdDisplay(); }
-function doPollNow(){
-  if(refreshPill) refreshPill.classList.add('loading');
-  if(rpIcon) rpIcon.textContent = '🔄';
-  pollNewMessages().then(function(){
-    setTimeout(function(){
-      if(refreshPill) refreshPill.classList.remove('loading');
-      if(pillState==='ok' && rpIcon) rpIcon.textContent = '🔄';
-    }, 400);
-  });
-}
-function startPolling(){
-  stopPolling(); resetPollCountdown();
-  if(refreshPill) refreshPill.hidden = false;
-  countdownTimer = setInterval(function(){
-    if(document.hidden) return;
-    if(pillState !== 'ok') return;
-    pollCountdown--;
-    if(pollCountdown <= 0){
-      if(refreshPill){
-        refreshPill.classList.add('tick');
-        setTimeout(function(){ refreshPill.classList.remove('tick'); }, 400);
-      }
-      doPollNow(); pollCountdown = POLL_INTERVAL;
-    }
-    updateCdDisplay();
-  }, 1000);
-}
-function stopPolling(){ if(countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; } }
-if(refreshPill){
-  refreshPill.addEventListener('click', function(){
-    if(refreshPill.classList.contains('loading')) return;
-    doPollNow(); resetPollCountdown();
-  });
-}
-
-setInterval(function(){
-  if(allMessages.length===0)return;
-  var real = allMessages.filter(function(m){ return !m.__local; });
-  var els = messagesEl.querySelectorAll('.msg .time');
-  var i = 0;
-  real.forEach(function(m){ var t = els[i]; if(t) t.textContent = fmtTime(m.ts); i++; });
-},30000);
-
-/* ============================================================
-   启动
-   ============================================================ */
-applyTheme(curTheme);
-initParticles();
-autoResize();
-updateLoginBtn();
-updateSoundIcon();
-
-(async function autoLogin(){
-  var saved = storage.get(K_NICK);
-  if(!saved) return;
-  loginNick.value = saved;
-  updateLoginBtn();
-  setLoginStatus('正在恢复上次的昵称…', 'busy');
-  autoClean();
-  var r = await claimNick(saved);
-  hideRetryOverlay();
-  if(r.ok){ myNick = saved; setLoginStatus('✓ 欢迎回来', 'ok'); startChat(); }
-  else if(r.reason==='taken'){ setLoginStatus('上次用的名字现在被占了，换一个吧', 'err'); storage.del(K_NICK); }
-  else setLoginStatus('网络异常，可重试', 'err');
-})();
-
-})();
-</script>
-</body>
-</html>
+  renderAll(); updateLastTs();
+ 
