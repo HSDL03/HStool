@@ -6,13 +6,7 @@
 <title>五子棋大厅 · 红石的小站</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚫</text></svg>">
 <script>
-(function(){
-  try{
-    var t=localStorage.getItem('wiki-theme');
-    var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
-    if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
-  }catch(e){}
-})();
+(function(){try{var t=localStorage.getItem('wiki-theme');var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
 <style>
 :root,[data-theme="mc-wiki"]{--bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;--bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;--ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;--sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);--bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(61,82,31,.13);--blob2:rgba(106,140,60,.09);--blob3:rgba(180,150,80,.07);--grid:rgba(61,82,31,.04);--p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;--hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);--tile-accent:linear-gradient(135deg,#7a9c3c,#3d521f);--topbar-bg:linear-gradient(180deg,#56682c,#3d521f);--topbar-fg:#fff;--topbar-bd:#2a3a1a;--ann-bg:linear-gradient(135deg,#7a9c3c,#3d521f);--ann-fg:#fff}
@@ -25,13 +19,12 @@
 [data-theme="github-dark"]{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--text:#e6edf3;--muted:#9198a1;--bd:#30363d;--bd2:#484f58;--ac:#4493f8;--acs:#16233a;--ok:#3fb950;--warn:#d4a72c;--dgr:#f85149;--sh:0 1px 4px rgba(0,0,0,.4);--r:6px;--bevel:none;--bevel-in:none;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(68,147,248,.06);--blob2:rgba(163,113,247,.05);--blob3:rgba(219,112,147,.04);--grid:rgba(230,237,243,.02);--p1:68,147,248;--p2:163,113,247;--p3:219,112,147;--p4:230,237,243;--hero-grad:linear-gradient(135deg,#4493f8,#a371f7);--tile-accent:linear-gradient(135deg,#4493f8,#a371f7);--topbar-bg:#161b22;--topbar-fg:#e6edf3;--topbar-bd:#30363d;--ann-bg:linear-gradient(135deg,#4493f8,#a371f7);--ann-fg:#fff}
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--bg);scroll-behavior:smooth;transition:background-color .3s}
-body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background-color .3s,color .3s}
+body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50}
 [data-theme^="mc-"] .topbar{border-bottom-width:2px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer}
 [data-theme^="mc-"] .logo{text-shadow:1px 1px 0 rgba(0,0,0,.4)}
-.logo-icon{display:inline-block;font-size:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.logo:hover .logo-icon{transform:rotate(-8deg) scale(1.08)}
+.logo-icon{display:inline-block;font-size:16px}
 .sp{flex:1}
 .me-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.15);border-radius:999px;font-size:12px;cursor:pointer;max-width:160px;overflow:hidden;border:none;color:inherit;font-family:inherit}
 .me-chip:hover{background:rgba(255,255,255,.28)}
@@ -39,12 +32,10 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .me-chip .me-avatar{width:16px;height:16px;display:grid;place-items:center;border-radius:50%;font-size:10px;font-weight:700;color:#fff;flex:none}
 [data-theme^="mc-"] .me-chip .me-avatar{border-radius:2px}
 .me-chip .me-nick{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:var(--muted);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,color .15s,transform .2s}
+.icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:var(--muted);background:transparent;border:none;border-radius:var(--r);cursor:pointer}
 .icon:hover{background:var(--bg3);color:var(--text)}
 [data-theme^="mc-"] .icon,[data-theme="sakura"] .icon,[data-theme="ocean"] .icon{color:rgba(255,255,255,.85)}
 [data-theme^="mc-"] .icon:hover{background:rgba(0,0,0,.2);color:#fff}
-.icon.spin{animation:spinIcon .7s linear infinite}
-@keyframes spinIcon{to{transform:rotate(360deg)}}
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .blob{position:absolute;border-radius:50%;filter:blur(80px)}
 .b1{width:420px;height:420px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 30s ease-in-out infinite}
@@ -86,30 +77,29 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .announce-banner .ann-icon{font-size:20px;flex:none}
 .announce-banner .ann-text{flex:1;min-width:0;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:1px 1px 0 rgba(0,0,0,.2)}
 .announce-banner .ann-text .ann-winner{font-weight:800;color:#fff}
-.announce-banner .ann-time{flex:none;font-size:11px;opacity:.8;font-variant-numeric:tabular-nums}
+.announce-banner .ann-time{flex:none;font-size:11px;opacity:.8}
 .announce-banner .ann-close{flex:none;width:22px;height:22px;display:grid;place-items:center;background:rgba(255,255,255,.2);border:none;border-radius:var(--r);color:inherit;cursor:pointer;font-size:12px;font-family:inherit}
 [data-theme^="mc-"] .announce-banner .ann-close{border-radius:2px}
-.announce-banner .ann-close:hover{background:rgba(255,255,255,.35)}
 .ann-history{margin-bottom:16px;padding:10px 12px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);display:none}
 [data-theme^="github-"] .ann-history{border-width:1px;border-radius:8px}
 .ann-history.show{display:block}
 .ann-history .ah-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--bd)}
-[data-theme^="mc-"] .ann-history .ah-head{border-bottom:2px solid var(--bd2);padding-bottom:5px}
+[data-theme^="mc-"] .ann-history .ah-head{border-bottom:2px solid var(--bd2)}
 .ann-history .ah-list{display:flex;flex-direction:column;gap:2px;max-height:120px;overflow-y:auto}
 .ann-history .ah-item{font-size:12.5px;color:var(--muted);padding:3px 0;display:flex;align-items:center;gap:8px;overflow:hidden}
 .ann-history .ah-item .ah-ic{flex:none;font-size:14px}
 .ann-history .ah-item .ah-tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ann-history .ah-item .ah-tm{flex:none;font-size:11px;opacity:.7;font-variant-numeric:tabular-nums}
+.ann-history .ah-item .ah-tm{flex:none;font-size:11px;opacity:.7}
 .toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:16px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
-[data-theme^="github-"] .toolbar{border-width:1px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-theme^="github-"] .toolbar{border-width:1px;border-radius:8px}
 .toolbar .tb-stat{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
 .toolbar .tb-stat .live-dot{width:7px;height:7px;background:var(--ok);border-radius:50%;box-shadow:0 0 0 3px rgba(45,122,45,.18);animation:livePulse 2s ease-in-out infinite}
 [data-theme^="mc-"] .toolbar .tb-stat .live-dot{border-radius:0}
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
-.toolbar .tb-stat strong{color:var(--ac);font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.toolbar .tb-stat strong{color:var(--ac);font-size:15px;font-weight:800}
 .toolbar .sp{flex:1}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;font-size:13.5px;font-family:inherit;font-weight:700;color:var(--text);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;box-shadow:var(--bevel);transition:all .15s}
-[data-theme^="github-"] .btn{border-width:1px;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+[data-theme^="github-"] .btn{border-width:1px;border-radius:6px}
 .btn:hover:not(:disabled){filter:brightness(1.05);transform:translateY(-1px)}
 [data-theme^="mc-"] .btn:hover:not(:disabled){transform:none;filter:brightness(1.08);box-shadow:var(--bevel),0 0 8px rgba(var(--p1),.3)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -118,7 +108,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .room-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 @media(max-width:700px){.room-list{grid-template-columns:1fr;gap:8px}}
 .room-card{position:relative;display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg));border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);cursor:pointer;overflow:hidden;transition:all .28s cubic-bezier(.34,1.56,.64,1)}
-[data-theme^="github-"] .room-card{border-width:1px;border-radius:10px;background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-theme^="github-"] .room-card{border-width:1px;border-radius:10px;background:var(--bg)}
 .room-card:hover{transform:translateY(-3px);box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.35),0 12px 20px rgba(0,0,0,.12);border-color:var(--ac)}
 [data-theme^="mc-"] .room-card:hover{transform:none;box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.4),0 6px 14px rgba(0,0,0,.15)}
 .rc-avatar{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:var(--r);font-size:17px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3)}
@@ -131,11 +121,10 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme="mc-end"] .rc-name{color:#e0d0ff;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
 [data-theme="sakura"] .rc-name{color:#8a2050;text-shadow:1px 1px 0 rgba(255,255,255,.5)}
 [data-theme="ocean"] .rc-name{color:#0a3060;text-shadow:1px 1px 0 rgba(255,255,255,.5)}
-.room-card:hover .rc-name{color:var(--ac)}
 .rc-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:11.5px;color:var(--muted)}
-.rc-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;color:var(--ac);letter-spacing:.06em;padding:1px 6px;background:var(--acs);border-radius:3px}
+.rc-code{font-family:ui-monospace,Monaco,monospace;font-weight:700;color:var(--ac);letter-spacing:.06em;padding:1px 6px;background:var(--acs);border-radius:3px}
 [data-theme^="mc-"] .rc-code{border-radius:2px}
-.rc-size{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;padding:1px 6px;background:var(--bg3);border-radius:3px;color:var(--text)}
+.rc-size{font-family:ui-monospace,Monaco,monospace;font-weight:700;padding:1px 6px;background:var(--bg3);border-radius:3px;color:var(--text)}
 [data-theme^="mc-"] .rc-size{border-radius:2px}
 .rc-meta .sep{opacity:.4}
 .rc-status{flex:none;padding:3px 9px;font-size:10.5px;font-weight:700;letter-spacing:.04em;border-radius:999px;text-transform:uppercase;border:1px solid transparent;white-space:nowrap}
@@ -154,14 +143,13 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .empty .empty-sub{font-size:13px;color:var(--muted);line-height:1.7}
 .foot{margin-top:56px;padding-top:20px;text-align:center;border-top:1px dashed var(--bd);font-size:12px;color:var(--muted)}
 .foot a{color:var(--ac);text-decoration:none;font-weight:600;border-bottom:1px dashed var(--ac)}
-.foot a:hover{border-bottom-style:solid;opacity:.8}
-.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
 .ov.show{opacity:1;visibility:visible}
 .pnl{display:flex;flex-direction:column;width:100%;max-width:520px;max-height:calc(100vh - 32px);background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) + 3px);box-shadow:var(--sh);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
 [data-theme^="mc-"] .pnl{border:2px solid var(--bd2);border-radius:2px;box-shadow:3px 3px 0 rgba(0,0,0,.3)}
 .ov.show .pnl{transform:none}
 .ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd);flex:none;color:#fff}
-[data-theme="mc-wiki"] .ph{background:linear-gradient(180deg,#7a9c3c,#56682c);border-bottom:2px solid #3d521f;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
+[data-theme="mc-wiki"] .ph{background:linear-gradient(180deg,#7a9c3c,#56682c);border-bottom:2px solid #3d521f}
 [data-theme="mc-night"] .ph{background:linear-gradient(180deg,#5a7a2c,#3d521f);color:#e8ffd0}
 [data-theme="mc-nether"] .ph{background:linear-gradient(180deg,#8a2010,#4a1008);color:#ffe0d0}
 [data-theme="mc-end"] .ph{background:linear-gradient(180deg,#4a2080,#2a1050);color:#e0d0ff}
@@ -186,15 +174,10 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .form-body input[type=text]:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
 .form-body .field{margin-bottom:16px}
 .form-body .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
-.form-body .hint.err{color:var(--dgr);font-weight:600}
-.form-body .hint.ok{color:var(--ok);font-weight:600}
-.form-body .hint.busy{color:var(--ac);font-weight:600}
 .form-foot{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd)}
 .form-foot button{padding:8px 18px;font-size:14px;font-family:inherit;font-weight:700;border-radius:var(--r);cursor:pointer;transition:all .15s}
 .form-foot .cancel{color:var(--text);background:var(--bg);border:2px solid var(--bd)}
-[data-theme^="github-"] .form-foot .cancel{border-width:1px}
 .form-foot .save{color:#fff;background:var(--hero-grad);border:2px solid var(--bd2);box-shadow:var(--bevel)}
-[data-theme^="github-"] .form-foot .save{border-width:1px;border-radius:6px}
 [data-theme^="mc-"] .form-foot .save{text-shadow:1px 1px 0 rgba(0,0,0,.3)}
 .form-foot .save:disabled{opacity:.5;cursor:not-allowed}
 .nick-preview{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:16px}
@@ -210,9 +193,8 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .size-presets{display:flex;flex-wrap:wrap;gap:6px}
 .size-presets button{padding:4px 10px;font-size:12px;font-family:ui-monospace,Monaco,monospace;font-weight:700;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer}
 [data-theme^="mc-"] .size-presets button{border-width:2px;border-color:var(--bd2)}
-.size-presets button:hover{color:var(--ac);border-color:var(--ac)}
 .size-presets button.active{color:var(--ac);background:var(--acs);border-color:var(--ac);font-weight:800}
-.nick-gate{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.nick-gate{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
 .nick-gate.show{opacity:1;visibility:visible}
 .nick-gate .pnl{max-width:440px}
 .nick-gate .gate-body{padding:22px 20px;text-align:center}
@@ -232,6 +214,9 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .nick-gate .gate-btn:disabled{opacity:.5;cursor:not-allowed}
 .nick-gate .gate-rand{margin-top:12px;font-size:12px;color:var(--muted);cursor:pointer;display:inline-block}
 .nick-gate .gate-rand:hover{color:var(--ac);text-decoration:underline}
+.nick-gate .gate-lan{margin-top:10px;width:100%;height:44px;font-size:14px;font-weight:700;font-family:inherit;color:var(--ac);background:var(--acs);border:2px solid var(--ac);border-radius:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.nick-gate .gate-lan:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.nick-gate .gate-lan-hint{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.5}
 .toast{position:fixed;left:50%;bottom:20px;max-width:calc(100vw - 32px);padding:8px 16px;font-size:13px;color:var(--bg);background:var(--text);border-radius:var(--r);box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(16px);transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:600}
 [data-theme^="mc-"] .toast{background:#2a3a1a;color:#e8ffd0;border:2px solid #4a4a3a;border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.4)}
 [data-theme="mc-nether"] .toast{background:#2a0800;color:#ffe0d0;border-color:#5a2010}
@@ -249,7 +234,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .big-announce .ba-sub{font-size:13.5px;color:var(--muted);line-height:1.6;margin:0}
 .conn-pill{position:fixed;right:14px;bottom:14px;z-index:80;display:flex;align-items:center;gap:6px;padding:5px 11px;font-size:11px;font-family:ui-monospace,Monaco,monospace;color:var(--muted);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);user-select:none;opacity:.75}
 [data-theme^="github-"] .conn-pill{border-width:1px;border-radius:999px}
-.conn-pill:hover{opacity:1}
 .conn-pill .cp-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
 [data-theme^="mc-"] .conn-pill .cp-dot{border-radius:0}
 .conn-pill.on .cp-dot{background:var(--ok);box-shadow:0 0 0 2px rgba(45,122,45,.18)}
@@ -258,7 +242,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 @keyframes cpPulse{0%,100%{opacity:1}50%{opacity:.35}}
 .conn-pill.on .cp-text{color:var(--ok)}
 .conn-pill.err .cp-text{color:var(--dgr);font-weight:700}
-@media(max-width:900px){.wrap{padding:40px 16px 60px}}
 @media(max-width:640px){
   .logo span:last-child{display:none}
   .hero h1{font-size:1.7rem}
@@ -370,6 +353,8 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
       <div class="gate-status" id="gateStatus"></div>
       <button class="gate-btn" id="gateBtn" disabled>进入大厅 →</button>
       <a class="gate-rand" id="gateRandom">🎲 随机一个</a>
+      <button class="gate-lan" id="gateLanBtn">📡 直接用局域网模式</button>
+      <div class="gate-lan-hint">无需起名，自动分配「1号」「2号」…</div>
     </div>
   </div>
 </div>
@@ -395,15 +380,9 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
     <div class="form-body">
       <div class="nick-preview">
         <div class="np-avatar" id="createAvatar">?</div>
-        <div class="np-body">
-          <div class="np-label">房主（执黑先行）</div>
-          <div class="np-name" id="createNick">未命名</div>
-        </div>
+        <div class="np-body"><div class="np-label">房主（执黑先行）</div><div class="np-name" id="createNick">未命名</div></div>
       </div>
-      <div class="field">
-        <label>房间名</label>
-        <input id="roomNameInput" type="text" maxlength="20" placeholder="留空则自动生成" autocomplete="off">
-      </div>
+      <div class="field"><label>房间名</label><input id="roomNameInput" type="text" maxlength="20" placeholder="留空则自动生成" autocomplete="off"></div>
       <div class="field" style="margin-bottom:0">
         <label>棋盘大小（5 × 5 ~ 50 × 50）</label>
         <div class="size-row">
@@ -421,10 +400,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
         <div class="hint">每步 60 秒 · 等待 120 秒自动关闭 · 黑先</div>
       </div>
     </div>
-    <div class="form-foot">
-      <button class="cancel" id="createCancel">取消</button>
-      <button class="save" id="createSave">创建并进入 →</button>
-    </div>
+    <div class="form-foot"><button class="cancel" id="createCancel">取消</button><button class="save" id="createSave">创建并进入 →</button></div>
   </div>
 </div>
 
@@ -435,13 +411,9 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
       <div class="field" style="margin-bottom:0">
         <label>房间码</label>
         <input id="joinCodeInput" type="text" maxlength="6" placeholder="6 位字母数字" autocomplete="off" style="font-family:ui-monospace,Monaco,monospace;letter-spacing:.15em;text-transform:uppercase">
-        <div class="hint">大小写不敏感</div>
       </div>
     </div>
-    <div class="form-foot">
-      <button class="cancel" id="joinCancel">取消</button>
-      <button class="save" id="joinSave">加入 →</button>
-    </div>
+    <div class="form-foot"><button class="cancel" id="joinCancel">取消</button><button class="save" id="joinSave">加入 →</button></div>
   </div>
 </div>
 
@@ -451,10 +423,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
     <div class="form-body">
       <div class="nick-preview">
         <div class="np-avatar" id="nickAvatar">?</div>
-        <div class="np-body">
-          <div class="np-label">预览</div>
-          <div class="np-name" id="nickPreviewName">未命名</div>
-        </div>
+        <div class="np-body"><div class="np-label">预览</div><div class="np-name" id="nickPreviewName">未命名</div></div>
       </div>
       <div class="field" style="margin-bottom:0">
         <label>昵称</label>
@@ -462,10 +431,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
         <div class="hint" id="nickHint">昵称全局唯一，改名后旧昵称会被释放</div>
       </div>
     </div>
-    <div class="form-foot">
-      <button class="cancel" id="nickCancel">取消</button>
-      <button class="save" id="nickSave">保存</button>
-    </div>
+    <div class="form-foot"><button class="cancel" id="nickCancel">取消</button><button class="save" id="nickSave">保存</button></div>
   </div>
 </div>
 
@@ -476,12 +442,14 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 (function(){
 'use strict';
 
-var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
+var SUPABASE_URL='https://lxdyrajbsjftduesvosh.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 
-var K_THEME='wiki-theme', K_NICK='gomoku-nick', K_UID='gomoku-uid', K_LAST_ANN='gomoku-last-ann';
-var ROOM_TTL_MS=30*60*1000, POLL_MS=8*1000, ANN_POLL_MS=6*1000;
-var BOARD_SIZE_MIN=5, BOARD_SIZE_MAX=50, BOARD_SIZE_DEFAULT=15;
+var K_THEME='wiki-theme',K_NICK='gomoku-nick',K_UID='gomoku-uid',K_LAST_ANN='gomoku-last-ann';
+var ROOM_TTL_MS=30*60*1000,POLL_MS=8*1000,ANN_POLL_MS=6*1000;
+var BOARD_SIZE_MIN=5,BOARD_SIZE_MAX=50,BOARD_SIZE_DEFAULT=15;
+var ROOM_IDLE_MS=25*1000;
+var CLEANUP_INTERVAL_MS=10*1000;
 
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -491,51 +459,41 @@ var storage={
 };
 var toastEl=$('toast'),toastTimer=null;
 function toast(msg){if(!toastEl)return;toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);}
-function fmtTimeAgo(ts){
-  if(!ts) return '';
-  var diff=Date.now()-Number(ts);
-  if(diff<60000) return '刚刚';
-  if(diff<3600000) return Math.floor(diff/60000)+' 分钟前';
-  if(diff<86400000) return Math.floor(diff/3600000)+' 小时前';
-  return Math.floor(diff/86400000)+' 天前';
-}
-function nickColor(nick){
-  var h=0;
-  for(var i=0;i<nick.length;i++){h=(h*31+nick.charCodeAt(i))>>>0;}
-  var palette=['#e57373','#f06292','#ba68c8','#9575cd','#7986cb','#64b5f6','#4fc3f7','#4dd0e1','#4db6ac','#81c784','#aed581','#dce775','#ffd54f','#ffb74d','#ff8a65','#a1887f','#90a4ae','#e91e63','#9c27b0','#2196f3'];
-  return palette[h%palette.length];
-}
-function randomNick(){
-  var a=['风','云','雷','雪','光','影','星','月','火','冰','暗','花','雾','山','海','棋','石','墨','白','黑'];
-  var b=['行者','旅人','术士','骑士','忍者','学者','猎人','棋手','弈者','落子','闲人'];
-  return a[Math.floor(Math.random()*a.length)]+b[Math.floor(Math.random()*b.length)]+Math.floor(10+Math.random()*90);
-}
-function clampSize(n){
-  n=parseInt(n,10);
-  if(isNaN(n)) n=BOARD_SIZE_DEFAULT;
-  if(n<BOARD_SIZE_MIN) n=BOARD_SIZE_MIN;
-  if(n>BOARD_SIZE_MAX) n=BOARD_SIZE_MAX;
-  return n;
+function fmtTimeAgo(ts){if(!ts)return '';var diff=Date.now()-Number(ts);if(diff<60000)return '刚刚';if(diff<3600000)return Math.floor(diff/60000)+' 分钟前';if(diff<86400000)return Math.floor(diff/3600000)+' 小时前';return Math.floor(diff/86400000)+' 天前';}
+function nickColor(nick){var h=0;for(var i=0;i<nick.length;i++){h=(h*31+nick.charCodeAt(i))>>>0;}var p=['#e57373','#f06292','#ba68c8','#9575cd','#7986cb','#64b5f6','#4fc3f7','#4dd0e1','#4db6ac','#81c784','#aed581','#dce775','#ffd54f','#ffb74d','#ff8a65','#a1887f','#90a4ae','#e91e63','#9c27b0','#2196f3'];return p[h%p.length];}
+function randomNick(){var a=['风','云','雷','雪','光','影','星','月','火','冰','暗','花','雾','山','海','棋','石','墨','白','黑'];var b=['行者','旅人','术士','骑士','忍者','学者','猎人','棋手','弈者','落子','闲人'];return a[Math.floor(Math.random()*a.length)]+b[Math.floor(Math.random()*b.length)]+Math.floor(10+Math.random()*90);}
+function clampSize(n){n=parseInt(n,10);if(isNaN(n))n=BOARD_SIZE_DEFAULT;if(n<BOARD_SIZE_MIN)n=BOARD_SIZE_MIN;if(n>BOARD_SIZE_MAX)n=BOARD_SIZE_MAX;return n;}
+
+/* ★ 分配局域网昵称：1号/2号/3号 */
+function getNextLanNick(){
+  var cached=sessionStorage.getItem('gomoku-lan-nick');
+  if(cached) return cached;
+  var counter=parseInt(localStorage.getItem('gomoku-lan-counter')||'0',10);
+  counter++;
+  localStorage.setItem('gomoku-lan-counter',String(counter));
+  var nk=counter+'号';
+  sessionStorage.setItem('gomoku-lan-nick',nk);
+  return nk;
 }
 
-/* ★ uid 用 sessionStorage，方便局域网多标签页 */
+/* uid 用 sessionStorage，多标签页独立 */
 var uid=(function(){
   var u=sessionStorage.getItem(K_UID);
-  if(!u){ u='u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8); sessionStorage.setItem(K_UID,u); }
+  if(!u){u='u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);sessionStorage.setItem(K_UID,u);}
   return u;
 })();
 var myNick=storage.get(K_NICK)||'';
 function setMyNick(n){myNick=n;storage.set(K_NICK,n);renderMeChip();}
 function renderMeChip(){
-  var av=$('meAvatar'), nk=$('meNick');
-  if(!myNick){ if(av) av.textContent='?'; if(nk) nk.textContent='未命名'; return; }
-  if(av){ av.textContent=myNick.charAt(0).toUpperCase(); av.style.background=nickColor(myNick); }
-  if(nk){ nk.textContent=myNick; }
+  var av=$('meAvatar'),nk=$('meNick');
+  if(!myNick){if(av)av.textContent='?';if(nk)nk.textContent='未命名';return;}
+  if(av){av.textContent=myNick.charAt(0).toUpperCase();av.style.background=nickColor(myNick);}
+  if(nk){nk.textContent=myNick;}
 }
 
-var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { params: { eventsPerSecond: 5 } } });
+var sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{realtime:{params:{eventsPerSecond:5}}});
 
-var connPill=$('connPill'), connText=$('connText');
+var connPill=$('connPill'),connText=$('connText');
 function setConn(state,text){
   if(!connPill) return;
   connPill.className='conn-pill '+state;
@@ -563,18 +521,18 @@ function initLanChannel(){
           if(rr&&rr.created_at&&(Date.now()-rr.created_at)<120000) lanRooms[k]=rr;
         });
         saveLanRooms();
-        if(LAN_MODE){ rooms=Object.keys(lanRooms).map(function(k){return lanRooms[k];}); renderRooms(); }
+        if(LAN_MODE){rooms=Object.keys(lanRooms).map(function(k){return lanRooms[k];});renderRooms();}
       } else if(m.type==='room-created'){
         if(m.room&&m.room.code){
           lanRooms[m.room.code]=m.room;
           saveLanRooms();
-          if(LAN_MODE){ rooms=Object.keys(lanRooms).map(function(k){return lanRooms[k];}); renderRooms(); }
+          if(LAN_MODE){rooms=Object.keys(lanRooms).map(function(k){return lanRooms[k];});renderRooms();}
         }
       } else if(m.type==='room-removed'){
         if(m.code){
           delete lanRooms[m.code];
           saveLanRooms();
-          if(LAN_MODE){ rooms=Object.keys(lanRooms).map(function(k){return lanRooms[k];}); renderRooms(); }
+          if(LAN_MODE){rooms=Object.keys(lanRooms).map(function(k){return lanRooms[k];});renderRooms();}
         }
       } else if(m.type==='room-list-request'){
         lanChannel.postMessage({type:'room-list-sync',rooms:lanRooms});
@@ -582,7 +540,7 @@ function initLanChannel(){
     };
     lanChannel.postMessage({type:'room-list-sync',rooms:lanRooms});
     lanChannel.postMessage({type:'room-list-request'});
-  }catch(e){ console.warn('BroadcastChannel 不可用',e); }
+  }catch(e){console.warn('BroadcastChannel 不可用',e);}
 }
 
 function loadLanRooms(){
@@ -593,18 +551,26 @@ function loadLanRooms(){
       if(o&&typeof o==='object'){
         var now=Date.now();
         Object.keys(o).forEach(function(k){
-          if(!o[k]||!o[k].created_at||(now-o[k].created_at)>120000) delete o[k];
+          var r=o[k];
+          if(!r||!r.last_active||(now-r.last_active)>ROOM_IDLE_MS) delete o[k];
         });
         lanRooms=o;
       }
     }
   }catch(e){}
 }
-function saveLanRooms(){ try{localStorage.setItem('gomoku-lan-rooms',JSON.stringify(lanRooms));}catch(e){} }
+function saveLanRooms(){try{localStorage.setItem('gomoku-lan-rooms',JSON.stringify(lanRooms));}catch(e){}}
 
 function enterLanMode(reason){
   if(LAN_MODE) return;
   LAN_MODE=true;
+  /* 局域网模式必须有昵称：没昵称自动分配 1号/2号 */
+  if(!myNick){
+    var auto=getNextLanNick();
+    myNick=auto;
+    renderMeChip();
+    closeGate();
+  }
   loadLanRooms();
   initLanChannel();
   rooms=Object.keys(lanRooms).map(function(k){return lanRooms[k];});
@@ -613,14 +579,17 @@ function enterLanMode(reason){
   if(banner){
     banner.classList.add('show');
     var bt=$('lanBannerText');
-    if(bt) bt.textContent=reason||'服务器无法连接 · 已切换到局域网模式';
+    if(bt) bt.textContent=reason||'局域网模式';
   }
   setConn('busy','局域网模式');
-  toast('已切换到局域网模式');
 }
 
 function createLanRoom(){
-  if(!myNick){ toast('请先设置昵称'); openGate(); return; }
+  if(!myNick){
+    var auto=getNextLanNick();
+    myNick=auto;
+    renderMeChip();
+  }
   var code=genRoomCode();
   var now=Date.now();
   var room={
@@ -638,36 +607,79 @@ function createLanRoom(){
 function joinLanRoom(code){
   code=String(code||'').toUpperCase().trim();
   var room=lanRooms[code];
-  if(!room){ toast('房间不存在或已关闭'); return; }
-  if(room.status!=='waiting'){ toast('房间已满或已开局'); return; }
-  if(room.host_uid===uid){ location.href='./wuzi_game.html?lan=1&room='+encodeURIComponent(code); return; }
-  room.guest_uid=uid; room.guest_nick=myNick; room.status='playing';
-  room.game_started_at=Date.now(); room.turn_started_at=Date.now();
+  if(!room){toast('房间不存在或已关闭');return;}
+  if(room.status!=='waiting'){toast('房间已满或已开局');return;}
+  if(!myNick){
+    var auto=getNextLanNick();
+    myNick=auto;
+    renderMeChip();
+  }
+  if(room.host_uid===uid){location.href='./wuzi_game.html?lan=1&room='+encodeURIComponent(code);return;}
+  room.guest_uid=uid;room.guest_nick=myNick;room.status='playing';
+  room.game_started_at=Date.now();room.turn_started_at=Date.now();room.last_active=Date.now();
   lanRooms[code]=room;
   saveLanRooms();
   if(lanChannel) lanChannel.postMessage({type:'room-created',room:room});
   location.href='./wuzi_game.html?lan=1&room='+encodeURIComponent(code);
 }
 
+/* ★ 局域网全局空置清理 */
+function lanCleanup(){
+  if(!LAN_MODE) return;
+  var dirty=false;
+  var now=Date.now();
+  Object.keys(lanRooms).forEach(function(k){
+    var r=lanRooms[k];
+    if(!r||!r.last_active||(now-r.last_active)>ROOM_IDLE_MS){
+      delete lanRooms[k];
+      dirty=true;
+    }
+  });
+  if(dirty){
+    saveLanRooms();
+    rooms=Object.keys(lanRooms).map(function(k){return lanRooms[k];});
+    renderRooms();
+  }
+}
+
+/* ★ 服务器模式全局清理 */
+function serverCleanup(){
+  if(LAN_MODE||!sb) return;
+  var cutoff=Date.now()-ROOM_IDLE_MS;
+  sb.from('gomoku_rooms').select('code').lt('last_active',cutoff)
+    .then(function(res){
+      if(res.error||!res.data||res.data.length===0) return;
+      var codes=res.data.map(function(r){return r.code;});
+      sb.from('gomoku_rooms').delete().in('code',codes).then(function(){});
+    }).catch(function(){});
+}
+
+var cleanupTimer=null;
+function startCleanup(){
+  if(cleanupTimer) return;
+  cleanupTimer=setInterval(function(){
+    if(document.hidden) return;
+    lanCleanup();
+    serverCleanup();
+  },CLEANUP_INTERVAL_MS);
+}
+
 async function detectServer(){
   try{
     var res=await Promise.race([
       sb.from('gomoku_rooms').select('code').limit(1),
-      new Promise(function(_,rej){ setTimeout(function(){rej(new Error('timeout'));},5000); })
+      new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},5000);})
     ]);
     if(res&&res.error) return false;
     return true;
-  }catch(e){ return false; }
+  }catch(e){return false;}
 }
 
 async function claimNick(nick){
   nick=String(nick||'').trim();
   if(!nick) return {ok:false,reason:'empty'};
   if(nick.length>12) return {ok:false,reason:'long'};
-  if(LAN_MODE){
-    /* 局域网模式：不检查全局唯一，只检查当前 session */
-    return {ok:true};
-  }
+  if(LAN_MODE) return {ok:true};
   var check=await sb.from('gomoku_players').select('uid').eq('nick',nick).maybeSingle();
   if(check.error&&check.error.code!=='PGRST116') return {ok:false,reason:'net',msg:check.error.message};
   if(check.data&&check.data.uid!==uid) return {ok:false,reason:'taken'};
@@ -694,8 +706,8 @@ var curTheme=(function(){var s=storage.get(K_THEME);for(var i=0;i<THEMES.length;
 function getCurrentShape(){for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===curTheme)return THEMES[i].shape||'square';return 'square';}
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
-  storage.set(K_THEME,t); curTheme=t;
-  buildThemeGrid(); readThemeColors(); currentShape=getCurrentShape(); initParticles();
+  storage.set(K_THEME,t);curTheme=t;
+  buildThemeGrid();readThemeColors();currentShape=getCurrentShape();initParticles();
 }
 function buildThemeGrid(){
   var grid=$('themeGrid');if(!grid)return;
@@ -741,30 +753,17 @@ var themeCache=['61,82,31','106,140,60','140,180,60','180,150,80'];
 var currentShape='square';
 function readThemeColors(){
   var cs=getComputedStyle(document.documentElement);
-  themeCache=[
-    (cs.getPropertyValue('--p1')||'61,82,31').trim(),
-    (cs.getPropertyValue('--p2')||'106,140,60').trim(),
-    (cs.getPropertyValue('--p3')||'140,180,60').trim(),
-    (cs.getPropertyValue('--p4')||'180,150,80').trim()
-  ];
+  themeCache=[(cs.getPropertyValue('--p1')||'61,82,31').trim(),(cs.getPropertyValue('--p2')||'106,140,60').trim(),(cs.getPropertyValue('--p3')||'140,180,60').trim(),(cs.getPropertyValue('--p4')||'180,150,80').trim()];
 }
 function initParticles(){
   var canvas=$('particles');if(!canvas||!canvas.getContext)return;
   particleCtx=canvas.getContext('2d');
   pDpr=Math.min(window.devicePixelRatio||1,2);
-  resizeCanvas(); readThemeColors(); currentShape=getCurrentShape();
+  resizeCanvas();readThemeColors();currentShape=getCurrentShape();
   var count=Math.max(14,Math.min(32,Math.floor((pW*pH)/42000)));
   particles=[];
   for(var i=0;i<count;i++){
-    particles.push({
-      x:Math.random()*pW,y:Math.random()*pH,
-      size:4+Math.random()*10,
-      vx:(Math.random()-0.5)*0.42,vy:(Math.random()-0.5)*0.42,
-      rot:Math.random()*Math.PI*2,vr:(Math.random()-0.5)*0.014,
-      alpha:0.12+Math.random()*0.28,alphaPhase:Math.random()*Math.PI*2,alphaSpeed:0.008+Math.random()*0.016,
-      hueIdx:Math.floor(Math.random()*4),hueMix:Math.random(),
-      glow:Math.random()<0.2
-    });
+    particles.push({x:Math.random()*pW,y:Math.random()*pH,size:4+Math.random()*10,vx:(Math.random()-0.5)*0.42,vy:(Math.random()-0.5)*0.42,rot:Math.random()*Math.PI*2,vr:(Math.random()-0.5)*0.014,alpha:0.12+Math.random()*0.28,alphaPhase:Math.random()*Math.PI*2,alphaSpeed:0.008+Math.random()*0.016,hueIdx:Math.floor(Math.random()*4),hueMix:Math.random(),glow:Math.random()<0.2});
   }
   if(particleRunning)drawParticles();
 }
@@ -829,7 +828,7 @@ function dedupeAndCleanup(list){
   var byHost={},toDelete=[];
   list.forEach(function(r){
     if(r.status!=='waiting') return;
-    var u=r.host_uid; if(!u) return;
+    var u=r.host_uid;if(!u) return;
     if(!byHost[u]) byHost[u]=r;
     else{
       if(parseInt(r.created_at,10)>parseInt(byHost[u].created_at,10)){toDelete.push(byHost[u].code);byHost[u]=r;}
@@ -867,11 +866,24 @@ function loadRooms(silent){
       if(res.error){setConn('err','连接失败');if(!silent)toast('加载房间失败：'+res.error.message);return;}
       setConn('on','已连接');
       var list=res.data||[];
+      var now=Date.now();
+      /* ★ 先清理超时空置房间 */
+      var idleCodes=[];
+      list.forEach(function(r){
+        var la=parseInt(r.last_active,10)||0;
+        if(now-la>ROOM_IDLE_MS&&r.status!=='finished') idleCodes.push(r.code);
+      });
+      if(idleCodes.length>0){
+        sb.from('gomoku_rooms').delete().in('code',idleCodes).then(function(){}).catch(function(){});
+      }
+      /* 过滤显示 */
       list=list.filter(function(r){
+        var la=parseInt(r.last_active,10)||0;
+        if(now-la>ROOM_IDLE_MS) return false;
         if(r.status==='playing') return true;
         if(r.status==='waiting'){
           var created=parseInt(r.created_at,10)||0;
-          return (Date.now()-created)<120000;
+          return (now-created)<120000;
         }
         return false;
       });
@@ -882,8 +894,7 @@ function loadRooms(silent){
     .catch(function(){
       loadingRooms=false;
       setConn('err','连接失败');
-      /* ★ 服务器挂了 → 自动切局域网 */
-      detectServer().then(function(ok){ if(!ok) enterLanMode('服务器无法连接 · 已切换到局域网模式'); });
+      detectServer().then(function(ok){if(!ok) enterLanMode('服务器无法连接 · 已切换到局域网模式');});
       if(!silent)toast('网络异常');
     });
 }
@@ -937,7 +948,7 @@ function renderRooms(){
 document.addEventListener('click',function(e){
   var joinBtn=e.target.closest('[data-join]');
   if(joinBtn){
-    e.preventDefault(); e.stopPropagation();
+    e.preventDefault();e.stopPropagation();
     if(joinBtn.disabled) return;
     joinRoom(joinBtn.getAttribute('data-join'));
     return;
@@ -966,7 +977,7 @@ function subscribeRooms(){
         setConn('err','连接失败');
         setTimeout(function(){
           try{if(roomsChannel)sb.removeChannel(roomsChannel);}catch(e){}
-          roomsChannel=null; subscribeRooms();
+          roomsChannel=null;subscribeRooms();
         },5000);
       }
     });
@@ -1038,14 +1049,12 @@ function loadAnnouncements(silent){
 function subscribeAnn(){
   if(LAN_MODE||annChannel) return;
   annChannel=sb.channel('gomoku-ann')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'gomoku_announcements'},function(){
-      loadAnnouncements(false);
-    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'gomoku_announcements'},function(){loadAnnouncements(false);})
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
         setTimeout(function(){
           try{if(annChannel)sb.removeChannel(annChannel);}catch(e){}
-          annChannel=null; subscribeAnn();
+          annChannel=null;subscribeAnn();
         },5000);
       }
     });
@@ -1069,9 +1078,7 @@ function setSize(n){
 if(sizeRange) sizeRange.addEventListener('input',function(){setSize(sizeRange.value);});
 if(sizeNum) sizeNum.addEventListener('input',function(){setSize(sizeNum.value);});
 if(sizeNum) sizeNum.addEventListener('blur',function(){setSize(sizeNum.value);});
-if(sizePresets) sizePresets.addEventListener('click',function(e){
-  var b=e.target.closest('button[data-size]');if(!b)return;setSize(b.getAttribute('data-size'));
-});
+if(sizePresets) sizePresets.addEventListener('click',function(e){var b=e.target.closest('button[data-size]');if(!b)return;setSize(b.getAttribute('data-size'));});
 
 function openCreate(){
   var av=$('createAvatar'),nk=$('createNick');
@@ -1086,8 +1093,12 @@ function openCreate(){
 function closeCreate(){createOv.classList.remove('show');}
 
 function quickLanCreate(){
-  if(!myNick){toast('请先设置昵称');openGate();return;}
-  if(LAN_MODE){ createLanRoom(); return; }
+  if(!myNick){
+    var auto=getNextLanNick();
+    myNick=auto;
+    renderMeChip();
+  }
+  if(LAN_MODE){createLanRoom();return;}
   var lanBtn=$('lanBtn');
   if(lanBtn) lanBtn.disabled=true;
   var code=genRoomCode();
@@ -1098,31 +1109,27 @@ function quickLanCreate(){
     var attempt=0;
     function tryInsert(){
       attempt++;
-      sb.from('gomoku_rooms').insert({
-        code:code,name:name,host_uid:uid,host_nick:myNick,
-        status:'waiting',board_size:size,last_active:now,created_at:now
-      }).then(function(res){
+      sb.from('gomoku_rooms').insert({code:code,name:name,host_uid:uid,host_nick:myNick,status:'waiting',board_size:size,last_active:now,created_at:now})
+      .then(function(res){
         if(lanBtn) lanBtn.disabled=false;
         if(res.error){
           if(res.error.code==='23505'&&attempt<5){code=genRoomCode();return tryInsert();}
-          /* ★ 服务器写失败 → 切局域网模式 */
           enterLanMode('服务器无法访问 · 已切换到局域网模式');
-          setTimeout(function(){ createLanRoom(); }, 100);
+          setTimeout(function(){createLanRoom();},100);
           return;
         }
         gotoRoom(code);
       }).catch(function(){
         if(lanBtn) lanBtn.disabled=false;
-        /* ★ 网络异常 → 切局域网 */
         enterLanMode('服务器无法访问 · 已切换到局域网模式');
-        setTimeout(function(){ createLanRoom(); }, 100);
+        setTimeout(function(){createLanRoom();},100);
       });
     }
     tryInsert();
   }).catch(function(){
     if(lanBtn) lanBtn.disabled=false;
     enterLanMode('服务器无法访问 · 已切换到局域网模式');
-    setTimeout(function(){ createLanRoom(); }, 100);
+    setTimeout(function(){createLanRoom();},100);
   });
 }
 var lanBtnEl=$('lanBtn');
@@ -1153,16 +1160,14 @@ if(createSave) createSave.addEventListener('click',function(){
   sb.from('gomoku_rooms').delete().eq('host_uid',uid).eq('status','waiting').then(function(){
     function tryInsert(){
       attempt++;
-      sb.from('gomoku_rooms').insert({
-        code:code,name:name,host_uid:uid,host_nick:myNick,
-        status:'waiting',board_size:size,last_active:now,created_at:now
-      }).then(function(res){
+      sb.from('gomoku_rooms').insert({code:code,name:name,host_uid:uid,host_nick:myNick,status:'waiting',board_size:size,last_active:now,created_at:now})
+      .then(function(res){
         if(res.error){
           if(res.error.code==='23505'&&attempt<5){code=genRoomCode();return tryInsert();}
           createSave.disabled=false;
           enterLanMode('服务器无法访问 · 已切换到局域网模式');
           closeCreate();
-          setTimeout(function(){ createLanRoom(); }, 100);
+          setTimeout(function(){createLanRoom();},100);
           return;
         }
         createSave.disabled=false;
@@ -1172,7 +1177,7 @@ if(createSave) createSave.addEventListener('click',function(){
         createSave.disabled=false;
         enterLanMode('服务器无法访问 · 已切换到局域网模式');
         closeCreate();
-        setTimeout(function(){ createLanRoom(); }, 100);
+        setTimeout(function(){createLanRoom();},100);
       });
     }
     tryInsert();
@@ -1180,7 +1185,7 @@ if(createSave) createSave.addEventListener('click',function(){
     createSave.disabled=false;
     enterLanMode('服务器无法访问 · 已切换到局域网模式');
     closeCreate();
-    setTimeout(function(){ createLanRoom(); }, 100);
+    setTimeout(function(){createLanRoom();},100);
   });
 });
 
@@ -1197,25 +1202,20 @@ function joinRoom(code){
       if(!r){toast('房间不存在或已关闭');return;}
       if(r.status!=='waiting'){toast('房间已满或已开局');return;}
       if(r.host_uid===uid){gotoRoom(code);return;}
-      sb.from('gomoku_rooms').update({
-        guest_uid:uid,guest_nick:myNick,status:'playing',
-        last_active:Date.now(),game_started_at:Date.now(),turn_started_at:Date.now()
-      }).eq('code',code).eq('status','waiting').then(function(res2){
-        if(res2.error){toast('加入失败：'+res2.error.message);return;}
-        gotoRoom(code);
-      });
+      sb.from('gomoku_rooms').update({guest_uid:uid,guest_nick:myNick,status:'playing',last_active:Date.now(),game_started_at:Date.now(),turn_started_at:Date.now()})
+        .eq('code',code).eq('status','waiting').then(function(res2){
+          if(res2.error){toast('加入失败：'+res2.error.message);return;}
+          gotoRoom(code);
+        });
     })
     .catch(function(){
       setConn('err','连接失败');
-      /* 服务器挂了 → 试试局域网 */
-      if(lanRooms[code]){ joinLanRoom(code); return; }
+      if(lanRooms[code]){joinLanRoom(code);return;}
       toast('网络异常');
     });
 }
 
-function gotoRoom(code){
-  location.href='./wuzi_game.html?room='+encodeURIComponent(code);
-}
+function gotoRoom(code){location.href='./wuzi_game.html?room='+encodeURIComponent(code);}
 
 /* 输入房间码 */
 var joinOv=$('joinOv'),joinBtn=$('joinByCodeBtn'),joinClose=$('joinClose'),joinCancel=$('joinCancel'),joinSave=$('joinSave'),joinInput=$('joinCodeInput');
@@ -1234,38 +1234,35 @@ if(joinSave) joinSave.addEventListener('click',function(){
   if(!myNick){closeJoin();openGate();return;}
   var v=joinInput?joinInput.value.trim().toUpperCase():'';
   if(v.length!==6){toast('请输入 6 位房间码');return;}
-  closeJoin(); joinRoom(v);
+  closeJoin();joinRoom(v);
 });
-if(joinInput) joinInput.addEventListener('keydown',function(e){
-  if(e.key==='Enter'){e.preventDefault();joinSave.click();}
-});
+if(joinInput) joinInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();joinSave.click();}});
 
-/* 昵称设置 */
-var nickGate=$('nickGate'),gateInput=$('gateInput'),gateStatus=$('gateStatus'),gateBtn=$('gateBtn'),gateRandom=$('gateRandom');
-function setGateStatus(text,cls){
-  if(!gateStatus) return;
-  gateStatus.textContent=text||'';
-  gateStatus.className='gate-status'+(cls?' '+cls:'');
-}
-function updateGateBtn(){
-  var v=gateInput?gateInput.value.trim():'';
-  if(gateBtn) gateBtn.disabled=!v||v.length>12;
-}
+/* 昵称 */
+var nickGate=$('nickGate'),gateInput=$('gateInput'),gateStatus=$('gateStatus'),gateBtn=$('gateBtn'),gateRandom=$('gateRandom'),gateLanBtn=$('gateLanBtn');
+function setGateStatus(text,cls){if(!gateStatus)return;gateStatus.textContent=text||'';gateStatus.className='gate-status'+(cls?' '+cls:'');}
+function updateGateBtn(){var v=gateInput?gateInput.value.trim():'';if(gateBtn)gateBtn.disabled=!v||v.length>12;}
 function openGate(){
   if(!nickGate) return;
   if(gateInput) gateInput.value='';
-  setGateStatus(''); updateGateBtn();
+  setGateStatus('');updateGateBtn();
   nickGate.classList.add('show');
   setTimeout(function(){try{gateInput.focus();}catch(e){}},40);
 }
 function closeGate(){if(nickGate) nickGate.classList.remove('show');}
 if(gateInput) gateInput.addEventListener('input',function(){updateGateBtn();setGateStatus('');});
-if(gateInput) gateInput.addEventListener('keydown',function(e){
-  if(e.key==='Enter'&&!gateBtn.disabled){e.preventDefault();submitGate();}
+if(gateInput) gateInput.addEventListener('keydown',function(e){if(e.key==='Enter'&&!gateBtn.disabled){e.preventDefault();submitGate();}});
+if(gateRandom) gateRandom.addEventListener('click',function(){if(gateInput){gateInput.value=randomNick();updateGateBtn();setGateStatus('');}});
+
+/* ★ 直接用局域网模式 */
+if(gateLanBtn) gateLanBtn.addEventListener('click',function(){
+  var auto=getNextLanNick();
+  myNick=auto;
+  renderMeChip();
+  closeGate();
+  enterLanMode('已进入局域网模式 · 你的名字是「'+auto+'」');
 });
-if(gateRandom) gateRandom.addEventListener('click',function(){
-  if(gateInput){gateInput.value=randomNick();updateGateBtn();setGateStatus('');}
-});
+
 async function submitGate(){
   var v=gateInput?gateInput.value.trim():'';
   if(!v){setGateStatus('昵称不能为空','err');return;}
@@ -1274,7 +1271,7 @@ async function submitGate(){
   setGateStatus('检查中…','busy');
   var r=await claimNick(v);
   if(r.ok){
-    setMyNick(v); setGateStatus('✓ 成功','ok');
+    setMyNick(v);setGateStatus('✓ 成功','ok');
     setTimeout(function(){closeGate();},350);
     return;
   }
@@ -1303,10 +1300,7 @@ function updateNickPreview(){
   if(av){av.textContent=v.charAt(0).toUpperCase();av.style.background=nickColor(v);}
   if(nm){nm.textContent=v;}
 }
-if(nickInput) nickInput.addEventListener('input',function(){
-  updateNickPreview();
-  if(nickHint){nickHint.className='hint';nickHint.textContent='昵称全局唯一，改名后旧昵称会被释放';}
-});
+if(nickInput) nickInput.addEventListener('input',function(){updateNickPreview();if(nickHint){nickHint.className='hint';nickHint.textContent='昵称全局唯一，改名后旧昵称会被释放';}});
 var meChip=$('meChip'),nickClose=$('nickClose'),nickCancel=$('nickCancel'),nickSave=$('nickSave');
 if(meChip) meChip.addEventListener('click',openNick);
 if(nickClose) nickClose.addEventListener('click',closeNick);
@@ -1317,6 +1311,7 @@ if(nickSave) nickSave.addEventListener('click',async function(){
   if(!v){if(nickHint){nickHint.textContent='昵称不能为空';nickHint.className='hint err';}return;}
   if(v.length>12){if(nickHint){nickHint.textContent='最多 12 个字';nickHint.className='hint err';}return;}
   if(v===myNick){closeNick();return;}
+  if(LAN_MODE){setMyNick(v);closeNick();toast('昵称已更新为「'+v+'」');return;}
   nickSave.disabled=true;
   if(nickHint){nickHint.textContent='检查中…';nickHint.className='hint busy';}
   var r=await claimNick(v);
@@ -1325,18 +1320,13 @@ if(nickSave) nickSave.addEventListener('click',async function(){
   if(r.reason==='taken'){if(nickHint){nickHint.textContent='这个昵称已经被占用了';nickHint.className='hint err';}}
   else{if(nickHint){nickHint.textContent='网络异常，请重试';nickHint.className='hint err';}}
 });
-if(nickInput) nickInput.addEventListener('keydown',function(e){
-  if(e.key==='Enter'){e.preventDefault();nickSave.click();}
-});
+if(nickInput) nickInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();nickSave.click();}});
 
 var refreshBtn=$('refreshBtn');
 if(refreshBtn) refreshBtn.addEventListener('click',function(){
-  if(refreshBtn.classList.contains('spin')) return;
-  refreshBtn.classList.add('spin');
   lastRoomsHtml='__INIT__';
   loadRooms(false);
   loadAnnouncements(true);
-  setTimeout(function(){refreshBtn.classList.remove('spin');},500);
 });
 
 if(themeBtn) themeBtn.addEventListener('click',openTheme);
@@ -1374,48 +1364,34 @@ function boot(){
   renderMeChip();
   setSize(BOARD_SIZE_DEFAULT);
   setConn('busy','连接中…');
+  startCleanup();
 
-  /* 先检测服务器 */
   detectServer().then(function(ok){
     if(!ok){
       enterLanMode('服务器无法连接 · 已切换到局域网模式');
     }
-
     if(!LAN_MODE){
       loadAnnouncements(true);
       subscribeAnn();
-      annPollTimer=setInterval(function(){
-        if(document.hidden) return;
-        loadAnnouncements(true);
-      },ANN_POLL_MS);
+      annPollTimer=setInterval(function(){if(document.hidden)return;loadAnnouncements(true);},ANN_POLL_MS);
     }
-
     if(!myNick){
       openGate();
       if(!LAN_MODE) subscribeRooms();
       return;
     }
-
     if(LAN_MODE){
       loadRooms(false);
       return;
     }
-
     claimNick(myNick).then(function(r){
       if(!r.ok&&r.reason==='taken'){
-        storage.set(K_NICK,'');
-        myNick='';
-        renderMeChip();
-        openGate();
-        subscribeRooms();
-        return;
+        storage.set(K_NICK,'');myNick='';renderMeChip();
+        openGate();subscribeRooms();return;
       }
       loadRooms(false);
       subscribeRooms();
-      pollTimer=setInterval(function(){
-        if(document.hidden) return;
-        loadRooms(true);
-      },POLL_MS);
+      pollTimer=setInterval(function(){if(document.hidden)return;loadRooms(true);},POLL_MS);
     });
   });
 
