@@ -1801,4 +1801,799 @@ function mergeNewMessages(newOnes){
   if(allMessages.length>MSG_LIMIT) allMessages=allMessages.slice(-MSG_LIMIT);
   if(needStyles){ loadStylesFor(collectUids(allMessages)).then(function(){ renderAll(); }); }
   renderAll(); updateLastTs();
- 
+  return true;
+}
+
+function updateUnreadBadge(){
+  if(unreadCount>0 && !isAtBottom()){
+    scrollBottomBtn.classList.add('show');
+    unreadCountEl.textContent = unreadCount>99 ? '99+' : unreadCount;
+  }else{
+    scrollBottomBtn.classList.remove('show');
+  }
+}
+
+async function loadMoreHistory(){
+  var oldestTs=null;
+  for(var i=0;i<allMessages.length;i++){
+    if(!allMessages[i].__local && typeof allMessages[i].ts==='number'){ oldestTs=allMessages[i].ts; break; }
+  }
+  if(!oldestTs){ toast('没有更早的消息了'); return; }
+  var r = await sbQuery('加载更早', function(){
+    return sb.from('messages').select('*').lt('ts', oldestTs).order('ts', { ascending:false }).limit(50);
+  }, { max:2, silent:true });
+  if(!r.ok){ toast('加载失败'); return; }
+  var data = r.data && r.data.data;
+  if(!Array.isArray(data) || data.length===0){
+    hasMoreHistory=false; toast('没有更早的消息了'); renderAll(); return;
+  }
+  data.reverse();
+  var more = data.map(normalizeMsg);
+  var seen={};
+  allMessages.forEach(function(m){ if(!m.__local) seen[m.id]=1; });
+  more.forEach(function(m){ if(!seen[m.id]){ allMessages.unshift(m); seen[m.id]=1; } });
+  hasMoreHistory = data.length>=50;
+  await loadStylesFor(collectUids(more));
+  await loadReactionsFor(collectMsgIds(more));
+  var oldTop=messagesEl.scrollTop, oldHeight=messagesEl.scrollHeight;
+  renderAll();
+  var newHeight=messagesEl.scrollHeight;
+  messagesEl.scrollTop = oldTop + (newHeight - oldHeight);
+}
+
+async function loadHistory(){
+  var r = await sbQuery('加载历史', function(){
+    return sb.from('messages').select('*').order('ts', { ascending:false }).limit(MSG_LIMIT);
+  });
+  if(!r.ok){ setPillErr(); setTimeout(loadHistory, 5000); return; }
+  hideRetryOverlay(); setPillOK();
+  var data = r.data && r.data.data;
+  if(!Array.isArray(data)) return;
+  var localPending = allMessages.filter(function(x){ return x.__local; });
+  var arr = data.map(normalizeMsg); arr.reverse();
+  localPending.forEach(function(lp){
+    if(!arr.some(function(x){ return x.uid===lp.uid && x.text===lp.text && Math.abs(x.ts-lp.ts)<5000; })){
+      arr.push(lp);
+    }
+  });
+  allMessages=arr;
+  hasMoreHistory = data.length>=MSG_LIMIT;
+  updateLastTs();
+  await loadStylesFor(collectUids(allMessages));
+  await loadReactionsFor(collectMsgIds(allMessages));
+  renderAll(); updateUnreadBadge();
+}
+
+async function pollNewMessages(){
+  var q = sb.from('messages').select('*');
+  if(lastTs>0) q = q.gt('ts', lastTs).order('ts', { ascending:true }).limit(MSG_LIMIT);
+  else q = q.order('ts', { ascending:false }).limit(MSG_LIMIT);
+  var r = await sbQuery('轮询消息', function(){ return q; });
+  if(!r.ok){ setPillErr(); return; }
+  hideRetryOverlay(); setPillOK();
+  var data = r.data && r.data.data;
+  if(!Array.isArray(data)) return;
+  if(lastTs===0) data.reverse();
+  var newOnes = data.map(normalizeMsg);
+  mergeNewMessages(newOnes);
+}
+
+function subscribeMessages(){
+  if(msgChannel) return;
+  msgChannel = sb.channel('chat-messages')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, function(payload){
+      var m=payload.new; if(!m) return;
+      mergeNewMessages([normalizeMsg(m)]);
+    })
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'messages' }, function(payload){
+      var m=payload.new; if(!m) return;
+      var idx = allMessages.findIndex(function(x){ return String(x.id)===String(m.id); });
+      if(idx>=0){ allMessages[idx]=normalizeMsg(m); renderAll(); }
+    })
+    .subscribe(function(status, err){
+      if(status==='SUBSCRIBED'){ setPillOK(); }
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+        setPillErr();
+        setTimeout(function(){
+          try{ if(msgChannel) sb.removeChannel(msgChannel); }catch(e){}
+          msgChannel=null; subscribeMessages();
+        }, 5000);
+      }
+    });
+}
+function subscribeReactions(){
+  if(reactionChannel) return;
+  reactionChannel = sb.channel('chat-reactions')
+    .on('postgres_changes', { event:'*', schema:'public', table:'reactions' }, function(payload){
+      var row=payload.new || payload.old; if(!row) return;
+      var msgId=row.msg_id; if(!msgId) return;
+      sbQuery('重载表情', function(){ return sb.from('reactions').select('*').eq('msg_id', msgId); }, { max:1, silent:true }).then(function(r){
+        if(!r.ok) return;
+        var list = (r.data && r.data.data || []).map(function(x){ return { uid:x.uid, emoji:x.emoji }; });
+        reactionsMap[msgId]=list; renderAll();
+      });
+    })
+    .subscribe(function(status){
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+        setTimeout(function(){
+          try{ if(reactionChannel) sb.removeChannel(reactionChannel); }catch(e){}
+          reactionChannel=null; subscribeReactions();
+        }, 5000);
+      }
+    });
+}
+function subscribePresence(){
+  if(presenceChannel) return;
+  presenceChannel = sb.channel('online-users', { config:{ presence:{ key: uid } } });
+  presenceChannel
+    .on('presence', { event:'sync' }, function(){
+      var state=presenceChannel.presenceState();
+      var arr=[];
+      Object.keys(state).forEach(function(k){
+        (state[k]||[]).forEach(function(p){ arr.push({ uid:k, nick:p.nick, joinedAt:p.joinedAt }); });
+      });
+      onlineUsers=arr;
+      onlineNum.textContent=arr.length;
+      if($('onlineOv').classList.contains('show')) renderOnlineList();
+    })
+    .subscribe(async function(status){
+      if(status==='SUBSCRIBED'){ try{ await presenceChannel.track({ nick:myNick, joinedAt: Date.now() }); }catch(e){} }
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+        setTimeout(function(){
+          try{ if(presenceChannel) sb.removeChannel(presenceChannel); }catch(e){}
+          presenceChannel=null; subscribePresence();
+        }, 5000);
+      }
+    });
+}
+var typingUsers={};
+function updateTypingBar(){
+  var now=Date.now(), names=[];
+  Object.keys(typingUsers).forEach(function(k){
+    var u=typingUsers[k];
+    if(now-u.ts<TYPING_TIMEOUT) names.push(u.nick);
+    else delete typingUsers[k];
+  });
+  if(names.length>0){
+    typingBar.classList.add('show');
+    typingWho.textContent = names.slice(0,2).join('、') + (names.length>2?(' 等 '+names.length+' 人'):'');
+  }else{ typingBar.classList.remove('show'); }
+}
+function subscribeTyping(){
+  if(typingChannel) return;
+  typingChannel = sb.channel('chat-typing', { config:{ broadcast:{ self:false } } });
+  typingChannel.on('broadcast', { event:'typing' }, function(payload){
+    var p=payload.payload||{}; if(!p.uid||p.uid===uid) return;
+    typingUsers[p.uid]={ nick:p.nick, ts:Date.now() }; updateTypingBar();
+  }).subscribe(function(){});
+  setInterval(updateTypingBar, 800);
+}
+
+/* ============================================================
+   用户资料卡
+   ============================================================ */
+async function openUserCard(targetUid){
+  if(!targetUid) return;
+  var u = onlineUsers.find(function(x){ return x.uid===targetUid; });
+  var nick = u ? u.nick : '';
+  if(!nick){
+    var m=allMessages.find(function(x){ return x.uid===targetUid; });
+    if(m) nick=m.nick;
+  }
+  if(!nick) nick='未知用户';
+  var st=styleMap[targetUid]||{};
+  var ac=st.avatar||(targetUid===uid?'var(--ac)':nickColor(nick));
+  var av=st.emoji?st.emoji:esc(nick.charAt(0).toUpperCase());
+  $('ucAvatar').style.background=ac; $('ucAvatar').textContent=av;
+  $('ucNick').textContent=nick;
+  $('ucMeta').textContent = targetUid===uid ? '这是你' : 'UID: '+targetUid.slice(0,12);
+  var myMsgs = allMessages.filter(function(x){ return x.uid===targetUid && !x.recalled && !x.deleted; });
+  $('ucMsgCount').textContent=myMsgs.length;
+  var first=myMsgs[0];
+  $('ucJoinTime').textContent = first ? fmtDay(first.ts) : '-';
+  var actHtml='';
+  if(targetUid===uid){ actHtml='<button class="btn-close" data-uc-close>关闭</button>'; }
+  else{
+    if(blockedUids[targetUid]) actHtml='<button class="btn-unblock" data-uc-unblock="'+esc(targetUid)+'">取消屏蔽</button>';
+    else actHtml='<button class="btn-block" data-uc-block="'+esc(targetUid)+'">屏蔽此人</button>';
+    actHtml += '<button class="btn-close" data-uc-close>关闭</button>';
+  }
+  $('ucActions').innerHTML=actHtml;
+  $('userCardOv').classList.add('show');
+}
+function closeUserCard(){ $('userCardOv').classList.remove('show'); }
+$('userCardClose').addEventListener('click', closeUserCard);
+$('userCardOv').addEventListener('click', function(e){ if(e.target===$('userCardOv')) closeUserCard(); });
+$('ucActions').addEventListener('click', function(e){
+  if(e.target.closest('[data-uc-close]')){ closeUserCard(); return; }
+  var b=e.target.closest('[data-uc-block]');
+  if(b){ blockedUids[b.getAttribute('data-uc-block')]=1; saveBlocked(); closeUserCard(); renderAll(); toast('已屏蔽'); return; }
+  var ub=e.target.closest('[data-uc-unblock]');
+  if(ub){ delete blockedUids[ub.getAttribute('data-uc-unblock')]; saveBlocked(); closeUserCard(); renderAll(); toast('已取消屏蔽'); return; }
+});
+
+/* ============================================================
+   编辑
+   ============================================================ */
+var editOv=$('editOv'), editInput=$('editInput'), editingMsg=null;
+function openEditDialog(m){
+  if(!m) return;
+  editingMsg=m; editInput.value=m.text;
+  editOv.classList.add('show');
+  setTimeout(function(){ try{ editInput.focus(); editInput.select(); }catch(e){} }, 40);
+}
+function closeEditDialog(){ editOv.classList.remove('show'); editingMsg=null; }
+$('editClose').addEventListener('click', closeEditDialog);
+$('editCancel').addEventListener('click', closeEditDialog);
+editOv.addEventListener('click', function(e){ if(e.target===editOv) closeEditDialog(); });
+$('editSave').addEventListener('click', async function(){
+  if(!editingMsg) return;
+  var newText = editInput.value.trim();
+  if(!newText){ toast('内容不能为空'); return; }
+  if(newText.length>MSG_MAXLEN){ toast('太长了'); return; }
+  if(newText===editingMsg.text){ closeEditDialog(); return; }
+  var r = await sbQuery('编辑消息', function(){
+    return sb.from('messages').update({ text:newText, updated_at:Date.now() }).eq('id', editingMsg.id).eq('uid', uid);
+  }, { max:2 });
+  if(!r.ok){ toast('编辑失败'); return; }
+  editingMsg.text=newText; editingMsg.updated_at=Date.now();
+  renderAll(); closeEditDialog(); toast('已编辑');
+});
+editInput.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){ e.preventDefault(); closeEditDialog(); }
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); $('editSave').click(); }
+});
+
+/* ============================================================
+   消息事件
+   ============================================================ */
+messagesEl.addEventListener('click', function(e){
+  var openU = e.target.closest('[data-open-user]');
+  if(openU && !e.target.closest('[data-tool]')){ openUserCard(openU.getAttribute('data-open-user')); return; }
+
+  var quote = e.target.closest('.reply-quote[data-goto]');
+  if(quote){
+    var gotoId=quote.getAttribute('data-goto');
+    var target=allMessages.find(function(x){ return String(x.id)===String(gotoId); });
+    if(target){
+      target.__highlight=true; renderAll();
+      setTimeout(function(){
+        var el=messagesEl.querySelector('[data-mid="'+gotoId+'"]');
+        if(el){
+          var elRect=el.getBoundingClientRect(), wrapRect=messagesEl.getBoundingClientRect();
+          var offsetInWrap = elRect.top - wrapRect.top + messagesEl.scrollTop;
+          messagesEl.scrollTop = offsetInWrap - (wrapRect.height - elRect.height)/2;
+          setTimeout(function(){ target.__highlight=false; }, 2500);
+        }
+      }, 100);
+    }
+    return;
+  }
+
+  var react = e.target.closest('[data-react-emoji]');
+  if(react){ toggleReaction(react.getAttribute('data-react-msg'), react.getAttribute('data-react-emoji')); return; }
+
+  var tool = e.target.closest('[data-tool]');
+  if(tool){
+    var toolName=tool.getAttribute('data-tool');
+    var msgEl=tool.closest('.msg');
+    var msgId2=msgEl?msgEl.getAttribute('data-mid'):null;
+    if(!msgId2) return;
+    var target2=allMessages.find(function(x){ return String(x.id)===String(msgId2); });
+    if(!target2) return;
+
+    if(toolName==='reply'){ setReply(target2); return; }
+    if(toolName==='edit'){ openEditDialog(target2); return; }
+    if(toolName==='copy'){
+      try{ navigator.clipboard.writeText(target2.text); toast('已复制'); }catch(err){ toast('复制失败'); }
+      return;
+    }
+    if(toolName==='recall'){
+      if(!confirm('撤回这条消息？')) return;
+      sbQuery('撤回', function(){ return sb.from('messages').update({ recalled:true }).eq('id', msgId2).eq('uid', uid); }, { max:2, silent:true }).then(function(r){
+        if(r.ok){ target2.recalled=true; renderAll(); toast('已撤回'); }
+        else toast('撤回失败');
+      });
+      return;
+    }
+    if(toolName==='react'){ showEmojiPop(tool, msgId2); return; }
+  }
+});
+
+/* ★ 修复：emoji 弹窗改成 fixed 定位 */
+var emojiPopEl=null;
+function closeEmojiPop(){
+  if(emojiPopEl && emojiPopEl.parentNode) emojiPopEl.parentNode.removeChild(emojiPopEl);
+  emojiPopEl=null;
+}
+function showEmojiPop(anchor, msgId){
+  closeEmojiPop();
+  var pop=document.createElement('div');
+  pop.className='emoji-pop';
+  QUICK_EMOJIS.forEach(function(em){
+    var b=document.createElement('button');
+    b.type='button'; b.textContent=em;
+    b.addEventListener('click', function(){ toggleReaction(msgId, em); closeEmojiPop(); });
+    pop.appendChild(b);
+  });
+  document.body.appendChild(pop);
+  emojiPopEl=pop;
+
+  var r = anchor.getBoundingClientRect();
+  var popW = pop.offsetWidth || 200;
+  var popH = pop.offsetHeight || 38;
+  var left = r.left;
+  var top = r.bottom + 4;
+
+  if(left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
+  if(left < 8) left = 8;
+  if(top + popH > window.innerHeight - 8) top = r.top - popH - 4;
+  if(top < 8) top = 8;
+
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+
+  setTimeout(function(){
+    document.addEventListener('click', function handler(ev){
+      if(emojiPopEl && !emojiPopEl.contains(ev.target) && !anchor.contains(ev.target)){
+        closeEmojiPop(); document.removeEventListener('click', handler);
+      }
+    });
+  }, 10);
+}
+
+messagesEl.addEventListener('scroll', function(){
+  if(isAtBottom()){ unreadCount=0; updateUnreadBadge(); }
+});
+scrollBottomBtn.addEventListener('click', function(){
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  unreadCount=0; updateUnreadBadge();
+});
+
+$('searchInput').addEventListener('input', function(e){
+  searchQuery = (e.target.value||'').trim();
+  renderAll();
+});
+
+/* ============================================================
+   跳转时间
+   ============================================================ */
+var jumpOv=$('jumpOv'), jumpInput=$('jumpInput');
+function openJumpDialog(){
+  jumpInput.value = toLocalInput(Date.now()-3600000);
+  jumpOv.classList.add('show');
+  setTimeout(function(){ try{ jumpInput.focus(); }catch(e){} }, 40);
+}
+function closeJumpDialog(){ jumpOv.classList.remove('show'); }
+async function jumpToTime(targetTs){
+  var r = await sbQuery('跳转查询', function(){
+    return sb.from('messages').select('*').lte('ts', targetTs).order('ts', { ascending:false }).limit(100);
+  }, { max:2, silent:true });
+  if(!r.ok){ toast('跳转失败'); return; }
+  var data = r.data && r.data.data;
+  if(!data || data.length===0){
+    var r2 = await sbQuery('往后查询', function(){
+      return sb.from('messages').select('*').gt('ts', targetTs).order('ts', { ascending:true }).limit(100);
+    }, { max:2, silent:true });
+    if(!r2.ok || !r2.data || !r2.data.data || r2.data.data.length===0){ toast('该时间附近没有消息'); return; }
+    data = r2.data.data.slice().reverse();
+  }
+  var arr = data.map(normalizeMsg).reverse();
+  var bestIdx=0, bestDist=Infinity;
+  arr.forEach(function(m,i){ var d=Math.abs(m.ts-targetTs); if(d<bestDist){ bestDist=d; bestIdx=i; } });
+  arr.forEach(function(m){ m.__highlight=false; });
+  if(arr[bestIdx]) arr[bestIdx].__highlight=true;
+  allMessages=arr;
+  updateLastTs(); hasMoreHistory=true;
+  await loadStylesFor(collectUids(allMessages));
+  await loadReactionsFor(collectMsgIds(allMessages));
+  renderAll();
+  setTimeout(function(){
+    var target=arr[bestIdx]; if(!target) return;
+    var el=messagesEl.querySelector('[data-mid="'+target.id+'"]');
+    if(el){
+      var elRect=el.getBoundingClientRect(), wrapRect=messagesEl.getBoundingClientRect();
+      var offsetInWrap = elRect.top - wrapRect.top + messagesEl.scrollTop;
+      messagesEl.scrollTop = offsetInWrap - (wrapRect.height - elRect.height)/2;
+      setTimeout(function(){ el.classList.remove('highlight'); }, 2500);
+    }
+  }, 100);
+  toast('已跳到 '+fmtTime(targetTs)+' 附近');
+}
+$('jumpBtn').addEventListener('click', openJumpDialog);
+$('jumpClose').addEventListener('click', closeJumpDialog);
+$('jumpCancel').addEventListener('click', closeJumpDialog);
+jumpOv.addEventListener('click', function(e){ if(e.target===jumpOv) closeJumpDialog(); });
+document.querySelectorAll('.jump-body .quick button').forEach(function(btn){
+  btn.addEventListener('click', function(){ jumpInput.value = toLocalInput(Date.now() - parseInt(btn.getAttribute('data-offset'),10)); });
+});
+$('jumpGo').addEventListener('click', function(){
+  var v=jumpInput.value; if(!v){ toast('请选择时间'); return; }
+  var targetTs = new Date(v.replace('T',' ')).getTime();
+  if(isNaN(targetTs)){ toast('时间格式不对'); return; }
+  closeJumpDialog(); jumpToTime(targetTs);
+});
+$('jumpLatestBtn').addEventListener('click', function(){
+  loadHistory().then(function(){ messagesEl.scrollTop = messagesEl.scrollHeight; toast('已回到最新'); });
+});
+
+/* ============================================================
+   自定义颜色
+   ============================================================ */
+var styleOv=$('styleOv');
+var cAvatar=$('cAvatar'), cBubble=$('cBubble'), cText=$('cText');
+var pvAvatar=$('pvAvatar'), pvBubble=$('pvBubble');
+function getThemeDefaultColors(){
+  var cs=getComputedStyle(document.documentElement);
+  function pick(n){ return cs.getPropertyValue(n).trim() || '#3d521f'; }
+  var ac=pick('--ac'), selfFg=pick('--self-fg');
+  var bubbleBg=ac;
+  if(bubbleBg.indexOf('linear-gradient')!==-1) bubbleBg='#3d521f';
+  if(bubbleBg[0]!=='#') bubbleBg='#3d521f';
+  if(!/^#[0-9a-fA-F]{6}$/.test(bubbleBg)) bubbleBg='#3d521f';
+  var avatar=ac;
+  if(avatar[0]!=='#') avatar='#3d521f';
+  if(!/^#[0-9a-fA-F]{6}$/.test(avatar)) avatar='#3d521f';
+  var text=selfFg;
+  if(text[0]!=='#') text='#ffffff';
+  if(!/^#[0-9a-fA-F]{6}$/.test(text)) text='#ffffff';
+  return { avatar:avatar, bubble:bubbleBg, text:text };
+}
+function buildEmojiGrid(){
+  var grid=$('emojiGrid'); if(!grid) return;
+  var html='';
+  AVATAR_EMOJIS.forEach(function(em){
+    var sel = (myStyle.emoji===em) ? ' selected' : '';
+    html+='<button type="button" data-emoji="'+em+'" class="'+sel.trim()+'">'+em+'</button>';
+  });
+  grid.innerHTML=html;
+}
+function updatePreview(){
+  var a=cAvatar.value||'#3d521f', b=cBubble.value||'#7a9c3c', t=cText.value||'#ffffff';
+  pvAvatar.style.background=a; pvAvatar.textContent=myStyle.emoji||'我';
+  pvBubble.style.background=b; pvBubble.style.color=t;
+}
+[cAvatar, cBubble, cText].forEach(function(el){ el.addEventListener('input', updatePreview); });
+document.querySelectorAll('.style-row .reset-one').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var target=btn.getAttribute('data-target'); if(!target) return;
+    var defs=getThemeDefaultColors();
+    if(target==='avatar') cAvatar.value=defs.avatar;
+    else if(target==='bubble') cBubble.value=defs.bubble;
+    else if(target==='text') cText.value=defs.text;
+    updatePreview();
+  });
+});
+$('emojiClearBtn').addEventListener('click', function(){ myStyle.emoji=null; buildEmojiGrid(); updatePreview(); });
+$('emojiGrid').addEventListener('click', function(e){
+  var btn=e.target.closest('button[data-emoji]'); if(!btn) return;
+  var em=btn.getAttribute('data-emoji');
+  myStyle.emoji = (myStyle.emoji===em) ? null : em;
+  buildEmojiGrid(); updatePreview();
+});
+function openStyleDialog(){
+  var defs=getThemeDefaultColors();
+  cAvatar.value=myStyle.avatar||defs.avatar;
+  cBubble.value=myStyle.bubble||defs.bubble;
+  cText.value=myStyle.text||defs.text;
+  buildEmojiGrid(); updatePreview();
+  styleOv.classList.add('show');
+}
+function closeStyleDialog(){ styleOv.classList.remove('show'); }
+$('styleBtn').addEventListener('click', openStyleDialog);
+$('styleClose').addEventListener('click', closeStyleDialog);
+$('styleCancel').addEventListener('click', closeStyleDialog);
+styleOv.addEventListener('click', function(e){ if(e.target===styleOv) closeStyleDialog(); });
+$('styleResetAll').addEventListener('click', function(){
+  var defs=getThemeDefaultColors();
+  cAvatar.value=defs.avatar; cBubble.value=defs.bubble; cText.value=defs.text;
+  myStyle.emoji=null; buildEmojiGrid(); updatePreview();
+});
+$('styleSave').addEventListener('click', async function(){
+  var defs=getThemeDefaultColors();
+  var newAvatar=(cAvatar.value===defs.avatar)?null:cAvatar.value;
+  var newBubble=(cBubble.value===defs.bubble)?null:cBubble.value;
+  var newText=(cText.value===defs.text)?null:cText.value;
+  myStyle = {
+    avatar: isValidHex(newAvatar)?newAvatar:null,
+    bubble: isValidHex(newBubble)?newBubble:null,
+    text:   isValidHex(newText)?newText:null,
+    emoji:  myStyle.emoji || null
+  };
+  saveMyStyleLocal();
+  styleMap[uid]=myStyle;
+  renderAll();
+  $('styleSave').disabled=true;
+  var ok=await saveMyStyle();
+  $('styleSave').disabled=false;
+  closeStyleDialog();
+  toast(ok ? '已保存' : '已应用到本地，服务器同步失败');
+});
+
+/* ============================================================
+   提示音
+   ============================================================ */
+function updateSoundIcon(){
+  $('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
+  $('soundBtn').title = soundEnabled ? '提示音已开' : '提示音已关';
+}
+$('soundBtn').addEventListener('click', function(){
+  soundEnabled=!soundEnabled;
+  storage.set(K_SOUND, soundEnabled?'on':'off');
+  updateSoundIcon();
+  toast(soundEnabled?'提示音已开':'提示音已关');
+  if(soundEnabled) playPing();
+});
+
+/* ============================================================
+   设置
+   ============================================================ */
+var settingsOv=$('settingsOv');
+function openSettings(){
+  $('fsDisplay').textContent=chatFontSize;
+  $('denseBtn').classList.toggle('active', denseMode);
+  $('animBtn').classList.toggle('active', noAnim);
+  $('sendKeyBtn').textContent = sendKey==='ctrl-enter' ? 'Ctrl+Enter' : 'Enter';
+  renderBlockList();
+  settingsOv.classList.add('show');
+}
+function closeSettings(){ settingsOv.classList.remove('show'); }
+function renderBlockList(){
+  var el=$('blockList'); if(!el) return;
+  var list=Object.keys(blockedUids);
+  if(list.length===0){ el.innerHTML='<span style="opacity:.6">没有屏蔽任何人</span>'; return; }
+  var html='';
+  list.forEach(function(blockUid){
+    var u=onlineUsers.find(function(x){ return x.uid===blockUid; });
+    var nick = u ? u.nick : '未知';
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:3px 0">'+
+      '<span style="flex:1">'+esc(nick)+'</span>'+
+      '<button class="sr-btn" data-unblock="'+esc(blockUid)+'">取消</button>'+
+    '</div>';
+  });
+  el.innerHTML=html;
+}
+$('settingsBtn').addEventListener('click', openSettings);
+$('settingsClose').addEventListener('click', closeSettings);
+$('settingsOk').addEventListener('click', closeSettings);
+settingsOv.addEventListener('click', function(e){ if(e.target===settingsOv) closeSettings(); });
+$('settingsOv').addEventListener('click', function(e){
+  var fs=e.target.closest('[data-fontsize]');
+  if(fs){
+    var delta=parseInt(fs.getAttribute('data-fontsize'),10);
+    chatFontSize = Math.max(12, Math.min(22, chatFontSize+delta));
+    document.documentElement.style.setProperty('--chat-fs', chatFontSize+'px');
+    storage.set(K_FS, String(chatFontSize));
+    $('fsDisplay').textContent=chatFontSize;
+    return;
+  }
+  if(e.target.closest('#denseBtn')){
+    denseMode=!denseMode;
+    document.documentElement.classList.toggle('dense', denseMode);
+    storage.set(K_DENSE, denseMode?'1':'0');
+    $('denseBtn').classList.toggle('active', denseMode);
+    return;
+  }
+  if(e.target.closest('#animBtn')){
+    noAnim=!noAnim;
+    document.documentElement.classList.toggle('noanim', noAnim);
+    storage.set(K_NOANIM, noAnim?'1':'0');
+    $('animBtn').classList.toggle('active', noAnim);
+    return;
+  }
+  if(e.target.closest('#sendKeyBtn')){
+    sendKey = sendKey==='enter' ? 'ctrl-enter' : 'enter';
+    storage.set(K_SENDKEY, sendKey);
+    $('sendKeyBtn').textContent = sendKey==='ctrl-enter' ? 'Ctrl+Enter' : 'Enter';
+    return;
+  }
+  var ub=e.target.closest('[data-unblock]');
+  if(ub){
+    delete blockedUids[ub.getAttribute('data-unblock')];
+    saveBlocked(); renderBlockList(); renderAll();
+    return;
+  }
+});
+
+/* ============================================================
+   修改昵称
+   ============================================================ */
+var nickOv=$('nickOv'),nickInput=$('nickInput'),nickHint=$('nickHint');
+var nickQuotaLeftEl=$('nickQuotaLeft');
+async function openNickDialog(){
+  nickInput.value=myNick;
+  nickHint.innerHTML='改名后旧昵称会被释放，别人可以用了。<br><span class="quota">今日还可改 <span id="nickQuotaLeft">?</span> / 5 次</span>';
+  nickQuotaLeftEl=$('nickQuotaLeft');
+  nickOv.classList.add('show');
+  setTimeout(function(){try{nickInput.focus();nickInput.select();}catch(e){}},40);
+  var q = await getNickChangeQuota();
+  if(nickQuotaLeftEl) nickQuotaLeftEl.textContent = q.ok ? q.left : '?';
+  if(q.ok && q.left<=0){
+    $('nickSave').disabled=true;
+    nickHint.innerHTML='今天已经改了 5 次了。<br><span class="quota">0 / 5</span>';
+  }else{
+    $('nickSave').disabled=false;
+  }
+}
+function closeNickDialog(){ nickOv.classList.remove('show'); }
+$('nickBtn').addEventListener('click',openNickDialog);
+$('nickClose').addEventListener('click',closeNickDialog);
+$('nickCancel').addEventListener('click',closeNickDialog);
+$('nickSave').addEventListener('click', async function(){
+  var v=nickInput.value.trim();
+  if(!v){ nickHint.textContent='昵称不能为空'; nickHint.className='hint err'; return; }
+  if(v.length>20){ nickHint.textContent='最多 20 字'; nickHint.className='hint err'; return; }
+  if(v===myNick){ closeNickDialog(); return; }
+  $('nickSave').disabled=true;
+  nickHint.textContent='检查中…'; nickHint.className='hint';
+  var quota = await getNickChangeQuota();
+  if(!quota.ok){ nickHint.textContent='网络异常'; nickHint.className='hint err'; $('nickSave').disabled=false; return; }
+  if(quota.left<=0){ nickHint.innerHTML='今天已经改了 5 次了。<br><span class="quota">0 / 5</span>'; $('nickSave').disabled=false; return; }
+  var r = await claimNick(v);
+  hideRetryOverlay();
+  if(!r.ok){
+    if(r.reason==='taken'){ nickHint.textContent='这个名字被占用了'; nickHint.className='hint err'; }
+    else { nickHint.textContent='网络异常'; nickHint.className='hint err'; }
+    $('nickSave').disabled=false; return;
+  }
+  var oldNick=myNick;
+  myNick=v;
+  storage.set(K_NICK, myNick);
+  $('meNick').textContent=myNick;
+  await logNickChange();
+  await releaseNick(oldNick);
+  await syncMyMessagesNick(myNick);
+  try{ if(presenceChannel) await presenceChannel.track({nick:myNick, joinedAt:Date.now()}); }catch(e){}
+  closeNickDialog();
+  toast('昵称已改为「'+myNick+'」（还剩 '+(quota.left-1)+' 次）');
+});
+nickInput.addEventListener('keydown',function(e){ if(e.key==='Enter'){e.preventDefault();$('nickSave').click();} });
+
+/* ============================================================
+   主题绑定
+   ============================================================ */
+themeBtn.addEventListener('click',openTheme);
+themeClose.addEventListener('click',closeTheme);
+themeOv.addEventListener('click',function(e){if(e.target===themeOv)closeTheme();});
+themeGrid.addEventListener('click',function(e){
+  var card=e.target.closest('[data-theme-val]'); if(!card)return;
+  var id=card.getAttribute('data-theme-val');
+  applyTheme(id); closeTheme();
+  var name=id;
+  for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===id)name=THEMES[i].name;
+  toast('已切换到 '+name);
+});
+$('onlineBadge').addEventListener('click', openOnlineDialog);
+$('onlineClose').addEventListener('click', closeOnlineDialog);
+$('onlineOv').addEventListener('click', function(e){ if(e.target===$('onlineOv')) closeOnlineDialog(); });
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(themeOv.classList.contains('show'))closeTheme();
+    else if(nickOv.classList.contains('show'))closeNickDialog();
+    else if(jumpOv.classList.contains('show'))closeJumpDialog();
+    else if(styleOv.classList.contains('show'))closeStyleDialog();
+    else if($('onlineOv').classList.contains('show'))closeOnlineDialog();
+    else if($('userCardOv').classList.contains('show'))closeUserCard();
+    else if(editOv.classList.contains('show'))closeEditDialog();
+    else if(settingsOv.classList.contains('show'))closeSettings();
+  }
+});
+
+window.addEventListener('resize',resizeCanvas,{passive:true});
+document.addEventListener('visibilitychange',function(){
+  particleRunning = !document.hidden;
+  if(particleRunning){
+    drawParticles();
+    if(!chatWrap.hidden){ doPollNow(); resetPollCountdown(); updateActivity(); }
+    if(presenceChannel){ try{ presenceChannel.track({nick:myNick, joinedAt:Date.now()}); }catch(e){} }
+    unreadCount=0; updateUnreadBadge();
+  }
+});
+
+/* ============================================================
+   右下角
+   ============================================================ */
+var refreshPill=$('refreshPill'), cdNum=$('cdNum'), rpIcon=$('rpIcon');
+var pollCountdown=POLL_INTERVAL, countdownTimer=null, pillState='ok';
+
+function setPillRetry(attempt, max){
+  pillState='retry';
+  if(refreshPill){
+    refreshPill.classList.remove('err','loading');
+    refreshPill.classList.add('retry');
+    var txt=refreshPill.querySelector('.rp-text');
+    if(txt) txt.innerHTML='<span id="cdNum">'+attempt+'</span>/'+max+' 重试中';
+    cdNum=$('cdNum');
+  }
+  if(rpIcon) rpIcon.textContent='⏳';
+}
+function setPillOK(){
+  pillState='ok';
+  if(refreshPill) refreshPill.classList.remove('err','retry');
+  if(rpIcon) rpIcon.textContent='🔄';
+  var txt=refreshPill && refreshPill.querySelector('.rp-text');
+  if(txt) txt.innerHTML='<span id="cdNum">'+pollCountdown+'</span> 秒后刷新';
+  cdNum=$('cdNum');
+}
+function setPillErr(){
+  pillState='err';
+  if(refreshPill){ refreshPill.classList.remove('retry','loading'); refreshPill.classList.add('err'); }
+  if(rpIcon) rpIcon.textContent='⚠';
+  var txt=refreshPill && refreshPill.querySelector('.rp-text');
+  if(txt) txt.innerHTML='连接失败';
+}
+function updateCdDisplay(){ if(pillState!=='ok') return; if(cdNum) cdNum.textContent=pollCountdown; }
+function setRpErr(){}
+function clearRpErr(){ setPillOK(); }
+function resetPollCountdown(){ pollCountdown=POLL_INTERVAL; updateCdDisplay(); }
+function doPollNow(){
+  if(refreshPill) refreshPill.classList.add('loading');
+  if(rpIcon) rpIcon.textContent='🔄';
+  pollNewMessages().then(function(){
+    setTimeout(function(){
+      if(refreshPill) refreshPill.classList.remove('loading');
+      if(pillState==='ok' && rpIcon) rpIcon.textContent='🔄';
+    }, 400);
+  });
+}
+function startPolling(){
+  stopPolling(); resetPollCountdown();
+  if(refreshPill) refreshPill.hidden=false;
+  countdownTimer=setInterval(function(){
+    if(document.hidden) return;
+    if(pillState!=='ok') return;
+    pollCountdown--;
+    if(pollCountdown<=0){
+      if(refreshPill){
+        refreshPill.classList.add('tick');
+        setTimeout(function(){ refreshPill.classList.remove('tick'); }, 400);
+      }
+      doPollNow(); pollCountdown=POLL_INTERVAL;
+    }
+    updateCdDisplay();
+  }, 1000);
+}
+function stopPolling(){ if(countdownTimer){ clearInterval(countdownTimer); countdownTimer=null; } }
+if(refreshPill){
+  refreshPill.addEventListener('click', function(){
+    if(refreshPill.classList.contains('loading')) return;
+    doPollNow(); resetPollCountdown();
+  });
+}
+
+setInterval(function(){
+  if(allMessages.length===0)return;
+  var real=allMessages.filter(function(m){ return !m.__local; });
+  var els=messagesEl.querySelectorAll('.msg .time');
+  var i=0;
+  real.forEach(function(m){ var t=els[i]; if(t) t.textContent=fmtTime(m.ts); i++; });
+},30000);
+
+/* ============================================================
+   启动
+   ============================================================ */
+applyTheme(curTheme);
+initParticles();
+autoResize();
+updateLoginBtn();
+updateSoundIcon();
+
+(async function autoLogin(){
+  var saved=storage.get(K_NICK);
+  if(!saved) return;
+  loginNick.value=saved;
+  updateLoginBtn();
+  setLoginStatus('正在恢复上次的昵称…', 'busy');
+  autoClean();
+  var r = await claimNick(saved);
+  hideRetryOverlay();
+  if(r.ok){ myNick=saved; setLoginStatus('✓ 欢迎回来','ok'); startChat(); }
+  else if(r.reason==='taken'){ setLoginStatus('上次用的名字现在被占了，换一个吧','err'); storage.del(K_NICK); }
+  else setLoginStatus('网络异常，可重试','err');
+})();
+
+})();
+</script>
+</body>
+</html>
