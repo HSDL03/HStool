@@ -9,7 +9,7 @@
 (function(){
   try{
     var t=localStorage.getItem('wiki-theme');
-    var ok=['mc-wiki','mc-night','github-light','github-dark'];
+    var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
     if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
   }catch(e){}
 })();
@@ -46,6 +46,70 @@
   --tile-accent:linear-gradient(135deg,#8ec44a,#3d521f);
   --topbar-bg:linear-gradient(180deg,#2a3a1a,#1a2a0a);
   --topbar-fg:#e8ffd0;--topbar-bd:#0a1a00;
+}
+[data-theme="mc-nether"]{
+  --bg:#1a0a0a;--bg2:#2a1212;--bg3:#3a1a1a;--text:#f0d0d0;--muted:#a08080;
+  --bd:#6a3030;--bd2:#8a4040;--ac:#ff6030;--acs:#3a1a10;
+  --ok:#5ab05a;--warn:#d4a72c;--dgr:#f85050;
+  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(255,96,48,.12);--blob2:rgba(200,60,30,.09);--blob3:rgba(255,150,80,.07);
+  --grid:rgba(255,150,100,.03);
+  --p1:255,96,48;--p2:200,60,30;--p3:255,150,80;--p4:120,40,20;
+  --hero-grad:linear-gradient(135deg,#ff6030,#8a2010);
+  --tile-accent:linear-gradient(135deg,#ff6030,#8a2010);
+  --topbar-bg:linear-gradient(180deg,#3a1212,#1a0a0a);
+  --topbar-fg:#ffe0d0;--topbar-bd:#0a0500;
+}
+[data-theme="mc-end"]{
+  --bg:#0f0a1a;--bg2:#1a1230;--bg3:#251a40;--text:#e0d0f0;--muted:#9080a0;
+  --bd:#4a3a6a;--bd2:#6a5a8a;--ac:#a060ff;--acs:#2a1a3a;
+  --ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;
+  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(160,96,255,.12);--blob2:rgba(120,60,200,.08);--blob3:rgba(200,150,255,.06);
+  --grid:rgba(200,150,255,.025);
+  --p1:160,96,255;--p2:120,60,200;--p3:200,150,255;--p4:80,40,120;
+  --hero-grad:linear-gradient(135deg,#a060ff,#4a2080);
+  --tile-accent:linear-gradient(135deg,#a060ff,#4a2080);
+  --topbar-bg:linear-gradient(180deg,#2a1a3a,#0f0a1a);
+  --topbar-fg:#e0d0ff;--topbar-bd:#0a0510;
+}
+[data-theme="sakura"]{
+  --bg:#fffafc;--bg2:#fff0f5;--bg3:#ffe0ea;--text:#2a1a20;--muted:#806070;
+  --bd:#e0b0c0;--bd2:#a06080;--ac:#d04080;--acs:#ffe0ea;
+  --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
+  --sh:2px 2px 0 rgba(160,80,120,.2);--r:4px;
+  --bevel:inset -1px -1px 0 rgba(160,80,120,.1),inset 1px 1px 0 rgba(255,255,255,.8);
+  --bevel-in:inset 1px 1px 0 rgba(160,80,120,.1),inset -1px -1px 0 rgba(255,255,255,.8);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(208,64,128,.12);--blob2:rgba(240,120,160,.08);--blob3:rgba(255,180,200,.06);
+  --grid:rgba(208,64,128,.04);
+  --p1:208,64,128;--p2:240,120,160;--p3:255,180,200;--p4:160,80,120;
+  --hero-grad:linear-gradient(135deg,#d04080,#ff80a0);
+  --tile-accent:linear-gradient(135deg,#ff80a0,#d04080);
+  --topbar-bg:linear-gradient(180deg,#d06090,#a04070);
+  --topbar-fg:#fff;--topbar-bd:#802050;
+}
+[data-theme="ocean"]{
+  --bg:#f0f8ff;--bg2:#e0f0fa;--bg3:#c8e0f0;--text:#0a1a2a;--muted:#406080;
+  --bd:#a0c0d8;--bd2:#406080;--ac:#0066cc;--acs:#c8e4ff;
+  --ok:#1a7f37;--warn:#b08800;--dgr:#cf222e;
+  --sh:2px 2px 0 rgba(32,80,140,.2);--r:4px;
+  --bevel:inset -1px -1px 0 rgba(32,80,140,.1),inset 1px 1px 0 rgba(255,255,255,.8);
+  --bevel-in:inset 1px 1px 0 rgba(32,80,140,.1),inset -1px -1px 0 rgba(255,255,255,.8);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(0,102,204,.10);--blob2:rgba(64,160,220,.08);--blob3:rgba(120,200,240,.06);
+  --grid:rgba(0,102,204,.04);
+  --p1:0,102,204;--p2:64,160,220;--p3:120,200,240;--p4:32,80,140;
+  --hero-grad:linear-gradient(135deg,#0066cc,#40a0dc);
+  --tile-accent:linear-gradient(135deg,#40a0dc,#0066cc);
+  --topbar-bg:linear-gradient(180deg,#2080c0,#004890);
+  --topbar-fg:#fff;--topbar-bd:#002040;
 }
 [data-theme="github-light"]{
   --bg:#ffffff;--bg2:#f6f8fa;--bg3:#eef1f4;--text:#1f2328;--muted:#59636e;
@@ -132,17 +196,14 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .hero h1{margin:0 0 12px;font-size:clamp(2rem,4.5vw,3.2rem);font-weight:800;line-height:1.12;letter-spacing:-.03em;background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .hero-sub{margin:0 auto 6px;max-width:520px;font-size:15px;color:var(--muted);line-height:1.65}
 .hero-line{display:inline-block;margin-top:12px;padding-top:12px;border-top:1px dashed var(--bd);font-size:12.5px;color:var(--muted);letter-spacing:.02em}
-
-/* 工具分组 */
-.tool-sections{display:flex;flex-direction:column;gap:36px}
-.tool-section{animation:heroIn .5s cubic-bezier(.22,1,.36,1) both}
+.columns{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
+.column{min-width:0}
 .section-title{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .section-title::before{content:"";display:inline-block;width:8px;height:8px;background:var(--ac);box-shadow:var(--bevel)}
 .section-title.deprecated::before{background:var(--muted);opacity:.5}
 .section-title .count{font-size:11px;padding:1px 8px;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;letter-spacing:0;text-transform:none;font-weight:600}
-
 .tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-
+.tool-grid.deprecated{grid-template-columns:1fr;gap:12px}
 .tool-card{position:relative;display:flex;align-items:center;gap:14px;padding:16px 18px;background:linear-gradient(135deg,var(--bg2),var(--bg));border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);text-decoration:none;color:inherit;overflow:hidden;transition:all .3s cubic-bezier(.34,1.56,.64,1);animation:cardIn .5s cubic-bezier(.22,1,.36,1) both;cursor:pointer}
 .tool-card::before{content:"";position:absolute;inset:0;background:var(--tile-accent);opacity:0;transition:opacity .3s;pointer-events:none}
 .tool-card:hover{transform:translateY(-4px);box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.3),0 12px 24px rgba(0,0,0,.15);border-color:var(--ac)}
@@ -155,43 +216,46 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .tc-name{font-size:16px;font-weight:800;line-height:1.25;letter-spacing:-.01em;margin-bottom:3px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .2s}
 [data-theme^="mc-"] .tc-name{color:#2a3a1a;text-shadow:1px 1px 0 rgba(255,255,255,.4)}
 [data-theme="mc-night"] .tc-name{color:#e8ffd0;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
+[data-theme="mc-nether"] .tc-name{color:#ffd0c0;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
+[data-theme="mc-end"] .tc-name{color:#e0d0ff;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
+[data-theme="sakura"] .tc-name{color:#8a2050;text-shadow:1px 1px 0 rgba(255,255,255,.5)}
+[data-theme="ocean"] .tc-name{color:#0a3060;text-shadow:1px 1px 0 rgba(255,255,255,.5)}
 .tool-card:hover .tc-name{color:var(--ac)}
-[data-theme^="mc-"] .tool-card:hover .tc-name{color:#1a2a0a}
-[data-theme="mc-night"] .tool-card:hover .tc-name{color:#c8ff90}
 .tc-desc{font-size:12px;color:var(--muted);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tc-tag{display:inline-block;margin-top:5px;padding:1px 8px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--acs);border:1px solid var(--ac);color:var(--ac)}
 [data-theme^="github-"] .tc-tag{border-radius:999px}
 .tc-arrow{flex:none;font-size:20px;font-weight:800;color:var(--ac);opacity:0;transform:translateX(-8px);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
 .tool-card:hover .tc-arrow{opacity:1;transform:translateX(0)}
-
 .tool-card.deprecated{border-color:var(--bd);border-style:dashed;opacity:.7;filter:grayscale(.35)}
 .tool-card.deprecated:hover{opacity:1;filter:none;border-style:solid}
 .tool-card.deprecated .tc-name{color:var(--muted)}
 .tool-card.deprecated:hover .tc-name{color:var(--ac)}
 .tool-card.deprecated .tc-tag{background:transparent;border-color:var(--bd);color:var(--muted)}
-
 .empty-col{padding:60px 24px;text-align:center;background:var(--bg2);border:2px dashed var(--bd);border-radius:var(--r);color:var(--muted)}
 .empty-col .ic{font-size:48px;opacity:.35;margin-bottom:12px;display:block;line-height:1}
 .empty-col .title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
 .empty-col .sub{font-size:12.5px;color:var(--muted);line-height:1.7}
-
 .foot{margin-top:64px;padding-top:20px;text-align:center;border-top:1px dashed var(--bd);font-size:12px;color:var(--muted);letter-spacing:.02em}
 .foot a{color:var(--ac);text-decoration:none;font-weight:600;border-bottom:1px dashed var(--ac);transition:all .2s}
 .foot a:hover{border-bottom-style:solid;opacity:.8}
-
 .ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
 .ov.show{opacity:1;visibility:visible}
-.pnl{display:flex;flex-direction:column;width:100%;max-width:500px;background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) + 3px);box-shadow:var(--sh);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+.pnl{display:flex;flex-direction:column;width:100%;max-width:560px;max-height:calc(100vh - 32px);background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) + 3px);box-shadow:var(--sh);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
 [data-theme^="mc-"] .pnl{border:2px solid var(--bd2);border-radius:2px;box-shadow:3px 3px 0 rgba(0,0,0,.3)}
 .ov.show .pnl{transform:none}
-.ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd)}
-[data-theme^="mc-"] .ph{background:linear-gradient(180deg,#7a9c3c,#56682c);color:#fff;border-bottom:2px solid #3d521f;text-shadow:1px 1px 0 rgba(0,0,0,.3);padding:8px 14px}
+.ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd);flex:none;color:#fff}
+[data-theme="mc-wiki"] .ph{background:linear-gradient(180deg,#7a9c3c,#56682c);border-bottom:2px solid #3d521f;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
 [data-theme="mc-night"] .ph{background:linear-gradient(180deg,#5a7a2c,#3d521f);color:#e8ffd0;border-bottom-color:#2a3a1a}
+[data-theme="mc-nether"] .ph{background:linear-gradient(180deg,#8a2010,#4a1008);color:#ffe0d0;border-bottom-color:#2a0800}
+[data-theme="mc-end"] .ph{background:linear-gradient(180deg,#4a2080,#2a1050);color:#e0d0ff;border-bottom-color:#150520}
+[data-theme="sakura"] .ph{background:linear-gradient(180deg,#e07090,#c05070);color:#fff;border-bottom-color:#a04060}
+[data-theme="ocean"] .ph{background:linear-gradient(180deg,#2080c0,#004890);color:#fff;border-bottom-color:#002040}
 .ph strong{font-size:14px}
 .ph .sp{flex:1}
-[data-theme^="mc-"] .ph .icon{color:#fff}
-[data-theme^="mc-"] .ph .icon:hover{background:rgba(0,0,0,.2)}
-.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+.ph .icon{color:inherit}
+.ph .icon:hover{background:rgba(0,0,0,.2);color:#fff}
+.theme-body{padding:14px;overflow-y:auto}
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .theme-card{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);cursor:pointer;font-family:inherit;color:var(--text);box-shadow:var(--bevel);transition:all .2s;text-align:left}
 .theme-card:hover{transform:translateY(-2px);border-color:var(--ac)}
 .theme-card.active{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 2px var(--acs)}
@@ -203,6 +267,10 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .theme-desc{font-size:10.5px;color:var(--muted);margin-top:-3px}
 .toast{position:fixed;left:50%;bottom:20px;max-width:calc(100vw - 32px);padding:8px 16px;font-size:13px;color:var(--bg);background:var(--text);border-radius:var(--r);box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(16px);transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:200}
 [data-theme^="mc-"] .toast{background:#2a3a1a;color:#e8ffd0;border:2px solid #4a4a3a;border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.4)}
+[data-theme="mc-nether"] .toast{background:#2a0800;color:#ffe0d0;border-color:#5a2010}
+[data-theme="mc-end"] .toast{background:#1a0f30;color:#e0d0ff;border-color:#3a2060}
+[data-theme="sakura"] .toast{background:#a04060;color:#ffe0ea;border-color:#802050}
+[data-theme="ocean"] .toast{background:#004890;color:#e0f0ff;border-color:#002040}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 [data-theme^="github-"] .hero-badge{border-width:1px}
 [data-theme^="github-"] .section-title .count{border-radius:999px}
@@ -211,7 +279,10 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme^="github-"] .tc-icon{border-width:1px;border-radius:10px}
 [data-theme^="github-"] .empty-col{border-radius:10px}
 [data-theme^="github-"] .section-title::before{border-radius:2px}
-
+@media(max-width:900px){
+  .columns{grid-template-columns:1fr;gap:32px}
+  .tool-grid.deprecated{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+}
 @media(max-width:640px){
   .wrap{padding:56px 16px 60px}
   .hero{padding:12px 0 28px}
@@ -221,7 +292,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   .tc-name{font-size:15px}
   .logo span:last-child{display:none}
   .theme-grid{grid-template-columns:1fr}
-  .tool-sections{gap:28px}
 }
 @media print{.bg-decor,.tc-arrow,.topbar,.ov,.toast{display:none}body{padding-top:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -249,11 +319,26 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   <div class="hero">
     <div class="hero-badge"><span class="dot"></span>STATION · 在线</div>
     <h1>红石的小站</h1>
-    <p class="hero-sub">各种实用小工具和小玩意儿 · 点开即可使用</p>
+    <p class="hero-sub">各种实用小工具的集合 · 点开即可使用</p>
     <span class="hero-line">🛠️ 轻量 · 无依赖 · 即开即用</span>
   </div>
 
-  <div class="tool-sections" id="toolSections"></div>
+  <div class="columns">
+    <div class="column">
+      <div class="section-title">
+        可用工具
+        <span class="count" id="activeCount">0</span>
+      </div>
+      <div class="tool-grid" id="activeGrid"></div>
+    </div>
+    <div class="column">
+      <div class="section-title deprecated">
+        已废弃
+        <span class="count" id="deprecatedCount">0</span>
+      </div>
+      <div class="tool-grid deprecated" id="deprecatedGrid"></div>
+    </div>
+  </div>
 
   <div class="foot">
     红石的小站 · 使用AI制作 ·
@@ -264,7 +349,9 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <div class="ov" id="themeOv">
   <div class="pnl">
     <div class="ph"><strong>选择风格</strong><span class="sp"></span><button class="icon" id="themeClose">✕</button></div>
-    <div class="theme-grid" id="themeGrid"></div>
+    <div class="theme-body">
+      <div class="theme-grid" id="themeGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -278,43 +365,14 @@ var GH_OWNER  = 'HSDL03';
 var GH_REPO   = 'HSwiki';
 var GH_BRANCH = 'main';
 var DATA_FILE = 'tools-data.json';
-
 var RAW_BASE = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/' + GH_BRANCH + '/';
 var CDN_BASE = 'https://cdn.jsdelivr.net/gh/' + GH_OWNER + '/' + GH_REPO + '@' + GH_BRANCH + '/';
 
 var DEFAULT_TOOLS = [
-  {
-    id: 'wiki',
-    icon: '📚',
-    name: '红石答辩wiki',
-    desc: '轻量知识库 · 已停止维护',
-    tag: '已废弃',
-    url: './wiki.html',
-    deprecated: true,
-    hidden: false
-  },
-  {
-    id: 'download',
-    icon: '📥',
-    name: '下载站',
-    desc: '资源文件 · 便捷下载',
-    tag: '资源',
-    url: './download.html',
-    deprecated: false,
-    hidden: false
-  },
-  {
-    id: 'misc',
-    icon: '🧩',
-    name: '杂类',
-    desc: '零散工具 · 各种小玩意儿',
-    tag: '综合',
-    url: './misc.html',
-    deprecated: false,
-    hidden: false
-  }
+  {id:'wiki',icon:'📚',name:'红石答辩wiki',desc:'轻量知识库 · 已停止维护',tag:'已废弃',url:'./wiki.html',deprecated:true,hidden:false},
+  {id:'download',icon:'📥',name:'下载站',desc:'资源文件 · 便捷下载',tag:'资源',url:'./download.html',deprecated:false,hidden:false},
+  {id:'misc',icon:'🧩',name:'杂类',desc:'零散工具 · 各种小玩意儿',tag:'综合',url:'./misc.html',deprecated:false,hidden:false}
 ];
-
 var TOOLS = DEFAULT_TOOLS.slice();
 
 function $(id){return document.getElementById(id);}
@@ -328,24 +386,45 @@ var storage={
   set:function(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
 };
 
+/* ============================================================
+   主题系统
+   shape 决定粒子形状：
+     square  = 圆角方块（默认）
+     lava    = 岩浆球（发光橙红）
+     spark   = 菱形火花（末地紫）
+     petal   = 花瓣（粉红椭圆）
+     bubble  = 水泡（蓝白高光圆）
+   ============================================================ */
 var K_THEME='wiki-theme';
 var THEMES=[
-  {id:'mc-wiki',name:'🟩 MC Wiki',desc:'我的世界中文 Wiki',colors:['#3d521f','#fffdf5','#56682c']},
-  {id:'mc-night',name:'⬛ MC 夜晚',desc:'Minecraft 夜间模式',colors:['#8ec44a','#1a1a1a','#3d521f']},
-  {id:'github-light',name:'☀️ GitHub 浅色',desc:'清爽默认',colors:['#0969da','#f6f8fa','#1f2328']},
-  {id:'github-dark',name:'🌙 GitHub 暗色',desc:'护眼夜间',colors:['#4493f8','#161b22','#e6edf3']}
+  {id:'mc-wiki',      name:'🟩 MC Wiki',    desc:'我的世界中文 Wiki', colors:['#3d521f','#fffdf5','#56682c'], shape:'square'},
+  {id:'mc-night',     name:'⬛ MC 夜晚',    desc:'Minecraft 夜间模式', colors:['#8ec44a','#1a1a1a','#3d521f'], shape:'square'},
+  {id:'mc-nether',    name:'🔥 MC 下界',    desc:'地狱岩浆风',         colors:['#ff6030','#1a0a0a','#8a2010'], shape:'lava'},
+  {id:'mc-end',       name:'🌌 MC 末地',    desc:'末地虚空紫',         colors:['#a060ff','#0f0a1a','#4a2080'], shape:'spark'},
+  {id:'sakura',       name:'🌸 樱花',       desc:'粉嫩柔和',           colors:['#d04080','#fffafc','#ff80a0'], shape:'petal'},
+  {id:'ocean',        name:'🌊 海洋',       desc:'清凉海蓝',           colors:['#0066cc','#f0f8ff','#40a0dc'], shape:'bubble'},
+  {id:'github-light', name:'☀️ GitHub 浅色', desc:'清爽默认',           colors:['#0969da','#f6f8fa','#1f2328'], shape:'square'},
+  {id:'github-dark',  name:'🌙 GitHub 暗色', desc:'护眼夜间',           colors:['#4493f8','#161b22','#e6edf3'], shape:'square'}
 ];
 var curTheme=(function(){
   var s=storage.get(K_THEME);
   for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===s)return s;
   return 'mc-wiki';
 })();
+
+function getCurrentShape(){
+  for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===curTheme)return THEMES[i].shape||'square';
+  return 'square';
+}
+
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   storage.set(K_THEME,t);
   curTheme=t;
   buildThemeGrid();
   readThemeColors();
+  currentShape=getCurrentShape();
+  initParticles();   /* 重新生成粒子（形状变化） */
 }
 function buildThemeGrid(){
   var grid=$('themeGrid');if(!grid)return;
@@ -384,7 +463,7 @@ function normTool(t, i){
     icon: (typeof t.icon==='string'&&t.icon.trim())?t.icon.trim():'🧰',
     name: name,
     desc: typeof t.desc==='string'?t.desc:'',
-    tag: (typeof t.tag==='string'&&t.tag.trim())?t.tag.trim():'未分类',
+    tag: (typeof t.tag==='string'&&t.tag.trim())?t.tag.trim():'工具',
     url: typeof t.url==='string'?t.url:'',
     deprecated: !!t.deprecated,
     disabled: !!t.disabled,
@@ -392,40 +471,26 @@ function normTool(t, i){
   };
 }
 
-function loadTools(force){
+function loadTools(){
   var url1=RAW_BASE+DATA_FILE+'?t='+Date.now();
   var url2=CDN_BASE+DATA_FILE+'?t='+Date.now();
-
   return fetch(url1,{cache:'no-store'})
-    .then(function(r){
-      if(!r.ok) throw new Error('raw HTTP '+r.status);
-      return r.json();
-    })
+    .then(function(r){if(!r.ok)throw new Error('raw HTTP '+r.status);return r.json();})
     .catch(function(){
-      return fetch(url2,{cache:'no-store'})
-        .then(function(r){
-          if(!r.ok) throw new Error('CDN HTTP '+r.status);
-          return r.json();
-        });
+      return fetch(url2,{cache:'no-store'}).then(function(r){
+        if(!r.ok)throw new Error('CDN HTTP '+r.status);
+        return r.json();
+      });
     })
     .then(function(data){
       if(Array.isArray(data) && data.length > 0){
         var list=[];
-        data.forEach(function(t,i){
-          var n=normTool(t,i);
-          if(n) list.push(n);
-        });
-        if(list.length>0){
-          TOOLS=list;
-          return true;
-        }
+        data.forEach(function(t,i){var n=normTool(t,i);if(n)list.push(n);});
+        if(list.length>0){TOOLS=list;return true;}
       }
       return false;
     })
-    .catch(function(err){
-      console.warn('[index] tools-data.json 加载失败，使用默认列表', err);
-      return false;
-    });
+    .catch(function(err){console.warn('[index] 加载失败',err);return false;});
 }
 
 function renderCard(t, delay){
@@ -433,62 +498,43 @@ function renderCard(t, delay){
   var href = t.disabled ? 'javascript:void(0)' : t.url;
   return '<a class="' + cls + '" href="' + escapeHtml(href) + '"'
     + ' style="animation-delay:' + delay + 'ms"'
-    + ' data-url="' + escapeHtml(t.url || '') + '"'
     + (t.disabled ? ' data-disabled="1"' : '') + '>'
     + '<div class="tc-icon">' + escapeHtml(t.icon) + '</div>'
     + '<div class="tc-info">'
     +   '<div class="tc-name">' + escapeHtml(t.name) + '</div>'
     +   '<div class="tc-desc">' + escapeHtml(t.desc) + '</div>'
+    +   '<span class="tc-tag">' + escapeHtml(t.tag || '工具') + '</span>'
     + '</div>'
     + '<div class="tc-arrow">→</div>'
     + '</a>';
 }
 
 function renderTools(){
-  var container = $('toolSections');
-  if(!container) return;
-
+  var activeGrid = $('activeGrid');
+  var deprecatedGrid = $('deprecatedGrid');
   var visible = TOOLS.filter(function(t){ return !t.hidden; });
+  var active = visible.filter(function(t){ return !t.deprecated; });
+  var deprecated = visible.filter(function(t){ return t.deprecated; });
 
-  if(visible.length === 0){
-    container.innerHTML =
-      '<div class="empty-col">' +
-        '<span class="ic">🧰</span>' +
-        '<div class="title">还没有内容</div>' +
-        '<div class="sub">去管理页添加工具</div>' +
-      '</div>';
-    return;
+  if (active.length === 0) {
+    activeGrid.innerHTML = '<div class="empty-col"><span class="ic">🧰</span><div class="title">还没有可用工具</div><div class="sub">后续会陆续添加</div></div>';
+  } else {
+    var h = '';
+    active.forEach(function(t,i){ h += renderCard(t, Math.min(i*50,500)); });
+    activeGrid.innerHTML = h;
   }
+  $('activeCount').textContent = active.length;
 
-  /* 按 tag 分组，保留出现顺序 */
-  var groups = {};
-  var order = [];
-  visible.forEach(function(t){
-    var tag = t.tag || '未分类';
-    if(!groups[tag]){ groups[tag] = []; order.push(tag); }
-    groups[tag].push(t);
-  });
+  if (deprecated.length === 0) {
+    deprecatedGrid.innerHTML = '<div class="empty-col"><span class="ic">🗂</span><div class="title">暂无已废弃条目</div></div>';
+  } else {
+    var d = '';
+    deprecated.forEach(function(t,i){ d += renderCard(t, Math.min(i*50,500)); });
+    deprecatedGrid.innerHTML = d;
+  }
+  $('deprecatedCount').textContent = deprecated.length;
 
-  var html = '';
-  order.forEach(function(tag, gi){
-    var items = groups[tag];
-    var delay = Math.min(gi * 60, 400);
-    html += '<div class="tool-section" style="animation-delay:' + delay + 'ms">';
-    html +=   '<div class="section-title">' +
-                escapeHtml(tag) +
-                '<span class="count">' + items.length + '</span>' +
-              '</div>';
-    html +=   '<div class="tool-grid">';
-    items.forEach(function(t, i){
-      html += renderCard(t, Math.min(i * 50, 400));
-    });
-    html +=   '</div>';
-    html += '</div>';
-  });
-  container.innerHTML = html;
-
-  /* 拦截禁用点击 */
-  var disableds = container.querySelectorAll('.tool-card[data-disabled="1"]');
+  var disableds = document.querySelectorAll('.tool-card[data-disabled="1"]');
   for(var i=0;i<disableds.length;i++){
     (function(el){
       el.addEventListener('click', function(e){
@@ -530,8 +576,13 @@ function buildFloatDecor(){
   wrap.innerHTML = html;
 }
 
-var particleCtx = null, particles = [], particleRunning = true, pW = 0, pH = 0, pDpr = 1;
-var themeColors = ['61,82,31','106,140,60','140,180,60','180,150,80'];
+/* ============================================================
+   粒子系统
+   ============================================================ */
+var particleCtx=null, particles=[], particleRunning=true, pW=0, pH=0, pDpr=1;
+var themeColors=['61,82,31','106,140,60','140,180,60','180,150,80'];
+var currentShape='square';
+
 function readThemeColors(){
   var cs = getComputedStyle(document.documentElement);
   themeColors = [
@@ -541,6 +592,7 @@ function readThemeColors(){
     (cs.getPropertyValue('--p4') || '180,150,80').trim()
   ];
 }
+
 function initParticles(){
   var canvas = $('particles');
   if(!canvas || !canvas.getContext) return;
@@ -548,27 +600,37 @@ function initParticles(){
   pDpr = Math.min(window.devicePixelRatio || 1, 2);
   resizeCanvas();
   readThemeColors();
+  currentShape = getCurrentShape();
+
   var count = Math.max(14, Math.min(32, Math.floor((pW * pH) / 42000)));
   particles = [];
   for(var i = 0; i < count; i++){
     particles.push({
       x: Math.random() * pW,
       y: Math.random() * pH,
-      size: 4 + Math.random() * 10,
-      vx: (Math.random() - 0.5) * 0.42,
-      vy: (Math.random() - 0.5) * 0.42,
+      size: currentShape==='lava' ? 6+Math.random()*12 :
+            currentShape==='petal' ? 8+Math.random()*10 :
+            currentShape==='bubble'? 6+Math.random()*8 :
+            currentShape==='spark' ? 5+Math.random()*9 :
+            4 + Math.random() * 10,
+      vx: (Math.random() - 0.5) * (currentShape==='petal'?0.6:0.42),
+      vy: currentShape==='lava' ? (-0.3 - Math.random()*0.4) :
+          currentShape==='petal'? (0.2 + Math.random()*0.4) :
+          currentShape==='bubble'?(-0.2 - Math.random()*0.5) :
+          (Math.random() - 0.5) * 0.42,
       rot: Math.random() * Math.PI * 2,
-      vr: (Math.random() - 0.5) * 0.014,
+      vr: (Math.random() - 0.5) * (currentShape==='petal'?0.03:0.014),
       alpha: 0.12 + Math.random() * 0.28,
       alphaPhase: Math.random() * Math.PI * 2,
       alphaSpeed: 0.008 + Math.random() * 0.016,
       hueIdx: Math.floor(Math.random() * 4),
       hueMix: Math.random(),
-      glow: Math.random() < 0.2
+      glow: currentShape==='lava' || currentShape==='spark' ? true : Math.random() < 0.2
     });
   }
   if(particleRunning) drawParticles();
 }
+
 function resizeCanvas(){
   var canvas = $('particles');
   if(!canvas) return;
@@ -577,49 +639,127 @@ function resizeCanvas(){
   canvas.style.width = pW + 'px'; canvas.style.height = pH + 'px';
   if(particleCtx) particleCtx.setTransform(pDpr, 0, 0, pDpr, 0, 0);
 }
+
+function drawSquare(ctx, s, hs, r, g, b, a){
+  var rad = Math.min(3, s/3.5);
+  var grad = ctx.createLinearGradient(-hs, -hs, hs, hs);
+  grad.addColorStop(0, 'rgba('+r+','+g+','+b+','+a+')');
+  grad.addColorStop(1, 'rgba('+r+','+g+','+b+','+(a*0.3)+')');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(-hs, -hs, s, s, rad);
+  else ctx.rect(-hs, -hs, s, s);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,'+(a*0.2)+')';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+}
+
+function drawLava(ctx, s, hs, r, g, b, a){
+  /* 发光球体 + 内核 */
+  var rad = hs * 1.4;
+  var grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rad);
+  grad.addColorStop(0, 'rgba(255,240,180,'+a+')');
+  grad.addColorStop(0.3, 'rgba(255,160,60,'+a+')');
+  grad.addColorStop(0.7, 'rgba('+r+','+g+','+b+','+(a*0.8)+')');
+  grad.addColorStop(1, 'rgba('+r+','+g+','+b+',0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, rad, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSpark(ctx, s, hs, r, g, b, a){
+  /* 菱形火花 */
+  var grad = ctx.createRadialGradient(0, 0, 0, 0, 0, hs);
+  grad.addColorStop(0, 'rgba(255,255,255,'+a+')');
+  grad.addColorStop(0.4, 'rgba('+r+','+g+','+b+','+a+')');
+  grad.addColorStop(1, 'rgba('+r+','+g+','+b+',0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(0, -hs*1.2);
+  ctx.lineTo(hs*0.5, 0);
+  ctx.lineTo(0, hs*1.2);
+  ctx.lineTo(-hs*0.5, 0);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawPetal(ctx, s, hs, r, g, b, a){
+  /* 花瓣：椭圆主体 + 内部浅色 */
+  var w = hs * 0.8, h = hs * 1.3;
+  var grad = ctx.createLinearGradient(0, -h, 0, h);
+  grad.addColorStop(0, 'rgba(255,220,235,'+a+')');
+  grad.addColorStop(0.5, 'rgba('+r+','+g+','+b+','+a+')');
+  grad.addColorStop(1, 'rgba('+r+','+g+','+b+','+(a*0.6)+')');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, w, h, 0, 0, Math.PI * 2);
+  ctx.fill();
+  /* 中脉 */
+  ctx.strokeStyle = 'rgba(255,255,255,'+(a*0.5)+')';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(0, -h*0.7);
+  ctx.lineTo(0, h*0.7);
+  ctx.stroke();
+}
+
+function drawBubble(ctx, s, hs, r, g, b, a){
+  /* 水泡：外圆环 + 高光 */
+  ctx.beginPath();
+  ctx.arc(0, 0, hs, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba('+r+','+g+','+b+','+(a*0.35)+')';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,'+(a*0.7)+')';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  /* 高光小圆 */
+  ctx.beginPath();
+  ctx.arc(-hs*0.3, -hs*0.3, hs*0.22, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,'+(a*0.8)+')';
+  ctx.fill();
+}
+
 function drawParticles(){
   if(!particleRunning || !particleCtx) return;
   particleCtx.clearRect(0, 0, pW, pH);
+
   for(var i = 0; i < particles.length; i++){
     var p = particles[i];
     p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-    if(p.x < -40) p.x = pW + 40; else if(p.x > pW + 40) p.x = -40;
-    if(p.y < -40) p.y = pH + 40; else if(p.y > pH + 40) p.y = -40;
+
+    /* 边界回绕 */
+    if(p.x < -60) p.x = pW + 60; else if(p.x > pW + 60) p.x = -60;
+    if(p.y < -60) p.y = pH + 60; else if(p.y > pH + 60) p.y = -60;
 
     p.alphaPhase += p.alphaSpeed;
     var a = p.alpha * (0.55 + 0.45 * Math.sin(p.alphaPhase));
-    a = Math.max(0.04, Math.min(0.5, a));
+    a = Math.max(0.05, Math.min(0.6, a));
 
-    var c1 = (themeColors[p.hueIdx] || themeColors[0]).split(',').map(function(n){ return parseInt(n, 10) || 0; });
-    var c2 = (themeColors[(p.hueIdx + 1) % 4] || themeColors[0]).split(',').map(function(n){ return parseInt(n, 10) || 0; });
+    var c1 = (themeColors[p.hueIdx] || themeColors[0]).split(',').map(function(n){ return parseInt(n,10)||0; });
+    var c2 = (themeColors[(p.hueIdx+1)%4] || themeColors[0]).split(',').map(function(n){ return parseInt(n,10)||0; });
     var mix = p.hueMix;
-    var r = Math.round(c1[0] * (1 - mix) + c2[0] * mix);
-    var g = Math.round(c1[1] * (1 - mix) + c2[1] * mix);
-    var b = Math.round(c1[2] * (1 - mix) + c2[2] * mix);
+    var r = Math.round(c1[0]*(1-mix) + c2[0]*mix);
+    var g = Math.round(c1[1]*(1-mix) + c2[1]*mix);
+    var b = Math.round(c1[2]*(1-mix) + c2[2]*mix);
 
     particleCtx.save();
     particleCtx.translate(p.x, p.y);
     particleCtx.rotate(p.rot);
 
     if(p.glow){
-      particleCtx.shadowBlur = 10;
-      particleCtx.shadowColor = 'rgba(' + r + ',' + g + ',' + b + ',' + (a * 0.8) + ')';
+      particleCtx.shadowBlur = currentShape==='lava'?18:10;
+      particleCtx.shadowColor = 'rgba('+r+','+g+','+b+','+(a*0.8)+')';
     }
 
-    var s = p.size, hs = s / 2, rad = Math.min(3, s / 3.5);
-    var grad = particleCtx.createLinearGradient(-hs, -hs, hs, hs);
-    grad.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')');
-    grad.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',' + (a * 0.3) + ')');
-    particleCtx.fillStyle = grad;
+    var s = p.size, hs = s/2;
 
-    particleCtx.beginPath();
-    if(particleCtx.roundRect) particleCtx.roundRect(-hs, -hs, s, s, rad);
-    else particleCtx.rect(-hs, -hs, s, s);
-    particleCtx.fill();
-
-    particleCtx.strokeStyle = 'rgba(255,255,255,' + (a * 0.2) + ')';
-    particleCtx.lineWidth = 0.5;
-    particleCtx.stroke();
+    if(currentShape==='lava')       drawLava(particleCtx, s, hs, r, g, b, a);
+    else if(currentShape==='spark') drawSpark(particleCtx, s, hs, r, g, b, a);
+    else if(currentShape==='petal') drawPetal(particleCtx, s, hs, r, g, b, a);
+    else if(currentShape==='bubble')drawBubble(particleCtx, s, hs, r, g, b, a);
+    else                            drawSquare(particleCtx, s, hs, r, g, b, a);
 
     particleCtx.restore();
   }
@@ -657,7 +797,7 @@ function bind(){
       if(reloadBtn.classList.contains('spin-anim'))return;
       reloadBtn.classList.add('spin-anim');
       toast('正在刷新…');
-      loadTools(true).then(function(){
+      loadTools().then(function(){
         renderTools();
         setTimeout(function(){reloadBtn.classList.remove('spin-anim');},400);
       });
@@ -680,13 +820,9 @@ function boot(){
   applyTheme(curTheme);
   renderTools();
   buildFloatDecor();
-  initParticles();
   bind();
   onScroll();
-
-  loadTools(false).then(function(ok){
-    if(ok) renderTools();
-  });
+  loadTools().then(function(ok){ if(ok) renderTools(); });
 }
 
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
