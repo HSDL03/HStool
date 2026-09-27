@@ -143,6 +143,64 @@ body{
   overflow:hidden;transition:background-color .3s,color .3s;
 }
 
+/* 网络离线遮罩 */
+.offline-mask{
+  position:fixed;
+  inset:0;
+  z-index:150;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .25s, visibility .25s;
+  pointer-events:none;
+}
+.offline-mask.show{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+.offline-card{
+  max-width:340px;
+  margin:20px;
+  padding:24px 22px;
+  background:var(--bg);
+  border:2px solid var(--bd2);
+  border-radius:var(--r);
+  box-shadow:var(--bevel), 0 12px 32px rgba(0,0,0,.3);
+  text-align:center;
+}
+[data-theme^="mc-"] .offline-card{box-shadow:3px 3px 0 rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.3)}
+.offline-card .ic{
+  font-size:44px;
+  line-height:1;
+  margin-bottom:10px;
+  display:block;
+  animation:offPulse 2s ease-in-out infinite;
+}
+@keyframes offPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.offline-card h2{margin:0 0 8px;font-size:1.15rem;font-weight:800}
+.offline-card p{margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.6}
+.offline-card .cnt{
+  font-family:ui-monospace,Menlo,Consolas,monospace;
+  color:var(--ac);
+  font-weight:700;
+}
+.offline-card .spin{
+  display:inline-block;
+  width:14px;height:14px;
+  margin-right:6px;
+  vertical-align:-2px;
+  border:2px solid var(--bd);
+  border-top-color:var(--ac);
+  border-radius:50%;
+  animation:spinIcon .8s linear infinite;
+}
+
 .topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50;transition:background .3s,color .3s}
 [data-theme^="mc-"] .topbar{border-bottom-width:2px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer}
@@ -187,7 +245,7 @@ body{
 .b3{width:340px;height:340px;background:var(--blob3);top:38%;left:52%;animation:drift3 42s ease-in-out infinite}
 @keyframes drift1{0%,100%{transform:translate(0,0) scale(1);opacity:.85}50%{transform:translate(50px,50px) scale(1.08);opacity:1}}
 @keyframes drift2{0%,100%{transform:translate(0,0) scale(1);opacity:.8}50%{transform:translate(-60px,-50px) scale(1.05);opacity:.95}}
-@keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50px,-60px) scale(1.1);opacity:.9}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50%,-60px) scale(1.1);opacity:.9}}
 .grid-bg{position:absolute;inset:0;
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:36px 36px;
@@ -237,6 +295,7 @@ body{
 }
 .login-card .status.err{color:var(--dgr);font-weight:600}
 .login-card .status.ok{color:var(--ok);font-weight:600}
+.login-card .status.busy{color:var(--ac);font-weight:600}
 .login-card .btn-main{
   width:100%;height:44px;
   font-size:15px;font-weight:700;font-family:inherit;
@@ -314,6 +373,23 @@ body{
 [data-theme="github-light"] .msg.self .content,[data-theme="github-dark"] .msg.self .content{text-shadow:none}
 .msg.compact{margin-top:-6px}
 
+/* 发送中 / 发送失败标记 */
+.msg .status-tag{
+  display:inline-block;
+  margin-left:8px;
+  font-size:10.5px;
+  color:var(--muted);
+  font-style:italic;
+  vertical-align:middle;
+}
+.msg.pending .content{opacity:.6}
+.msg.failed .content{
+  border-color:var(--dgr);
+  box-shadow:var(--bevel),0 0 0 1px rgba(160,32,32,.3);
+}
+.msg.failed .status-tag{color:var(--dgr);font-weight:700;font-style:normal}
+.msg.failed .status-tag::before{content:"⚠ "}
+
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;padding:40px 20px}
 .empty-state .ic{font-size:48px;opacity:.4;margin-bottom:12px}
 .empty-state .t{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
@@ -324,7 +400,7 @@ body{
 .composer .input-wrap{flex:1;display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;transition:border-color .2s,box-shadow .2s}
 [data-theme^="mc-"] .composer .input-wrap{border-width:2px;border-color:var(--bd2);box-shadow:var(--bevel)}
 .composer .input-wrap:focus-within{border-color:var(--ac);box-shadow:0 0 0 2px var(--acs)}
-[data-theme^="mc-"] .composer .input-wrap:focus-within{box-shadow:0 0 8px rgba(var(--p1),.4)}
+[data-theme^="mc-"] .composer .input-wrap:focus-within{box-shadow:0 0 0 2px var(--acs),0 0 8px rgba(var(--p1),.4)}
 .composer textarea{width:100%;min-height:38px;max-height:120px;padding:8px 12px;font-family:inherit;font-size:14px;line-height:1.5;color:var(--text);background:transparent;border:none;outline:none;resize:none;overflow-y:auto}
 .composer textarea::placeholder{color:var(--muted)}
 .composer .send{flex:none;min-width:64px;height:40px;padding:0 16px;font-size:14px;font-family:inherit;font-weight:700;color:#fff;background:var(--self-bg);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;box-shadow:var(--bevel);transition:all .15s}
@@ -385,7 +461,7 @@ body{
   box-shadow:var(--bevel);
   user-select:none;
   opacity:.72;
-  transition:opacity .25s,transform .25s cubic-bezier(.34,1.56,.64,1),border-color .25s;
+  transition:opacity .25s,transform .25s cubic-bezier(.34,1.56,.64,1),border-color .25s,color .25s;
   pointer-events:auto;
 }
 [data-theme^="mc-"] .refresh-pill{border:2px solid var(--bd2);border-radius:2px}
@@ -416,6 +492,8 @@ body{
 @keyframes spinIcon{to{transform:rotate(360deg)}}
 .refresh-pill.err{border-color:var(--dgr);color:var(--dgr)}
 .refresh-pill.err .rp-text #cdNum{color:var(--dgr)}
+.refresh-pill.retry{border-color:var(--warn);color:var(--warn)}
+.refresh-pill.retry .rp-text #cdNum{color:var(--warn)}
 
 .nick-ov-body{padding:18px}
 .nick-ov-body label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
@@ -448,7 +526,7 @@ body{
     opacity:.65;
   }
 }
-@media print{.refresh-pill{display:none}}
+@media print{.refresh-pill,.offline-mask{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -475,6 +553,21 @@ body{
   <div class="blob b3"></div>
   <div class="grid-bg"></div>
   <canvas id="particles"></canvas>
+</div>
+
+<!-- 网络离线遮罩 -->
+<div class="offline-mask" id="offlineMask">
+  <div class="offline-card">
+    <span class="ic">📡</span>
+    <h2 id="offlineTitle">连接中断，正在重试…</h2>
+    <p id="offlineSub">
+      <span class="spin"></span>第 <span class="cnt" id="retryCount">1</span> 次重试
+    </p>
+    <p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5">
+      如果一直失败，可能是网络被墙。<br>
+      试试换 WiFi / 手机热点，或挂梯子。
+    </p>
+  </div>
 </div>
 
 <div class="login-wrap" id="loginWrap">
@@ -561,6 +654,12 @@ var SEND_COOLDOWN = 2000;
 var MSG_MAXLEN = 500;
 var POLL_INTERVAL = 5;
 
+/* 重试配置 */
+var RETRY_MAX = 5;              /* 最多重试 5 次 */
+var RETRY_BASE = 800;           /* 首次退避 800ms */
+var RETRY_FACTOR = 2;           /* 每次 ×2：800, 1600, 3200, 6400, 12800 */
+var RETRY_MAX_DELAY = 12000;    /* 单次最大等待 12s */
+
 /* ============================================================
    工具
    ============================================================ */
@@ -610,6 +709,114 @@ function toast(msg){
 }
 
 /* ============================================================
+   重试核心
+   ============================================================ */
+function sleep(ms){
+  return new Promise(function(r){ setTimeout(r, ms); });
+}
+function calcDelay(attempt){
+  /* attempt 从 1 开始 */
+  var d = RETRY_BASE * Math.pow(RETRY_FACTOR, attempt - 1);
+  return Math.min(d, RETRY_MAX_DELAY);
+}
+/*
+ * 通用重试包装
+ *   fn       : 返回 Promise 的函数（每次调用重试）
+ *   opts     : { max, onRetry, shouldRetry, label }
+ *   返回 { ok, data, err }
+ */
+function withRetry(fn, opts){
+  opts = opts || {};
+  var max = opts.max || RETRY_MAX;
+  var label = opts.label || '请求';
+  var shouldRetry = opts.shouldRetry || function(){ return true; };
+
+  var attempt = 0;
+
+  function go(){
+    attempt++;
+    return Promise.resolve()
+      .then(function(){ return fn(); })
+      .then(function(res){
+        return { ok:true, data:res, attempts:attempt };
+      })
+      .catch(function(err){
+        if(attempt >= max || !shouldRetry(err)){
+          return { ok:false, err:err, attempts:attempt };
+        }
+        var delay = calcDelay(attempt);
+        if(opts.onRetry){
+          try{ opts.onRetry(attempt+1, max, delay, label); }catch(e){}
+        }
+        return sleep(delay).then(go);
+      });
+  }
+  return go();
+}
+
+/*
+ * 包一层 supabase 请求，自动判断错误
+ *   res 是 { data, error } 结构
+ *   - 如果 error 是网络问题（Failed to fetch / network）→ 触发重试
+ *   - 其他业务错误（比如昵称已存在）→ 不重试，直接返回
+ */
+function sbQuery(label, queryFn){
+  return withRetry(function(){
+    return Promise.resolve().then(function(){ return queryFn(); }).then(function(res){
+      if(res && res.error){
+        var msg = String(res.error.message || res.error || '');
+        var isNetwork = /fetch|network|timeout|abort|connection/i.test(msg);
+        var e = new Error(msg);
+        e.__isNetwork = isNetwork;
+        e.__res = res;
+        throw e;
+      }
+      return res;
+    });
+  }, {
+    label: label,
+    shouldRetry: function(err){
+      /* 网络问题重试；业务错误不重试 */
+      return err && (err.__isNetwork || /fetch|network|timeout|abort|connection/i.test(String(err.message||'')));
+    },
+    onRetry: function(attempt, max, delay, label){
+      showRetryOverlay(attempt, max, label);
+      setPillRetry(attempt, max);
+    }
+  });
+}
+
+/* ============================================================
+   重试提示 UI
+   ============================================================ */
+var offlineMask = $('offlineMask');
+var offlineTitle = $('offlineTitle');
+var offlineSub = $('offlineSub');
+var retryCountEl = $('retryCount');
+var retryHideTimer = null;
+
+function showRetryOverlay(attempt, max, label){
+  if(!offlineMask) return;
+  offlineTitle.textContent = '连接中断，正在重试…';
+  offlineSub.innerHTML = '<span class="spin"></span>第 <span class="cnt">' + attempt + '</span> / ' + max + ' 次重试 · ' + label;
+  offlineMask.classList.add('show');
+  clearTimeout(retryHideTimer);
+}
+function hideRetryOverlay(){
+  if(offlineMask) offlineMask.classList.remove('show');
+  clearTimeout(retryHideTimer);
+}
+function showFailOverlay(label){
+  if(!offlineMask) return;
+  offlineTitle.textContent = '连接失败';
+  offlineSub.innerHTML = '已重试 ' + RETRY_MAX + ' 次还是连不上 · ' + label;
+  offlineMask.classList.add('show');
+  /* 8 秒后自动隐藏，允许用户重试 */
+  clearTimeout(retryHideTimer);
+  retryHideTimer = setTimeout(hideRetryOverlay, 8000);
+}
+
+/* ============================================================
    Supabase 初始化
    ============================================================ */
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -630,26 +837,63 @@ var presenceChannel=null;
 var msgChannel=null;
 
 /* ============================================================
+   网络状态监听
+   ============================================================ */
+window.addEventListener('online', function(){
+  toast('网络已恢复');
+  hideRetryOverlay();
+  /* 立即拉一次 */
+  if(!chatWrap.hidden){
+    doPollNow();
+    resetPollCountdown();
+  }
+});
+window.addEventListener('offline', function(){
+  toast('网络已断开');
+  if(offlineMask){
+    offlineTitle.textContent = '网络已断开';
+    offlineSub.innerHTML = '等待网络恢复…';
+    offlineMask.classList.add('show');
+  }
+});
+
+/* ============================================================
    昵称
    ============================================================ */
 async function claimNick(nick){
-  try{
-    var ins = await sb.from('nicknames').insert({ nick: nick, uid: uid });
-    if(!ins.error) return { ok:true, mine:true };
-    if(ins.error.code === '23505'){
-      var q = await sb.from('nicknames').select('uid').eq('nick', nick).maybeSingle();
-      if(q.error) return { ok:false, reason:'net', msg:q.error.message };
-      if(q.data && q.data.uid === uid) return { ok:true, mine:true };
-      return { ok:false, reason:'taken' };
-    }
-    return { ok:false, reason:'net', msg:ins.error.message };
-  }catch(e){
-    return { ok:false, reason:'net', msg: e.message || 'Failed to fetch' };
+  var r = await sbQuery('占用昵称', function(){
+    return sb.from('nicknames').insert({ nick: nick, uid: uid });
+  });
+
+  if(r.ok){
+    return { ok:true, mine:true };
   }
+
+  var err = r.err;
+  /* 23505 = 主键冲突，已存在 */
+  if(err && (err.__res && err.__res.error && err.__res.error.code === '23505')){
+    /* 查询是谁占的 */
+    var q = await sbQuery('查询昵称', function(){
+      return sb.from('nicknames').select('uid').eq('nick', nick).maybeSingle();
+    });
+    if(!q.ok){
+      return { ok:false, reason:'net', msg: '查询失败，请重试' };
+    }
+    var row = q.data && q.data.data;
+    if(row && row.uid === uid){
+      return { ok:true, mine:true };
+    }
+    return { ok:false, reason:'taken' };
+  }
+
+  /* 网络错误 */
+  return { ok:false, reason:'net', msg: '网络异常，请重试' };
 }
 async function releaseNick(nick){
   if(!nick) return;
-  try{ await sb.from('nicknames').delete().eq('nick', nick).eq('uid', uid); }catch(e){}
+  await sbQuery('释放昵称', function(){
+    return sb.from('nicknames').delete().eq('nick', nick).eq('uid', uid);
+  });
 }
 
 /* ============================================================
@@ -825,9 +1069,10 @@ async function tryLogin(){
     return;
   }
   loginBtn.disabled = true;
-  setLoginStatus('检查中…');
+  setLoginStatus('检查中…', 'busy');
 
   var r = await claimNick(nick);
+  hideRetryOverlay();
 
   if(r.ok){
     myNick = nick;
@@ -839,7 +1084,7 @@ async function tryLogin(){
   if(r.reason === 'taken'){
     setLoginStatus('这个名字被占用了，换一个吧', 'err');
   }else{
-    setLoginStatus('网络异常：' + (r.msg||'未知错误'), 'err');
+    setLoginStatus('网络异常：' + (r.msg||'请重试'), 'err');
   }
   loginBtn.disabled = false;
 }
@@ -908,22 +1153,53 @@ async function doSend(){
   autoResize();
   sendBtn.disabled=true;
 
-  try{
-    var res = await sb.from('messages').insert({
+  /* 本地先插入，标记 pending */
+  var localId = 'local_' + now + '_' + Math.random().toString(36).slice(2,6);
+  var localMsg = {
+    id: localId,
+    uid: uid,
+    nick: myNick,
+    text: text,
+    ts: now,
+    __pending: true
+  };
+  allMessages.push(localMsg);
+  renderAll();
+  updateLastTs();
+
+  /* 发送到服务器（自动重试） */
+  var r = await sbQuery('发送消息', function(){
+    return sb.from('messages').insert({
       uid: uid,
       nick: myNick,
       text: text,
       ts: now
     });
-    if(res.error){
-      toast('发送失败：'+res.error.message);
-      lastSendTime=0;
-    }else{
-      resetPollCountdown();
+  });
+
+  hideRetryOverlay();
+
+  if(r.ok){
+    /* 成功：去掉 pending 标记（真实消息会通过 realtime 或轮询补上） */
+    var idx = allMessages.findIndex(function(x){ return x.id === localId; });
+    if(idx >= 0){
+      allMessages[idx].__pending = false;
+      allMessages[idx].__sent = true;
     }
-  }catch(e){
-    toast('发送失败：'+(e.message||'网络异常'));
-    lastSendTime=0;
+    renderAll();
+    resetPollCountdown();
+    setPillOK();
+  }else{
+    /* 失败：标记 failed */
+    var i2 = allMessages.findIndex(function(x){ return x.id === localId; });
+    if(i2 >= 0){
+      allMessages[i2].__pending = false;
+      allMessages[i2].__failed = true;
+    }
+    renderAll();
+    toast('发送失败，已重试 ' + RETRY_MAX + ' 次');
+    setPillErr();
+    showFailOverlay('发送消息');
   }
 }
 
@@ -949,8 +1225,10 @@ function renderMsg(m, prev){
   var div=document.createElement('div');
   div.className='msg';
   if(m.uid===uid)div.classList.add('self');
+  if(m.__pending)div.classList.add('pending');
+  if(m.__failed)div.classList.add('failed');
 
-  if(prev && prev.uid===m.uid && (m.ts-prev.ts)<3*60*1000){
+  if(prev && prev.uid===m.uid && (m.ts-prev.ts)<3*60*1000 && !m.__pending && !m.__failed){
     div.classList.add('compact');
   }
 
@@ -961,9 +1239,13 @@ function renderMsg(m, prev){
     ? '<div class="avatar empty"></div>'
     : '<div class="avatar" style="background:'+color+'">'+esc(m.nick.charAt(0).toUpperCase())+'</div>';
 
+  var statusTag = '';
+  if(m.__pending) statusTag = '<span class="status-tag">发送中…</span>';
+  else if(m.__failed) statusTag = '<span class="status-tag">发送失败</span>';
+
   var headHtml=isCompact
     ? '<div class="head" style="visibility:hidden"><span class="nick">&nbsp;</span></div>'
-    : '<div class="head"><span class="nick">'+esc(m.nick)+'</span><span class="time">'+esc(fmtTime(m.ts))+'</span></div>';
+    : '<div class="head"><span class="nick">'+esc(m.nick)+'</span><span class="time">'+esc(fmtTime(m.ts))+'</span>'+statusTag+'</div>';
 
   div.innerHTML=
     avatarHtml+
@@ -996,7 +1278,7 @@ function renderAll(){
   var prev=null;
   allMessages.forEach(function(m){
     frag.appendChild(renderMsg(m,prev));
-    prev=m;
+    if(!m.__pending && !m.__failed) prev=m;
   });
   messagesEl.innerHTML='';
   messagesEl.appendChild(frag);
@@ -1007,24 +1289,46 @@ function renderAll(){
 }
 
 function updateLastTs(){
-  if(allMessages.length > 0){
-    lastTs = allMessages[allMessages.length-1].ts;
-  }else{
-    lastTs = 0;
+  /* 忽略本地 pending 消息 */
+  for(var i=allMessages.length-1;i>=0;i--){
+    var m = allMessages[i];
+    if(!m.__pending && !m.__failed && typeof m.ts==='number' && m.ts>0){
+      lastTs = m.ts;
+      return;
+    }
   }
+  lastTs = 0;
 }
 
 function mergeNewMessages(newOnes){
   if(!newOnes || newOnes.length === 0) return false;
   var changed = false;
   newOnes.forEach(function(n){
-    if(!allMessages.some(function(x){ return x.id===n.id; })){
-      allMessages.push(n);
+    /* 用 id 去重 */
+    if(!allMessages.some(function(x){ return String(x.id)===String(n.id); })){
+      /* 再尝试用 uid+nick+text+ts 匹配本地 pending，避免重复显示 */
+      var localIdx = allMessages.findIndex(function(x){
+        return x.__pending &&
+          x.uid === n.uid &&
+          x.nick === n.nick &&
+          x.text === n.text &&
+          Math.abs(x.ts - n.ts) < 3000;
+      });
+      if(localIdx >= 0){
+        /* 用真实记录替换本地 pending */
+        allMessages[localIdx] = n;
+      }else{
+        allMessages.push(n);
+      }
       changed = true;
     }
   });
   if(!changed) return false;
-  allMessages.sort(function(a,b){ return a.ts-b.ts; });
+  allMessages.sort(function(a,b){
+    if(a.__pending && !b.__pending) return 1;
+    if(!a.__pending && b.__pending) return -1;
+    return a.ts - b.ts;
+  });
   if(allMessages.length > MSG_LIMIT){
     allMessages = allMessages.slice(-MSG_LIMIT);
   }
@@ -1034,55 +1338,71 @@ function mergeNewMessages(newOnes){
 }
 
 async function loadHistory(){
-  try{
-    var res = await sb
-      .from('messages')
+  var r = await sbQuery('加载历史', function(){
+    return sb.from('messages')
       .select('*')
       .order('ts', { ascending: false })
       .limit(MSG_LIMIT);
+  });
 
-    if(res.error){
-      console.warn('加载失败', res.error);
-      return;
-    }
-    var arr = (res.data||[]).map(normalizeMsg);
-    arr.reverse();
-    allMessages = arr;
-    updateLastTs();
-    renderAll();
-  }catch(e){
-    console.warn('加载异常', e);
+  if(!r.ok){
+    console.warn('加载失败', r.err);
+    setPillErr();
+    /* 5 秒后自动重试一次 */
+    setTimeout(function(){ loadHistory(); }, 5000);
+    return;
   }
+
+  hideRetryOverlay();
+  setPillOK();
+
+  var data = r.data && r.data.data;
+  if(!Array.isArray(data)) return;
+
+  /* 保留本地 pending / failed */
+  var localPending = allMessages.filter(function(x){ return x.__pending || x.__failed; });
+
+  var arr = data.map(normalizeMsg);
+  arr.reverse();
+
+  /* 合并本地 pending（去重） */
+  localPending.forEach(function(lp){
+    if(!arr.some(function(x){ return x.uid===lp.uid && x.text===lp.text && Math.abs(x.ts-lp.ts)<3000; })){
+      arr.push(lp);
+    }
+  });
+
+  allMessages = arr;
+  updateLastTs();
+  renderAll();
 }
 
 async function pollNewMessages(){
-  try{
-    var res;
-    if(lastTs > 0){
-      res = await sb.from('messages')
-        .select('*')
-        .gt('ts', lastTs)
-        .order('ts', { ascending: true })
-        .limit(MSG_LIMIT);
-    }else{
-      res = await sb.from('messages')
-        .select('*')
-        .order('ts', { ascending: false })
-        .limit(MSG_LIMIT);
-      if(res.data) res.data.reverse();
-    }
-    if(res.error){
-      console.warn('轮询失败', res.error);
-      setRpErr();
-      return;
-    }
-    var newOnes = (res.data||[]).map(normalizeMsg);
-    mergeNewMessages(newOnes);
-    clearRpErr();
-  }catch(e){
-    console.warn('轮询异常', e);
-    setRpErr();
+  var q = sb.from('messages').select('*');
+  if(lastTs > 0){
+    q = q.gt('ts', lastTs).order('ts', { ascending: true }).limit(MSG_LIMIT);
+  }else{
+    q = q.order('ts', { ascending: false }).limit(MSG_LIMIT);
   }
+
+  var r = await sbQuery('轮询消息', function(){ return q; });
+
+  if(!r.ok){
+    console.warn('轮询失败', r.err);
+    setRpErr();
+    setPillErr();
+    return;
+  }
+
+  hideRetryOverlay();
+  clearRpErr();
+  setPillOK();
+
+  var data = r.data && r.data.data;
+  if(!Array.isArray(data)) return;
+  if(lastTs === 0) data.reverse();
+  var newOnes = data.map(normalizeMsg);
+  mergeNewMessages(newOnes);
 }
 
 function subscribeMessages(){
@@ -1096,20 +1416,22 @@ function subscribeMessages(){
       var m = payload.new;
       if(!m) return;
       var msg = normalizeMsg(m);
-      if(allMessages.some(function(x){ return x.id===msg.id; })) return;
-      allMessages.push(msg);
-      if(allMessages.length > MSG_LIMIT){
-        allMessages = allMessages.slice(-MSG_LIMIT);
-      }
-      allMessages.sort(function(a,b){ return a.ts-b.ts; });
-      renderAll();
-      updateLastTs();
+      if(allMessages.some(function(x){ return String(x.id)===String(msg.id); })) return;
+      mergeNewMessages([msg]);
     })
-    .subscribe(function(status){
+    .subscribe(function(status, err){
       if(status==='SUBSCRIBED'){
         console.log('[chat] 实时已连接');
-      }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT'){
-        console.warn('[chat] 实时连接异常：', status);
+        setPillOK();
+      }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
+        console.warn('[chat] 实时连接异常：', status, err);
+        setPillErr();
+        /* 5 秒后重连 */
+        setTimeout(function(){
+          try{ if(msgChannel) sb.removeChannel(msgChannel); }catch(e){}
+          msgChannel = null;
+          subscribeMessages();
+        }, 5000);
       }
     });
 }
@@ -1136,28 +1458,75 @@ function subscribePresence(){
             online_at: Date.now()
           });
         }catch(e){}
+      }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
+        setTimeout(function(){
+          try{ if(presenceChannel) sb.removeChannel(presenceChannel); }catch(e){}
+          presenceChannel = null;
+          subscribePresence();
+        }, 5000);
       }
     });
 }
 
 /* ============================================================
-   右下角倒计时
+   右下角倒计时 + 状态
    ============================================================ */
 var refreshPill = $('refreshPill');
 var cdNum = $('cdNum');
+var rpIcon = $('rpIcon');
 var pollCountdown = POLL_INTERVAL;
 var countdownTimer = null;
 
-function updateCdDisplay(){ if(cdNum) cdNum.textContent = pollCountdown; }
-function setRpErr(){ if(refreshPill) refreshPill.classList.add('err'); }
-function clearRpErr(){ if(refreshPill) refreshPill.classList.remove('err'); }
+var pillState = 'ok';   /* ok | retry | err */
+function setPillRetry(attempt, max){
+  pillState = 'retry';
+  if(refreshPill){
+    refreshPill.classList.remove('err','loading');
+    refreshPill.classList.add('retry');
+  }
+  if(rpIcon) rpIcon.textContent = '⏳';
+  if(cdNum) cdNum.textContent = attempt;
+  if(refreshPill){
+    var txt = refreshPill.querySelector('.rp-text');
+    if(txt) txt.innerHTML = '<span id="cdNum">' + attempt + '</span>/' + max + ' 重试中';
+  }
+}
+function setPillOK(){
+  pillState = 'ok';
+  if(refreshPill){
+    refreshPill.classList.remove('err','retry');
+  }
+  if(rpIcon) rpIcon.textContent = '🔄';
+  var txt = refreshPill && refreshPill.querySelector('.rp-text');
+  if(txt) txt.innerHTML = '<span id="cdNum">' + pollCountdown + '</span> 秒后刷新';
+  cdNum = $('cdNum');
+}
+function setPillErr(){
+  pillState = 'err';
+  if(refreshPill){
+    refreshPill.classList.remove('retry','loading');
+    refreshPill.classList.add('err');
+  }
+  if(rpIcon) rpIcon.textContent = '⚠';
+  var txt = refreshPill && refreshPill.querySelector('.rp-text');
+  if(txt) txt.innerHTML = '连接失败';
+}
+
+function updateCdDisplay(){
+  if(pillState !== 'ok') return;
+  if(cdNum) cdNum.textContent = pollCountdown;
+}
+function setRpErr(){ /* 保留函数，逻辑走 setPillErr */ }
+function clearRpErr(){ setPillOK(); }
 function resetPollCountdown(){ pollCountdown = POLL_INTERVAL; updateCdDisplay(); }
 
 function doPollNow(){
   if(refreshPill) refreshPill.classList.add('loading');
+  if(rpIcon) rpIcon.textContent = '🔄';
   pollNewMessages().then(function(){
     setTimeout(function(){
       if(refreshPill) refreshPill.classList.remove('loading');
+      if(pillState==='ok' && rpIcon) rpIcon.textContent = '🔄';
     }, 400);
   });
 }
@@ -1169,6 +1538,7 @@ function startPolling(){
 
   countdownTimer = setInterval(function(){
     if(document.hidden) return;
+    if(pillState !== 'ok') return;    /* 重试或失败状态时不跳倒计时 */
     pollCountdown--;
     if(pollCountdown <= 0){
       if(refreshPill){
@@ -1199,9 +1569,9 @@ if(refreshPill){
 setInterval(function(){
   if(allMessages.length===0)return;
   var els=messagesEl.querySelectorAll('.msg .time');
-  if(els.length!==allMessages.length)return;
-  var i=0;
+  var i = 0;
   allMessages.forEach(function(m){
+    if(m.__pending || m.__failed) return;
     var t=els[i];
     if(t)t.textContent=fmtTime(m.ts);
     i++;
@@ -1236,6 +1606,7 @@ $('nickSave').addEventListener('click', async function(){
   $('nickSave').disabled = true;
 
   var r = await claimNick(v);
+  hideRetryOverlay();
   $('nickSave').disabled = false;
 
   if(!r.ok){
@@ -1243,7 +1614,7 @@ $('nickSave').addEventListener('click', async function(){
       nickHint.textContent='这个名字被占用了，换一个吧';
       nickHint.className='hint err';
     }else{
-      nickHint.textContent='网络异常：'+(r.msg||'未知错误');
+      nickHint.textContent='网络异常：'+(r.msg||'请重试');
       nickHint.className='hint err';
     }
     return;
@@ -1319,9 +1690,10 @@ updateLoginBtn();
   if(!saved) return;
   loginNick.value = saved;
   updateLoginBtn();
-  setLoginStatus('正在恢复上次的昵称…');
+  setLoginStatus('正在恢复上次的昵称…', 'busy');
 
   var r = await claimNick(saved);
+  hideRetryOverlay();
   if(r.ok){
     myNick = saved;
     setLoginStatus('✓ 欢迎回来', 'ok');
