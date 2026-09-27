@@ -6,13 +6,7 @@
 <title>对局中 · 五子棋</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚫</text></svg>">
 <script>
-(function(){
-  try{
-    var t=localStorage.getItem('wiki-theme');
-    var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
-    if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
-  }catch(e){}
-})();
+(function(){try{var t=localStorage.getItem('wiki-theme');var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
 <style>
 :root,[data-theme="mc-wiki"]{--bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;--bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;--ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;--sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);--bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(61,82,31,.13);--blob2:rgba(106,140,60,.09);--blob3:rgba(180,150,80,.07);--grid:rgba(61,82,31,.04);--p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;--hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);--topbar-bg:linear-gradient(180deg,#56682c,#3d521f);--topbar-fg:#fff;--topbar-bd:#2a3a1a;--board-bg:#dcb980;--board-line:#4a3520}
@@ -25,7 +19,7 @@
 [data-theme="github-dark"]{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--text:#e6edf3;--muted:#9198a1;--bd:#30363d;--bd2:#484f58;--ac:#4493f8;--acs:#16233a;--ok:#3fb950;--warn:#d4a72c;--dgr:#f85149;--sh:0 1px 4px rgba(0,0,0,.4);--r:6px;--bevel:none;--bevel-in:none;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(68,147,248,.06);--blob2:rgba(163,113,247,.05);--blob3:rgba(219,112,147,.04);--grid:rgba(230,237,243,.02);--p1:68,147,248;--p2:163,113,247;--p3:219,112,147;--p4:230,237,243;--hero-grad:linear-gradient(135deg,#4493f8,#a371f7);--topbar-bg:#161b22;--topbar-fg:#e6edf3;--topbar-bd:#30363d;--board-bg:#21262d;--board-line:#484f58}
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--bg);transition:background-color .3s}
-body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background-color .3s,color .3s}
+body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50}
 [data-theme^="mc-"] .topbar{border-bottom-width:2px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer}
@@ -97,13 +91,13 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn-danger{color:var(--dgr);border-color:var(--dgr)}
 .btn-danger:hover:not(:disabled){background:rgba(160,32,32,.1)}
-.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:100;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:100;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
 .ov.show{opacity:1;visibility:visible}
 .pnl{display:flex;flex-direction:column;width:100%;max-width:480px;max-height:calc(100vh - 32px);background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) + 3px);box-shadow:var(--sh);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
 [data-theme^="mc-"] .pnl{border:2px solid var(--bd2);border-radius:2px;box-shadow:3px 3px 0 rgba(0,0,0,.3)}
 .ov.show .pnl{transform:none}
 .ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd);flex:none;color:#fff}
-[data-theme="mc-wiki"] .ph{background:linear-gradient(180deg,#7a9c3c,#56682c);border-bottom:2px solid #3d521f;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
+[data-theme="mc-wiki"] .ph{background:linear-gradient(180deg,#7a9c3c,#56682c);border-bottom:2px solid #3d521f}
 [data-theme="mc-night"] .ph{background:linear-gradient(180deg,#5a7a2c,#3d521f);color:#e8ffd0}
 [data-theme="mc-nether"] .ph{background:linear-gradient(180deg,#8a2010,#4a1008);color:#ffe0d0}
 [data-theme="mc-end"] .ph{background:linear-gradient(180deg,#4a2080,#2a1050);color:#e0d0ff}
@@ -137,7 +131,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme="sakura"] .toast{background:#a04060;color:#ffe0ea;border-color:#802050}
 [data-theme="ocean"] .toast{background:#004890;color:#e0f0ff;border-color:#002040}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.loading-mask{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.loading-mask{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
 .loading-mask.show{opacity:1;visibility:visible}
 .loading-card{padding:24px 28px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 12px 32px rgba(0,0,0,.3);text-align:center;max-width:340px}
 .loading-card .spin{display:inline-block;width:28px;height:28px;margin-bottom:12px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spinIcon .8s linear infinite}
@@ -281,11 +275,12 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 (function(){
 'use strict';
 
-var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
+var SUPABASE_URL='https://lxdyrajbsjftduesvosh.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 
-var K_THEME='wiki-theme', K_NICK='gomoku-nick', K_UID='gomoku-uid';
-var TURN_LIMIT_MS=60*1000, WAITING_LIMIT_MS=120*1000, TICK_MS=200, WIN_COUNT=5, POLL_MS=3000;
+var K_THEME='wiki-theme',K_NICK='gomoku-nick',K_UID='gomoku-uid';
+var TURN_LIMIT_MS=60*1000,WAITING_LIMIT_MS=120*1000,TICK_MS=200,WIN_COUNT=5,POLL_MS=3000;
+var HEARTBEAT_MS=3000,ROOM_IDLE_MS=25000,CLEANUP_INTERVAL_MS=10000;
 
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -295,10 +290,18 @@ var storage={
 };
 var toastEl=$('toast'),toastTimer=null;
 function toast(msg){if(!toastEl)return;toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);}
-function nickColor(nick){
-  var h=0;for(var i=0;i<nick.length;i++){h=(h*31+nick.charCodeAt(i))>>>0;}
-  var palette=['#e57373','#f06292','#ba68c8','#9575cd','#7986cb','#64b5f6','#4fc3f7','#4dd0e1','#4db6ac','#81c784','#aed581','#dce775','#ffd54f','#ffb74d','#ff8a65','#a1887f','#90a4ae','#e91e63','#9c27b0','#2196f3'];
-  return palette[h%palette.length];
+function nickColor(nick){var h=0;for(var i=0;i<nick.length;i++){h=(h*31+nick.charCodeAt(i))>>>0;}var p=['#e57373','#f06292','#ba68c8','#9575cd','#7986cb','#64b5f6','#4fc3f7','#4dd0e1','#4db6ac','#81c784','#aed581','#dce775','#ffd54f','#ffb74d','#ff8a65','#a1887f','#90a4ae','#e91e63','#9c27b0','#2196f3'];return p[h%p.length];}
+
+/* ★ 局域网自动分配昵称 */
+function getNextLanNick(){
+  var cached=sessionStorage.getItem('gomoku-lan-nick');
+  if(cached) return cached;
+  var counter=parseInt(localStorage.getItem('gomoku-lan-counter')||'0',10);
+  counter++;
+  localStorage.setItem('gomoku-lan-counter',String(counter));
+  var nk=counter+'号';
+  sessionStorage.setItem('gomoku-lan-nick',nk);
+  return nk;
 }
 
 var uid=sessionStorage.getItem(K_UID)||'';
@@ -306,6 +309,12 @@ var myNick=storage.get(K_NICK)||'';
 function getQuery(name){var m=location.search.match(new RegExp('[?&]'+name+'=([^&#]*)'));return m?decodeURIComponent(m[1]):'';}
 var roomCode=getQuery('room').toUpperCase().trim();
 var LAN_MODE=getQuery('lan')==='1';
+
+/* ★ 局域网模式：如果没昵称，自动分配 1号/2号 */
+if(LAN_MODE&&!myNick){
+  myNick=getNextLanNick();
+  storage.set(K_NICK,myNick);
+}
 
 var sb=null;
 try{
@@ -322,7 +331,7 @@ var state={
 };
 
 /* ============================================================
-   ★ 局域网模式：BroadcastChannel + localStorage
+   ★ 局域网模式
    ============================================================ */
 var lanChannel=null;
 
@@ -345,8 +354,11 @@ function initLanChannel(){
         state.loserNick=m.loserNick;
         showResult(m.winnerUid,m.reason);
         setTimeout(function(){location.href='./wuzi_hotel.html';},3500);
-      } else if(m.type==='room-list-request'){
-        lanChannel.postMessage({type:'room-list-request-ack'});
+      } else if(m.type==='room-killed'&&m.code===roomCode){
+        if(!state.finished){
+          toast('房间已解散');
+          setTimeout(function(){location.href='./wuzi_hotel.html';},1200);
+        }
       }
     };
   }catch(e){console.warn('BroadcastChannel 不可用',e);}
@@ -561,7 +573,6 @@ function getPointFromEvent(e){
   return {x:col,y:row};
 }
 
-/* 游戏逻辑 */
 function emptyBoard(size){
   var b=[];
   for(var y=0;y<size;y++){var row=[];for(var x=0;x<size;x++) row.push(null);b.push(row);}
@@ -601,7 +612,6 @@ function checkWin(x,y,color){
   return null;
 }
 
-/* 落子 */
 function tryPlace(x,y){
   if(!LAN_MODE&&!sb){toast('连接未就绪');return;}
   if(state.placing) return;
@@ -622,7 +632,6 @@ function tryPlace(x,y){
   renderCanvas();
   updateUI();
 
-  /* ★ 局域网模式：直接广播 */
   if(LAN_MODE){
     state.placing=false;
     if(state.gameOver&&line){
@@ -631,6 +640,7 @@ function tryPlace(x,y){
     } else {
       state.turnStartedAt=Date.now();
       state.room.turn_started_at=state.turnStartedAt;
+      state.room.last_active=Date.now();
       saveLanRoom();
       updateUI();
     }
@@ -646,7 +656,7 @@ function tryPlace(x,y){
       state.lastMove=state.moves.length?{x:state.moves[state.moves.length-1].x,y:state.moves[state.moves.length-1].y}:null;
       state.winLine=null;
       state.gameOver=false;
-      renderCanvas(); updateUI();
+      renderCanvas();updateUI();
       toast('落子失败：'+res.error.message);
       return;
     }
@@ -664,7 +674,6 @@ function tryPlace(x,y){
   });
 }
 
-/* 结束 */
 function finishGame(winnerUid,winnerNick,loserNick,reason){
   if(LAN_MODE){
     if(state.finished) return;
@@ -728,7 +737,6 @@ function showResult(winnerUid,reason){
   ov.classList.add('show');
 }
 
-/* UI 更新 */
 function updateUI(){
   if(!state.room) return;
   var hostNick=state.room.host_nick||'黑方';
@@ -887,7 +895,9 @@ function updateTimers(info){
   else{setText(tW,txt);setClass(tW,cls);setText(tB,'--');setClass(tB,'pc-timer');}
 }
 
-/* 数据加载 */
+/* ============================================================
+   数据加载
+   ============================================================ */
 var roomsChannel=null,movesChannel=null,heartbeatTimer=null;
 
 function loadRoom(){
@@ -947,7 +957,7 @@ function subscribeRoom(){
     })
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
-        console.warn('⚠️ 房间订阅失败，已自动轮询兜底');
+        console.warn('⚠️ 房间订阅失败，轮询兜底');
       }
     });
 }
@@ -966,19 +976,103 @@ function subscribeMoves(){
     })
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
-        console.warn('⚠️ 落子订阅失败，已自动轮询兜底');
+        console.warn('⚠️ 落子订阅失败，轮询兜底');
       }
     });
 }
+
+/* ★ 心跳 + 房间空置清理 */
 function startHeartbeat(){
   if(heartbeatTimer) return;
   heartbeatTimer=setInterval(function(){
-    if(LAN_MODE) return;
-    if(!sb||!state.room) return;
-    if(state.room.status!=='playing') return;
-    sb.from('gomoku_rooms').update({last_active:Date.now()}).eq('code',roomCode);
-  },10000);
+    if(document.hidden) return;
+    if(!state.room) return;
+
+    if(LAN_MODE){
+      try{
+        var raw=localStorage.getItem('gomoku-lan-rooms');
+        if(raw){
+          var rooms=JSON.parse(raw);
+          var r=rooms[roomCode];
+          if(r){
+            r.last_active=Date.now();
+            rooms[roomCode]=r;
+            localStorage.setItem('gomoku-lan-rooms',JSON.stringify(rooms));
+            state.room.last_active=r.last_active;
+          }
+        }
+      }catch(e){}
+      return;
+    }
+
+    if(!sb) return;
+    if(state.room.status!=='playing'&&state.room.status!=='waiting') return;
+    var now=Date.now();
+    state.room.last_active=now;
+    sb.from('gomoku_rooms').update({last_active:now}).eq('code',roomCode);
+  },HEARTBEAT_MS);
 }
+
+var cleanupTimer=null;
+function startRoomCleanup(){
+  if(cleanupTimer) return;
+  cleanupTimer=setInterval(function(){
+    if(document.hidden) return;
+    checkRoomIdle();
+    globalCleanup();
+  },CLEANUP_INTERVAL_MS);
+}
+function checkRoomIdle(){
+  if(!state.room||state.finished) return;
+
+  if(LAN_MODE){
+    try{
+      var raw=localStorage.getItem('gomoku-lan-rooms');
+      if(!raw) return;
+      var rooms=JSON.parse(raw);
+      var r=rooms[roomCode];
+      if(!r) return;
+      if(Date.now()-(r.last_active||0)>ROOM_IDLE_MS){
+        delete rooms[roomCode];
+        localStorage.setItem('gomoku-lan-rooms',JSON.stringify(rooms));
+        if(lanChannel) lanChannel.postMessage({type:'room-killed',code:roomCode});
+        if(!state.finished){
+          toast('房间已解散');
+          setTimeout(function(){location.href='./wuzi_hotel.html';},1200);
+        }
+      }
+    }catch(e){}
+    return;
+  }
+
+  if(!sb) return;
+  sb.from('gomoku_rooms').select('last_active').eq('code',roomCode).maybeSingle()
+    .then(function(res){
+      if(res.error||!res.data) return;
+      var lastActive=parseInt(res.data.last_active,10)||0;
+      if(Date.now()-lastActive>ROOM_IDLE_MS){
+        sb.from('gomoku_rooms').delete().eq('code',roomCode).then(function(){
+          if(!state.finished){
+            toast('房间已解散');
+            setTimeout(function(){location.href='./wuzi_hotel.html';},1200);
+          }
+        });
+      }
+    }).catch(function(){});
+}
+function globalCleanup(){
+  if(LAN_MODE||!sb) return;
+  var cutoff=Date.now()-ROOM_IDLE_MS;
+  sb.from('gomoku_rooms').select('code').lt('last_active',cutoff)
+    .then(function(res){
+      if(res.error||!res.data||res.data.length===0) return;
+      var codes=res.data.map(function(r){return r.code;});
+      sb.from('gomoku_rooms').delete().in('code',codes).then(function(){
+        console.log('🧹 清理空置房间：',codes.join(','));
+      });
+    }).catch(function(){});
+}
+
 var pollTimer=null,pollingMoves=false;
 function startPollingFallback(){
   if(LAN_MODE||pollTimer) return;
@@ -1067,6 +1161,7 @@ function exitRoom(){
         var raw=localStorage.getItem('gomoku-lan-rooms');
         if(raw){var rooms=JSON.parse(raw);delete rooms[roomCode];localStorage.setItem('gomoku-lan-rooms',JSON.stringify(rooms));}
       }catch(e){}
+      if(lanChannel) lanChannel.postMessage({type:'room-killed',code:roomCode});
     } else if(sb){
       sb.from('gomoku_rooms').delete().eq('code',roomCode).eq('status','waiting');
     }
@@ -1135,8 +1230,7 @@ function buildThemeGrid(){
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
-  storage.set(K_THEME,t);
-  curTheme=t;
+  storage.set(K_THEME,t);curTheme=t;
   setTimeout(renderCanvas,50);
 }
 var themeOv=$('themeOv'),themeBtn=$('themeBtn'),themeClose=$('themeClose'),themeGrid=$('themeGrid');
@@ -1154,12 +1248,7 @@ var particleCtx=null,particles=[],particleRunning=true,pW=0,pH=0,pDpr=1;
 var themeColors=['61,82,31','106,140,60','140,180,60','180,150,80'];
 function readThemeColors(){
   var cs=getComputedStyle(document.documentElement);
-  themeColors=[
-    (cs.getPropertyValue('--p1')||'61,82,31').trim(),
-    (cs.getPropertyValue('--p2')||'106,140,60').trim(),
-    (cs.getPropertyValue('--p3')||'140,180,60').trim(),
-    (cs.getPropertyValue('--p4')||'180,150,80').trim()
-  ];
+  themeColors=[(cs.getPropertyValue('--p1')||'61,82,31').trim(),(cs.getPropertyValue('--p2')||'106,140,60').trim(),(cs.getPropertyValue('--p3')||'140,180,60').trim(),(cs.getPropertyValue('--p4')||'180,150,80').trim()];
 }
 function initParticles(){
   var cn=$('particles');if(!cn||!cn.getContext) return;
@@ -1169,13 +1258,7 @@ function initParticles(){
   var count=Math.max(14,Math.min(28,Math.floor((pW*pH)/50000)));
   particles=[];
   for(var i=0;i<count;i++){
-    particles.push({
-      x:Math.random()*pW,y:Math.random()*pH,size:4+Math.random()*9,
-      vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,
-      rot:Math.random()*Math.PI*2,vr:(Math.random()-0.5)*0.012,
-      alpha:0.10+Math.random()*0.22,alphaPhase:Math.random()*Math.PI*2,alphaSpeed:0.008+Math.random()*0.014,
-      hueIdx:Math.floor(Math.random()*4),hueMix:Math.random()
-    });
+    particles.push({x:Math.random()*pW,y:Math.random()*pH,size:4+Math.random()*9,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,rot:Math.random()*Math.PI*2,vr:(Math.random()-0.5)*0.012,alpha:0.10+Math.random()*0.22,alphaPhase:Math.random()*Math.PI*2,alphaSpeed:0.008+Math.random()*0.014,hueIdx:Math.floor(Math.random()*4),hueMix:Math.random()});
   }
   if(particleRunning) drawParticles();
 }
@@ -1258,7 +1341,7 @@ async function boot(){
     return;
   }
 
-  /* ★ 局域网模式分支 */
+  /* ★ 局域网模式 */
   if(LAN_MODE){
     initLanChannel();
     var lb=$('lanBadge');
@@ -1277,6 +1360,8 @@ async function boot(){
     bindCanvas();
     updateUI();
     startTick();
+    startHeartbeat();
+    startRoomCleanup();
     if(state.room.status==='waiting'&&state.room.host_uid===uid){
       toast('等待对手加入（同一浏览器新开标签页 → 输入房间码）');
     } else if(state.room.status==='playing'){
@@ -1330,6 +1415,7 @@ async function boot(){
   startHeartbeat();
   startTick();
   startPollingFallback();
+  startRoomCleanup();
 
   if(state.room.status==='playing'&&!state.room.turn_started_at){
     state.turnStartedAt=Date.now();
