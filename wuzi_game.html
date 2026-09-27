@@ -216,6 +216,8 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .status-bar .dot-live{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(45,122,45,.18);animation:livePulse 2s ease-in-out infinite;flex:none}
 [data-theme^="mc-"] .status-bar .dot-live{border-radius:0}
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
+.status-bar .sb-count{color:var(--ac);font-weight:800;font-variant-numeric:tabular-nums}
+.status-bar .sb-count.danger{color:var(--dgr);animation:timerPulse .8s ease-in-out infinite}
 
 .board-wrap{display:flex;justify-content:center;margin-bottom:14px}
 .board-frame{position:relative;padding:10px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 8px 24px rgba(0,0,0,.1)}
@@ -224,7 +226,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .board-frame canvas{display:block;background:var(--board-bg);border-radius:calc(var(--r) - 1px);cursor:crosshair;touch-action:manipulation}
 [data-theme^="github-"] .board-frame canvas{border-radius:8px}
 .board-frame.locked canvas{cursor:not-allowed}
-.board-frame.waiting{opacity:.85}
 
 .action-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;font-size:13.5px;font-family:inherit;font-weight:700;color:var(--text);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;box-shadow:var(--bevel);transition:all .15s}
@@ -259,16 +260,8 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .result-title{font-size:1.5rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em}
 .result-title.win{color:var(--ok)}
 .result-title.lose{color:var(--dgr)}
-.result-title.draw{color:var(--warn)}
 .result-sub{font-size:13.5px;color:var(--muted);margin:0 0 6px;line-height:1.6}
 .result-note{font-size:12px;color:var(--muted);opacity:.8;margin:12px 0 0;padding-top:10px;border-top:1px dashed var(--bd)}
-
-.form-foot{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd)}
-.form-foot button{padding:9px 20px;font-size:14px;font-family:inherit;font-weight:700;border-radius:var(--r);cursor:pointer;transition:all .15s}
-.form-foot .save{color:#fff;background:var(--hero-grad);border:2px solid var(--bd2);box-shadow:var(--bevel);flex:1}
-[data-theme^="github-"] .form-foot .save{border-width:1px;border-radius:6px}
-[data-theme^="mc-"] .form-foot .save{text-shadow:1px 1px 0 rgba(0,0,0,.3)}
-.form-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 
 .theme-body{padding:14px;overflow-y:auto}
 .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -298,6 +291,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 @keyframes spinIcon{to{transform:rotate(360deg)}}
 .loading-card .lt{font-size:15px;font-weight:700;margin-bottom:4px}
 .loading-card .ls{font-size:12.5px;color:var(--muted);line-height:1.6}
+.loading-card .lerr{color:var(--dgr);font-weight:600}
 
 .waiting-hint{margin-top:14px;padding:10px 14px;background:var(--bg2);border:2px dashed var(--bd2);border-radius:var(--r);font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}
 [data-theme^="github-"] .waiting-hint{border-width:1px}
@@ -380,7 +374,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   </div>
 
   <div class="waiting-hint" id="waitingHint" style="display:none">
-    把这个房间码发给好友 → <strong id="hintCode">------</strong>
+    把房间码发给好友 → <strong id="hintCode">------</strong>
   </div>
 
   <div class="action-row" id="actionRow" style="margin-top:14px">
@@ -413,7 +407,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <!-- 加载遮罩 -->
 <div class="loading-mask show" id="loadingMask">
   <div class="loading-card">
-    <span class="spin"></span>
+    <span class="spin" id="loadingSpin"></span>
     <div class="lt" id="loadingTitle">正在进入房间</div>
     <div class="ls" id="loadingSub">连接服务器中…</div>
   </div>
@@ -436,9 +430,10 @@ var K_THEME = 'wiki-theme';
 var K_NICK  = 'gomoku-nick';
 var K_UID   = 'gomoku-uid';
 
-var TURN_LIMIT_MS = 30 * 1000;      /* 每步 30 秒 */
-var TICK_MS = 200;
-var WIN_COUNT = 5;
+var TURN_LIMIT_MS       = 30 * 1000;       /* 每步 30 秒 */
+var WAITING_LIMIT_MS    = 120 * 1000;      /* 等待对手 120 秒 */
+var TICK_MS             = 200;
+var WIN_COUNT           = 5;
 
 /* ============================================================
    工具
@@ -487,9 +482,16 @@ var roomCode = getQuery('room').toUpperCase().trim();
 /* ============================================================
    Supabase
    ============================================================ */
-var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  realtime: { params: { eventsPerSecond: 10 } }
-});
+var sb = null;
+try{
+  if(typeof supabase !== 'undefined'){
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      realtime: { params: { eventsPerSecond: 10 } }
+    });
+  }
+}catch(e){
+  console.error('Supabase 初始化失败', e);
+}
 
 /* ============================================================
    游戏状态
@@ -509,7 +511,9 @@ var state = {
   winLine: null,
   hover: null,
   placing: false,
-  turnStartedAt: 0
+  turnStartedAt: 0,
+  waitingDeadline: 0,
+  waitingTimeoutFired: false
 };
 
 /* ============================================================
@@ -522,11 +526,12 @@ var padding = 0, cell = 0, stoneR = 0;
 
 function initCanvas(){
   canvas = $('board');
+  if(!canvas) return;
   ctx = canvas.getContext('2d');
   dpr = Math.min(window.devicePixelRatio||1, 2);
 }
 function resizeCanvas(){
-  if(!canvas) return;
+  if(!canvas || !ctx) return;
   var frame = $('boardFrame');
   if(!frame) return;
   var wrap = frame.parentNode;
@@ -582,7 +587,6 @@ function renderCanvas(){
   }
   ctx.stroke();
 
-  /* 星位 */
   if(size >= 9 && size <= 25){
     var starPoints = [];
     if(size === 15){
@@ -639,7 +643,6 @@ function renderCanvas(){
     }
   }
 
-  /* 最后一步红点 */
   if(state.lastMove){
     var lm = state.lastMove;
     if(state.board[lm.y] && state.board[lm.y][lm.x]){
@@ -655,7 +658,6 @@ function renderCanvas(){
     }
   }
 
-  /* 五连高亮 */
   if(state.winLine && state.winLine.length){
     ctx.save();
     ctx.strokeStyle = '#ffd700';
@@ -672,7 +674,6 @@ function renderCanvas(){
     ctx.restore();
   }
 
-  /* 悬停预览 */
   if(state.hover && !state.gameOver && canIPlayNow()){
     var hx = state.hover.x, hy = state.hover.y;
     if(hx >= 0 && hx < size && hy >= 0 && hy < size && !state.board[hy][hx]){
@@ -745,7 +746,6 @@ function canIPlayNow(){
   if(!state.myColor) return false;
   return currentTurnColor() === state.myColor;
 }
-
 function checkWin(x, y, color){
   var size = state.boardSize;
   var dirs = [[1,0],[0,1],[1,1],[1,-1]];
@@ -771,6 +771,7 @@ function checkWin(x, y, color){
    落子
    ============================================================ */
 function tryPlace(x, y){
+  if(!sb) { toast('连接未就绪'); return; }
   if(state.placing) return;
   if(state.gameOver) return;
   if(!state.room || state.room.status !== 'playing'){ toast('对局还没开始'); return; }
@@ -789,14 +790,11 @@ function tryPlace(x, y){
   };
 
   state.placing = true;
-
-  /* 乐观更新 */
   state.moves.push(move);
   state.board[y][x] = state.myColor;
   state.lastMove = { x:x, y:y };
   state.winLine = null;
 
-  /* 五连判定 */
   var line = checkWin(x, y, state.myColor);
   if(line){
     state.winLine = line;
@@ -806,11 +804,9 @@ function tryPlace(x, y){
   renderCanvas();
   updateUI();
 
-  /* 写库 */
   sb.from('gomoku_moves').insert(move).then(function(res){
     state.placing = false;
     if(res.error){
-      /* 回滚 */
       state.moves = state.moves.filter(function(m){ return !(m.x === x && m.y === y); });
       state.board[y][x] = null;
       state.lastMove = state.moves.length ? { x: state.moves[state.moves.length-1].x, y: state.moves[state.moves.length-1].y } : null;
@@ -822,18 +818,18 @@ function tryPlace(x, y){
       return;
     }
     if(state.gameOver && line){
-      /* 我赢了 */
-      var oppUid = state.myColor === 'black' ? state.room.guest_uid : state.room.host_uid;
       var oppNick = state.myColor === 'black' ? state.room.guest_nick : state.room.host_nick;
       finishGame(uid, myNick, oppNick, 'five');
     } else {
-      /* 更新房间时间戳 */
       state.turnStartedAt = Date.now();
       sb.from('gomoku_rooms')
         .update({ turn_started_at: state.turnStartedAt, last_active: Date.now() })
         .eq('code', roomCode);
       updateUI();
     }
+  }).catch(function(err){
+    state.placing = false;
+    toast('网络错误：' + (err.message || err));
   });
 }
 
@@ -841,11 +837,13 @@ function tryPlace(x, y){
    结束对局
    ============================================================ */
 function finishGame(winnerUid, winnerNick, loserNick, reason){
+  if(!sb) return;
   if(state.finished) return;
   state.finished = true;
   state.gameOver = true;
+  state.winnerUid = winnerUid;
+  state.winnerNick = winnerNick;
 
-  /* 用 CAS 保证只有一个客户端能写成功 */
   sb.from('gomoku_rooms')
     .update({
       status: 'finished',
@@ -860,11 +858,7 @@ function finishGame(winnerUid, winnerNick, loserNick, reason){
     .eq('status', 'playing')
     .select()
     .then(function(res){
-      if(res.error){
-        console.warn('结束失败', res.error);
-        return;
-      }
-      /* 只有真正改动的那一个客户端写公告 */
+      if(res.error){ console.warn('结束失败', res.error); return; }
       if(res.data && res.data.length > 0){
         sb.from('gomoku_announcements').insert({
           winner_nick: winnerNick,
@@ -872,17 +866,14 @@ function finishGame(winnerUid, winnerNick, loserNick, reason){
           text: winnerNick + ' vs ' + loserNick + ' — ' + winnerNick + ' 胜出！',
           created_at: Date.now()
         }).then(function(){});
-        /* 5 秒后删房间 */
         setTimeout(function(){
           sb.from('gomoku_rooms').delete().eq('code', roomCode);
         }, 5000);
       }
     });
 
-  /* 本地立刻展示 */
   showResult(winnerUid, reason);
 
-  /* 3 秒后自动返回大厅 */
   setTimeout(function(){
     location.href = './wuzi_hotel.html';
   }, 3500);
@@ -955,7 +946,6 @@ function updateUI(){
     if(cW) cW.classList.add('empty');
   }
 
-  /* 当前回合高亮 */
   var cur = currentTurnColor();
   if(state.room.status === 'playing' && !state.gameOver){
     if(cB) cB.classList.toggle('active', cur === 'black');
@@ -965,7 +955,6 @@ function updateUI(){
     if(cW) cW.classList.remove('active');
   }
 
-  /* 状态栏 */
   var st = $('statusBar'), stx = $('statusText');
   if(st && stx){
     st.className = 'status-bar';
@@ -973,7 +962,9 @@ function updateUI(){
       st.classList.add(winnerIsMe() ? 'win' : 'lose');
       stx.innerHTML = state.winnerNick ? ('<strong>' + esc(state.winnerNick) + '</strong> 胜出') : '对局结束';
     } else if(state.room.status === 'waiting'){
-      stx.innerHTML = '<span class="dot-live"></span>等待对手加入…';
+      var remain = Math.max(0, Math.ceil((state.waitingDeadline - Date.now())/1000));
+      var cls = remain <= 30 ? 'danger' : '';
+      stx.innerHTML = '<span class="dot-live"></span>等待对手加入… <span class="sb-count ' + cls + '">' + remain + 's</span> 后自动关闭';
     } else if(state.room.status === 'playing'){
       st.classList.add('playing');
       if(!state.myColor){
@@ -988,7 +979,6 @@ function updateUI(){
     }
   }
 
-  /* 等待提示 */
   var hint = $('waitingHint');
   if(hint){
     if(state.room.status === 'waiting'){
@@ -1000,13 +990,11 @@ function updateUI(){
     }
   }
 
-  /* 认输按钮 */
   var rb = $('resignBtn');
   if(rb){
     rb.disabled = !state.myColor || state.gameOver || state.room.status !== 'playing';
   }
 
-  /* 房间码 chip */
   var rc = $('roomChip');
   if(rc) rc.textContent = '#' + roomCode;
 
@@ -1020,27 +1008,36 @@ function winnerIsMe(){
    计时
    ============================================================ */
 var tickTimer = null;
+var lastWaitingSec = -1;
+
 function startTick(){
   if(tickTimer) return;
   tickTimer = setInterval(tick, TICK_MS);
 }
 function tick(){
-  if(!state.room || state.room.status !== 'playing'){ updateTimers(null); return; }
+  if(!state.room){ updateTimers(null); return; }
+
+  /* 等待对手阶段：只更新倒计时数字和超时检测 */
+  if(state.room.status === 'waiting'){
+    updateTimers(null);
+    tickWaiting();
+    return;
+  }
+
+  if(state.room.status !== 'playing'){ updateTimers(null); return; }
   if(state.gameOver){ updateTimers(null); return; }
 
   var cur = currentTurnColor();
-  var startAt = state.turnStartedAt || state.room.turn_started_at || Date.now();
+  var startAt = state.turnStartedAt || Date.now();
   var elapsed = Date.now() - startAt;
   var remain = TURN_LIMIT_MS - elapsed;
   if(remain < 0) remain = 0;
 
   updateTimers({ color: cur, remain: remain });
 
-  /* 超时判定 */
   if(remain <= 0){
-    var timeoutColor = cur;
     var loserUid, loserNick, winnerUid, winnerNick;
-    if(timeoutColor === 'black'){
+    if(cur === 'black'){
       loserUid = state.room.host_uid;
       loserNick = state.room.host_nick;
       winnerUid = state.room.guest_uid;
@@ -1056,6 +1053,50 @@ function tick(){
     }
   }
 }
+
+/* 等待对手阶段 */
+function tickWaiting(){
+  if(state.waitingTimeoutFired) return;
+  var remain = Math.max(0, Math.ceil((state.waitingDeadline - Date.now())/1000));
+  var stx = $('statusText');
+  var st = $('statusBar');
+  if(stx && st){
+    st.className = 'status-bar';
+    var cls = remain <= 30 ? 'danger' : '';
+    stx.innerHTML = '<span class="dot-live"></span>等待对手加入… <span class="sb-count ' + cls + '">' + remain + 's</span> 后自动关闭';
+  }
+  if(remain <= 0){
+    state.waitingTimeoutFired = true;
+    handleWaitingTimeout();
+  }
+}
+
+function handleWaitingTimeout(){
+  if(!sb) return;
+  /* CAS 删除：只有 status 还是 waiting 才删 */
+  sb.from('gomoku_rooms')
+    .delete()
+    .eq('code', roomCode)
+    .eq('status', 'waiting')
+    .select()
+    .then(function(res){
+      if(res.error){
+        console.warn('超时关闭失败', res.error);
+        /* 失败也让用户回大厅 */
+        setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
+        return;
+      }
+      if(res.data && res.data.length > 0){
+        toast('房间超时，已自动关闭');
+      } else {
+        toast('房间已关闭');
+      }
+      setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
+    }).catch(function(){
+      setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
+    });
+}
+
 function updateTimers(info){
   var tB = $('timerBlack'), tW = $('timerWhite');
   if(!tB || !tW) return;
@@ -1088,6 +1129,7 @@ var movesChannel = null;
 var heartbeatTimer = null;
 
 function loadRoom(){
+  if(!sb) return Promise.reject(new Error('连接未初始化'));
   return sb.from('gomoku_rooms').select('*').eq('code', roomCode).maybeSingle()
     .then(function(res){
       if(res.error) throw new Error(res.error.message);
@@ -1097,12 +1139,14 @@ function loadRoom(){
       if(state.boardSize < 5) state.boardSize = 5;
       if(state.boardSize > 50) state.boardSize = 50;
 
-      /* 判断角色 */
+      /* 计算等待截止时间 */
+      var created = parseInt(res.data.created_at, 10) || Date.now();
+      state.waitingDeadline = created + WAITING_LIMIT_MS;
+
       if(res.data.host_uid === uid) state.myColor = 'black';
       else if(res.data.guest_uid === uid) state.myColor = 'white';
       else state.myColor = null;
 
-      /* 兜底：如果我是 guest 但状态还是 waiting，改成 playing */
       if(state.myColor === 'white' && res.data.status === 'waiting'){
         sb.from('gomoku_rooms').update({
           status: 'playing',
@@ -1115,18 +1159,23 @@ function loadRoom(){
 }
 
 function loadMoves(){
+  if(!sb) return Promise.reject(new Error('连接未初始化'));
   return sb.from('gomoku_moves').select('*').eq('room_code', roomCode).order('seq', {ascending:true})
     .then(function(res){
       if(res.error) throw new Error(res.error.message);
       state.moves = (res.data || []).map(function(m){
-        return { x: parseInt(m.x,10), y: parseInt(m.y,10), color: m.color, uid: m.uid, seq: parseInt(m.seq,10), ts: parseInt(m.ts,10) };
+        return {
+          x: parseInt(m.x,10), y: parseInt(m.y,10),
+          color: m.color, uid: m.uid,
+          seq: parseInt(m.seq,10), ts: parseInt(m.ts,10)
+        };
       });
       rebuildBoard();
     });
 }
 
 function subscribeRoom(){
-  if(roomsChannel) return;
+  if(!sb || roomsChannel) return;
   roomsChannel = sb.channel('game-room-'+roomCode)
     .on('postgres_changes', {event:'UPDATE', schema:'public', table:'gomoku_rooms', filter:'code=eq.'+roomCode}, function(payload){
       var r = payload.new;
@@ -1134,12 +1183,10 @@ function subscribeRoom(){
       var oldStatus = state.room ? state.room.status : null;
       state.room = r;
       state.boardSize = parseInt(r.board_size, 10) || state.boardSize;
-      /* 玩家角色可能变化（新加入者） */
       if(r.host_uid === uid) state.myColor = 'black';
       else if(r.guest_uid === uid) state.myColor = 'white';
       else state.myColor = null;
 
-      /* 对手刚进来 → 开始计时 */
       if(oldStatus === 'waiting' && r.status === 'playing'){
         state.turnStartedAt = Date.now();
         toast('对手已加入，对局开始！');
@@ -1147,7 +1194,6 @@ function subscribeRoom(){
       if(r.turn_started_at){
         state.turnStartedAt = parseInt(r.turn_started_at, 10);
       }
-      /* 房间被结束 */
       if(r.status === 'finished' && !state.finished){
         state.finished = true;
         state.gameOver = true;
@@ -1161,26 +1207,24 @@ function subscribeRoom(){
     })
     .on('postgres_changes', {event:'DELETE', schema:'public', table:'gomoku_rooms', filter:'code=eq.'+roomCode}, function(){
       if(!state.finished){
-        /* 房间被删了但不是我这边的结束流程 → 直接回大厅 */
-        location.href = './wuzi_hotel.html';
+        toast('房间已关闭');
+        setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
       }
     })
     .subscribe();
 }
 
 function subscribeMoves(){
-  if(movesChannel) return;
+  if(!sb || movesChannel) return;
   movesChannel = sb.channel('game-moves-'+roomCode)
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'gomoku_moves', filter:'room_code=eq.'+roomCode}, function(payload){
       var m = payload.new;
       if(!m) return;
       var x = parseInt(m.x,10), y = parseInt(m.y,10);
-      /* 去重 */
       if(state.moves.some(function(v){ return v.x === x && v.y === y; })) return;
       var mv = { x:x, y:y, color:m.color, uid:m.uid, seq:parseInt(m.seq,10), ts:parseInt(m.ts,10) };
       state.moves.push(mv);
       rebuildBoard();
-      /* 本地重新判定五连 */
       if(!state.gameOver){
         var line = checkWin(mv.x, mv.y, mv.color);
         if(line){
@@ -1189,7 +1233,6 @@ function subscribeMoves(){
         }
       }
       updateUI();
-      /* 若是对手落子，刷新本地回合开始时间 */
       if(mv.uid !== uid){
         state.turnStartedAt = Date.now();
       }
@@ -1200,14 +1243,14 @@ function subscribeMoves(){
 function startHeartbeat(){
   if(heartbeatTimer) return;
   heartbeatTimer = setInterval(function(){
-    if(!state.room) return;
+    if(!sb || !state.room) return;
     if(state.room.status !== 'playing') return;
     sb.from('gomoku_rooms').update({ last_active: Date.now() }).eq('code', roomCode);
   }, 10000);
 }
 
 /* ============================================================
-   认输
+   认输 / 退出
    ============================================================ */
 var resignBtn = $('resignBtn');
 if(resignBtn){
@@ -1227,9 +1270,6 @@ if(resignBtn){
   });
 }
 
-/* ============================================================
-   退出
-   ============================================================ */
 function exitRoom(){
   if(state.room && state.room.status === 'playing' && !state.gameOver){
     if(!confirm('对局进行中，确定退出？退出视为认输')) return;
@@ -1247,9 +1287,11 @@ function exitRoom(){
         return;
       }
     }
-  } else if(state.room && state.room.status === 'waiting' && state.room.host_uid === uid){
-    /* 房主等待中退出 → 删房间 */
-    sb.from('gomoku_rooms').delete().eq('code', roomCode);
+  } else if(state.room && state.room.status === 'waiting'){
+    /* 等待中任何人退出 → 尝试删房间 */
+    if(sb){
+      sb.from('gomoku_rooms').delete().eq('code', roomCode).eq('status','waiting');
+    }
   }
   location.href = './wuzi_hotel.html';
 }
@@ -1262,9 +1304,6 @@ if(leaveBtn) leaveBtn.addEventListener('click', exitRoom);
    Canvas 交互
    ============================================================ */
 function onCanvasClick(e){
-  if(e.touches && e.touches.length > 0){
-    e = { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
-  }
   var p = getPointFromEvent(e);
   if(!p) return;
   tryPlace(p.x, p.y);
@@ -1279,22 +1318,20 @@ function onCanvasMove(e){
 function onCanvasLeave(){
   if(state.hover){ state.hover = null; renderCanvas(); }
 }
-
 function bindCanvas(){
+  if(!canvas) return;
   canvas.addEventListener('click', onCanvasClick);
   canvas.addEventListener('mousemove', onCanvasMove);
   canvas.addEventListener('mouseleave', onCanvasLeave);
-  /* 触屏：用 touchstart 直接落子 */
   canvas.addEventListener('touchstart', function(e){
     if(e.touches.length !== 1) return;
     e.preventDefault();
-    onCanvasClick(e.touches[0]);
+    var t = e.touches[0];
+    onCanvasClick({ clientX: t.clientX, clientY: t.clientY });
   }, {passive:false});
 }
 
-/* ============================================================
-   房间码 chip 复制
-   ============================================================ */
+/* 房间码复制 */
 var roomChip = $('roomChip');
 if(roomChip) roomChip.addEventListener('click', function(){
   try{
@@ -1459,67 +1496,126 @@ document.addEventListener('visibilitychange', function(){
 /* ============================================================
    启动
    ============================================================ */
-async function boot(){
-  applyTheme(curTheme);
-  initParticles();
-  initCanvas();
-  buildThemeGrid();
+var lm = $('loadingMask');
+function hideLoading(){ if(lm) lm.classList.remove('show'); }
+function showLoadError(msg){
+  var sub = $('loadingSub');
+  var spin = $('loadingSpin');
+  if(sub){ sub.textContent = msg || '出错了'; sub.className = 'ls lerr'; }
+  if(spin) spin.style.display = 'none';
+}
 
+async function boot(){
+  /* ---------- 1. 环境检查 ---------- */
+  try{
+    applyTheme(curTheme);
+    initParticles();
+    initCanvas();
+    buildThemeGrid();
+    resizeCanvas();
+  }catch(err){
+    console.error('[boot] 初始化失败', err);
+    showLoadError('页面初始化失败');
+    return;
+  }
+
+  /* ---------- 2. Supabase 检查 ---------- */
+  if(!sb){
+    showLoadError('Supabase 未加载，请刷新页面');
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 2500);
+    return;
+  }
+
+  /* ---------- 3. 参数检查 ---------- */
   if(!roomCode || roomCode.length !== 6){
+    hideLoading();
     toast('房间码无效');
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
     return;
   }
   if(!myNick){
+    hideLoading();
     toast('请先设置昵称');
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
     return;
   }
 
+  /* ---------- 4. 拉房间数据 ---------- */
   try{
     await loadRoom();
   }catch(err){
-    var ls = $('loadingSub');
-    if(ls) ls.textContent = err.message || '房间不存在';
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1500);
+    console.error('[boot] loadRoom 失败', err);
+    showLoadError('房间不存在或加载失败');
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 2500);
     return;
   }
 
-  /* 房间已结束 → 直接返回 */
   if(state.room.status === 'finished'){
+    hideLoading();
     toast('该房间已结束');
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
     return;
   }
 
-  await loadMoves();
-  resizeCanvas();
-  bindCanvas();
-  updateUI();
+  /* 房间已超时（waiting 且超 120s）→ 直接删掉走人 */
+  if(state.room.status === 'waiting'){
+    var created = parseInt(state.room.created_at, 10) || 0;
+    var deadline = created + WAITING_LIMIT_MS;
+    if(Date.now() > deadline){
+      hideLoading();
+      toast('房间已超时');
+      try{
+        sb.from('gomoku_rooms').delete().eq('code', roomCode).eq('status','waiting');
+      }catch(e){}
+      setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 800);
+      return;
+    }
+    state.waitingDeadline = deadline;
+  }
 
-  /* 隐藏 loading */
-  var lm = $('loadingMask');
-  if(lm) lm.classList.remove('show');
+  /* ---------- 5. 拉历史落子（失败不阻塞） ---------- */
+  try{
+    await loadMoves();
+  }catch(err){
+    console.error('[boot] loadMoves 失败', err);
+    state.moves = [];
+    rebuildBoard();
+    toast('历史落子读取失败，仍可继续');
+  }
 
-  /* 订阅 */
-  subscribeRoom();
-  subscribeMoves();
+  /* ---------- 6. 尺寸 / 绑定 / UI ---------- */
+  try{
+    resizeCanvas();
+    bindCanvas();
+    updateUI();
+  }catch(err){
+    console.error('[boot] 渲染失败', err);
+  }
+
+  /* ---------- 7. 隐藏 Loading（关键：一定会执行到这里） ---------- */
+  hideLoading();
+
+  /* ---------- 8. 订阅 ---------- */
+  try{ subscribeRoom(); }catch(e){ console.warn('订阅房间失败', e); }
+  try{ subscribeMoves(); }catch(e){ console.warn('订阅落子失败', e); }
   startHeartbeat();
   startTick();
 
-  /* 房间已经开始但本地没 turn_started_at → 补上 */
+  /* ---------- 9. 补 turn_started_at ---------- */
   if(state.room.status === 'playing' && !state.room.turn_started_at){
     state.turnStartedAt = Date.now();
-    sb.from('gomoku_rooms').update({ turn_started_at: state.turnStartedAt }).eq('code', roomCode);
+    try{
+      sb.from('gomoku_rooms').update({ turn_started_at: state.turnStartedAt }).eq('code', roomCode);
+    }catch(e){}
   } else if(state.room.turn_started_at){
-    state.turnStartedAt = parseInt(state.room.turn_started_at, 10);
+    state.turnStartedAt = parseInt(state.room.turn_started_at, 10) || Date.now();
   }
 
-  /* 播放提示 */
+  /* ---------- 10. 开局提示 ---------- */
   if(state.room.status === 'playing'){
     toast('对局开始，' + (state.myColor === 'black' ? '你执黑先行' : '你执白后手'));
   } else if(state.room.status === 'waiting' && state.room.host_uid === uid){
-    toast('等待对手加入…');
+    toast('等待对手加入（120 秒后自动关闭）');
   }
 }
 
