@@ -361,13 +361,23 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 (function(){
 'use strict';
 
+/* ============================================================
+   配置
+   ============================================================ */
 var GH_OWNER  = 'HSDL03';
 var GH_REPO   = 'HSwiki';
 var GH_BRANCH = 'main';
 var DATA_FILE = 'tools-data.json';
+
 var RAW_BASE = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/' + GH_BRANCH + '/';
 var CDN_BASE = 'https://cdn.jsdelivr.net/gh/' + GH_OWNER + '/' + GH_REPO + '@' + GH_BRANCH + '/';
 
+var K_TOOLS_CACHE = 'tools-cache-v1';
+var REFRESH_MS = 120 * 1000;   /* 120 秒自动刷新 */
+
+/* ============================================================
+   默认工具（网络全挂时的兜底）
+   ============================================================ */
 var DEFAULT_TOOLS = [
   {id:'wiki',icon:'📚',name:'红石答辩wiki',desc:'轻量知识库 · 已停止维护',tag:'已废弃',url:'./wiki.html',deprecated:true,hidden:false},
   {id:'download',icon:'📥',name:'下载站',desc:'资源文件 · 便捷下载',tag:'资源',url:'./download.html',deprecated:false,hidden:false},
@@ -375,6 +385,9 @@ var DEFAULT_TOOLS = [
 ];
 var TOOLS = DEFAULT_TOOLS.slice();
 
+/* ============================================================
+   工具函数
+   ============================================================ */
 function $(id){return document.getElementById(id);}
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -387,13 +400,7 @@ var storage={
 };
 
 /* ============================================================
-   主题系统
-   shape 决定粒子形状：
-     square  = 圆角方块（默认）
-     lava    = 岩浆球（发光橙红）
-     spark   = 菱形火花（末地紫）
-     petal   = 花瓣（粉红椭圆）
-     bubble  = 水泡（蓝白高光圆）
+   主题
    ============================================================ */
 var K_THEME='wiki-theme';
 var THEMES=[
@@ -411,12 +418,10 @@ var curTheme=(function(){
   for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===s)return s;
   return 'mc-wiki';
 })();
-
 function getCurrentShape(){
   for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===curTheme)return THEMES[i].shape||'square';
   return 'square';
 }
-
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   storage.set(K_THEME,t);
@@ -424,7 +429,7 @@ function applyTheme(t){
   buildThemeGrid();
   readThemeColors();
   currentShape=getCurrentShape();
-  initParticles();   /* 重新生成粒子（形状变化） */
+  initParticles();
 }
 function buildThemeGrid(){
   var grid=$('themeGrid');if(!grid)return;
@@ -446,6 +451,9 @@ var themeOv=$('themeOv'),themeGrid=$('themeGrid'),themeBtn=$('themeBtn'),themeCl
 function openTheme(){buildThemeGrid();themeOv.classList.add('show');}
 function closeTheme(){themeOv.classList.remove('show');}
 
+/* ============================================================
+   Toast
+   ============================================================ */
 var toastEl=$('toast'),toastTimer=null;
 function toast(msg){
   if(!toastEl)return;
@@ -455,6 +463,9 @@ function toast(msg){
   toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2000);
 }
 
+/* ============================================================
+   数据规范化
+   ============================================================ */
 function normTool(t, i){
   if(!t || typeof t!=='object') return null;
   var name=(typeof t.name==='string'&&t.name.trim())?t.name.trim():('未命名 '+(i+1));
@@ -470,29 +481,75 @@ function normTool(t, i){
     hidden: !!t.hidden
   };
 }
+function normList(arr){
+  if(!Array.isArray(arr)) return [];
+  var list=[];
+  arr.forEach(function(t,i){
+    var n=normTool(t,i);
+    if(n) list.push(n);
+  });
+  return list;
+}
 
+/* ============================================================
+   localStorage 缓存兜底
+   ============================================================ */
+function loadToolsCache(){
+  try{
+    var raw = storage.get(K_TOOLS_CACHE);
+    if(!raw) return null;
+    var o = JSON.parse(raw);
+    if(!o || !Array.isArray(o.data) || o.data.length === 0) return null;
+    var list = normList(o.data);
+    return list.length > 0 ? list : null;
+  }catch(e){
+    return null;
+  }
+}
+function saveToolsCache(list){
+  try{
+    storage.set(K_TOOLS_CACHE, JSON.stringify({ t: Date.now(), data: list }));
+  }catch(e){}
+}
+
+/* ============================================================
+   远程加载（raw 优先，CDN 兜底）
+   ============================================================ */
+function fetchJson(url){
+  return fetch(url, { cache: 'no-store' })
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+}
 function loadTools(){
-  var url1=RAW_BASE+DATA_FILE+'?t='+Date.now();
-  var url2=CDN_BASE+DATA_FILE+'?t='+Date.now();
-  return fetch(url1,{cache:'no-store'})
-    .then(function(r){if(!r.ok)throw new Error('raw HTTP '+r.status);return r.json();})
+  var url1 = RAW_BASE + DATA_FILE + '?t=' + Date.now();
+  var url2 = CDN_BASE + DATA_FILE + '?t=' + Date.now();
+
+  return fetchJson(url1)
     .catch(function(){
-      return fetch(url2,{cache:'no-store'}).then(function(r){
-        if(!r.ok)throw new Error('CDN HTTP '+r.status);
-        return r.json();
-      });
+      return fetchJson(url2);
     })
     .then(function(data){
       if(Array.isArray(data) && data.length > 0){
-        var list=[];
-        data.forEach(function(t,i){var n=normTool(t,i);if(n)list.push(n);});
-        if(list.length>0){TOOLS=list;return true;}
+        var list = normList(data);
+        if(list.length > 0){
+          TOOLS = list;
+          saveToolsCache(list);
+          return true;
+        }
       }
       return false;
     })
-    .catch(function(err){console.warn('[index] 加载失败',err);return false;});
+    .catch(function(err){
+      console.warn('[index] 远程加载失败，保持现状', err);
+      return false;
+    });
 }
 
+/* ============================================================
+   渲染
+   ============================================================ */
 function renderCard(t, delay){
   var cls = 'tool-card' + (t.deprecated ? ' deprecated' : '');
   var href = t.disabled ? 'javascript:void(0)' : t.url;
@@ -512,27 +569,43 @@ function renderCard(t, delay){
 function renderTools(){
   var activeGrid = $('activeGrid');
   var deprecatedGrid = $('deprecatedGrid');
+  var activeCount = $('activeCount');
+  var deprecatedCount = $('deprecatedCount');
+
   var visible = TOOLS.filter(function(t){ return !t.hidden; });
   var active = visible.filter(function(t){ return !t.deprecated; });
   var deprecated = visible.filter(function(t){ return t.deprecated; });
 
   if (active.length === 0) {
-    activeGrid.innerHTML = '<div class="empty-col"><span class="ic">🧰</span><div class="title">还没有可用工具</div><div class="sub">后续会陆续添加</div></div>';
+    activeGrid.innerHTML =
+      '<div class="empty-col">' +
+        '<span class="ic">🧰</span>' +
+        '<div class="title">还没有可用工具</div>' +
+        '<div class="sub">后续会陆续添加</div>' +
+      '</div>';
   } else {
-    var h = '';
-    active.forEach(function(t,i){ h += renderCard(t, Math.min(i*50,500)); });
-    activeGrid.innerHTML = h;
+    var activeHtml = '';
+    active.forEach(function(t, i){
+      activeHtml += renderCard(t, Math.min(i * 50, 500));
+    });
+    activeGrid.innerHTML = activeHtml;
   }
-  $('activeCount').textContent = active.length;
+  activeCount.textContent = active.length;
 
   if (deprecated.length === 0) {
-    deprecatedGrid.innerHTML = '<div class="empty-col"><span class="ic">🗂</span><div class="title">暂无已废弃条目</div></div>';
+    deprecatedGrid.innerHTML =
+      '<div class="empty-col">' +
+        '<span class="ic">🗂</span>' +
+        '<div class="title">暂无已废弃条目</div>' +
+      '</div>';
   } else {
-    var d = '';
-    deprecated.forEach(function(t,i){ d += renderCard(t, Math.min(i*50,500)); });
-    deprecatedGrid.innerHTML = d;
+    var depHtml = '';
+    deprecated.forEach(function(t, i){
+      depHtml += renderCard(t, Math.min(i * 50, 500));
+    });
+    deprecatedGrid.innerHTML = depHtml;
   }
-  $('deprecatedCount').textContent = deprecated.length;
+  deprecatedCount.textContent = deprecated.length;
 
   var disableds = document.querySelectorAll('.tool-card[data-disabled="1"]');
   for(var i=0;i<disableds.length;i++){
@@ -548,10 +621,29 @@ function renderTools(){
   }
 }
 
+/* 判断列表是否变化（避免无意义重渲染闪屏） */
+function toolsSignature(list){
+  return list.map(function(t){
+    return [t.id, t.icon, t.name, t.desc, t.tag, t.url, t.deprecated, t.disabled, t.hidden].join('|');
+  }).join('||');
+}
+var lastSignature = '';
+
+function renderIfChanged(){
+  var sig = toolsSignature(TOOLS);
+  if(sig === lastSignature) return false;
+  lastSignature = sig;
+  renderTools();
+  return true;
+}
+
 var styleEl = document.createElement('style');
 styleEl.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}';
 document.head.appendChild(styleEl);
 
+/* ============================================================
+   浮动装饰
+   ============================================================ */
 function buildFloatDecor(){
   var wrap = $('floatDecor');
   if(!wrap) return;
@@ -579,9 +671,9 @@ function buildFloatDecor(){
 /* ============================================================
    粒子系统
    ============================================================ */
-var particleCtx=null, particles=[], particleRunning=true, pW=0, pH=0, pDpr=1;
-var themeColors=['61,82,31','106,140,60','140,180,60','180,150,80'];
-var currentShape='square';
+var particleCtx = null, particles = [], particleRunning = true, pW = 0, pH = 0, pDpr = 1;
+var themeColors = ['61,82,31','106,140,60','140,180,60','180,150,80'];
+var currentShape = 'square';
 
 function readThemeColors(){
   var cs = getComputedStyle(document.documentElement);
@@ -654,9 +746,7 @@ function drawSquare(ctx, s, hs, r, g, b, a){
   ctx.lineWidth = 0.5;
   ctx.stroke();
 }
-
 function drawLava(ctx, s, hs, r, g, b, a){
-  /* 发光球体 + 内核 */
   var rad = hs * 1.4;
   var grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rad);
   grad.addColorStop(0, 'rgba(255,240,180,'+a+')');
@@ -664,72 +754,45 @@ function drawLava(ctx, s, hs, r, g, b, a){
   grad.addColorStop(0.7, 'rgba('+r+','+g+','+b+','+(a*0.8)+')');
   grad.addColorStop(1, 'rgba('+r+','+g+','+b+',0)');
   ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(0, 0, rad, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, rad, 0, Math.PI*2); ctx.fill();
 }
-
 function drawSpark(ctx, s, hs, r, g, b, a){
-  /* 菱形火花 */
   var grad = ctx.createRadialGradient(0, 0, 0, 0, 0, hs);
   grad.addColorStop(0, 'rgba(255,255,255,'+a+')');
   grad.addColorStop(0.4, 'rgba('+r+','+g+','+b+','+a+')');
   grad.addColorStop(1, 'rgba('+r+','+g+','+b+',0)');
   ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.moveTo(0, -hs*1.2);
-  ctx.lineTo(hs*0.5, 0);
-  ctx.lineTo(0, hs*1.2);
-  ctx.lineTo(-hs*0.5, 0);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(0, -hs*1.2); ctx.lineTo(hs*0.5, 0); ctx.lineTo(0, hs*1.2); ctx.lineTo(-hs*0.5, 0);
+  ctx.closePath(); ctx.fill();
 }
-
 function drawPetal(ctx, s, hs, r, g, b, a){
-  /* 花瓣：椭圆主体 + 内部浅色 */
-  var w = hs * 0.8, h = hs * 1.3;
+  var w = hs*0.8, h = hs*1.3;
   var grad = ctx.createLinearGradient(0, -h, 0, h);
   grad.addColorStop(0, 'rgba(255,220,235,'+a+')');
   grad.addColorStop(0.5, 'rgba('+r+','+g+','+b+','+a+')');
   grad.addColorStop(1, 'rgba('+r+','+g+','+b+','+(a*0.6)+')');
   ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, w, h, 0, 0, Math.PI * 2);
-  ctx.fill();
-  /* 中脉 */
+  ctx.beginPath(); ctx.ellipse(0, 0, w, h, 0, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,'+(a*0.5)+')';
   ctx.lineWidth = 0.8;
-  ctx.beginPath();
-  ctx.moveTo(0, -h*0.7);
-  ctx.lineTo(0, h*0.7);
-  ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -h*0.7); ctx.lineTo(0, h*0.7); ctx.stroke();
 }
-
 function drawBubble(ctx, s, hs, r, g, b, a){
-  /* 水泡：外圆环 + 高光 */
-  ctx.beginPath();
-  ctx.arc(0, 0, hs, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba('+r+','+g+','+b+','+(a*0.35)+')';
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, hs, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba('+r+','+g+','+b+','+(a*0.35)+')'; ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,'+(a*0.7)+')';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  /* 高光小圆 */
-  ctx.beginPath();
-  ctx.arc(-hs*0.3, -hs*0.3, hs*0.22, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,'+(a*0.8)+')';
-  ctx.fill();
+  ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(-hs*0.3, -hs*0.3, hs*0.22, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,'+(a*0.8)+')'; ctx.fill();
 }
 
 function drawParticles(){
   if(!particleRunning || !particleCtx) return;
   particleCtx.clearRect(0, 0, pW, pH);
-
   for(var i = 0; i < particles.length; i++){
     var p = particles[i];
     p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-
-    /* 边界回绕 */
     if(p.x < -60) p.x = pW + 60; else if(p.x > pW + 60) p.x = -60;
     if(p.y < -60) p.y = pH + 60; else if(p.y > pH + 60) p.y = -60;
 
@@ -754,18 +817,20 @@ function drawParticles(){
     }
 
     var s = p.size, hs = s/2;
-
-    if(currentShape==='lava')       drawLava(particleCtx, s, hs, r, g, b, a);
-    else if(currentShape==='spark') drawSpark(particleCtx, s, hs, r, g, b, a);
-    else if(currentShape==='petal') drawPetal(particleCtx, s, hs, r, g, b, a);
-    else if(currentShape==='bubble')drawBubble(particleCtx, s, hs, r, g, b, a);
-    else                            drawSquare(particleCtx, s, hs, r, g, b, a);
+    if(currentShape==='lava')        drawLava(particleCtx, s, hs, r, g, b, a);
+    else if(currentShape==='spark')  drawSpark(particleCtx, s, hs, r, g, b, a);
+    else if(currentShape==='petal')  drawPetal(particleCtx, s, hs, r, g, b, a);
+    else if(currentShape==='bubble') drawBubble(particleCtx, s, hs, r, g, b, a);
+    else                             drawSquare(particleCtx, s, hs, r, g, b, a);
 
     particleCtx.restore();
   }
   requestAnimationFrame(drawParticles);
 }
 
+/* ============================================================
+   滚动
+   ============================================================ */
 var topbarEl=$('topbar'),rafPend=false;
 function onScroll(){
   if(rafPend)return;rafPend=true;
@@ -776,6 +841,35 @@ function onScroll(){
   });
 }
 
+/* ============================================================
+   自动刷新
+   ============================================================ */
+var refreshTimer = null;
+var refreshing = false;
+
+function silentRefresh(){
+  if(refreshing) return;
+  if(document.hidden) return;
+  refreshing = true;
+  loadTools().then(function(ok){
+    refreshing = false;
+    if(ok) renderIfChanged();
+  }).catch(function(){
+    refreshing = false;
+  });
+}
+
+function startAutoRefresh(){
+  stopAutoRefresh();
+  refreshTimer = setInterval(silentRefresh, REFRESH_MS);
+}
+function stopAutoRefresh(){
+  if(refreshTimer){ clearInterval(refreshTimer); refreshTimer = null; }
+}
+
+/* ============================================================
+   绑定
+   ============================================================ */
 function bind(){
   themeBtn.addEventListener('click',openTheme);
   themeClose.addEventListener('click',closeTheme);
@@ -797,7 +891,8 @@ function bind(){
       if(reloadBtn.classList.contains('spin-anim'))return;
       reloadBtn.classList.add('spin-anim');
       toast('正在刷新…');
-      loadTools().then(function(){
+      loadTools().then(function(ok){
+        lastSignature = '';      /* 强制重渲染 */
         renderTools();
         setTimeout(function(){reloadBtn.classList.remove('spin-anim');},400);
       });
@@ -810,19 +905,45 @@ function bind(){
 
   window.addEventListener('scroll',onScroll,{passive:true});
   window.addEventListener('resize',function(){resizeCanvas();onScroll();},{passive:true});
+
+  /* 页面可见性：隐藏时暂停刷新和粒子，可见时立即刷一次 */
   document.addEventListener('visibilitychange',function(){
-    particleRunning=!document.hidden;
-    if(particleRunning)drawParticles();
+    particleRunning = !document.hidden;
+    if(particleRunning){
+      drawParticles();
+      silentRefresh();          /* 回来时立刻拉一次 */
+      startAutoRefresh();
+    }else{
+      stopAutoRefresh();
+    }
   });
 }
 
+/* ============================================================
+   启动
+   ============================================================ */
 function boot(){
   applyTheme(curTheme);
+
+  /* 1. 先用缓存（或默认）立即渲染，避免空白 */
+  var cached = loadToolsCache();
+  if(cached) TOOLS = cached;
+  lastSignature = toolsSignature(TOOLS);
   renderTools();
+
+  /* 2. 装饰 + 粒子 */
   buildFloatDecor();
+  initParticles();
   bind();
   onScroll();
-  loadTools().then(function(ok){ if(ok) renderTools(); });
+
+  /* 3. 后台异步拉远程数据，成功后覆盖 */
+  loadTools().then(function(ok){
+    if(ok) renderIfChanged();
+  });
+
+  /* 4. 启动 120 秒自动刷新 */
+  startAutoRefresh();
 }
 
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
