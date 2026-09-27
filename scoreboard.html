@@ -2,1289 +2,212 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>备份计分板 · 红石的小工具箱</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Website</title>
 <style>
-:root{
-  --bg:#f9fafb;--bg-elev:#ffffff;--bg-subtle:#f3f4f6;
-  --text:#111827;--text-muted:#6b7280;--text-dim:#9ca3af;
-  --border:#e5e7eb;--border-strong:#d1d5db;
-  --primary:#6366f1;--primary-hover:#4f46e5;--primary-soft:#eef2ff;--primary-text:#4338ca;
-  --blue:#3b82f6;--blue-dark:#2563eb;--blue-soft:#eff6ff;
-  --danger:#ef4444;--danger-soft:#fef2f2;
-  --success:#10b981;--success-soft:#ecfdf5;
-  --warning:#f59e0b;--warning-soft:#fffbeb;
-  --shadow-xs:0 1px 2px rgba(0,0,0,.04);
-  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
-  --shadow:0 4px 6px -1px rgba(0,0,0,.06),0 2px 4px -1px rgba(0,0,0,.04);
-  --shadow-md:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.04);
-  --shadow-lg:0 20px 25px -5px rgba(0,0,0,.10),0 10px 10px -5px rgba(0,0,0,.04);
-  --shadow-primary:0 4px 14px rgba(99,102,241,.28);
-  --r-xs:6px;--r-sm:8px;--r:10px;--r-md:12px;--r-lg:16px;
-  --font:-apple-system,BlinkMacSystemFont,"Inter","SF Pro Display","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
-  --mono:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;color:#fff;font-family:"Segoe UI","Microsoft YaHei",sans-serif;
+  background:#050714;overflow-x:hidden;
 }
-*,*::before,*::after{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh}
+body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-2}
+body::before{
+  background:
+   radial-gradient(ellipse at 10% 55%,rgba(49,42,180,.35),transparent 35%),
+   radial-gradient(ellipse at 90% 55%,rgba(20,73,180,.28),transparent 35%),
+   radial-gradient(circle at 50% 40%,rgba(25,30,85,.2),transparent 45%);
+}
+body::after{
+  z-index:-1;opacity:.55;
+  background-image:
+   radial-gradient(circle,rgba(105,120,255,.9) 1px,transparent 1px),
+   radial-gradient(circle,rgba(255,255,255,.65) 1px,transparent 1px);
+  background-size:170px 170px,260px 260px;
+  background-position:20px 30px,100px 100px;
+}
 
-.topbar{position:sticky;top:0;z-index:50;height:56px;display:flex;align-items:center;gap:12px;padding:0 20px;background:rgba(255,255,255,.85);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--border)}
-.topbar .logo{display:flex;align-items:center;gap:10px;font-size:14.5px;font-weight:700;letter-spacing:-.01em;color:var(--text);text-decoration:none}
-.topbar .logo-icon{font-size:20px;line-height:1}
-.topbar .sp{flex:1}
-.topbar .icon{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;font-size:12.5px;font-family:inherit;font-weight:600;color:var(--text-muted);background:var(--bg-subtle);border:1px solid transparent;border-radius:var(--r-sm);cursor:pointer;text-decoration:none;white-space:nowrap;transition:all .15s}
-.topbar .icon:hover{background:var(--bg-elev);border-color:var(--border);color:var(--text);box-shadow:var(--shadow-xs)}
-.topbar .icon.gold{color:#fff;background:linear-gradient(135deg,var(--primary),#8b5cf6);box-shadow:var(--shadow-primary);border-color:transparent}
-.topbar .icon.gold:hover{filter:brightness(1.05)}
+nav{
+  height:72px;position:fixed;top:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;padding:0 7%;
+  background:rgba(5,7,20,.62);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.08)
+}
+.logo{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.logo .blue{color:#48baff}.logo .purple{color:#a66cff}
+.star{display:inline-block;margin-right:12px;font-size:28px;color:#7d73ff;text-shadow:0 0 18px #7d73ff}
+nav ul{list-style:none;display:flex;gap:42px}
+nav a{color:#a7a9b7;text-decoration:none;font-size:16px;transition:.25s}
+nav a:hover,nav a.active{color:#9d86ff}
+nav a.active{position:relative}
+nav a.active::after{content:"";position:absolute;left:0;right:0;bottom:-24px;height:2px;background:#8f78ff;box-shadow:0 0 10px #8f78ff}
 
-.wrap{max-width:1080px;margin:0 auto;padding:28px 22px 72px}
-.page-head{text-align:center;margin-bottom:26px}
-.page-head h1{margin:0 0 6px;font-size:clamp(1.6rem,3.6vw,2.2rem);font-weight:800;letter-spacing:-.03em;line-height:1.1}
-.page-head .sub{margin:0;font-size:13px;color:var(--text-muted)}
+.hero{min-height:100vh;display:flex;justify-content:center;align-items:center;text-align:center;padding:105px 20px 55px}
+.hero-inner{width:min(900px,100%)}
+.avatar-wrap{width:330px;height:330px;margin:0 auto 45px;position:relative;border-radius:50%;display:grid;place-items:center}
+.avatar-wrap::before{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  border:2px solid #526dff;box-shadow:0 0 16px #526dff,0 0 55px rgba(71,95,255,.65),inset 0 0 30px rgba(65,80,255,.2);
+  animation:pulse 3s ease-in-out infinite
+}
+.avatar-wrap::after{
+  content:"";position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(115,133,255,.18);
+}
+.avatar{width:300px;height:300px;border-radius:50%;object-fit:cover;object-position:50% 18%;position:relative;z-index:1}
+@keyframes pulse{50%{box-shadow:0 0 25px #526dff,0 0 80px rgba(71,95,255,.85),inset 0 0 35px rgba(65,80,255,.25)}}
 
-.status-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:16px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-xs);font-size:12.5px;color:var(--text-muted)}
-.status-bar .dot{width:7px;height:7px;flex:none;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px var(--success-soft)}
-.status-bar .dot.warn{background:var(--warning);box-shadow:0 0 0 3px var(--warning-soft)}
-.status-bar .dot.bad{background:var(--danger);box-shadow:0 0 0 3px var(--danger-soft)}
-.status-bar .sp{flex:1}
-.status-bar strong{color:var(--text);font-weight:600}
+h1{font-size:clamp(42px,5.5vw,70px);line-height:1.15;margin-bottom:22px;font-weight:800}
+h1 span{background:linear-gradient(90deg,#42baff,#a66cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.subtitle{font-size:19px;color:#9b9dad;line-height:1.9;margin:auto;max-width:700px}
+.buttons{display:flex;justify-content:center;gap:25px;margin-top:34px}
+.btn{min-width:195px;padding:15px 28px;border-radius:30px;text-decoration:none;font-size:17px;font-weight:600;transition:.25s}
+.btn.primary{color:#fff;background:linear-gradient(90deg,#39baff,#a65cff);box-shadow:0 8px 35px rgba(88,86,255,.28)}
+.btn.secondary{color:#fff;border:1px solid #6f7fff;background:rgba(10,12,30,.3)}
+.btn:hover{transform:translateY(-3px);filter:brightness(1.12)}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;height:36px;font-size:13px;font-family:inherit;font-weight:600;color:var(--text);background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;box-shadow:var(--shadow-xs);transition:all .15s}
-.btn:hover:not(:disabled){background:var(--bg-subtle);border-color:var(--border-strong);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
-.btn:active:not(:disabled){transform:translateY(0)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn.p{color:#fff;background:linear-gradient(135deg,var(--primary),#8b5cf6);border-color:transparent;box-shadow:var(--shadow-primary)}
-.btn.p:hover:not(:disabled){filter:brightness(1.05)}
-.btn.gold{color:#fff;background:linear-gradient(135deg,#f59e0b,#f97316);border-color:transparent;box-shadow:0 4px 14px rgba(245,158,11,.28)}
-.btn.d{color:var(--danger)}
-.btn.d:hover:not(:disabled){background:var(--danger-soft);border-color:rgba(239,68,68,.3)}
-.btn.sm{padding:5px 11px;height:30px;font-size:12px;border-radius:var(--r-xs)}
+.scroll{position:absolute;bottom:25px;left:50%;transform:translateX(-50%);color:#8891ff;font-size:27px;animation:bounce 1.8s infinite}
+@keyframes bounce{50%{transform:translate(-50%,7px)}}
 
-.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;margin-bottom:16px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-xs)}
-.toolbar .search{position:relative;flex:1;min-width:200px}
-.toolbar .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none}
-.toolbar .search input{width:100%;height:36px;padding:0 12px 0 36px;font-size:13px;font-family:inherit;color:var(--text);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-sm);outline:none;transition:all .15s}
-.toolbar .search input::placeholder{color:var(--text-dim)}
-.toolbar .search input:focus{background:var(--bg-elev);border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
 
-.upload-zone{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;padding:28px;margin-bottom:16px;background:var(--bg-elev);border:2px dashed var(--border);border-radius:var(--r-lg);cursor:pointer;transition:all .2s}
-.upload-zone:hover{border-color:var(--primary);background:var(--primary-soft)}
-.upload-zone.has-image{padding:0;border-style:solid;border-color:var(--border);background:#0a0a0a;overflow:hidden}
-.upload-zone .uz-icon{font-size:40px;opacity:.5;margin-bottom:10px;line-height:1}
-.upload-zone .uz-title{font-size:14.5px;font-weight:600;margin-bottom:4px;letter-spacing:-.01em}
-.upload-zone .uz-hint{font-size:12px;color:var(--text-muted)}
-.upload-zone .uz-img{display:block;max-width:100%;max-height:500px;object-fit:contain;cursor:zoom-in}
-.upload-zone .uz-remove{position:absolute;top:12px;right:12px;width:34px;height:34px;display:grid;place-items:center;font-size:14px;color:#fff;background:rgba(239,68,68,.9);border:none;border-radius:50%;cursor:pointer;z-index:2;backdrop-filter:blur(8px);box-shadow:0 4px 12px rgba(0,0,0,.2);transition:all .15s}
-.upload-zone .uz-remove:hover{background:var(--danger);transform:scale(1.08)}
-
-.ocr-panel{margin-bottom:16px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-sm);overflow:hidden}
-.ocr-head{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--bg-subtle);border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text)}
-.ocr-head .dot{width:7px;height:7px;flex:none;border-radius:50%;background:var(--text-dim);transition:all .2s}
-.ocr-head .dot.busy{background:var(--warning);box-shadow:0 0 0 3px var(--warning-soft);animation:pulse 1.5s infinite}
-.ocr-head .dot.ok{background:var(--success);box-shadow:0 0 0 3px var(--success-soft)}
-.ocr-head .dot.warn{background:var(--warning);box-shadow:0 0 0 3px var(--warning-soft)}
-.ocr-head .dot.bad{background:var(--danger);box-shadow:0 0 0 3px var(--danger-soft)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.ocr-head .sp{flex:1}
-.ocr-head .close{width:30px;height:30px;display:grid;place-items:center;font-size:13px;color:var(--text-muted);background:transparent;border:none;border-radius:var(--r-xs);cursor:pointer;transition:all .15s}
-.ocr-head .close:hover{background:var(--bg-elev);color:var(--text)}
-
-.ocr-body{padding:16px}
-.ocr-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:var(--primary-soft);border:1px solid rgba(99,102,241,.2);border-radius:var(--r-sm);font-size:12.5px;font-weight:500;color:var(--primary-text)}
-.ocr-status.bad{background:var(--danger-soft);border-color:rgba(239,68,68,.2);color:#b91c1c}
-.ocr-status .badge{display:inline-flex;align-items:center;padding:2px 8px;font-size:10.5px;font-weight:700;background:var(--bg-elev);border:1px solid currentColor;border-radius:20px}
-.ocr-progress{height:3px;background:var(--bg-subtle);border-radius:2px;overflow:hidden;margin-bottom:14px}
-.ocr-progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--primary),#8b5cf6);transition:width .3s ease}
-.ocr-raw{padding:12px 14px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--mono);font-size:12px;line-height:1.65;max-height:170px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;color:var(--text-muted);margin-bottom:14px}
-.ocr-raw mark{background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;font-weight:600}
-.ocr-actions{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px;border-top:1px solid var(--border)}
-
-.preview-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
-
-/* ============ 透明缩小的卡片 ============ */
-.board{display:flex;flex-direction:column;gap:8px}
-
-.board-card{
-  position:relative;
+.contact-modal{
+  position:fixed;
+  inset:0;
+  z-index:100;
   display:flex;
-  gap:14px;
-  padding:12px;
-  background:rgba(255,255,255,.5);
-  border:1px solid rgba(229,231,235,.7);
-  border-radius:var(--r-md);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
-  transition:all .2s;
-  animation:cardIn .35s cubic-bezier(.22,1,.36,1) both;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(2,4,15,.72);
+  backdrop-filter:blur(10px);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .25s ease,visibility .25s ease;
 }
-.board-card:hover{
-  background:rgba(255,255,255,.85);
-  border-color:rgba(99,102,241,.3);
-  box-shadow:0 4px 16px rgba(99,102,241,.1);
+.contact-modal.show{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
 }
-@keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-.board-card.top1{border-color:rgba(234,179,8,.4);background:rgba(254,252,232,.5)}
-.board-card.top1:hover{background:rgba(254,252,232,.85);border-color:rgba(234,179,8,.6)}
-.board-card.top2{border-color:rgba(148,163,184,.4);background:rgba(248,250,252,.5)}
-.board-card.top2:hover{background:rgba(248,250,252,.85);border-color:rgba(148,163,184,.6)}
-.board-card.top3{border-color:rgba(217,119,6,.35);background:rgba(255,247,237,.5)}
-.board-card.top3:hover{background:rgba(255,247,237,.85);border-color:rgba(217,119,6,.55)}
-
-/* 头像缩小 */
-.bc-avatar{
-  flex:none;
-  width:96px;height:144px;
-  background:rgba(243,244,246,.7);
-  border-radius:var(--r-sm);
-  display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
-  position:relative;
+.contact-box{
+  width:min(440px,100%);
+  padding:34px;
+  text-align:center;
+  border:1px solid rgba(125,115,255,.65);
+  border-radius:22px;
+  background:linear-gradient(145deg,rgba(13,17,45,.96),rgba(7,9,25,.96));
+  box-shadow:0 0 30px rgba(82,109,255,.3),0 20px 80px rgba(0,0,0,.45);
+  transform:translateY(15px) scale(.97);
+  transition:transform .25s ease;
 }
-.bc-avatar img{width:100%;height:100%;object-fit:cover;display:block}
-.bc-avatar .bc-avatar-empty{
-  font-size:40px;font-weight:800;color:var(--text-dim);
-  letter-spacing:-.04em;text-transform:uppercase;line-height:1;
+.contact-modal.show .contact-box{
+  transform:translateY(0) scale(1);
 }
-
-.bc-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
-
-.bc-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid rgba(229,231,235,.6)}
-.bc-rank{flex:none;min-width:44px;font-size:12.5px;font-weight:700;color:var(--text-muted);text-align:center;letter-spacing:-.01em}
-.board-card.top1 .bc-rank{color:#a16207}
-.board-card.top2 .bc-rank{color:#475569}
-.board-card.top3 .bc-rank{color:#9a3412}
-
-.bc-name{flex:1;min-width:0;font-size:16px;font-weight:800;letter-spacing:-.02em;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;padding:1px 4px;border-radius:var(--r-xs);transition:background .15s}
-.bc-name:hover{background:rgba(255,255,255,.6)}
-
-.bc-actions{display:flex;gap:4px;flex:none}
-
-/* 字段缩小，两列更紧凑 */
-.bc-fields{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
-
-.bc-field{display:flex;align-items:center;padding:3px;height:34px;background:rgba(243,244,246,.6);border-radius:6px;cursor:pointer;transition:all .15s}
-.bc-field:hover{background:rgba(229,231,235,.9)}
-
-.bc-field .v{
-  flex:1;height:100%;min-width:0;
-  display:flex;align-items:center;gap:8px;
-  padding:0 10px;
-  background:linear-gradient(135deg,rgba(59,130,246,.85),rgba(37,99,235,.85));
+.contact-box h2{
+  font-size:30px;
+  margin-bottom:10px;
+}
+.contact-box p{
+  color:#9b9dad;
+  margin-bottom:20px;
+}
+.email{
+  padding:15px 18px;
+  border-radius:12px;
+  background:rgba(75,92,190,.14);
+  border:1px solid rgba(120,135,255,.28);
   color:#fff;
-  border-radius:4px;
-  box-shadow:0 1px 3px rgba(59,130,246,.18);
-  transition:all .15s;
+  font-size:20px;
+  letter-spacing:.3px;
+  user-select:all;
+  margin-bottom:24px;
 }
-.bc-field:hover .v{background:linear-gradient(135deg,rgba(59,130,246,.95),rgba(37,99,235,.95))}
-
-.bc-field .k{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.75);flex:none}
-.bc-field .n{flex:1;text-align:right;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-
-.bc-field.missing .v{background:linear-gradient(135deg,rgba(156,163,175,.7),rgba(107,114,128,.7));box-shadow:none}
-.bc-field.missing .n{font-style:italic;font-weight:500;color:rgba(255,255,255,.85)}
-
-.empty{padding:64px 24px;text-align:center;color:var(--text-muted);background:rgba(255,255,255,.5);border:1px solid rgba(229,231,235,.7);border-radius:var(--r-lg);backdrop-filter:blur(8px)}
-.empty .ic{font-size:52px;opacity:.3;display:block;margin-bottom:14px;line-height:1}
-.empty .lead{font-size:13.5px;line-height:1.85}
-
-.admin-panel{margin-bottom:16px;background:var(--bg-elev);border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:var(--r-md);box-shadow:var(--shadow-sm);overflow:hidden}
-.admin-head{display:flex;align-items:center;gap:10px;padding:12px 18px;background:linear-gradient(90deg,rgba(99,102,241,.06),rgba(139,92,246,.06));border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--primary-text)}
-.admin-head .cnt{padding:2px 9px;font-size:11.5px;font-weight:700;background:var(--primary);color:#fff;border-radius:20px;box-shadow:0 2px 6px rgba(99,102,241,.3)}
-.admin-head .sp{flex:1}
-.admin-head .mini{width:28px;height:28px;display:grid;place-items:center;font-size:12px;color:var(--text-muted);background:transparent;border:none;border-radius:var(--r-xs);cursor:pointer;transition:all .15s}
-.admin-head .mini:hover{background:var(--bg-elev);color:var(--text)}
-.admin-body{padding:18px}
-.admin-empty{padding:28px;text-align:center;color:var(--text-muted);font-size:13px}
-
-.pending-card{padding:14px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:10px;transition:all .15s}
-.pending-card:last-child{margin-bottom:0}
-.pending-card:hover{background:var(--bg-elev);box-shadow:var(--shadow-xs)}
-.pd-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.pd-rank-badge{width:32px;height:32px;flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--primary),#8b5cf6);border-radius:50%;box-shadow:0 2px 8px rgba(99,102,241,.3)}
-.pd-name{flex:1;min-width:0;font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pd-time{font-size:11.5px;color:var(--text-dim)}
-.pd-score{padding:3px 10px;font-size:12px;font-weight:700;font-family:var(--mono);color:var(--blue-dark);background:var(--blue-soft);border:1px solid rgba(59,130,246,.2);border-radius:20px;font-variant-numeric:tabular-nums}
-.pd-img{display:block;width:100%;max-height:240px;object-fit:contain;background:#0a0a0a;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:12px;cursor:zoom-in;transition:all .15s}
-.pd-img:hover{filter:brightness(1.05);box-shadow:var(--shadow-sm)}
-.pd-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px;padding:10px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:12px}
-.pd-f{display:flex;flex-direction:column;gap:1px;padding:6px 9px;background:var(--bg-subtle);border-radius:var(--r-xs)}
-.pd-f .k{font-size:9.5px;font-weight:700;color:var(--text-dim);letter-spacing:.04em;text-transform:uppercase}
-.pd-f .v{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--blue-dark);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pd-acts{display:flex;gap:6px;flex-wrap:wrap}
-
-.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(17,24,39,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
-.ov.show{opacity:1;visibility:visible}
-.pnl{display:flex;flex-direction:column;width:100%;max-width:460px;max-height:calc(100vh - 40px);background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);overflow:hidden;transform:translateY(24px) scale(.96);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.ov.show .pnl{transform:none}
-.ph{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--border)}
-.ph.gold{background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(139,92,246,.06))}
-.ph strong{font-size:14.5px;font-weight:700;letter-spacing:-.01em;flex:1}
-.ph .sp{flex:1}
-.ph .close{width:30px;height:30px;display:grid;place-items:center;font-size:13px;color:var(--text-muted);background:transparent;border:none;border-radius:var(--r-xs);cursor:pointer;transition:all .15s}
-.ph .close:hover{background:var(--bg-subtle);color:var(--text)}
-.pb{padding:22px;overflow-y:auto}
-.pb .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-.pb .fld span{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
-.pb .fld input{height:40px;padding:0 12px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-sm);outline:none;transition:all .15s}
-.pb .fld input:focus{background:var(--bg-elev);border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
-.pb .hint{padding:11px 13px;font-size:12px;line-height:1.65;color:var(--text-muted);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-sm)}
-.field-row{display:flex;align-items:center;gap:14px;padding:9px 12px;border-bottom:1px solid var(--border)}
-.field-row:last-child{border-bottom:none}
-.field-row .fk{flex:none;width:100px;font-size:11.5px;font-weight:600;color:var(--text-muted);letter-spacing:.02em;text-transform:uppercase}
-.field-row .fv{flex:1;text-align:right;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--blue-dark);font-variant-numeric:tabular-nums}
-.pfoot{display:flex;align-items:center;gap:10px;padding:14px 22px;background:var(--bg-subtle);border-top:1px solid var(--border)}
-.pfoot .sp{flex:1}
-
-.lightbox{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;background:rgba(0,0,0,.95);z-index:200;opacity:0;visibility:hidden;transition:opacity .25s;cursor:zoom-out}
-.lightbox.show{opacity:1;visibility:visible}
-.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:var(--r-md);box-shadow:0 20px 60px rgba(0,0,0,.5);animation:zoomIn .3s cubic-bezier(.34,1.56,.64,1) both}
-@keyframes zoomIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-
-.toast{position:fixed;left:50%;bottom:28px;max-width:calc(100vw - 40px);padding:11px 18px;font-size:13px;font-weight:600;color:#fff;background:rgba(17,24,39,.95);backdrop-filter:blur(10px);border-radius:var(--r-md);box-shadow:var(--shadow-lg);opacity:0;transform:translateX(-50%) translateY(20px) scale(.96);transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:210}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+.close-btn{
+  border:1px solid #6f7fff;
+  border-radius:24px;
+  padding:10px 28px;
+  color:#fff;
+  background:rgba(10,12,30,.5);
+  cursor:pointer;
+  font-size:15px;
+  transition:.2s;
+}
+.close-btn:hover{
+  background:#526dff;
+  transform:translateY(-2px);
+}
 
 @media(max-width:760px){
-  .wrap{padding:20px 14px 60px}
-  .board-card{flex-direction:column;gap:12px;padding:10px}
-  .bc-avatar{width:100%;height:160px}
-  .bc-fields{grid-template-columns:1fr}
-  .bc-name{font-size:15px}
+ nav{padding:0 20px}.logo{font-size:19px}.star{font-size:23px;margin-right:6px}
+ nav ul{gap:14px}nav a{font-size:13px}nav a.active::after{bottom:-23px}
+ .avatar-wrap{width:245px;height:245px;margin-bottom:35px}.avatar{width:220px;height:220px}
+ h1{font-size:40px}.subtitle{font-size:16px}.buttons{flex-direction:column;align-items:center;gap:12px}.btn{width:220px}
 }
-@media(max-width:560px){
-  .topbar{padding:0 12px}
-  .topbar .logo span:not(.logo-icon){display:none}
-  .topbar .icon{padding:0 9px;font-size:11.5px}
-  .bc-field{height:30px}
-  .bc-field .n{font-size:11.5px}
-  .bc-field .k{font-size:9px}
-  .pd-fields{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
-  .toolbar .search{min-width:0;width:100%;flex-basis:100%}
-}
+@media(max-width:500px){nav ul{display:none}.hero{padding-top:90px}.avatar-wrap{width:220px;height:220px}.avatar{width:198px;height:198px}h1{font-size:34px}}
 </style>
 </head>
 <body>
+<nav>
+  <div class="logo"><span class="star">✦</span><span class="blue">TERBYTE</span><span class="purple">-CONNEC</span></div>
+  <ul>
+    <li><a class="active" href="#home">首页</a></li>
+    <li><a href="#about">关于我</a></li>
+    <li><a href="#skills">技能</a></li>
+    <li><a href="#projects">项目</a></li>
+    <li><a href="#contact">联系</a></li>
+  </ul>
+</nav>
 
-<header class="topbar">
-  <a class="logo" href="./index.html"><span class="logo-icon">🏆</span><span>备份计分板</span></a>
-  <span class="sp"></span>
-  <button class="icon" id="btnLogin">🔑 管理员</button>
-  <button class="icon" id="btnLogout" style="display:none">🚪 退出</button>
-  <a class="icon" href="./index.html" title="返回工具箱">🏠</a>
-</header>
-
-<div class="wrap">
-  <div class="page-head">
-    <h1>备份计分板</h1>
-    <p class="sub">上传图片按颜色识别 · 提交管理员审核 · 批准后所有人可见</p>
-  </div>
-
-  <div class="status-bar" id="statusBar">
-    <span class="dot" id="cloudDot"></span>
-    <span id="bannerText">检查云端连接…</span>
-    <span class="sp"></span>
-    <button class="btn sm" id="btnRefresh">🔄 刷新</button>
-  </div>
-
-  <div class="toolbar">
-    <button class="btn p" id="btnUploadImage">🖼️ 上传图片</button>
-    <div class="search">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="searchInput" type="search" placeholder="搜索玩家名…" autocomplete="off">
+<main id="home" class="hero">
+  <div class="hero-inner">
+    <div class="avatar-wrap">
+      <img class="avatar" src="avatar.png" alt="个人头像">
+    </div>
+    <h1>Jake <span>Ken</span></h1>
+    <p class="subtitle">I am heike I am heike<br>No kill me! No kill me!</p>
+    <div class="buttons">
+      <a class="btn primary" href="https://project.konshion.com">查看我的项目　→</a>
+      <a class="btn secondary" id="contactBtn" href="#contact">联系我</a>
     </div>
   </div>
+  <div class="scroll">⌄</div>
+</main>
 
-  <div class="upload-zone" id="uploadZone">
-    <div class="uz-empty" id="uzEmpty">
-      <div class="uz-icon">🖼️</div>
-      <div class="uz-title">点击上传计分板截图</div>
-      <div class="uz-hint">自动识别彩色数字 + 白色玩家名</div>
-    </div>
-    <img class="uz-img" id="uzImg" style="display:none" alt="计分板图片">
-    <button class="uz-remove" id="uzRemove" style="display:none">✕</button>
-  </div>
+<!-- 下面这些区域先留空，方便以后继续添加内容 -->
+<section id="about"></section>
+<section id="skills"></section>
+<section id="projects"></section>
+<section id="contact"></section>
 
-  <div class="ocr-panel" id="ocrPanel" style="display:none">
-    <div class="ocr-head">
-      <span class="dot" id="ocrDot"></span>
-      <span>颜色识别</span>
-      <span class="sp"></span>
-      <button class="close" id="ocrClose">✕</button>
-    </div>
-    <div class="ocr-body">
-      <div class="ocr-status" id="ocrStatus">准备中…</div>
-      <div class="ocr-progress" id="ocrProgressWrap" style="display:none"><div class="ocr-progress-bar" id="ocrProgressBar"></div></div>
-      <div class="ocr-raw" id="ocrRawBox" style="display:none"></div>
-      <div class="preview-list" id="previewList"></div>
-      <div class="ocr-actions" id="ocrActions" style="display:none">
-        <button class="btn sm" id="ocrCopy">📋 复制识别文字</button>
-        <button class="btn sm" id="ocrRawBtn">🔍 原始文字</button>
-        <button class="btn sm" id="ocrDebug">🎨 颜色诊断</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="admin-panel" id="adminPanel" style="display:none">
-    <div class="admin-head">
-      <span>🔑 待审核申请</span>
-      <span class="cnt" id="pendingCount">0</span>
-      <span class="sp"></span>
-      <button class="mini" id="adminRefresh" title="刷新">🔄</button>
-      <button class="mini" id="adminClose" title="收起">✕</button>
-    </div>
-    <div class="admin-body"><div id="pendingList"></div></div>
-  </div>
-
-  <div class="board" id="boardBody"></div>
-</div>
-
-<div class="ov" id="loginOv">
-  <div class="pnl">
-    <div class="ph gold"><span>🔑</span><strong>管理员登录</strong><span class="sp"></span><button class="close" id="loginClose">✕</button></div>
-    <div class="pb">
-      <div class="fld"><span>邮箱</span><input id="loginEmail" type="email" placeholder="admin@example.com"></div>
-      <div class="fld"><span>密码</span><input id="loginPassword" type="password" placeholder="••••••••"></div>
-      <div class="hint">用你在 Supabase Authentication → Users 里创建的账号登录。</div>
-    </div>
-    <div class="pfoot"><span class="sp"></span><button class="btn" id="loginCancel">取消</button><button class="btn gold" id="loginSubmit">登录</button></div>
+<div class="contact-modal" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+  <div class="contact-box">
+    <h2 id="contactTitle">联系我</h2>
+    <p>你可以通过以下邮箱联系我：</p>
+    <div class="email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e535b7e5551504d56575150105d5153">[email&#160;protected]</a></div>
+    <button class="close-btn" id="closeContact" type="button">关闭</button>
   </div>
 </div>
 
-<div class="ov" id="fieldsOv">
-  <div class="pnl">
-    <div class="ph"><span>📋</span><strong id="fieldsTitle">字段详情</strong><span class="sp"></span><button class="close" id="fieldsClose">✕</button></div>
-    <div class="pb" id="fieldsBody"></div>
-  </div>
-</div>
-
-<div class="lightbox" id="lightbox"><img id="lightboxImg" alt="预览"></div>
-<input type="file" id="imageInput" accept="image/*" hidden>
-<div class="toast" id="toast"></div>
-
-<script>
-(function(){
-'use strict';
-
-var SUPABASE_URL = 'https://ionliotsxprkoivjdnzg.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlvbmxpb3RzeHBya29pdmpkbnpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MTI5NTMsImV4cCI6MjEwNTk4ODk1M30.rfRGd-mf8Edrf6jEE6Zcc8DTZWZI1VbLBNN8h8Q9-cU';
-
-var K_IMAGE = 'scoreboard-image';
-var MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-var MAX_UPLOAD_IMAGE = 700 * 1024;
-
-var FIELD_DEFS = [
-  { key:'tuber', label:'tuber' },{ key:'uid',   label:'uid' },
-  { key:'kill',  label:'kill' },{ key:'sp',    label:'sp' },
-  { key:'wkjf',  label:'wkjf' },{ key:'qy_b',  label:'qy.b' },
-  { key:'qy_c',  label:'qy.c' },{ key:'qy_d',  label:'qy.d' },
-  { key:'dix',   label:'地x' },{ key:'diz',   label:'地z' },
-  { key:'zxsc',  label:'zxsc' },{ key:'vip',   label:'vip' },
-  { key:'mrjf',  label:'mrjf' }
-];
-var FIELD_COUNT = FIELD_DEFS.length;
-
-var sb = null, cloudReady = false, isAdmin = false;
-var players = [], pendingList = [], boardImage = '', searchQuery = '';
-var ocrState = { running:false, text:'', players:[] };
-
-function $(id){ return document.getElementById(id); }
-var cloudDot=$('cloudDot'), bannerText=$('bannerText'), btnRefresh=$('btnRefresh');
-var btnLogin=$('btnLogin'), btnLogout=$('btnLogout');
-var btnUploadImage=$('btnUploadImage'), imageInput=$('imageInput');
-var uploadZone=$('uploadZone'), uzEmpty=$('uzEmpty'), uzImg=$('uzImg'), uzRemove=$('uzRemove');
-var ocrPanel=$('ocrPanel'), ocrDot=$('ocrDot'), ocrStatus=$('ocrStatus');
-var ocrProgressWrap=$('ocrProgressWrap'), ocrProgressBar=$('ocrProgressBar');
-var ocrRawBox=$('ocrRawBox'), previewList=$('previewList'), ocrActions=$('ocrActions');
-var ocrClose=$('ocrClose'), ocrCopy=$('ocrCopy'), ocrRawBtn=$('ocrRawBtn'), ocrDebug=$('ocrDebug');
-var adminPanel=$('adminPanel'), adminRefresh=$('adminRefresh'), adminClose=$('adminClose');
-var pendingCount=$('pendingCount'), pendingListEl=$('pendingList');
-var boardBody=$('boardBody'), searchInput=$('searchInput'), toastEl=$('toast');
-var loginOv=$('loginOv'), loginEmail=$('loginEmail'), loginPassword=$('loginPassword');
-var loginSubmit=$('loginSubmit'), loginCancel=$('loginCancel'), loginClose=$('loginClose');
-var fieldsOv=$('fieldsOv'), fieldsTitle=$('fieldsTitle'), fieldsBody=$('fieldsBody'), fieldsClose=$('fieldsClose');
-var lightbox=$('lightbox'), lightboxImg=$('lightboxImg');
-
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
-var toastTimer=null;
-function toast(m){ toastEl.textContent=m; toastEl.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2400); }
-function formatSize(b){ if(b<1024)return b+' B'; if(b<1048576)return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(2)+' MB'; }
-function formatTime(iso){ try{ var d=new Date(iso); var p=function(n){return n<10?'0'+n:''+n;}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes()); }catch(e){ return ''; } }
-function bigOrFloat(str){ try{ return BigInt(String(str).replace(/[^\d-]/g,'')); }catch(e){ return parseFloat(str)||0; } }
-
-function initSupabase(){
-  if(typeof window.supabase === 'undefined') return false;
-  try{ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); cloudReady=true; return true; }
-  catch(e){ return false; }
-}
-function setBanner(state, text){
-  cloudDot.className='dot';
-  if(state==='warn') cloudDot.classList.add('warn');
-  else if(state==='bad') cloudDot.classList.add('bad');
-  bannerText.innerHTML=text;
-}
-function updateBanner(){
-  if(!cloudReady){ setBanner('bad','⚠️ Supabase 未连接'); return; }
-  if(isAdmin){ setBanner('','✓ 云端已连接 · <strong>管理员模式</strong> · 可审核、编辑'); }
-  else { setBanner('','✓ 云端已连接 · <strong>访客模式</strong> · 可上传提交，只读浏览'); }
-}
-
-async function fetchApprovedPlayers(){
-  if(!cloudReady) return;
-  try{
-    var res = await sb.from('approved_players').select('*');
-    if(res.error) throw res.error;
-    players = (res.data||[]).map(function(p){
-      return { id:p.id, name:p.name, score:String(p.score==null?'0':p.score), fields:p.fields||{}, image:p.image_data||'' };
-    });
-    players.sort(function(a,b){
-      var an = bigOrFloat(a.score), bn = bigOrFloat(b.score);
-      if(an > bn) return -1; if(an < bn) return 1; return 0;
-    });
-    render();
-  }catch(e){ toast('读取失败：'+(e.message||e)); }
-}
-async function fetchPendingList(){
-  if(!cloudReady || !isAdmin) return;
-  try{
-    var res = await sb.from('pending_requests').select('*').order('created_at',{ascending:true});
-    if(res.error) throw res.error;
-    pendingList = res.data||[];
-    renderPending();
-  }catch(e){}
-}
-async function submitRequest(p){
-  if(!cloudReady){ toast('云端未连接'); return false; }
-  var fields = {};
-  FIELD_DEFS.forEach(function(f, fi){
-    if(p.nums[fi]!==undefined) fields[f.key] = String(p.nums[fi]);
-  });
-  var payload = {
-    name: String(p.name),
-    score: (p.nums[0]!==undefined) ? String(p.nums[0]) : '0',
-    fields: fields
-  };
-  if(boardImage){
-    try{ payload.image_data = await compressImage(boardImage, MAX_UPLOAD_IMAGE); }
-    catch(e){}
-  }
-  try{
-    var res = await sb.from('pending_requests').insert([payload]).select();
-    if(res.error) throw res.error;
-    return true;
-  }catch(e){ alert('提交失败：'+(e.message||e)); return false; }
-}
-async function approveRequest(req){
-  if(!cloudReady || !isAdmin) return;
-  try{
-    var ex = await sb.from('approved_players').select('id').eq('name', req.name).maybeSingle();
-    var data = { score: String(req.score), fields: req.fields||{}, image_data: req.image_data||null, approved_at: new Date().toISOString() };
-    if(ex.data && ex.data.id){
-      var u = await sb.from('approved_players').update(data).eq('id', ex.data.id);
-      if(u.error) throw u.error;
-    } else {
-      data.name = req.name;
-      var i = await sb.from('approved_players').insert([data]);
-      if(i.error) throw i.error;
-    }
-    var d = await sb.from('pending_requests').delete().eq('id', req.id);
-    if(d.error) throw d.error;
-    toast('已批准「'+req.name+'」');
-    await fetchApprovedPlayers();
-    await fetchPendingList();
-  }catch(e){ alert('批准失败：'+(e.message||e)); }
-}
-async function rejectRequest(req){
-  if(!cloudReady || !isAdmin) return;
-  if(!confirm('拒绝「'+req.name+'」？')) return;
-  try{
-    var d = await sb.from('pending_requests').delete().eq('id', req.id);
-    if(d.error) throw d.error;
-    toast('已拒绝');
-    await fetchPendingList();
-  }catch(e){ alert('拒绝失败：'+(e.message||e)); }
-}
-async function updatePlayer(id, patch){
-  if(!cloudReady || !isAdmin) return;
-  try{
-    var res = await sb.from('approved_players').update(patch).eq('id', id);
-    if(res.error) throw res.error;
-    var p = players.find(function(x){ return x.id===id; });
-    if(p) Object.assign(p, patch);
-    players.sort(function(a,b){ var an=bigOrFloat(a.score), bn=bigOrFloat(b.score); if(an>bn)return -1; if(an<bn)return 1; return 0; });
-    render();
-  }catch(e){ toast('更新失败：'+(e.message||e)); }
-}
-async function removePlayer(id){
-  if(!cloudReady || !isAdmin) return;
-  try{
-    var res = await sb.from('approved_players').delete().eq('id', id);
-    if(res.error) throw res.error;
-    players = players.filter(function(x){ return x.id!==id; });
-    render();
-    toast('已删除');
-  }catch(e){ alert('删除失败：'+(e.message||e)); }
-}
-function setupRealtime(){
-  if(!cloudReady) return;
-  try{
-    sb.channel('scoreboard-rt')
-      .on('postgres_changes', {event:'*', schema:'public', table:'approved_players'}, function(){ fetchApprovedPlayers(); })
-      .on('postgres_changes', {event:'*', schema:'public', table:'pending_requests'}, function(){ if(isAdmin) fetchPendingList(); })
-      .subscribe();
-  }catch(e){}
-}
-
-function updateImageUI(){
-  if(boardImage){
-    uzEmpty.style.display='none';
-    uzImg.src = boardImage;
-    uzImg.style.display='block';
-    uzRemove.style.display='grid';
-    uploadZone.classList.add('has-image');
-  } else {
-    uzEmpty.style.display='block';
-    uzImg.removeAttribute('src');
-    uzImg.style.display='none';
-    uzRemove.style.display='none';
-    uploadZone.classList.remove('has-image');
-  }
-}
-function handleImageUpload(file){
-  if(!file) return;
-  if(!file.type || file.type.indexOf('image/')!==0){ alert('请选择图片'); return; }
-  if(file.size > MAX_IMAGE_SIZE){ alert('图片太大（'+formatSize(file.size)+'），请选择小于 5MB'); return; }
-  var r = new FileReader();
-  r.onload = function(){
-    var url = String(r.result||'');
-    if(!url) return;
-    boardImage = url;
-    try{ localStorage.setItem(K_IMAGE, url); }catch(e){}
-    updateImageUI();
-    toast('图片已上传');
-    setTimeout(function(){ runOCR(url); }, 300);
-  };
-  r.readAsDataURL(file);
-}
-function removeImage(){
-  if(!boardImage) return;
-  if(!confirm('删除当前图片？')) return;
-  boardImage='';
-  try{ localStorage.removeItem(K_IMAGE); }catch(e){}
-  updateImageUI();
-  ocrPanel.style.display='none';
-}
-function compressImage(dataUrl, maxBytes){
-  return new Promise(function(resolve){
-    var img = new Image();
-    img.onload = function(){
-      var maxDim = 1400, scale = 1;
-      if(img.naturalWidth > maxDim || img.naturalHeight > maxDim){
-        scale = Math.min(maxDim/img.naturalWidth, maxDim/img.naturalHeight);
-      }
-      var w = Math.round(img.naturalWidth * scale);
-      var h = Math.round(img.naturalHeight * scale);
-      var cv = document.createElement('canvas');
-      cv.width = w; cv.height = h;
-      cv.getContext('2d').drawImage(img, 0, 0, w, h);
-      var q = 0.9;
-      var out = cv.toDataURL('image/jpeg', q);
-      while(out.length > maxBytes && q > 0.3){ q -= 0.1; out = cv.toDataURL('image/jpeg', q); }
-      resolve(out);
-    };
-    img.onerror = function(){ resolve(dataUrl); };
-    img.src = dataUrl;
-  });
-}
-
-/* 预处理：暗背景反转，彩色保留，白色变黑 */
-function preprocessImage(dataUrl){
-  return new Promise(function(resolve){
-    var img = new Image();
-    img.onload = function(){
-      var scale = Math.max(1, Math.min(2.4, 1500 / img.naturalWidth));
-      var w = Math.round(img.naturalWidth * scale);
-      var h = Math.round(img.naturalHeight * scale);
-      var cv = document.createElement('canvas');
-      cv.width = w; cv.height = h;
-      var ctx = cv.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(img, 0, 0, w, h);
-
-      var imgData = ctx.getImageData(0, 0, w, h);
-      var d = imgData.data;
-
-      var sum = 0, cnt = 0;
-      for(var i = 0; i < d.length; i += 64){ sum += (d[i]+d[i+1]+d[i+2])/3; cnt++; }
-      var isDark = (sum / Math.max(1, cnt)) < 110;
-
-      for(var j = 0; j < d.length; j += 4){
-        var r = d[j], g = d[j+1], b = d[j+2];
-        var bright = (r + g + b) / 3;
-        var maxc = Math.max(r, g, b);
-        var minc = Math.min(r, g, b);
-        var sat = maxc - minc;
-        /* 彩色（含青、蓝、绿等） */
-        var isColor = (sat > 60 && maxc > 110);
-        /* 亮白 */
-        var isWhite = (bright > 190 && sat < 55);
-
-        if(isDark){
-          if(isColor){ d[j]=0; d[j+1]=80; d[j+2]=180; }  /* 彩色统一加深蓝 */
-          else if(isWhite){ d[j]=0; d[j+1]=0; d[j+2]=0; } /* 白字变黑 */
-          else if(bright < 70){ d[j]=255; d[j+1]=255; d[j+2]=255; } /* 暗背景变白 */
-          else { d[j]=200; d[j+1]=200; d[j+2]=200; }
-        } else {
-          if(isColor){ d[j]=0; d[j+1]=80; d[j+2]=180; }
-          else if(bright < 120){ d[j]=0; d[j+1]=0; d[j+2]=0; }
-        }
-      }
-      ctx.putImageData(imgData, 0, 0);
-      resolve({ dataUrl: cv.toDataURL('image/png'), imageData: imgData, width: w, height: h });
-    };
-    img.onerror = function(){ resolve(null); };
-    img.src = dataUrl;
-  });
-}
-
-/* 采样：判断词是彩色（数字）还是黑/白（文本） */
-function classifyWord(imageData, bbox){
-  var W = imageData.width, H = imageData.height, d = imageData.data;
-  var x0 = Math.max(0, Math.floor(bbox.x0)), y0 = Math.max(0, Math.floor(bbox.y0));
-  var x1 = Math.min(W-1, Math.ceil(bbox.x1)), y1 = Math.min(H-1, Math.ceil(bbox.y1));
-
-  var rSum=0, gSum=0, bSum=0, n=0;
-  for(var y = y0; y <= y1; y += 1){
-    for(var x = x0; x <= x1; x += 1){
-      var idx = (y*W + x)*4;
-      var r = d[idx], g = d[idx+1], b = d[idx+2];
-      if(r > 220 && g > 220 && b > 220) continue;
-      rSum += r; gSum += g; bSum += b; n++;
-    }
-  }
-  if(n < 3) return 'other';
-  var aR = rSum/n, aG = gSum/n, aB = bSum/n;
-  /* 预处理后：数字是深蓝(0,80,180)，文本是黑(0,0,0) */
-  if(aB > 100 && aB > aR + 30) return 'color';   /* 蓝 → 数字 */
-  if(aR < 100 && aG < 100 && aB < 100) return 'text'; /* 黑 → 文本 */
-  return 'other';
-}
-
-function groupIntoRows(words){
-  if(!words.length) return [];
-  var sorted = words.slice().sort(function(a, b){
-    return ((a.bbox.y0 + a.bbox.y1) / 2) - ((b.bbox.y0 + b.bbox.y1) / 2);
-  });
-  var rows = [], cur = null;
-  sorted.forEach(function(w){
-    var yc = (w.bbox.y0 + w.bbox.y1) / 2;
-    var hh = Math.max(6, w.bbox.y1 - w.bbox.y0);
-    if(!cur){ cur = { yMin: w.bbox.y0, yMax: w.bbox.y1, items: [w] }; return; }
-    var cyc = (cur.yMin + cur.yMax) / 2;
-    if(Math.abs(yc - cyc) < hh * 0.7){
-      cur.items.push(w);
-      cur.yMin = Math.min(cur.yMin, w.bbox.y0);
-      cur.yMax = Math.max(cur.yMax, w.bbox.y1);
-    } else {
-      rows.push(cur);
-      cur = { yMin: w.bbox.y0, yMax: w.bbox.y1, items: [w] };
-    }
-  });
-  if(cur) rows.push(cur);
-  rows.forEach(function(r){ r.items.sort(function(a,b){ return a.bbox.x0 - b.bbox.x0; }); });
-  return rows;
-}
-
-function setOCRDot(c){ ocrDot.className='dot'+(c?' '+c:''); }
-function updateOCRStatus(h, isBad){
-  ocrStatus.className = 'ocr-status' + (isBad ? ' bad' : '');
-  ocrStatus.innerHTML = h;
-}
-
-async function runOCR(dataUrl){
-  if(!dataUrl) return;
-  ocrPanel.style.display='block';
-  if(typeof Tesseract === 'undefined'){
-    setOCRDot('bad');
-    updateOCRStatus('<span class="badge">✕</span> 识别库加载失败，请刷新', true);
-    return;
-  }
-  if(ocrState.running) return;
-  ocrState.running = true;
-  ocrState.text = '';
-  ocrState.players = [];
-
-  setOCRDot('busy');
-  updateOCRStatus('<span class="badge">⏳</span> 颜色分离预处理…');
-  ocrProgressWrap.style.display='block';
-  ocrProgressBar.style.width='0%';
-  ocrRawBox.style.display='none';
-  previewList.innerHTML='';
-  ocrActions.style.display='none';
-
-  var pre = await preprocessImage(dataUrl);
-  if(!pre){
-    ocrState.running = false;
-    setOCRDot('bad');
-    updateOCRStatus('<span class="badge">✕</span> 图片处理失败', true);
-    return;
-  }
-
-  updateOCRStatus('<span class="badge">⏳</span> 加载识别引擎…');
-
-  try{
-    var result = await Tesseract.recognize(pre.dataUrl, 'eng+chi_sim', {
-      logger: function(m){
-        if(!m) return;
-        if(m.status === 'loading tesseract core') updateOCRStatus('<span class="badge">⏳</span> 加载核心…');
-        else if(m.status === 'initializing tesseract') updateOCRStatus('<span class="badge">⏳</span> 初始化…');
-        else if(m.status === 'loading language traineddata'){
-          var p = Math.round((m.progress||0)*100);
-          updateOCRStatus('<span class="badge">⏳</span> 下载语言包… '+p+'%（首次较慢）');
-          ocrProgressBar.style.width = p+'%';
-        } else if(m.status === 'initializing api') updateOCRStatus('<span class="badge">⏳</span> 准备中…');
-        else if(m.status === 'recognizing text'){
-          var p2 = Math.round((m.progress||0)*100);
-          updateOCRStatus('<span class="badge">⏳</span> 识别中… '+p2+'%');
-          ocrProgressBar.style.width = p2+'%';
-        }
-      }
-    });
-
-    ocrState.running = false;
-    ocrState.text = (result.data && result.data.text) || '';
-
-    var words = [];
-    if(result.data.words && result.data.words.length){
-      words = result.data.words;
-    } else if(result.data.lines){
-      result.data.lines.forEach(function(line){
-        if(line.words) line.words.forEach(function(w){ words.push(w); });
-      });
-    }
-
-    var classified = [];
-    words.forEach(function(w){
-      if(!w.text || !w.text.trim()) return;
-      if(!w.bbox) return;
-      var cat = classifyWord(pre.imageData, w.bbox);
-      classified.push({ text: w.text.trim(), bbox: w.bbox, category: cat });
-    });
-
-    var rows = groupIntoRows(classified);
-
-    ocrState._debug = {
-      totalWords: words.length,
-      rows: rows.map(function(r){
-        return r.items.map(function(w){ return w.category + ':' + w.text; }).join(' | ');
-      })
-    };
-
-    processOCRWithColors(rows);
-
-  }catch(err){
-    ocrState.running = false;
-    setOCRDot('bad');
-    updateOCRStatus('<span class="badge">✕</span> 识别失败：'+esc(err.message||err), true);
-    ocrProgressWrap.style.display='none';
-  }
-}
-
-function hasTuber(str){
-  var s = String(str||'').replace(/[\s\-_.·、,，|]/g,'').toLowerCase();
-  if(!s) return false;
-  if(s.indexOf('tuber') !== -1) return true;
-  if(s.indexOf('tvber') !== -1) return true;
-  if(s.indexOf('tnber') !== -1) return true;
-  if(/\bt\w*ber/i.test(s)) return true;
-  return false;
-}
-function fixDigit(str){
-  return String(str)
-    .replace(/[OoQ]/g,'0').replace(/[Il|!]/g,'1').replace(/[Zz]/g,'2')
-    .replace(/S/g,'5').replace(/[Gg]/g,'6').replace(/[B]/g,'8')
-    .replace(/[，、。：:]/g,'').replace(/\s+/g,'');
-}
-
-/* ★ 核心解析：不依赖 tuber，纯按颜色分 */
-function processOCRWithColors(rows){
-  var parsed = [];
-  var current = null;
-  var pendingName = '';
-
-  function flush(){
-    if(current && current.nums.length > 0){
-      if(!current.name || current.name === '未命名玩家'){
-        current.name = pendingName || '未命名玩家';
-      }
-      parsed.push(current);
-    }
-    current = null;
-  }
-
-  rows.forEach(function(row){
-    row.items.forEach(function(w){
-      var text = w.text;
-      if(!text) return;
-      if(hasTuber(text)){ flush(); pendingName = ''; return; }
-
-      if(w.category === 'color'){
-        /* 彩色 → 数字 */
-        var fixed = fixDigit(text);
-        if(/^-?\d+$/.test(fixed)){
-          if(!current){
-            current = { name: pendingName || '未命名玩家', nums: [], submitting:false, submitted:false };
-            pendingName = '';
-          }
-          if(current.nums.length < FIELD_COUNT){
-            current.nums.push(fixed);
-          }
-        }
-        return;
-      }
-
-      if(w.category === 'text' || w.category === 'other'){
-        /* 黑/白 → 文本（玩家名） */
-        var nameTxt = text.replace(/[§$]/g,'').trim();
-        if(!nameTxt) return;
-        /* 如果当前已经收集完 13 个数字 → 结束，开启新玩家 */
-        if(current && current.nums.length >= FIELD_COUNT){
-          flush();
-        }
-        /* 如果当前玩家已有数字但不足13 → 也认为是下一玩家 */
-        if(current && current.nums.length > 0 && current.nums.length < FIELD_COUNT){
-          /* 判断：数字后跟文本？那可能是下一玩家。但保险起见先拼接 */
-          /* 这里用启发式：如果数字已经 >= 5 个，就认为数字收集完，新开 */
-          if(current.nums.length >= 5){ flush(); }
-        }
-        pendingName = nameTxt;
-        /* 如果有已收集完数字的 current，把 pendingName 也交给它（但通常会有 flush） */
-        if(current && current.nums.length === 0){
-          current.name = nameTxt;
-          pendingName = '';
-        }
-      }
-    });
-  });
-
-  /* 收尾 */
-  if(current && current.nums.length > 0){
-    if(!current.name || current.name === '未命名玩家'){
-      current.name = pendingName || '未命名玩家';
-    }
-    parsed.push(current);
-  }
-
-  parsed = parsed.filter(function(p){ return p.nums.length > 0; });
-
-  ocrState.players = parsed;
-
-  if(ocrState.text){
-    ocrRawBox.innerHTML = esc(ocrState.text).replace(/\n/g,'<br>');
-  }
-  ocrProgressWrap.style.display = 'none';
-  ocrActions.style.display = 'flex';
-
-  if(parsed.length === 0){
-    setOCRDot('warn');
-    updateOCRStatus('<span class="badge">!</span> 未解析出玩家数据，点「🎨 颜色诊断」查看详情', true);
-    return;
-  }
-
-  var totalNums = parsed.reduce(function(s,p){return s+p.nums.length;},0);
-  setOCRDot('ok');
-  updateOCRStatus('<span class="badge">✓</span> 识别到 <strong>'+parsed.length+'</strong> 位玩家 · <strong>'+totalNums+'</strong> 个数值');
-  renderPreview();
-}
-
-function renderPreview(){
-  var list = ocrState.players;
-  if(!list || !list.length){ previewList.innerHTML=''; return; }
-  var html = '';
-  list.forEach(function(p, i){
-    html += '<div class="board-card">';
-    html += '<div class="bc-avatar"><div class="bc-avatar-empty">?</div></div>';
-    html += '<div class="bc-info">';
-    html += '<div class="bc-name-row">';
-    html += '<div class="bc-rank">#' + (i+1) + '</div>';
-    html += '<div class="bc-name" data-edit-name="'+i+'">'+esc(p.name)+'</div>';
-    html += '<div class="bc-actions">';
-    if(p.submitted) html += '<button class="btn sm" disabled>✓ 已提交</button>';
-    else if(p.submitting) html += '<button class="btn sm" disabled>⏳ 提交中</button>';
-    else html += '<button class="btn gold sm" data-submit="'+i+'">📤 提交</button>';
-    html += '</div></div>';
-    html += '<div class="bc-fields">';
-    FIELD_DEFS.forEach(function(f, fi){
-      var v = p.nums[fi];
-      var cls = 'bc-field' + (v === undefined ? ' missing' : '');
-      html += '<div class="'+cls+'" data-edit-num="'+i+','+fi+'">';
-      html += '<div class="v"><span class="k">'+esc(f.label)+'</span><span class="n">' + (v===undefined?'—':esc(v)) + '</span></div>';
-      html += '</div>';
-    });
-    html += '</div></div></div>';
-  });
-  html += '<div style="display:flex;justify-content:center;margin-top:6px"><button class="btn p" id="ppSubmitAll">📤 全部提交申请</button></div>';
-  previewList.innerHTML = html;
-}
-
-previewList.addEventListener('click', async function(e){
-  var ne = e.target.closest('[data-edit-name]');
-  if(ne){
-    var ni = parseInt(ne.getAttribute('data-edit-name'),10);
-    var np = ocrState.players[ni];
-    if(!np) return;
-    var nn = prompt('修改玩家名：', np.name);
-    if(nn === null) return;
-    nn = nn.trim(); if(!nn) return;
-    np.name = nn.slice(0,40);
-    renderPreview();
-    return;
-  }
-  var num = e.target.closest('[data-edit-num]');
-  if(num){
-    var ps = num.getAttribute('data-edit-num').split(',');
-    var pi = parseInt(ps[0],10), fi = parseInt(ps[1],10);
-    var pp = ocrState.players[pi];
-    if(!pp) return;
-    var cur = pp.nums[fi];
-    var nv = prompt('修改「'+FIELD_DEFS[fi].label+'」：', cur===undefined?'':cur);
-    if(nv === null) return;
-    nv = nv.trim();
-    if(nv === '') pp.nums[fi] = undefined;
-    else pp.nums[fi] = nv;
-    renderPreview();
-    return;
-  }
-  var sub = e.target.closest('[data-submit]');
-  if(sub){
-    var idx = parseInt(sub.getAttribute('data-submit'),10);
-    var p = ocrState.players[idx];
-    if(!p || p.submitted || p.submitting) return;
-    if(!cloudReady){ alert('云端未连接'); return; }
-    p.submitting = true;
-    renderPreview();
-    var ok = await submitRequest(p);
-    p.submitting = false;
-    if(ok){ p.submitted = true; toast('「'+p.name+'」已提交，等待审核'); }
-    renderPreview();
-    return;
-  }
-  if(e.target.closest('#ppSubmitAll')){
-    var todo = ocrState.players.filter(function(x){return !x.submitted && !x.submitting;});
-    if(!todo.length){ toast('都已经提交了'); return; }
-    if(!cloudReady){ alert('云端未连接'); return; }
-    if(!confirm('提交 '+todo.length+' 条申请？')) return;
-    var okc = 0;
-    for(var k=0; k<todo.length; k++){
-      todo[k].submitting = true;
-      renderPreview();
-      var ok2 = await submitRequest(todo[k]);
-      todo[k].submitting = false;
-      if(ok2){ todo[k].submitted = true; okc++; }
-      renderPreview();
-    }
-    toast('已提交 '+okc+'/'+todo.length+' 条');
-  }
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const links=document.querySelectorAll('nav a');
+window.addEventListener('scroll',()=>{
+  const y=window.scrollY;
+  links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#home'&&y<300));
 });
 
-ocrCopy.addEventListener('click', function(){
-  var t = ocrState.text || '';
-  if(!t){ toast('没有内容'); return; }
-  try{
-    navigator.clipboard.writeText(t).then(function(){ toast('已复制'); }).catch(function(){
-      var ta = document.createElement('textarea');
-      ta.value = t; ta.style.position='fixed'; ta.style.opacity='0';
-      document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
-      toast('已复制');
-    });
-  }catch(e){ toast('复制失败'); }
-});
-ocrRawBtn.addEventListener('click', function(){
-  ocrRawBox.style.display = ocrRawBox.style.display === 'block' ? 'none' : 'block';
-});
-ocrDebug.addEventListener('click', function(){
-  var dbg = ocrState._debug;
-  if(!dbg){ toast('没有诊断数据'); return; }
-  var lines = ['共 ' + dbg.totalWords + ' 个词', '', '=== 按行分组 ==='];
-  dbg.rows.forEach(function(r, i){ lines.push('行 ' + (i+1) + ': ' + r); });
-  alert(lines.join('\n'));
-});
-ocrClose.addEventListener('click', function(){ ocrPanel.style.display='none'; });
+const contactBtn=document.getElementById('contactBtn');
+const contactModal=document.getElementById('contactModal');
+const closeContact=document.getElementById('closeContact');
 
-function renderPending(){
-  pendingCount.textContent = pendingList.length;
-  if(pendingList.length === 0){
-    pendingListEl.innerHTML = '<div class="admin-empty">暂无待审核申请</div>';
-    return;
-  }
-  var html = '';
-  pendingList.forEach(function(req, i){
-    html += '<div class="pending-card">';
-    html += '<div class="pd-head">';
-    html += '<div class="pd-rank-badge">' + (i+1) + '</div>';
-    html += '<div class="pd-name">'+esc(req.name)+'</div>';
-    html += '<div class="pd-score">tuber: '+esc(String(req.score||'0'))+'</div>';
-    html += '<div class="pd-time">'+formatTime(req.created_at)+'</div>';
-    html += '</div>';
-    if(req.image_data) html += '<img class="pd-img" src="'+req.image_data+'" data-zoom="1" alt="">';
-    var fields = req.fields || {};
-    html += '<div class="pd-fields">';
-    FIELD_DEFS.forEach(function(f){
-      var v = fields[f.key];
-      html += '<div class="pd-f"><div class="k">'+esc(f.label)+'</div><div class="v">' + (v===undefined?'—':esc(v)) + '</div></div>';
-    });
-    html += '</div>';
-    html += '<div class="pd-acts">';
-    html += '<button class="btn p sm" data-approve="'+i+'">✓ 批准</button>';
-    html += '<button class="btn d sm" data-reject="'+i+'">✕ 拒绝</button>';
-    html += '</div></div>';
-  });
-  pendingListEl.innerHTML = html;
-}
-pendingListEl.addEventListener('click', async function(e){
-  var z = e.target.closest('[data-zoom]');
-  if(z){ lightboxImg.src = z.src; lightbox.classList.add('show'); return; }
-  var ab = e.target.closest('[data-approve]');
-  if(ab){ var ai = parseInt(ab.getAttribute('data-approve'),10); if(pendingList[ai]) await approveRequest(pendingList[ai]); return; }
-  var rb = e.target.closest('[data-reject]');
-  if(rb){ var ri = parseInt(rb.getAttribute('data-reject'),10); if(pendingList[ri]) await rejectRequest(pendingList[ri]); }
+contactBtn.addEventListener('click',()=>contactModal.classList.add('show'));
+closeContact.addEventListener('click',()=>contactModal.classList.remove('show'));
+contactModal.addEventListener('click',(e)=>{
+  if(e.target===contactModal) contactModal.classList.remove('show');
 });
-adminRefresh.addEventListener('click', function(){ fetchPendingList(); fetchApprovedPlayers(); toast('已刷新'); });
-adminClose.addEventListener('click', function(){ adminPanel.style.display='none'; });
-
-function getTop3(){
-  var s = players.slice().sort(function(a,b){ return bigOrFloat(b.score) > bigOrFloat(a.score) ? 1 : -1; });
-  var t = {};
-  if(s[0]) t[s[0].id]=1;
-  if(s[1]) t[s[1].id]=2;
-  if(s[2]) t[s[2].id]=3;
-  return t;
-}
-
-function renderBoard(){
-  if(players.length === 0){
-    boardBody.innerHTML = '<div class="empty"><span class="ic">📭</span><div class="lead">还没有已批准的玩家<br>上传图片识别后提交申请，等待管理员审核</div></div>';
-    return;
-  }
-  var q = searchQuery.trim().toLowerCase();
-  var list = players;
-  if(q) list = players.filter(function(p){ return p.name.toLowerCase().indexOf(q) !== -1; });
-  if(list.length === 0){
-    boardBody.innerHTML = '<div class="empty"><span class="ic">🔍</span><div class="lead">没有匹配「'+esc(searchQuery)+'」的玩家</div></div>';
-    return;
-  }
-  var top = q ? {} : getTop3();
-  var html = '';
-  list.forEach(function(p){
-    var rank = players.indexOf(p) + 1;
-    var rc = '';
-    var tr = top[p.id];
-    if(tr === 1) rc = 'top1'; else if(tr === 2) rc = 'top2'; else if(tr === 3) rc = 'top3';
-    var medal = '';
-    if(tr === 1) medal = '🥇'; else if(tr === 2) medal = '🥈'; else if(tr === 3) medal = '🥉';
-
-    html += '<div class="board-card '+rc+'" data-id="'+esc(p.id)+'">';
-    html += '<div class="bc-avatar">';
-    if(p.image){ html += '<img src="'+esc(p.image)+'" alt="">'; }
-    else {
-      var ch = (p.name || '?').trim().charAt(0) || '?';
-      html += '<div class="bc-avatar-empty">'+esc(ch)+'</div>';
-    }
-    html += '</div>';
-    html += '<div class="bc-info">';
-    html += '<div class="bc-name-row">';
-    html += '<div class="bc-rank">' + (medal ? medal + ' ' : '') + '#' + rank + '</div>';
-    html += '<div class="bc-name"'+(isAdmin?' data-action="edit-name"':'')+'>'+esc(p.name)+'</div>';
-    if(isAdmin){
-      html += '<div class="bc-actions">';
-      html += '<button class="btn sm" data-action="dec">−</button>';
-      html += '<button class="btn sm" data-action="inc">＋</button>';
-      html += '<button class="btn sm d" data-action="del">✕</button>';
-      html += '</div>';
-    } else {
-      html += '<div class="bc-actions"><button class="btn sm" data-action="view-fields">📋 详情</button></div>';
-    }
-    html += '</div>';
-    html += '<div class="bc-fields">';
-    FIELD_DEFS.forEach(function(f, fi){
-      var v = p.fields ? p.fields[f.key] : undefined;
-      var cls = 'bc-field' + (v === undefined || v === '' ? ' missing' : '');
-      html += '<div class="'+cls+'" data-field="'+esc(f.key)+'" data-action="'+(isAdmin?'edit-field':'noop')+'">';
-      html += '<div class="v"><span class="k">'+esc(f.label)+'</span><span class="n">' + (v===undefined||v===''?'—':esc(v)) + '</span></div>';
-      html += '</div>';
-    });
-    html += '</div></div></div>';
-  });
-  boardBody.innerHTML = html;
-}
-function render(){ renderBoard(); }
-function findPlayer(id){ for(var i=0; i<players.length; i++) if(players[i].id === id) return players[i]; return null; }
-function changeScore(id, delta){
-  if(!isAdmin) return;
-  var p = findPlayer(id); if(!p) return;
-  var cur = p.score || '0', ns;
-  try{ ns = (BigInt(cur) + BigInt(delta)).toString(); } catch(e){ ns = String((parseFloat(cur)||0) + delta); }
-  var nf = Object.assign({}, p.fields || {}); nf.tuber = ns;
-  updatePlayer(id, { score: ns, fields: nf });
-}
-function deleteP(id){
-  if(!isAdmin) return;
-  var p = findPlayer(id); if(!p) return;
-  if(!confirm('删除「'+p.name+'」？')) return;
-  removePlayer(id);
-}
-function editName(el, id){
-  if(!isAdmin) return;
-  var p = findPlayer(id); if(!p) return;
-  var inp = document.createElement('input');
-  inp.type = 'text'; inp.value = p.name; inp.maxLength = 40;
-  inp.style.cssText = 'font:inherit;font-weight:800;font-size:16px;color:#111827;width:100%;padding:4px 8px;border:2px solid #6366f1;border-radius:6px;outline:none;background:#fff;';
-  el.innerHTML = ''; el.appendChild(inp);
-  inp.focus(); inp.select();
-  var done = false;
-  function fin(sv){
-    if(done) return; done = true;
-    if(sv && inp.value.trim() && inp.value.trim() !== p.name){ updatePlayer(id, { name: inp.value.trim().slice(0,40) }); return; }
-    render();
-  }
-  inp.addEventListener('blur', function(){ fin(true); });
-  inp.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){ e.preventDefault(); fin(true); }
-    else if(e.key === 'Escape'){ e.preventDefault(); fin(false); }
-  });
-}
-function editField(scope, fieldKey, id){
-  if(!isAdmin) return;
-  var p = findPlayer(id); if(!p) return;
-  var cur = p.fields ? (p.fields[fieldKey] || '') : '';
-  var nv = prompt('修改「' + fieldKey + '」：', cur);
-  if(nv === null) return;
-  nv = String(nv).trim();
-  var nf = Object.assign({}, p.fields || {}); nf[fieldKey] = nv;
-  var patch = { fields: nf };
-  if(fieldKey === 'tuber') patch.score = nv || '0';
-  updatePlayer(id, patch);
-}
-boardBody.addEventListener('click', function(e){
-  var card = e.target.closest('.board-card'); if(!card) return;
-  var id = card.getAttribute('data-id');
-  var p = findPlayer(id); if(!p) return;
-  var act = e.target.closest('[data-action]'); if(!act) return;
-  var a = act.getAttribute('data-action');
-  if(a === 'inc'){ changeScore(id, 1); return; }
-  if(a === 'dec'){ changeScore(id, -1); return; }
-  if(a === 'del'){ deleteP(id); return; }
-  if(a === 'edit-name'){ editName(act, id); return; }
-  if(a === 'edit-field'){ var fk = act.getAttribute('data-field'); if(fk) editField('card', fk, id); return; }
-  if(a === 'view-fields'){ openFieldsDetail(p); return; }
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape') contactModal.classList.remove('show');
 });
-function openFieldsDetail(p){
-  fieldsTitle.textContent = p.name;
-  var html = '';
-  if(!p.fields || !Object.keys(p.fields).length){
-    html = '<p style="color:var(--text-muted);text-align:center;padding:20px">没有字段数据</p>';
-  } else {
-    FIELD_DEFS.forEach(function(f){
-      var v = p.fields[f.key];
-      html += '<div class="field-row"><span class="fk">'+esc(f.label)+'</span><span class="fv">' + (v===undefined?'—':esc(v)) + '</span></div>';
-    });
-  }
-  fieldsBody.innerHTML = html; fieldsOv.classList.add('show');
-}
-fieldsClose.addEventListener('click', function(){ fieldsOv.classList.remove('show'); });
-fieldsOv.addEventListener('click', function(e){ if(e.target === fieldsOv) fieldsOv.classList.remove('show'); });
-
-btnUploadImage.addEventListener('click', function(e){ e.stopPropagation(); imageInput.click(); });
-uploadZone.addEventListener('click', function(e){
-  if(e.target.closest('.uz-remove')) return;
-  if(boardImage){ lightboxImg.src = boardImage; lightbox.classList.add('show'); return; }
-  imageInput.click();
-});
-imageInput.addEventListener('change', function(){
-  var f = imageInput.files && imageInput.files[0];
-  imageInput.value = '';
-  if(f) handleImageUpload(f);
-});
-uzRemove.addEventListener('click', function(e){ e.stopPropagation(); removeImage(); });
-lightbox.addEventListener('click', function(){ lightbox.classList.remove('show'); });
-searchInput.addEventListener('input', function(){ searchQuery = searchInput.value || ''; renderBoard(); });
-btnRefresh.addEventListener('click', async function(){
-  toast('正在刷新…');
-  await fetchApprovedPlayers();
-  if(isAdmin) await fetchPendingList();
-  toast('已刷新');
-});
-function openLogin(){ loginOv.classList.add('show'); setTimeout(function(){ try{ loginEmail.focus(); }catch(e){} }, 100); }
-function closeLogin(){ loginOv.classList.remove('show'); }
-btnLogin.addEventListener('click', openLogin);
-loginCancel.addEventListener('click', closeLogin);
-loginClose.addEventListener('click', closeLogin);
-loginOv.addEventListener('click', function(e){ if(e.target === loginOv) closeLogin(); });
-loginSubmit.addEventListener('click', async function(){
-  if(!cloudReady){ alert('云端未连接'); return; }
-  var email = loginEmail.value.trim(), pw = loginPassword.value;
-  if(!email || !pw){ alert('请输入邮箱和密码'); return; }
-  loginSubmit.disabled = true; loginSubmit.textContent = '登录中…';
-  try{
-    var res = await sb.auth.signInWithPassword({email:email, password:pw});
-    if(res.error) throw res.error;
-    toast('登录成功'); closeLogin();
-  }catch(e){ alert('登录失败：'+(e.message||e)); }
-  loginSubmit.disabled = false; loginSubmit.textContent = '登录';
-});
-btnLogout.addEventListener('click', async function(){
-  if(!cloudReady) return;
-  if(!confirm('退出管理员登录？')) return;
-  await sb.auth.signOut();
-});
-async function applyAdminState(admin){
-  isAdmin = !!admin;
-  btnLogin.style.display = isAdmin ? 'none' : 'inline-flex';
-  btnLogout.style.display = isAdmin ? 'inline-flex' : 'none';
-  adminPanel.style.display = isAdmin ? 'block' : 'none';
-  updateBanner(); render();
-  if(isAdmin) await fetchPendingList();
-  else { pendingList = []; renderPending(); }
-}
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape'){
-    if(lightbox.classList.contains('show')){ lightbox.classList.remove('show'); return; }
-    if(fieldsOv.classList.contains('show')){ fieldsOv.classList.remove('show'); return; }
-    if(loginOv.classList.contains('show')){ closeLogin(); return; }
-  }
-  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
-    e.preventDefault(); searchInput.focus(); searchInput.select();
-  }
-});
-async function boot(){
-  try{
-    var img = localStorage.getItem(K_IMAGE);
-    if(img && img.indexOf('data:image/') === 0) boardImage = img;
-  }catch(e){}
-  updateImageUI();
-  initSupabase();
-  updateBanner();
-  if(cloudReady){
-    sb.auth.onAuthStateChange(function(event, session){ applyAdminState(!!(session && session.user)); });
-    try{
-      var s = await sb.auth.getSession();
-      await applyAdminState(!!(s.data && s.data.session && s.data.session.user));
-    }catch(e){ await applyAdminState(false); }
-    await fetchApprovedPlayers();
-    setupRealtime();
-  } else {
-    render();
-    applyAdminState(false);
-  }
-  if(boardImage) setTimeout(function(){ runOCR(boardImage); }, 500);
-}
-if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-else boot();
-
-})();
 </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"02fbd55a5dc44629920d1f5fa3e359f1","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
