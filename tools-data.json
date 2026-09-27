@@ -6,7 +6,7 @@
     "desc": "暂时没用",
     "tag": "已废弃",
     "url": "./wiki.html",
-    "deprecated": false,
+    "deprecated": true,
     "disabled": false,
     "hidden": false
   },
