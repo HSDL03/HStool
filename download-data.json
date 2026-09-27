@@ -1,1 +1,24 @@
-[]
+[
+  {
+    "releaseTag": "饿",
+    "fileName": "w.mcstructure",
+    "icon": "📦",
+    "name": "w.mcstructure",
+    "desc": "测试",
+    "tag": "测试",
+    "version": "饿",
+    "hidden": false,
+    "offline": false
+  },
+  {
+    "releaseTag": "下载源",
+    "fileName": "default.txt",
+    "icon": "📝",
+    "name": "default.txt",
+    "desc": "无",
+    "tag": "测试",
+    "version": "v1.0",
+    "hidden": false,
+    "offline": false
+  }
+]
