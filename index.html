@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>红石的小工具箱</title>
+<title>红石的小站</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
 <script>
 (function(){
@@ -132,14 +132,17 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .hero h1{margin:0 0 12px;font-size:clamp(2rem,4.5vw,3.2rem);font-weight:800;line-height:1.12;letter-spacing:-.03em;background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .hero-sub{margin:0 auto 6px;max-width:520px;font-size:15px;color:var(--muted);line-height:1.65}
 .hero-line{display:inline-block;margin-top:12px;padding-top:12px;border-top:1px dashed var(--bd);font-size:12.5px;color:var(--muted);letter-spacing:.02em}
-.columns{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
-.column{min-width:0}
+
+/* 工具分组 */
+.tool-sections{display:flex;flex-direction:column;gap:36px}
+.tool-section{animation:heroIn .5s cubic-bezier(.22,1,.36,1) both}
 .section-title{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .section-title::before{content:"";display:inline-block;width:8px;height:8px;background:var(--ac);box-shadow:var(--bevel)}
 .section-title.deprecated::before{background:var(--muted);opacity:.5}
 .section-title .count{font-size:11px;padding:1px 8px;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;letter-spacing:0;text-transform:none;font-weight:600}
+
 .tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.tool-grid.deprecated{grid-template-columns:1fr;gap:12px}
+
 .tool-card{position:relative;display:flex;align-items:center;gap:14px;padding:16px 18px;background:linear-gradient(135deg,var(--bg2),var(--bg));border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);text-decoration:none;color:inherit;overflow:hidden;transition:all .3s cubic-bezier(.34,1.56,.64,1);animation:cardIn .5s cubic-bezier(.22,1,.36,1) both;cursor:pointer}
 .tool-card::before{content:"";position:absolute;inset:0;background:var(--tile-accent);opacity:0;transition:opacity .3s;pointer-events:none}
 .tool-card:hover{transform:translateY(-4px);box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.3),0 12px 24px rgba(0,0,0,.15);border-color:var(--ac)}
@@ -160,18 +163,22 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme^="github-"] .tc-tag{border-radius:999px}
 .tc-arrow{flex:none;font-size:20px;font-weight:800;color:var(--ac);opacity:0;transform:translateX(-8px);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
 .tool-card:hover .tc-arrow{opacity:1;transform:translateX(0)}
+
 .tool-card.deprecated{border-color:var(--bd);border-style:dashed;opacity:.7;filter:grayscale(.35)}
 .tool-card.deprecated:hover{opacity:1;filter:none;border-style:solid}
 .tool-card.deprecated .tc-name{color:var(--muted)}
 .tool-card.deprecated:hover .tc-name{color:var(--ac)}
 .tool-card.deprecated .tc-tag{background:transparent;border-color:var(--bd);color:var(--muted)}
+
 .empty-col{padding:60px 24px;text-align:center;background:var(--bg2);border:2px dashed var(--bd);border-radius:var(--r);color:var(--muted)}
 .empty-col .ic{font-size:48px;opacity:.35;margin-bottom:12px;display:block;line-height:1}
 .empty-col .title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
 .empty-col .sub{font-size:12.5px;color:var(--muted);line-height:1.7}
+
 .foot{margin-top:64px;padding-top:20px;text-align:center;border-top:1px dashed var(--bd);font-size:12px;color:var(--muted);letter-spacing:.02em}
 .foot a{color:var(--ac);text-decoration:none;font-weight:600;border-bottom:1px dashed var(--ac);transition:all .2s}
 .foot a:hover{border-bottom-style:solid;opacity:.8}
+
 .ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
 .ov.show{opacity:1;visibility:visible}
 .pnl{display:flex;flex-direction:column;width:100%;max-width:500px;background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) + 3px);box-shadow:var(--sh);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
@@ -204,10 +211,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme^="github-"] .tc-icon{border-width:1px;border-radius:10px}
 [data-theme^="github-"] .empty-col{border-radius:10px}
 [data-theme^="github-"] .section-title::before{border-radius:2px}
-@media(max-width:900px){
-  .columns{grid-template-columns:1fr;gap:32px}
-  .tool-grid.deprecated{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
-}
+
 @media(max-width:640px){
   .wrap{padding:56px 16px 60px}
   .hero{padding:12px 0 28px}
@@ -217,6 +221,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   .tc-name{font-size:15px}
   .logo span:last-child{display:none}
   .theme-grid{grid-template-columns:1fr}
+  .tool-sections{gap:28px}
 }
 @media print{.bg-decor,.tc-arrow,.topbar,.ov,.toast{display:none}body{padding-top:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -225,7 +230,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <body>
 
 <header class="topbar" id="topbar">
-  <a class="logo" href="./index.html"><span class="logo-icon">🧰</span><span>红石的小工具箱</span></a>
+  <a class="logo" href="./index.html"><span class="logo-icon">🧰</span><span>红石的小站</span></a>
   <span class="sp"></span>
   <button class="icon" id="reloadBtn" title="刷新工具列表">🔄</button>
   <button class="icon" id="themeBtn" title="切换风格">🎨</button>
@@ -242,31 +247,16 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 
 <div class="wrap">
   <div class="hero">
-    <div class="hero-badge"><span class="dot"></span>TOOLBOX · 在线</div>
-    <h1>红石的小工具箱</h1>
-    <p class="hero-sub">各种实用小工具的集合 · 点开即可使用</p>
+    <div class="hero-badge"><span class="dot"></span>STATION · 在线</div>
+    <h1>红石的小站</h1>
+    <p class="hero-sub">各种实用小工具和小玩意儿 · 点开即可使用</p>
     <span class="hero-line">🛠️ 轻量 · 无依赖 · 即开即用</span>
   </div>
 
-  <div class="columns">
-    <div class="column">
-      <div class="section-title">
-        可用工具
-        <span class="count" id="activeCount">0</span>
-      </div>
-      <div class="tool-grid" id="activeGrid"></div>
-    </div>
-    <div class="column">
-      <div class="section-title deprecated">
-        已废弃
-        <span class="count" id="deprecatedCount">0</span>
-      </div>
-      <div class="tool-grid deprecated" id="deprecatedGrid"></div>
-    </div>
-  </div>
+  <div class="tool-sections" id="toolSections"></div>
 
   <div class="foot">
-    红石的小工具箱 · 使用AI制作 ·
+    红石的小站 · 使用AI制作 ·
     <a href="https://github.com/HSDL03/HSwiki" target="_blank" rel="noopener">此AI项目在 GitHub</a>
   </div>
 </div>
@@ -284,9 +274,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 (function(){
 'use strict';
 
-/* ============================================================
-   配置
-   ============================================================ */
 var GH_OWNER  = 'HSDL03';
 var GH_REPO   = 'HSwiki';
 var GH_BRANCH = 'main';
@@ -295,9 +282,6 @@ var DATA_FILE = 'tools-data.json';
 var RAW_BASE = 'https://raw.githubusercontent.com/' + GH_OWNER + '/' + GH_REPO + '/' + GH_BRANCH + '/';
 var CDN_BASE = 'https://cdn.jsdelivr.net/gh/' + GH_OWNER + '/' + GH_REPO + '@' + GH_BRANCH + '/';
 
-/* ============================================================
-   ★ 默认工具列表（当 tools-data.json 不存在时使用）
-   ============================================================ */
 var DEFAULT_TOOLS = [
   {
     id: 'wiki',
@@ -333,9 +317,6 @@ var DEFAULT_TOOLS = [
 
 var TOOLS = DEFAULT_TOOLS.slice();
 
-/* ============================================================
-   工具函数
-   ============================================================ */
 function $(id){return document.getElementById(id);}
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -347,9 +328,6 @@ var storage={
   set:function(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
 };
 
-/* ============================================================
-   主题系统
-   ============================================================ */
 var K_THEME='wiki-theme';
 var THEMES=[
   {id:'mc-wiki',name:'🟩 MC Wiki',desc:'我的世界中文 Wiki',colors:['#3d521f','#fffdf5','#56682c']},
@@ -389,9 +367,6 @@ var themeOv=$('themeOv'),themeGrid=$('themeGrid'),themeBtn=$('themeBtn'),themeCl
 function openTheme(){buildThemeGrid();themeOv.classList.add('show');}
 function closeTheme(){themeOv.classList.remove('show');}
 
-/* ============================================================
-   Toast
-   ============================================================ */
 var toastEl=$('toast'),toastTimer=null;
 function toast(msg){
   if(!toastEl)return;
@@ -401,11 +376,6 @@ function toast(msg){
   toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2000);
 }
 
-/* ============================================================
-   加载 tools-data.json
-   ------------------------------------------------------------
-   顺序：raw 优先（无缓存延迟）→ CDN 兜底
-   ============================================================ */
 function normTool(t, i){
   if(!t || typeof t!=='object') return null;
   var name=(typeof t.name==='string'&&t.name.trim())?t.name.trim():('未命名 '+(i+1));
@@ -414,7 +384,7 @@ function normTool(t, i){
     icon: (typeof t.icon==='string'&&t.icon.trim())?t.icon.trim():'🧰',
     name: name,
     desc: typeof t.desc==='string'?t.desc:'',
-    tag: (typeof t.tag==='string'&&t.tag.trim())?t.tag.trim():'工具',
+    tag: (typeof t.tag==='string'&&t.tag.trim())?t.tag.trim():'未分类',
     url: typeof t.url==='string'?t.url:'',
     deprecated: !!t.deprecated,
     disabled: !!t.disabled,
@@ -426,14 +396,12 @@ function loadTools(force){
   var url1=RAW_BASE+DATA_FILE+'?t='+Date.now();
   var url2=CDN_BASE+DATA_FILE+'?t='+Date.now();
 
-  /* raw 优先，实时更新 */
   return fetch(url1,{cache:'no-store'})
     .then(function(r){
       if(!r.ok) throw new Error('raw HTTP '+r.status);
       return r.json();
     })
     .catch(function(){
-      /* raw 失败才用 CDN 兜底 */
       return fetch(url2,{cache:'no-store'})
         .then(function(r){
           if(!r.ok) throw new Error('CDN HTTP '+r.status);
@@ -460,9 +428,6 @@ function loadTools(force){
     });
 }
 
-/* ============================================================
-   渲染工具卡片
-   ============================================================ */
 function renderCard(t, delay){
   var cls = 'tool-card' + (t.deprecated ? ' deprecated' : '');
   var href = t.disabled ? 'javascript:void(0)' : t.url;
@@ -474,54 +439,56 @@ function renderCard(t, delay){
     + '<div class="tc-info">'
     +   '<div class="tc-name">' + escapeHtml(t.name) + '</div>'
     +   '<div class="tc-desc">' + escapeHtml(t.desc) + '</div>'
-    +   '<span class="tc-tag">' + escapeHtml(t.tag || '工具') + '</span>'
     + '</div>'
     + '<div class="tc-arrow">→</div>'
     + '</a>';
 }
 
 function renderTools(){
-  var activeGrid = $('activeGrid');
-  var deprecatedGrid = $('deprecatedGrid');
-  var activeCount = $('activeCount');
-  var deprecatedCount = $('deprecatedCount');
+  var container = $('toolSections');
+  if(!container) return;
 
   var visible = TOOLS.filter(function(t){ return !t.hidden; });
-  var active = visible.filter(function(t){ return !t.deprecated; });
-  var deprecated = visible.filter(function(t){ return t.deprecated; });
 
-  if (active.length === 0) {
-    activeGrid.innerHTML =
+  if(visible.length === 0){
+    container.innerHTML =
       '<div class="empty-col">' +
         '<span class="ic">🧰</span>' +
-        '<div class="title">还没有可用工具</div>' +
-        '<div class="sub">后续会陆续添加</div>' +
+        '<div class="title">还没有内容</div>' +
+        '<div class="sub">去管理页添加工具</div>' +
       '</div>';
-  } else {
-    var activeHtml = '';
-    active.forEach(function(t, i){
-      activeHtml += renderCard(t, Math.min(i * 50, 500));
-    });
-    activeGrid.innerHTML = activeHtml;
+    return;
   }
-  activeCount.textContent = active.length;
 
-  if (deprecated.length === 0) {
-    deprecatedGrid.innerHTML =
-      '<div class="empty-col">' +
-        '<span class="ic">🗂</span>' +
-        '<div class="title">暂无已废弃条目</div>' +
-      '</div>';
-  } else {
-    var depHtml = '';
-    deprecated.forEach(function(t, i){
-      depHtml += renderCard(t, Math.min(i * 50, 500));
+  /* 按 tag 分组，保留出现顺序 */
+  var groups = {};
+  var order = [];
+  visible.forEach(function(t){
+    var tag = t.tag || '未分类';
+    if(!groups[tag]){ groups[tag] = []; order.push(tag); }
+    groups[tag].push(t);
+  });
+
+  var html = '';
+  order.forEach(function(tag, gi){
+    var items = groups[tag];
+    var delay = Math.min(gi * 60, 400);
+    html += '<div class="tool-section" style="animation-delay:' + delay + 'ms">';
+    html +=   '<div class="section-title">' +
+                escapeHtml(tag) +
+                '<span class="count">' + items.length + '</span>' +
+              '</div>';
+    html +=   '<div class="tool-grid">';
+    items.forEach(function(t, i){
+      html += renderCard(t, Math.min(i * 50, 400));
     });
-    deprecatedGrid.innerHTML = depHtml;
-  }
-  deprecatedCount.textContent = deprecated.length;
+    html +=   '</div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
 
-  var disableds = document.querySelectorAll('.tool-card[data-disabled="1"]');
+  /* 拦截禁用点击 */
+  var disableds = container.querySelectorAll('.tool-card[data-disabled="1"]');
   for(var i=0;i<disableds.length;i++){
     (function(el){
       el.addEventListener('click', function(e){
@@ -539,9 +506,6 @@ var styleEl = document.createElement('style');
 styleEl.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}';
 document.head.appendChild(styleEl);
 
-/* ============================================================
-   浮动几何装饰
-   ============================================================ */
 function buildFloatDecor(){
   var wrap = $('floatDecor');
   if(!wrap) return;
@@ -566,9 +530,6 @@ function buildFloatDecor(){
   wrap.innerHTML = html;
 }
 
-/* ============================================================
-   粒子系统
-   ============================================================ */
 var particleCtx = null, particles = [], particleRunning = true, pW = 0, pH = 0, pDpr = 1;
 var themeColors = ['61,82,31','106,140,60','140,180,60','180,150,80'];
 function readThemeColors(){
@@ -665,9 +626,6 @@ function drawParticles(){
   requestAnimationFrame(drawParticles);
 }
 
-/* ============================================================
-   滚动阴影
-   ============================================================ */
 var topbarEl=$('topbar'),rafPend=false;
 function onScroll(){
   if(rafPend)return;rafPend=true;
@@ -678,9 +636,6 @@ function onScroll(){
   });
 }
 
-/* ============================================================
-   绑定
-   ============================================================ */
 function bind(){
   themeBtn.addEventListener('click',openTheme);
   themeClose.addEventListener('click',closeTheme);
@@ -721,18 +676,14 @@ function bind(){
   });
 }
 
-/* ============================================================
-   启动
-   ============================================================ */
 function boot(){
   applyTheme(curTheme);
-  renderTools();     /* 先用默认列表渲染，避免空白 */
+  renderTools();
   buildFloatDecor();
   initParticles();
   bind();
   onScroll();
 
-  /* 异步加载远程列表，成功后覆盖 */
   loadTools(false).then(function(ok){
     if(ok) renderTools();
   });
