@@ -15,178 +15,44 @@
 })();
 </script>
 <style>
-:root,[data-theme="mc-wiki"]{
-  --bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;
-  --bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;
-  --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
-  --sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;
-  --bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);
-  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);
-  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --blob1:rgba(61,82,31,.13);--blob2:rgba(106,140,60,.09);--blob3:rgba(180,150,80,.07);
-  --grid:rgba(61,82,31,.04);
-  --p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;
-  --hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);
-  --tile-accent:linear-gradient(135deg,#7a9c3c,#3d521f);
-  --topbar-bg:linear-gradient(180deg,#56682c,#3d521f);
-  --topbar-fg:#fff;--topbar-bd:#2a3a1a;
-  --board-bg:#dcb980;--board-line:#4a3520;
-}
-[data-theme="mc-night"]{
-  --bg:#1a1a1a;--bg2:#242424;--bg3:#303030;--text:#e0e0e0;--muted:#909090;
-  --bd:#505050;--bd2:#6a6a6a;--ac:#8ec44a;--acs:#2a3a1a;
-  --ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;
-  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
-  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
-  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
-  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --blob1:rgba(142,196,74,.10);--blob2:rgba(90,140,60,.07);--blob3:rgba(120,90,40,.07);
-  --grid:rgba(255,255,255,.025);
-  --p1:142,196,74;--p2:90,140,60;--p3:200,180,100;--p4:120,90,40;
-  --hero-grad:linear-gradient(135deg,#8ec44a,#3d521f);
-  --tile-accent:linear-gradient(135deg,#8ec44a,#3d521f);
-  --topbar-bg:linear-gradient(180deg,#2a3a1a,#1a2a0a);
-  --topbar-fg:#e8ffd0;--topbar-bd:#0a1a00;
-  --board-bg:#3a2a18;--board-line:#8a7a60;
-}
-[data-theme="mc-nether"]{
-  --bg:#1a0a0a;--bg2:#2a1212;--bg3:#3a1a1a;--text:#f0d0d0;--muted:#a08080;
-  --bd:#6a3030;--bd2:#8a4040;--ac:#ff6030;--acs:#3a1a10;
-  --ok:#5ab05a;--warn:#d4a72c;--dgr:#f85050;
-  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
-  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
-  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
-  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --blob1:rgba(255,96,48,.12);--blob2:rgba(200,60,30,.09);--blob3:rgba(255,150,80,.07);
-  --grid:rgba(255,150,100,.03);
-  --p1:255,96,48;--p2:200,60,30;--p3:255,150,80;--p4:120,40,20;
-  --hero-grad:linear-gradient(135deg,#ff6030,#8a2010);
-  --tile-accent:linear-gradient(135deg,#ff6030,#8a2010);
-  --topbar-bg:linear-gradient(180deg,#3a1212,#1a0a0a);
-  --topbar-fg:#ffe0d0;--topbar-bd:#0a0500;
-  --board-bg:#3a1a10;--board-line:#c87050;
-}
-[data-theme="mc-end"]{
-  --bg:#0f0a1a;--bg2:#1a1230;--bg3:#251a40;--text:#e0d0f0;--muted:#9080a0;
-  --bd:#4a3a6a;--bd2:#6a5a8a;--ac:#a060ff;--acs:#2a1a3a;
-  --ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;
-  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
-  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
-  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
-  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --blob1:rgba(160,96,255,.12);--blob2:rgba(120,60,200,.08);--blob3:rgba(200,150,255,.06);
-  --grid:rgba(200,150,255,.025);
-  --p1:160,96,255;--p2:120,60,200;--p3:200,150,255;--p4:80,40,120;
-  --hero-grad:linear-gradient(135deg,#a060ff,#4a2080);
-  --tile-accent:linear-gradient(135deg,#a060ff,#4a2080);
-  --topbar-bg:linear-gradient(180deg,#2a1a3a,#0f0a1a);
-  --topbar-fg:#e0d0ff;--topbar-bd:#0a0510;
-  --board-bg:#2a1a3a;--board-line:#a080d0;
-}
-[data-theme="sakura"]{
-  --bg:#fffafc;--bg2:#fff0f5;--bg3:#ffe0ea;--text:#2a1a20;--muted:#806070;
-  --bd:#e0b0c0;--bd2:#a06080;--ac:#d04080;--acs:#ffe0ea;
-  --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
-  --sh:2px 2px 0 rgba(160,80,120,.2);--r:4px;
-  --bevel:inset -1px -1px 0 rgba(160,80,120,.1),inset 1px 1px 0 rgba(255,255,255,.8);
-  --bevel-in:inset 1px 1px 0 rgba(160,80,120,.1),inset -1px -1px 0 rgba(255,255,255,.8);
-  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --blob1:rgba(208,64,128,.12);--blob2:rgba(240,120,160,.08);--blob3:rgba(255,180,200,.06);
-  --grid:rgba(208,64,128,.04);
-  --p1:208,64,128;--p2:240,120,160;--p3:255,180,200;--p4:160,80,120;
-  --hero-grad:linear-gradient(135deg,#d04080,#ff80a0);
-  --tile-accent:linear-gradient(135deg,#ff80a0,#d04080);
-  --topbar-bg:linear-gradient(180deg,#d06090,#a04070);
-  --topbar-fg:#fff;--topbar-bd:#802050;
-  --board-bg:#ffe0ea;--board-line:#a06080;
-}
-[data-theme="ocean"]{
-  --bg:#f0f8ff;--bg2:#e0f0fa;--bg3:#c8e0f0;--text:#0a1a2a;--muted:#406080;
-  --bd:#a0c0d8;--bd2:#406080;--ac:#0066cc;--acs:#c8e4ff;
-  --ok:#1a7f37;--warn:#b08800;--dgr:#cf222e;
-  --sh:2px 2px 0 rgba(32,80,140,.2);--r:4px;
-  --bevel:inset -1px -1px 0 rgba(32,80,140,.1),inset 1px 1px 0 rgba(255,255,255,.8);
-  --bevel-in:inset 1px 1px 0 rgba(32,80,140,.1),inset -1px -1px 0 rgba(255,255,255,.8);
-  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --blob1:rgba(0,102,204,.10);--blob2:rgba(64,160,220,.08);--blob3:rgba(120,200,240,.06);
-  --grid:rgba(0,102,204,.04);
-  --p1:0,102,204;--p2:64,160,220;--p3:120,200,240;--p4:32,80,140;
-  --hero-grad:linear-gradient(135deg,#0066cc,#40a0dc);
-  --tile-accent:linear-gradient(135deg,#40a0dc,#0066cc);
-  --topbar-bg:linear-gradient(180deg,#2080c0,#004890);
-  --topbar-fg:#fff;--topbar-bd:#002040;
-  --board-bg:#c8e4ff;--board-line:#406080;
-}
-[data-theme="github-light"]{
-  --bg:#ffffff;--bg2:#f6f8fa;--bg3:#eef1f4;--text:#1f2328;--muted:#59636e;
-  --bd:#d1d9e0;--bd2:#a0a8b0;--ac:#0969da;--acs:#ddf4ff;
-  --ok:#1a7f37;--warn:#d4a72c;--dgr:#cf222e;
-  --sh:0 1px 4px rgba(31,35,40,.08);--r:6px;
-  --bevel:none;--bevel-in:none;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --blob1:rgba(9,105,218,.08);--blob2:rgba(163,113,247,.06);--blob3:rgba(219,112,147,.05);
-  --grid:rgba(31,35,40,.02);
-  --p1:9,105,218;--p2:163,113,247;--p3:219,112,147;--p4:31,35,40;
-  --hero-grad:linear-gradient(135deg,#0969da,#a371f7);
-  --tile-accent:linear-gradient(135deg,#0969da,#a371f7);
-  --topbar-bg:#ffffff;--topbar-fg:#1f2328;--topbar-bd:#d1d9e0;
-  --board-bg:#f6f8fa;--board-line:#a0a8b0;
-}
-[data-theme="github-dark"]{
-  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--text:#e6edf3;--muted:#9198a1;
-  --bd:#30363d;--bd2:#484f58;--ac:#4493f8;--acs:#16233a;
-  --ok:#3fb950;--warn:#d4a72c;--dgr:#f85149;
-  --sh:0 1px 4px rgba(0,0,0,.4);--r:6px;
-  --bevel:none;--bevel-in:none;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  --blob1:rgba(68,147,248,.06);--blob2:rgba(163,113,247,.05);--blob3:rgba(219,112,147,.04);
-  --grid:rgba(230,237,243,.02);
-  --p1:68,147,248;--p2:163,113,247;--p3:219,112,147;--p4:230,237,243;
-  --hero-grad:linear-gradient(135deg,#4493f8,#a371f7);
-  --tile-accent:linear-gradient(135deg,#4493f8,#a371f7);
-  --topbar-bg:#161b22;--topbar-fg:#e6edf3;--topbar-bd:#30363d;
-  --board-bg:#21262d;--board-line:#484f58;
-}
+:root,[data-theme="mc-wiki"]{--bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;--bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;--ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;--sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);--bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(61,82,31,.13);--blob2:rgba(106,140,60,.09);--blob3:rgba(180,150,80,.07);--grid:rgba(61,82,31,.04);--p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;--hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);--topbar-bg:linear-gradient(180deg,#56682c,#3d521f);--topbar-fg:#fff;--topbar-bd:#2a3a1a;--board-bg:#dcb980;--board-line:#4a3520}
+[data-theme="mc-night"]{--bg:#1a1a1a;--bg2:#242424;--bg3:#303030;--text:#e0e0e0;--muted:#909090;--bd:#505050;--bd2:#6a6a6a;--ac:#8ec44a;--acs:#2a3a1a;--ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;--sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(142,196,74,.10);--blob2:rgba(90,140,60,.07);--blob3:rgba(120,90,40,.07);--grid:rgba(255,255,255,.025);--p1:142,196,74;--p2:90,140,60;--p3:200,180,100;--p4:120,90,40;--hero-grad:linear-gradient(135deg,#8ec44a,#3d521f);--topbar-bg:linear-gradient(180deg,#2a3a1a,#1a2a0a);--topbar-fg:#e8ffd0;--topbar-bd:#0a1a00;--board-bg:#3a2a18;--board-line:#8a7a60}
+[data-theme="mc-nether"]{--bg:#1a0a0a;--bg2:#2a1212;--bg3:#3a1a1a;--text:#f0d0d0;--muted:#a08080;--bd:#6a3030;--bd2:#8a4040;--ac:#ff6030;--acs:#3a1a10;--ok:#5ab05a;--warn:#d4a72c;--dgr:#f85050;--sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(255,96,48,.12);--blob2:rgba(200,60,30,.09);--blob3:rgba(255,150,80,.07);--grid:rgba(255,150,100,.03);--p1:255,96,48;--p2:200,60,30;--p3:255,150,80;--p4:120,40,20;--hero-grad:linear-gradient(135deg,#ff6030,#8a2010);--topbar-bg:linear-gradient(180deg,#3a1212,#1a0a0a);--topbar-fg:#ffe0d0;--topbar-bd:#0a0500;--board-bg:#3a1a10;--board-line:#c87050}
+[data-theme="mc-end"]{--bg:#0f0a1a;--bg2:#1a1230;--bg3:#251a40;--text:#e0d0f0;--muted:#9080a0;--bd:#4a3a6a;--bd2:#6a5a8a;--ac:#a060ff;--acs:#2a1a3a;--ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;--sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(160,96,255,.12);--blob2:rgba(120,60,200,.08);--blob3:rgba(200,150,255,.06);--grid:rgba(200,150,255,.025);--p1:160,96,255;--p2:120,60,200;--p3:200,150,255;--p4:80,40,120;--hero-grad:linear-gradient(135deg,#a060ff,#4a2080);--topbar-bg:linear-gradient(180deg,#2a1a3a,#0f0a1a);--topbar-fg:#e0d0ff;--topbar-bd:#0a0510;--board-bg:#2a1a3a;--board-line:#a080d0}
+[data-theme="sakura"]{--bg:#fffafc;--bg2:#fff0f5;--bg3:#ffe0ea;--text:#2a1a20;--muted:#806070;--bd:#e0b0c0;--bd2:#a06080;--ac:#d04080;--acs:#ffe0ea;--ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;--sh:2px 2px 0 rgba(160,80,120,.2);--r:4px;--bevel:inset -1px -1px 0 rgba(160,80,120,.1),inset 1px 1px 0 rgba(255,255,255,.8);--bevel-in:inset 1px 1px 0 rgba(160,80,120,.1),inset -1px -1px 0 rgba(255,255,255,.8);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(208,64,128,.12);--blob2:rgba(240,120,160,.08);--blob3:rgba(255,180,200,.06);--grid:rgba(208,64,128,.04);--p1:208,64,128;--p2:240,120,160;--p3:255,180,200;--p4:160,80,120;--hero-grad:linear-gradient(135deg,#d04080,#ff80a0);--topbar-bg:linear-gradient(180deg,#d06090,#a04070);--topbar-fg:#fff;--topbar-bd:#802050;--board-bg:#ffe0ea;--board-line:#a06080}
+[data-theme="ocean"]{--bg:#f0f8ff;--bg2:#e0f0fa;--bg3:#c8e0f0;--text:#0a1a2a;--muted:#406080;--bd:#a0c0d8;--bd2:#406080;--ac:#0066cc;--acs:#c8e4ff;--ok:#1a7f37;--warn:#b08800;--dgr:#cf222e;--sh:2px 2px 0 rgba(32,80,140,.2);--r:4px;--bevel:inset -1px -1px 0 rgba(32,80,140,.1),inset 1px 1px 0 rgba(255,255,255,.8);--bevel-in:inset 1px 1px 0 rgba(32,80,140,.1),inset -1px -1px 0 rgba(255,255,255,.8);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(0,102,204,.10);--blob2:rgba(64,160,220,.08);--blob3:rgba(120,200,240,.06);--grid:rgba(0,102,204,.04);--p1:0,102,204;--p2:64,160,220;--p3:120,200,240;--p4:32,80,140;--hero-grad:linear-gradient(135deg,#0066cc,#40a0dc);--topbar-bg:linear-gradient(180deg,#2080c0,#004890);--topbar-fg:#fff;--topbar-bd:#002040;--board-bg:#c8e4ff;--board-line:#406080}
+[data-theme="github-light"]{--bg:#ffffff;--bg2:#f6f8fa;--bg3:#eef1f4;--text:#1f2328;--muted:#59636e;--bd:#d1d9e0;--bd2:#a0a8b0;--ac:#0969da;--acs:#ddf4ff;--ok:#1a7f37;--warn:#d4a72c;--dgr:#cf222e;--sh:0 1px 4px rgba(31,35,40,.08);--r:6px;--bevel:none;--bevel-in:none;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(9,105,218,.08);--blob2:rgba(163,113,247,.06);--blob3:rgba(219,112,147,.05);--grid:rgba(31,35,40,.02);--p1:9,105,218;--p2:163,113,247;--p3:219,112,147;--p4:31,35,40;--hero-grad:linear-gradient(135deg,#0969da,#a371f7);--topbar-bg:#ffffff;--topbar-fg:#1f2328;--topbar-bd:#d1d9e0;--board-bg:#f6f8fa;--board-line:#a0a8b0}
+[data-theme="github-dark"]{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--text:#e6edf3;--muted:#9198a1;--bd:#30363d;--bd2:#484f58;--ac:#4493f8;--acs:#16233a;--ok:#3fb950;--warn:#d4a72c;--dgr:#f85149;--sh:0 1px 4px rgba(0,0,0,.4);--r:6px;--bevel:none;--bevel-in:none;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--blob1:rgba(68,147,248,.06);--blob2:rgba(163,113,247,.05);--blob3:rgba(219,112,147,.04);--grid:rgba(230,237,243,.02);--p1:68,147,248;--p2:163,113,247;--p3:219,112,147;--p4:230,237,243;--hero-grad:linear-gradient(135deg,#4493f8,#a371f7);--topbar-bg:#161b22;--topbar-fg:#e6edf3;--topbar-bd:#30363d;--board-bg:#21262d;--board-line:#484f58}
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--bg);transition:background-color .3s}
 body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background-color .3s,color .3s}
-
-.topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50;transition:background .3s,color .3s}
+.topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50}
 [data-theme^="mc-"] .topbar{border-bottom-width:2px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer}
 [data-theme^="mc-"] .logo{text-shadow:1px 1px 0 rgba(0,0,0,.4)}
 .logo-icon{display:inline-block;font-size:16px}
 .sp{flex:1}
-.room-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.15);border-radius:999px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;letter-spacing:.06em;cursor:pointer;user-select:none;transition:background .15s;border:none;color:inherit}
+.room-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.15);border-radius:999px;font-size:12px;font-family:ui-monospace,Monaco,monospace;font-weight:700;letter-spacing:.06em;cursor:pointer;border:none;color:inherit}
 .room-chip:hover{background:rgba(255,255,255,.28)}
 [data-theme="github-light"] .room-chip{background:rgba(0,0,0,.06)}
-[data-theme="github-light"] .room-chip:hover{background:rgba(0,0,0,.1)}
-.icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:var(--muted);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,color .15s,transform .2s}
+.icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:var(--muted);background:transparent;border:none;border-radius:var(--r);cursor:pointer}
 .icon:hover{background:var(--bg3);color:var(--text)}
 [data-theme^="mc-"] .icon,[data-theme="sakura"] .icon,[data-theme="ocean"] .icon{color:rgba(255,255,255,.85)}
-[data-theme^="mc-"] .icon:hover,[data-theme="sakura"] .icon:hover,[data-theme="ocean"] .icon:hover{background:rgba(0,0,0,.2);color:#fff}
-.icon:active{transform:scale(.92)}
-
+[data-theme^="mc-"] .icon:hover{background:rgba(0,0,0,.2);color:#fff}
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform,opacity}
+.blob{position:absolute;border-radius:50%;filter:blur(80px)}
 .b1{width:420px;height:420px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 30s ease-in-out infinite}
 .b2{width:480px;height:480px;background:var(--blob2);bottom:-180px;right:-160px;animation:drift2 36s ease-in-out infinite}
 .b3{width:340px;height:340px;background:var(--blob3);top:38%;left:52%;animation:drift3 42s ease-in-out infinite}
 @keyframes drift1{0%,100%{transform:translate(0,0) scale(1);opacity:.85}50%{transform:translate(50px,50px) scale(1.08);opacity:1}}
 @keyframes drift2{0%,100%{transform:translate(0,0) scale(1);opacity:.8}50%{transform:translate(-60px,-50px) scale(1.05);opacity:.95}}
 @keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50%,-60px) scale(1.1);opacity:.9}}
-.grid-bg{position:absolute;inset:0;
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:36px 36px;
-  -webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%);
-  mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
 #particles{position:absolute;inset:0;width:100%;height:100%;display:block}
-
 .wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:16px 16px 40px}
-
 .players{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .pc{position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
-[data-theme^="github-"] .pc{border-width:1px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-theme^="github-"] .pc{border-width:1px;border-radius:10px}
 .pc.active{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 2px var(--acs),0 0 16px rgba(var(--p1),.35)}
 [data-theme^="mc-"] .pc.active{box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.5),0 0 12px rgba(var(--p1),.3)}
 .pc.me{background:linear-gradient(135deg,var(--acs) 0%,var(--bg2) 60%)}
@@ -200,15 +66,14 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .pc-avatar .pc-stone.white{background:radial-gradient(circle at 35% 30%,#ffffff,#c8c4b8 70%)}
 .pc-body{flex:1;min-width:0}
 .pc-name{font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
-.pc-info{font-size:11.5px;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px;margin-top:2px}
+.pc-info{font-size:11.5px;color:var(--muted);font-family:ui-monospace,Monaco,monospace;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px;margin-top:2px}
 .pc.right .pc-info{justify-content:flex-end}
 .pc-timer{font-weight:800;color:var(--ac);font-size:14px}
 .pc-timer.warn{color:var(--warn)}
 .pc-timer.danger{color:var(--dgr);animation:timerPulse .8s ease-in-out infinite}
 @keyframes timerPulse{0%,100%{opacity:1}50%{opacity:.4}}
-
 .status-bar{padding:9px 14px;margin-bottom:12px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);text-align:center;font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px;min-height:40px}
-[data-theme^="github-"] .status-bar{border-width:1px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-theme^="github-"] .status-bar{border-width:1px;border-radius:10px}
 .status-bar strong{color:var(--text);font-weight:800}
 .status-bar.playing strong{color:var(--ac)}
 .status-bar.win strong{color:var(--ok)}
@@ -218,24 +83,20 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
 .status-bar .sb-count{color:var(--ac);font-weight:800;font-variant-numeric:tabular-nums}
 .status-bar .sb-count.danger{color:var(--dgr);animation:timerPulse .8s ease-in-out infinite}
-
 .board-wrap{display:flex;justify-content:center;margin-bottom:14px}
 .board-frame{position:relative;padding:10px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 8px 24px rgba(0,0,0,.1)}
 [data-theme^="mc-"] .board-frame{box-shadow:3px 3px 0 rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.15)}
-[data-theme^="github-"] .board-frame{border-width:1px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+[data-theme^="github-"] .board-frame{border-width:1px;border-radius:12px}
 .board-frame canvas{display:block;background:var(--board-bg);border-radius:calc(var(--r) - 1px);cursor:crosshair;touch-action:manipulation}
 [data-theme^="github-"] .board-frame canvas{border-radius:8px}
-
 .action-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;font-size:13.5px;font-family:inherit;font-weight:700;color:var(--text);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;box-shadow:var(--bevel);transition:all .15s}
-[data-theme^="github-"] .btn{border-width:1px;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+[data-theme^="github-"] .btn{border-width:1px;border-radius:6px}
 .btn:hover:not(:disabled){filter:brightness(1.05);transform:translateY(-1px)}
 [data-theme^="mc-"] .btn:hover:not(:disabled){transform:none;filter:brightness(1.08);box-shadow:var(--bevel),0 0 8px rgba(var(--p1),.3)}
-.btn:active:not(:disabled){transform:translateY(0);box-shadow:var(--bevel-in)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn-danger{color:var(--dgr);border-color:var(--dgr)}
 .btn-danger:hover:not(:disabled){background:rgba(160,32,32,.1)}
-
 .ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:100;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
 .ov.show{opacity:1;visibility:visible}
 .pnl{display:flex;flex-direction:column;width:100%;max-width:480px;max-height:calc(100vh - 32px);background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) + 3px);box-shadow:var(--sh);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
@@ -252,7 +113,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .ph .sp{flex:1}
 .ph .icon{color:inherit}
 .ph .icon:hover{background:rgba(0,0,0,.2);color:#fff}
-
 .result-body{padding:26px 20px 20px;text-align:center}
 .result-icon{font-size:64px;line-height:1;margin-bottom:14px;display:block;animation:resPop .5s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes resPop{from{transform:scale(.5) rotate(-15deg);opacity:0}60%{transform:scale(1.15) rotate(8deg)}to{transform:scale(1) rotate(0);opacity:1}}
@@ -261,19 +121,15 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .result-title.lose{color:var(--dgr)}
 .result-sub{font-size:13.5px;color:var(--muted);margin:0 0 6px;line-height:1.6}
 .result-note{font-size:12px;color:var(--muted);opacity:.8;margin:12px 0 0;padding-top:10px;border-top:1px dashed var(--bd)}
-
 .theme-body{padding:14px;overflow-y:auto}
 .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .theme-card{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);cursor:pointer;font-family:inherit;color:var(--text);box-shadow:var(--bevel);transition:all .2s;text-align:left}
 .theme-card:hover{transform:translateY(-2px);border-color:var(--ac)}
 .theme-card.active{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 2px var(--acs)}
-[data-theme^="github-"] .theme-card{border-width:1px;box-shadow:none}
-[data-theme^="github-"] .theme-card.active{box-shadow:0 0 0 2px var(--acs)}
 .theme-prev{display:flex;height:30px;border:1px solid var(--bd);border-radius:calc(var(--r) - 2px);overflow:hidden}
 .theme-prev span{flex:1;display:block}
 .theme-name{font-size:12.5px;font-weight:700}
 .theme-desc{font-size:10.5px;color:var(--muted);margin-top:-3px}
-
 .toast{position:fixed;left:50%;bottom:20px;max-width:calc(100vw - 32px);padding:8px 16px;font-size:13px;color:var(--bg);background:var(--text);border-radius:var(--r);box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(16px);transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:600}
 [data-theme^="mc-"] .toast{background:#2a3a1a;color:#e8ffd0;border:2px solid #4a4a3a;border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.4)}
 [data-theme="mc-nether"] .toast{background:#2a0800;color:#ffe0d0;border-color:#5a2010}
@@ -281,21 +137,30 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme="sakura"] .toast{background:#a04060;color:#ffe0ea;border-color:#802050}
 [data-theme="ocean"] .toast{background:#004890;color:#e0f0ff;border-color:#002040}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
 .loading-mask{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
 .loading-mask.show{opacity:1;visibility:visible}
-.loading-card{padding:24px 28px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 12px 32px rgba(0,0,0,.3);text-align:center;color:var(--text);max-width:340px}
-[data-theme^="github-"] .loading-card{border-width:1px;border-radius:12px}
+.loading-card{padding:24px 28px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 12px 32px rgba(0,0,0,.3);text-align:center;max-width:340px}
 .loading-card .spin{display:inline-block;width:28px;height:28px;margin-bottom:12px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spinIcon .8s linear infinite}
 @keyframes spinIcon{to{transform:rotate(360deg)}}
 .loading-card .lt{font-size:15px;font-weight:700;margin-bottom:4px}
 .loading-card .ls{font-size:12.5px;color:var(--muted);line-height:1.6}
 .loading-card .lerr{color:var(--dgr);font-weight:600}
-
-.waiting-hint{margin-top:14px;padding:10px 14px;background:var(--bg2);border:2px dashed var(--bd2);border-radius:var(--r);font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}
-[data-theme^="github-"] .waiting-hint{border-width:1px}
-.waiting-hint strong{color:var(--ac);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;letter-spacing:.08em;font-weight:800;cursor:pointer;padding:1px 6px;background:var(--acs);border-radius:3px}
-
+.waiting-panel{display:none;margin-top:16px;padding:16px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);gap:16px;align-items:center}
+[data-theme^="github-"] .waiting-panel{border-width:1px;border-radius:12px}
+.waiting-panel.show{display:flex}
+@media(max-width:640px){.waiting-panel.show{flex-direction:column}}
+.wp-qr{flex:none;width:180px;height:180px;display:grid;place-items:center;background:#fff;border:2px solid var(--bd2);border-radius:var(--r);padding:8px;overflow:hidden}
+.wp-qr img,.wp-qr canvas{display:block;width:164px!important;height:164px!important;image-rendering:pixelated}
+.wp-qr-loading{font-size:12px;color:#666;text-align:center;line-height:1.5;padding:0 10px}
+.wp-info{flex:1;min-width:0;text-align:left}
+.wp-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px}
+.wp-code{font-family:ui-monospace,Monaco,monospace;font-size:32px;font-weight:800;color:var(--ac);letter-spacing:.12em;line-height:1.1;margin-bottom:12px}
+.wp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.wp-actions .btn{padding:6px 14px;font-size:12.5px}
+.wp-tip{font-size:11.5px;color:var(--muted);line-height:1.6}
+.lan-badge{display:none;margin-bottom:12px;padding:8px 12px;background:linear-gradient(135deg,#d4a017,#8a6810);color:#fff;border:2px solid var(--bd2);border-radius:var(--r);font-size:12.5px;font-weight:700;text-align:center}
+[data-theme^="github-"] .lan-badge{border-width:1px;border-radius:8px}
+.lan-badge.show{display:block}
 @media(max-width:640px){
   .wrap{padding:10px 10px 30px}
   .logo span:last-child{display:none}
@@ -305,16 +170,12 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   .pc-avatar .pc-stone{width:14px;height:14px}
   .pc-name{font-size:13px}
   .pc-timer{font-size:13px}
-  .pc-info{font-size:11px}
   .board-frame{padding:6px}
-  .status-bar{padding:8px 10px;font-size:12.5px;min-height:38px}
+  .status-bar{padding:8px 10px;font-size:12.5px}
   .btn{padding:8px 14px;font-size:13px}
-  .theme-grid{grid-template-columns:1fr}
-  .result-icon{font-size:52px}
-  .result-title{font-size:1.25rem}
 }
 @media print{.bg-decor,.topbar,.ov,.toast,.loading-mask{display:none}body{padding-top:0}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -322,7 +183,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <header class="topbar">
   <a class="logo" href="./wuzi_hotel.html"><span class="logo-icon">⚫</span><span>对局中</span></a>
   <span class="sp"></span>
-  <button class="room-chip" id="roomChip" title="点击复制房间码">#------</button>
+  <button class="room-chip" id="roomChip">#------</button>
   <button class="icon" id="themeBtn" title="切换风格">🎨</button>
   <button class="icon" id="exitBtn" title="离开对局">🚪</button>
 </header>
@@ -336,27 +197,21 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 </div>
 
 <div class="wrap">
+  <div class="lan-badge" id="lanBadge">📡 局域网模式 · 同浏览器多标签页对战</div>
+
   <div class="players">
     <div class="pc" id="cardBlack">
-      <div class="pc-avatar" id="avatarBlack">?
-        <span class="pc-stone black"></span>
-      </div>
+      <div class="pc-avatar" id="avatarBlack">?<span class="pc-stone black"></span></div>
       <div class="pc-body">
         <div class="pc-name" id="nameBlack">黑方</div>
-        <div class="pc-info">
-          <span class="pc-timer" id="timerBlack">--</span>
-        </div>
+        <div class="pc-info"><span class="pc-timer" id="timerBlack">--</span></div>
       </div>
     </div>
     <div class="pc right" id="cardWhite">
-      <div class="pc-avatar" id="avatarWhite">?
-        <span class="pc-stone white"></span>
-      </div>
+      <div class="pc-avatar" id="avatarWhite">?<span class="pc-stone white"></span></div>
       <div class="pc-body">
         <div class="pc-name" id="nameWhite">白方</div>
-        <div class="pc-info">
-          <span class="pc-timer" id="timerWhite">--</span>
-        </div>
+        <div class="pc-info"><span class="pc-timer" id="timerWhite">--</span></div>
       </div>
     </div>
   </div>
@@ -372,11 +227,20 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
     </div>
   </div>
 
-  <div class="waiting-hint" id="waitingHint" style="display:none">
-    把房间码发给好友 → <strong id="hintCode">------</strong>
+  <div class="waiting-panel" id="waitingHint">
+    <div class="wp-qr" id="qrBox"><div class="wp-qr-loading">二维码生成中…</div></div>
+    <div class="wp-info">
+      <div class="wp-label">房间码</div>
+      <div class="wp-code" id="hintCode">------</div>
+      <div class="wp-actions">
+        <button class="btn" id="copyCodeBtn">📋 复制房间码</button>
+        <button class="btn" id="copyLinkBtn">🔗 复制链接</button>
+      </div>
+      <div class="wp-tip">手机扫二维码，或点链接加入<br>局域网模式下：同一浏览器新开标签页</div>
+    </div>
   </div>
 
-  <div class="action-row" id="actionRow" style="margin-top:14px">
+  <div class="action-row" style="margin-top:14px">
     <button class="btn btn-danger" id="resignBtn" disabled>🏳️ 认输</button>
     <button class="btn" id="leaveBtn">← 返回大厅</button>
   </div>
@@ -412,6 +276,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@gh-pages/qrcode.min.js"></script>
 <script>
 (function(){
 'use strict';
@@ -419,1069 +284,849 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 
-var K_THEME = 'wiki-theme';
-var K_NICK  = 'gomoku-nick';
-var K_UID   = 'gomoku-uid';
-
-var TURN_LIMIT_MS     = 30 * 1000;
-var WAITING_LIMIT_MS  = 120 * 1000;
-var TICK_MS           = 200;
-var WIN_COUNT         = 5;
-var POLL_MS           = 3000;   /* ★ 3 秒轮询兜底 */
+var K_THEME='wiki-theme', K_NICK='gomoku-nick', K_UID='gomoku-uid';
+var TURN_LIMIT_MS=60*1000, WAITING_LIMIT_MS=120*1000, TICK_MS=200, WIN_COUNT=5, POLL_MS=3000;
 
 function $(id){return document.getElementById(id);}
-function esc(s){
-  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-  });
-}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var storage={
   get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
   set:function(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
 };
 var toastEl=$('toast'),toastTimer=null;
-function toast(msg){
-  if(!toastEl)return;
-  toastEl.textContent=msg;
-  toastEl.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);
-}
+function toast(msg){if(!toastEl)return;toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);}
 function nickColor(nick){
-  var h=0;
-  for(var i=0;i<nick.length;i++){h=(h*31+nick.charCodeAt(i))>>>0;}
-  var palette=[
-    '#e57373','#f06292','#ba68c8','#9575cd','#7986cb',
-    '#64b5f6','#4fc3f7','#4dd0e1','#4db6ac','#81c784',
-    '#aed581','#dce775','#ffd54f','#ffb74d','#ff8a65',
-    '#a1887f','#90a4ae','#e91e63','#9c27b0','#2196f3'
-  ];
+  var h=0;for(var i=0;i<nick.length;i++){h=(h*31+nick.charCodeAt(i))>>>0;}
+  var palette=['#e57373','#f06292','#ba68c8','#9575cd','#7986cb','#64b5f6','#4fc3f7','#4dd0e1','#4db6ac','#81c784','#aed581','#dce775','#ffd54f','#ffb74d','#ff8a65','#a1887f','#90a4ae','#e91e63','#9c27b0','#2196f3'];
   return palette[h%palette.length];
 }
 
-var uid = storage.get(K_UID) || '';
-var myNick = storage.get(K_NICK) || '';
-function getQuery(name){
-  var m = location.search.match(new RegExp('[?&]'+name+'=([^&#]*)'));
-  return m ? decodeURIComponent(m[1]) : '';
-}
-var roomCode = getQuery('room').toUpperCase().trim();
+var uid=sessionStorage.getItem(K_UID)||'';
+var myNick=storage.get(K_NICK)||'';
+function getQuery(name){var m=location.search.match(new RegExp('[?&]'+name+'=([^&#]*)'));return m?decodeURIComponent(m[1]):'';}
+var roomCode=getQuery('room').toUpperCase().trim();
+var LAN_MODE=getQuery('lan')==='1';
 
-var sb = null;
+var sb=null;
 try{
-  if(typeof supabase !== 'undefined'){
-    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      realtime: { params: { eventsPerSecond: 10 } }
-    });
+  if(typeof supabase!=='undefined'){
+    sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{realtime:{params:{eventsPerSecond:10}}});
   }
-}catch(e){
-  console.error('Supabase 初始化失败', e);
-}
+}catch(e){console.error('Supabase 初始化失败',e);}
 
-var state = {
-  room: null,
-  boardSize: 15,
-  board: [],
-  moves: [],
-  myColor: null,
-  lastMove: null,
-  gameOver: false,
-  finished: false,
-  winnerUid: null,
-  winnerNick: null,
-  loserNick: null,
-  winLine: null,
-  hover: null,
-  placing: false,
-  turnStartedAt: 0,
-  waitingDeadline: 0,
-  waitingTimeoutFired: false
+var state={
+  room:null,boardSize:15,board:[],moves:[],myColor:null,lastMove:null,
+  gameOver:false,finished:false,winnerUid:null,winnerNick:null,loserNick:null,
+  winLine:null,hover:null,placing:false,turnStartedAt:0,
+  waitingDeadline:0,waitingTimeoutFired:false
 };
 
-/* ★ UI 缓存：值一样就不写 DOM，彻底避免闪烁 */
-var uiSnap = {};
-function setText(el, txt){
-  if(!el) return;
-  if(el.textContent === txt) return;
-  el.textContent = txt;
+/* ============================================================
+   ★ 局域网模式：BroadcastChannel + localStorage
+   ============================================================ */
+var lanChannel=null;
+
+function initLanChannel(){
+  if(lanChannel) return;
+  try{
+    lanChannel=new BroadcastChannel('gomoku-lan');
+    lanChannel.onmessage=function(e){
+      var m=e.data;
+      if(!m||!m.type) return;
+      if(m.type==='move'&&m.code===roomCode){
+        applyLanMove(m.move);
+      } else if(m.type==='room-update'&&m.code===roomCode){
+        reloadLanRoom();
+      } else if(m.type==='game-end'&&m.code===roomCode){
+        state.finished=true;
+        state.gameOver=true;
+        state.winnerUid=m.winnerUid;
+        state.winnerNick=m.winnerNick;
+        state.loserNick=m.loserNick;
+        showResult(m.winnerUid,m.reason);
+        setTimeout(function(){location.href='./wuzi_hotel.html';},3500);
+      } else if(m.type==='room-list-request'){
+        lanChannel.postMessage({type:'room-list-request-ack'});
+      }
+    };
+  }catch(e){console.warn('BroadcastChannel 不可用',e);}
 }
-function setHTML(el, html){
-  if(!el) return;
-  var key = el.id || '';
-  if(uiSnap[key] === html) return;
-  uiSnap[key] = html;
-  el.innerHTML = html;
+
+function loadRoomLan(){
+  var raw=localStorage.getItem('gomoku-lan-rooms');
+  if(!raw) throw new Error('房间数据丢失');
+  var rooms=JSON.parse(raw);
+  var r=rooms[roomCode];
+  if(!r) throw new Error('房间不存在或已关闭');
+  state.room=r;
+  state.boardSize=parseInt(r.board_size,10)||15;
+  if(state.boardSize<5) state.boardSize=5;
+  if(state.boardSize>50) state.boardSize=50;
+  var created=parseInt(r.created_at,10)||Date.now();
+  state.waitingDeadline=created+WAITING_LIMIT_MS;
+  if(r.host_uid===uid) state.myColor='black';
+  else if(r.guest_uid===uid) state.myColor='white';
+  else state.myColor=null;
+  return Promise.resolve();
 }
-function setClass(el, cls){
-  if(!el) return;
-  if(el.className === cls) return;
-  el.className = cls;
+
+function loadMovesLan(){
+  state.moves=state.moves||[];
+  rebuildBoard();
+  return Promise.resolve();
 }
-function setBg(el, val){
-  if(!el) return;
-  if(el.style.background === val) return;
-  el.style.background = val;
+
+function reloadLanRoom(){
+  try{
+    var raw=localStorage.getItem('gomoku-lan-rooms');
+    if(!raw) return;
+    var rooms=JSON.parse(raw);
+    var r=rooms[roomCode];
+    if(!r) return;
+    var oldStatus=state.room?state.room.status:null;
+    state.room=r;
+    state.boardSize=r.board_size||15;
+    if(r.host_uid===uid) state.myColor='black';
+    else if(r.guest_uid===uid) state.myColor='white';
+    else state.myColor=null;
+    if(oldStatus==='waiting'&&r.status==='playing'){
+      state.turnStartedAt=Date.now();
+      toast('对手已加入，对局开始！');
+    }
+    if(r.turn_started_at) state.turnStartedAt=parseInt(r.turn_started_at,10)||Date.now();
+    updateUI();
+  }catch(e){}
 }
+
+function applyLanMove(move){
+  if(!move) return;
+  var x=parseInt(move.x,10),y=parseInt(move.y,10);
+  if(state.moves.some(function(v){return v.x===x&&v.y===y;})) return;
+  var mv={x:x,y:y,color:move.color,uid:move.uid,seq:parseInt(move.seq,10),ts:parseInt(move.ts,10)};
+  state.moves.push(mv);
+  rebuildBoard();
+  if(!state.gameOver){
+    var line=checkWin(mv.x,mv.y,mv.color);
+    if(line){state.winLine=line;state.gameOver=true;}
+  }
+  if(mv.uid!==uid) state.turnStartedAt=Date.now();
+  updateUI();
+}
+
+function saveLanRoom(){
+  try{
+    var raw=localStorage.getItem('gomoku-lan-rooms');
+    var rooms=raw?JSON.parse(raw):{};
+    rooms[roomCode]=state.room;
+    localStorage.setItem('gomoku-lan-rooms',JSON.stringify(rooms));
+    if(lanChannel) lanChannel.postMessage({type:'room-update',code:roomCode});
+  }catch(e){}
+}
+
+/* ============================================================
+   UI 缓存
+   ============================================================ */
+var uiSnap={};
+function setText(el,txt){if(!el)return;if(el.textContent===txt)return;el.textContent=txt;}
+function setHTML(el,html){if(!el)return;var key=el.id||'';if(uiSnap[key]===html)return;uiSnap[key]=html;el.innerHTML=html;}
+function setClass(el,cls){if(!el)return;if(el.className===cls)return;el.className=cls;}
+function setBg(el,val){if(!el)return;if(el.style.background===val)return;el.style.background=val;}
 
 /* ============================================================
    Canvas
    ============================================================ */
-var canvas, ctx;
-var dpr = 1;
-var cssW = 0, cssH = 0;
-var padding = 0, cell = 0, stoneR = 0;
+var canvas,ctx,dpr=1,cssW=0,cssH=0,padding=0,cell=0,stoneR=0;
 
 function initCanvas(){
-  canvas = $('board');
-  if(!canvas) return;
-  ctx = canvas.getContext('2d');
-  dpr = Math.min(window.devicePixelRatio||1, 2);
+  canvas=$('board');if(!canvas) return;
+  ctx=canvas.getContext('2d');
+  dpr=Math.min(window.devicePixelRatio||1,2);
 }
 function resizeCanvas(){
-  if(!canvas || !ctx) return;
-  var frame = $('boardFrame');
-  if(!frame) return;
-  var wrap = frame.parentNode;
-  var maxW = Math.min(wrap.clientWidth - 20, 560);
-  if(maxW < 200) maxW = 200;
-
-  var size = state.boardSize;
-  cell = maxW / (size + 0.4);
-  if(cell > 36) cell = 36;
-  if(cell < 4) cell = 4;
-  padding = cell * 0.7;
-  stoneR = cell * 0.42;
-
-  cssW = (size - 1) * cell + 2 * padding;
-  cssH = cssW;
-
-  canvas.style.width = cssW + 'px';
-  canvas.style.height = cssH + 'px';
-  canvas.width = Math.round(cssW * dpr);
-  canvas.height = Math.round(cssH * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
+  if(!canvas||!ctx) return;
+  var frame=$('boardFrame');if(!frame) return;
+  var wrap=frame.parentNode;
+  var maxW=Math.min(wrap.clientWidth-20,560);
+  if(maxW<200) maxW=200;
+  var size=state.boardSize;
+  cell=maxW/(size+0.4);
+  if(cell>36) cell=36;
+  if(cell<4) cell=4;
+  padding=cell*0.7;
+  stoneR=cell*0.42;
+  cssW=(size-1)*cell+2*padding;
+  cssH=cssW;
+  canvas.style.width=cssW+'px';
+  canvas.style.height=cssH+'px';
+  canvas.width=Math.round(cssW*dpr);
+  canvas.height=Math.round(cssH*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   renderCanvas();
 }
-
-function readCssVar(name){
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
+function readCssVar(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim();}
 
 function renderCanvas(){
   if(!ctx) return;
-  var size = state.boardSize;
-  var boardBg = readCssVar('--board-bg') || '#dcb980';
-  var boardLine = readCssVar('--board-line') || '#4a3520';
-
-  ctx.clearRect(0, 0, cssW, cssH);
-  ctx.fillStyle = boardBg;
-  ctx.fillRect(0, 0, cssW, cssH);
-
-  ctx.strokeStyle = boardLine;
-  ctx.lineWidth = Math.max(1, Math.min(1.5, cell/20));
+  var size=state.boardSize;
+  var boardBg=readCssVar('--board-bg')||'#dcb980';
+  var boardLine=readCssVar('--board-line')||'#4a3520';
+  ctx.clearRect(0,0,cssW,cssH);
+  ctx.fillStyle=boardBg;
+  ctx.fillRect(0,0,cssW,cssH);
+  ctx.strokeStyle=boardLine;
+  ctx.lineWidth=Math.max(1,Math.min(1.5,cell/20));
   ctx.beginPath();
   var i;
-  for(i=0;i<size;i++){
-    var y = padding + i * cell;
-    ctx.moveTo(padding, y);
-    ctx.lineTo(padding + (size-1)*cell, y);
-  }
-  for(i=0;i<size;i++){
-    var x = padding + i * cell;
-    ctx.moveTo(x, padding);
-    ctx.lineTo(x, padding + (size-1)*cell);
-  }
+  for(i=0;i<size;i++){var y=padding+i*cell;ctx.moveTo(padding,y);ctx.lineTo(padding+(size-1)*cell,y);}
+  for(i=0;i<size;i++){var x=padding+i*cell;ctx.moveTo(x,padding);ctx.lineTo(x,padding+(size-1)*cell);}
   ctx.stroke();
-
-  if(size >= 9 && size <= 25){
-    var starPoints = [];
-    if(size === 15){
-      starPoints = [[3,3],[3,11],[11,3],[11,11],[7,7]];
-    } else if(size === 19){
-      starPoints = [[3,3],[3,9],[3,15],[9,3],[9,9],[9,15],[15,3],[15,9],[15,15]];
-    } else {
-      var mid = Math.floor((size-1)/2);
-      var q1 = Math.floor((size-1)/4);
-      var q3 = size - 1 - q1;
-      starPoints = [[q1,q1],[q1,q3],[q3,q1],[q3,q3],[mid,mid]];
-    }
-    ctx.fillStyle = boardLine;
+  if(size>=9&&size<=25){
+    var starPoints=[];
+    if(size===15) starPoints=[[3,3],[3,11],[11,3],[11,11],[7,7]];
+    else if(size===19) starPoints=[[3,3],[3,9],[3,15],[9,3],[9,9],[9,15],[15,3],[15,9],[15,15]];
+    else{var mid=Math.floor((size-1)/2);var q1=Math.floor((size-1)/4);var q3=size-1-q1;starPoints=[[q1,q1],[q1,q3],[q3,q1],[q3,q3],[mid,mid]];}
+    ctx.fillStyle=boardLine;
     starPoints.forEach(function(p){
-      if(p[0] < 0 || p[0] >= size || p[1] < 0 || p[1] >= size) return;
-      ctx.beginPath();
-      ctx.arc(padding + p[0]*cell, padding + p[1]*cell, Math.max(1.5, cell*0.08), 0, Math.PI*2);
-      ctx.fill();
+      if(p[0]<0||p[0]>=size||p[1]<0||p[1]>=size) return;
+      ctx.beginPath();ctx.arc(padding+p[0]*cell,padding+p[1]*cell,Math.max(1.5,cell*0.08),0,Math.PI*2);ctx.fill();
     });
   }
-
-  function makeStoneGrad(cx, cy, isBlack){
-    var grad = ctx.createRadialGradient(
-      cx - stoneR*0.35, cy - stoneR*0.35, stoneR*0.05,
-      cx, cy, stoneR
-    );
-    if(isBlack){
-      grad.addColorStop(0, '#6a6a6a');
-      grad.addColorStop(0.55, '#2a2a2a');
-      grad.addColorStop(1, '#0d0d0d');
-    } else {
-      grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(0.6, '#f0f0e8');
-      grad.addColorStop(1, '#c8c4b8');
-    }
+  function makeStoneGrad(cx,cy,isBlack){
+    var grad=ctx.createRadialGradient(cx-stoneR*0.35,cy-stoneR*0.35,stoneR*0.05,cx,cy,stoneR);
+    if(isBlack){grad.addColorStop(0,'#6a6a6a');grad.addColorStop(0.55,'#2a2a2a');grad.addColorStop(1,'#0d0d0d');}
+    else{grad.addColorStop(0,'#ffffff');grad.addColorStop(0.6,'#f0f0e8');grad.addColorStop(1,'#c8c4b8');}
     return grad;
   }
-
   for(var yy=0;yy<size;yy++){
     for(var xx=0;xx<size;xx++){
-      var c = state.board[yy] && state.board[yy][xx];
+      var c=state.board[yy]&&state.board[yy][xx];
       if(!c) continue;
-      var px = padding + xx * cell;
-      var py = padding + yy * cell;
+      var px=padding+xx*cell, py=padding+yy*cell;
       ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,.35)';
-      ctx.shadowBlur = stoneR * 0.3;
-      ctx.shadowOffsetY = stoneR * 0.12;
-      ctx.beginPath();
-      ctx.arc(px, py, stoneR, 0, Math.PI*2);
-      ctx.fillStyle = makeStoneGrad(px, py, c === 'black');
+      ctx.shadowColor='rgba(0,0,0,.35)';
+      ctx.shadowBlur=stoneR*0.3;
+      ctx.shadowOffsetY=stoneR*0.12;
+      ctx.beginPath();ctx.arc(px,py,stoneR,0,Math.PI*2);
+      ctx.fillStyle=makeStoneGrad(px,py,c==='black');
       ctx.fill();
       ctx.restore();
     }
   }
-
   if(state.lastMove){
-    var lm = state.lastMove;
-    if(state.board[lm.y] && state.board[lm.y][lm.x]){
-      var lx = padding + lm.x * cell;
-      var ly = padding + lm.y * cell;
-      ctx.beginPath();
-      ctx.arc(lx, ly, Math.max(2, stoneR * 0.22), 0, Math.PI*2);
-      ctx.fillStyle = '#ff4444';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,.6)';
-      ctx.lineWidth = Math.max(1, cell * 0.04);
-      ctx.stroke();
+    var lm=state.lastMove;
+    if(state.board[lm.y]&&state.board[lm.y][lm.x]){
+      var lx=padding+lm.x*cell, ly=padding+lm.y*cell;
+      ctx.beginPath();ctx.arc(lx,ly,Math.max(2,stoneR*0.22),0,Math.PI*2);
+      ctx.fillStyle='#ff4444';ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=Math.max(1,cell*0.04);ctx.stroke();
     }
   }
-
-  if(state.winLine && state.winLine.length){
+  if(state.winLine&&state.winLine.length){
     ctx.save();
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = Math.max(2, stoneR * 0.28);
-    ctx.shadowColor = 'rgba(255,215,0,.8)';
-    ctx.shadowBlur = stoneR * 0.6;
+    ctx.strokeStyle='#ffd700';
+    ctx.lineWidth=Math.max(2,stoneR*0.28);
+    ctx.shadowColor='rgba(255,215,0,.8)';
+    ctx.shadowBlur=stoneR*0.6;
     state.winLine.forEach(function(p){
-      var px = padding + p.x * cell;
-      var py = padding + p.y * cell;
-      ctx.beginPath();
-      ctx.arc(px, py, stoneR * 0.9, 0, Math.PI*2);
-      ctx.stroke();
+      var px=padding+p.x*cell, py=padding+p.y*cell;
+      ctx.beginPath();ctx.arc(px,py,stoneR*0.9,0,Math.PI*2);ctx.stroke();
     });
     ctx.restore();
   }
-
-  if(state.hover && !state.gameOver && canIPlayNow()){
-    var hx = state.hover.x, hy = state.hover.y;
-    if(hx >= 0 && hx < size && hy >= 0 && hy < size && !state.board[hy][hx]){
-      var hpx = padding + hx * cell;
-      var hpy = padding + hy * cell;
+  if(state.hover&&!state.gameOver&&canIPlayNow()){
+    var hx=state.hover.x, hy=state.hover.y;
+    if(hx>=0&&hx<size&&hy>=0&&hy<size&&!state.board[hy][hx]){
+      var hpx=padding+hx*cell, hpy=padding+hy*cell;
       ctx.save();
-      ctx.globalAlpha = 0.45;
-      ctx.beginPath();
-      ctx.arc(hpx, hpy, stoneR, 0, Math.PI*2);
-      ctx.fillStyle = makeStoneGrad(hpx, hpy, state.myColor === 'black');
+      ctx.globalAlpha=0.45;
+      ctx.beginPath();ctx.arc(hpx,hpy,stoneR,0,Math.PI*2);
+      ctx.fillStyle=makeStoneGrad(hpx,hpy,state.myColor==='black');
       ctx.fill();
       ctx.restore();
     }
   }
 }
 
-/* ============================================================
-   坐标
-   ============================================================ */
 function getPointFromEvent(e){
   if(!canvas) return null;
-  var rect = canvas.getBoundingClientRect();
-  var scaleX = cssW / rect.width;
-  var scaleY = cssH / rect.height;
-  var px = (e.clientX - rect.left) * scaleX;
-  var py = (e.clientY - rect.top) * scaleY;
-  var col = Math.round((px - padding) / cell);
-  var row = Math.round((py - padding) / cell);
-  if(col < 0 || col >= state.boardSize || row < 0 || row >= state.boardSize) return null;
-  var cx = padding + col * cell;
-  var cy = padding + row * cell;
-  if(Math.abs(px - cx) > cell * 0.5 || Math.abs(py - cy) > cell * 0.5) return null;
-  return {x: col, y: row};
+  var rect=canvas.getBoundingClientRect();
+  var scaleX=cssW/rect.width, scaleY=cssH/rect.height;
+  var px=(e.clientX-rect.left)*scaleX;
+  var py=(e.clientY-rect.top)*scaleY;
+  var col=Math.round((px-padding)/cell);
+  var row=Math.round((py-padding)/cell);
+  if(col<0||col>=state.boardSize||row<0||row>=state.boardSize) return null;
+  var cx=padding+col*cell, cy=padding+row*cell;
+  if(Math.abs(px-cx)>cell*0.5||Math.abs(py-cy)>cell*0.5) return null;
+  return {x:col,y:row};
 }
 
-/* ============================================================
-   游戏逻辑
-   ============================================================ */
+/* 游戏逻辑 */
 function emptyBoard(size){
-  var b = [];
-  for(var y=0;y<size;y++){
-    var row = [];
-    for(var x=0;x<size;x++) row.push(null);
-    b.push(row);
-  }
+  var b=[];
+  for(var y=0;y<size;y++){var row=[];for(var x=0;x<size;x++) row.push(null);b.push(row);}
   return b;
 }
 function rebuildBoard(){
-  var size = state.boardSize;
-  state.board = emptyBoard(size);
-  state.moves.sort(function(a,b){return a.seq - b.seq;});
+  var size=state.boardSize;
+  state.board=emptyBoard(size);
+  state.moves.sort(function(a,b){return a.seq-b.seq;});
   state.moves.forEach(function(m){
-    if(m.y >= 0 && m.y < size && m.x >= 0 && m.x < size){
-      state.board[m.y][m.x] = m.color;
-    }
+    if(m.y>=0&&m.y<size&&m.x>=0&&m.x<size) state.board[m.y][m.x]=m.color;
   });
   if(state.moves.length){
-    var last = state.moves[state.moves.length-1];
-    state.lastMove = { x: last.x, y: last.y };
-  } else {
-    state.lastMove = null;
-  }
+    var last=state.moves[state.moves.length-1];
+    state.lastMove={x:last.x,y:last.y};
+  } else state.lastMove=null;
 }
-function currentTurnColor(){
-  return state.moves.length % 2 === 0 ? 'black' : 'white';
-}
+function currentTurnColor(){return state.moves.length%2===0?'black':'white';}
 function canIPlayNow(){
   if(state.gameOver) return false;
-  if(state.room && state.room.status !== 'playing') return false;
+  if(state.room&&state.room.status!=='playing') return false;
   if(!state.myColor) return false;
-  return currentTurnColor() === state.myColor;
+  return currentTurnColor()===state.myColor;
 }
-function checkWin(x, y, color){
-  var size = state.boardSize;
-  var dirs = [[1,0],[0,1],[1,1],[1,-1]];
+function checkWin(x,y,color){
+  var size=state.boardSize;
+  var dirs=[[1,0],[0,1],[1,1],[1,-1]];
   for(var d=0;d<dirs.length;d++){
-    var dx = dirs[d][0], dy = dirs[d][1];
-    var line = [{x:x, y:y}];
-    var cx = x + dx, cy = y + dy;
-    while(cx >= 0 && cx < size && cy >= 0 && cy < size && state.board[cy][cx] === color){
-      line.push({x:cx, y:cy});
-      cx += dx; cy += dy;
-    }
-    cx = x - dx; cy = y - dy;
-    while(cx >= 0 && cx < size && cy >= 0 && cy < size && state.board[cy][cx] === color){
-      line.unshift({x:cx, y:cy});
-      cx -= dx; cy -= dy;
-    }
-    if(line.length >= WIN_COUNT) return line;
+    var dx=dirs[d][0],dy=dirs[d][1];
+    var line=[{x:x,y:y}];
+    var cx=x+dx,cy=y+dy;
+    while(cx>=0&&cx<size&&cy>=0&&cy<size&&state.board[cy][cx]===color){line.push({x:cx,y:cy});cx+=dx;cy+=dy;}
+    cx=x-dx;cy=y-dy;
+    while(cx>=0&&cx<size&&cy>=0&&cy<size&&state.board[cy][cx]===color){line.unshift({x:cx,y:cy});cx-=dx;cy-=dy;}
+    if(line.length>=WIN_COUNT) return line;
   }
   return null;
 }
 
-/* ============================================================
-   落子
-   ============================================================ */
-function tryPlace(x, y){
-  if(!sb) { toast('连接未就绪'); return; }
+/* 落子 */
+function tryPlace(x,y){
+  if(!LAN_MODE&&!sb){toast('连接未就绪');return;}
   if(state.placing) return;
   if(state.gameOver) return;
-  if(!state.room || state.room.status !== 'playing'){ toast('对局还没开始'); return; }
-  if(!state.myColor){ toast('你是观战者'); return; }
-  if(currentTurnColor() !== state.myColor){ toast('还没轮到你'); return; }
-  if(state.board[y][x]){ toast('这里已有棋子'); return; }
+  if(!state.room||state.room.status!=='playing'){toast('对局还没开始');return;}
+  if(!state.myColor){toast('你是观战者');return;}
+  if(currentTurnColor()!==state.myColor){toast('还没轮到你');return;}
+  if(state.board[y][x]){toast('这里已有棋子');return;}
 
-  var move = {
-    room_code: roomCode,
-    seq: state.moves.length,
-    x: x,
-    y: y,
-    uid: uid,
-    color: state.myColor,
-    ts: Date.now()
-  };
-
-  state.placing = true;
+  var move={room_code:roomCode,seq:state.moves.length,x:x,y:y,uid:uid,color:state.myColor,ts:Date.now()};
+  state.placing=true;
   state.moves.push(move);
-  state.board[y][x] = state.myColor;
-  state.lastMove = { x:x, y:y };
-  state.winLine = null;
-
-  var line = checkWin(x, y, state.myColor);
-  if(line){
-    state.winLine = line;
-    state.gameOver = true;
-  }
-
+  state.board[y][x]=state.myColor;
+  state.lastMove={x:x,y:y};
+  state.winLine=null;
+  var line=checkWin(x,y,state.myColor);
+  if(line){state.winLine=line;state.gameOver=true;}
   renderCanvas();
   updateUI();
 
-  sb.from('gomoku_moves').insert(move).then(function(res){
-    state.placing = false;
-    if(res.error){
-      state.moves = state.moves.filter(function(m){ return !(m.x === x && m.y === y); });
-      state.board[y][x] = null;
-      state.lastMove = state.moves.length ? { x: state.moves[state.moves.length-1].x, y: state.moves[state.moves.length-1].y } : null;
-      state.winLine = null;
-      state.gameOver = false;
-      renderCanvas();
+  /* ★ 局域网模式：直接广播 */
+  if(LAN_MODE){
+    state.placing=false;
+    if(state.gameOver&&line){
+      var oppNick=state.myColor==='black'?state.room.guest_nick:state.room.host_nick;
+      finishGame(uid,myNick,oppNick,'five');
+    } else {
+      state.turnStartedAt=Date.now();
+      state.room.turn_started_at=state.turnStartedAt;
+      saveLanRoom();
       updateUI();
-      toast('落子失败：' + res.error.message);
+    }
+    if(lanChannel) lanChannel.postMessage({type:'move',code:roomCode,move:move});
+    return;
+  }
+
+  sb.from('gomoku_moves').insert(move).then(function(res){
+    state.placing=false;
+    if(res.error){
+      state.moves=state.moves.filter(function(m){return !(m.x===x&&m.y===y);});
+      state.board[y][x]=null;
+      state.lastMove=state.moves.length?{x:state.moves[state.moves.length-1].x,y:state.moves[state.moves.length-1].y}:null;
+      state.winLine=null;
+      state.gameOver=false;
+      renderCanvas(); updateUI();
+      toast('落子失败：'+res.error.message);
       return;
     }
-    if(state.gameOver && line){
-      var oppNick = state.myColor === 'black' ? state.room.guest_nick : state.room.host_nick;
-      finishGame(uid, myNick, oppNick, 'five');
+    if(state.gameOver&&line){
+      var oppNick=state.myColor==='black'?state.room.guest_nick:state.room.host_nick;
+      finishGame(uid,myNick,oppNick,'five');
     } else {
-      state.turnStartedAt = Date.now();
-      sb.from('gomoku_rooms')
-        .update({ turn_started_at: state.turnStartedAt, last_active: Date.now() })
-        .eq('code', roomCode);
+      state.turnStartedAt=Date.now();
+      sb.from('gomoku_rooms').update({turn_started_at:state.turnStartedAt,last_active:Date.now()}).eq('code',roomCode);
       updateUI();
     }
   }).catch(function(err){
-    state.placing = false;
-    toast('网络错误：' + (err.message || err));
+    state.placing=false;
+    toast('网络错误：'+(err.message||err));
   });
 }
 
-/* ============================================================
-   结束对局
-   ============================================================ */
-function finishGame(winnerUid, winnerNick, loserNick, reason){
+/* 结束 */
+function finishGame(winnerUid,winnerNick,loserNick,reason){
+  if(LAN_MODE){
+    if(state.finished) return;
+    state.finished=true;
+    state.gameOver=true;
+    state.winnerUid=winnerUid;
+    state.winnerNick=winnerNick;
+    state.loserNick=loserNick;
+    showResult(winnerUid,reason);
+    if(lanChannel) lanChannel.postMessage({type:'game-end',code:roomCode,winnerUid:winnerUid,winnerNick:winnerNick,loserNick:loserNick,reason:reason});
+    try{
+      var raw=localStorage.getItem('gomoku-lan-rooms');
+      if(raw){var rooms=JSON.parse(raw);delete rooms[roomCode];localStorage.setItem('gomoku-lan-rooms',JSON.stringify(rooms));}
+    }catch(e){}
+    setTimeout(function(){location.href='./wuzi_hotel.html';},3500);
+    return;
+  }
   if(!sb) return;
   if(state.finished) return;
-  state.finished = true;
-  state.gameOver = true;
-  state.winnerUid = winnerUid;
-  state.winnerNick = winnerNick;
-
-  sb.from('gomoku_rooms')
-    .update({
-      status: 'finished',
-      winner_uid: winnerUid,
-      winner_nick: winnerNick,
-      loser_nick: loserNick,
-      finish_reason: reason,
-      finished_at: Date.now(),
-      last_active: Date.now()
-    })
-    .eq('code', roomCode)
-    .eq('status', 'playing')
-    .select()
-    .then(function(res){
-      if(res.error){ console.warn('结束失败', res.error); return; }
-      if(res.data && res.data.length > 0){
-        sb.from('gomoku_announcements').insert({
-          winner_nick: winnerNick,
-          loser_nick: loserNick,
-          text: winnerNick + ' vs ' + loserNick + ' — ' + winnerNick + ' 胜出！',
-          created_at: Date.now()
-        }).then(function(){});
-        setTimeout(function(){
-          sb.from('gomoku_rooms').delete().eq('code', roomCode);
-        }, 5000);
-      }
-    });
-
-  showResult(winnerUid, reason);
-
-  setTimeout(function(){
-    location.href = './wuzi_hotel.html';
-  }, 3500);
+  state.finished=true;
+  state.gameOver=true;
+  state.winnerUid=winnerUid;
+  state.winnerNick=winnerNick;
+  sb.from('gomoku_rooms').update({
+    status:'finished',winner_uid:winnerUid,winner_nick:winnerNick,
+    loser_nick:loserNick,finish_reason:reason,finished_at:Date.now(),last_active:Date.now()
+  }).eq('code',roomCode).eq('status','playing').select().then(function(res){
+    if(res.error){console.warn('结束失败',res.error);return;}
+    if(res.data&&res.data.length>0){
+      sb.from('gomoku_announcements').insert({
+        winner_nick:winnerNick,loser_nick:loserNick,
+        text:winnerNick+' vs '+loserNick+' — '+winnerNick+' 胜出！',
+        created_at:Date.now()
+      }).then(function(){});
+      setTimeout(function(){sb.from('gomoku_rooms').delete().eq('code',roomCode);},5000);
+    }
+  });
+  showResult(winnerUid,reason);
+  setTimeout(function(){location.href='./wuzi_hotel.html';},3500);
 }
 
-function showResult(winnerUid, reason){
-  var ov = $('resultOv');
-  var icon = $('resultIcon');
-  var title = $('resultTitle');
-  var sub = $('resultSub');
+function showResult(winnerUid,reason){
+  var ov=$('resultOv'),icon=$('resultIcon'),title=$('resultTitle'),sub=$('resultSub');
   if(!ov) return;
-
-  var iWon = (winnerUid === uid);
-  var isObserver = !state.myColor;
-
+  var iWon=(winnerUid===uid);
+  var isObserver=!state.myColor;
   if(isObserver){
-    icon.textContent = '🏆';
-    title.textContent = '对局结束';
-    title.className = 'result-title';
-    sub.textContent = state.winnerNick ? (state.winnerNick + ' 胜出') : '对局已结束';
+    icon.textContent='🏆';title.textContent='对局结束';title.className='result-title';
+    sub.textContent=state.winnerNick?(state.winnerNick+' 胜出'):'对局已结束';
   } else if(iWon){
-    icon.textContent = '🏆';
-    title.textContent = '你赢了！';
-    title.className = 'result-title win';
-    if(reason === 'timeout') sub.textContent = '对手超时，你获得胜利';
-    else if(reason === 'resign') sub.textContent = '对手认输，你获得胜利';
-    else sub.textContent = '五子连珠，恭喜获胜';
+    icon.textContent='🏆';title.textContent='你赢了！';title.className='result-title win';
+    if(reason==='timeout') sub.textContent='对手超时，你获得胜利';
+    else if(reason==='resign') sub.textContent='对手认输，你获得胜利';
+    else sub.textContent='五子连珠，恭喜获胜';
   } else {
-    icon.textContent = '😢';
-    title.textContent = '你输了';
-    title.className = 'result-title lose';
-    if(reason === 'timeout') sub.textContent = '超时判负，下次快一点';
-    else if(reason === 'resign') sub.textContent = '你认输了';
-    else sub.textContent = '对手先连成了五子';
+    icon.textContent='😢';title.textContent='你输了';title.className='result-title lose';
+    if(reason==='timeout') sub.textContent='超时判负，下次快一点';
+    else if(reason==='resign') sub.textContent='你认输了';
+    else sub.textContent='对手先连成了五子';
   }
   ov.classList.add('show');
 }
 
-/* ============================================================
-   UI 更新（全部走缓存，避免闪烁）
-   ============================================================ */
+/* UI 更新 */
 function updateUI(){
   if(!state.room) return;
-
-  var hostNick = state.room.host_nick || '黑方';
-  var guestNick = state.room.guest_nick || '';
-  var isHost = state.room.host_uid === uid;
-  var isGuest = state.room.guest_uid === uid;
-
-  var avB = $('avatarBlack'), nB = $('nameBlack'), cB = $('cardBlack');
-  var avW = $('avatarWhite'), nW = $('nameWhite'), cW = $('cardWhite');
-
-  if(avB){ setText(avB, hostNick.charAt(0).toUpperCase()); setBg(avB, nickColor(hostNick)); }
-  if(nB) setText(nB, hostNick + (isHost ? ' (你)' : ''));
-  if(cB){
-    setClass(cB, 'pc' + (isHost ? ' me' : '') + (cB.classList.contains('active') ? ' active' : ''));
-  }
-
+  var hostNick=state.room.host_nick||'黑方';
+  var guestNick=state.room.guest_nick||'';
+  var isHost=state.room.host_uid===uid;
+  var isGuest=state.room.guest_uid===uid;
+  var avB=$('avatarBlack'),nB=$('nameBlack'),cB=$('cardBlack');
+  var avW=$('avatarWhite'),nW=$('nameWhite'),cW=$('cardWhite');
+  if(avB){setText(avB,hostNick.charAt(0).toUpperCase());setBg(avB,nickColor(hostNick));}
+  if(nB) setText(nB,hostNick+(isHost?' (你)':''));
+  if(cB) setClass(cB,'pc'+(isHost?' me':'')+(cB.classList.contains('active')?' active':''));
   if(guestNick){
-    if(avW){ setText(avW, guestNick.charAt(0).toUpperCase()); setBg(avW, nickColor(guestNick)); }
-    if(nW) setText(nW, guestNick + (isGuest ? ' (你)' : ''));
-    if(cW){
-      setClass(cW, 'pc right' + (isGuest ? ' me' : '') + (cW.classList.contains('active') ? ' active' : ''));
-    }
+    if(avW){setText(avW,guestNick.charAt(0).toUpperCase());setBg(avW,nickColor(guestNick));}
+    if(nW) setText(nW,guestNick+(isGuest?' (你)':''));
+    if(cW) setClass(cW,'pc right'+(isGuest?' me':'')+(cW.classList.contains('active')?' active':''));
   } else {
-    if(avW){ setText(avW, '?'); setBg(avW, 'var(--muted)'); }
-    if(nW) setText(nW, '等待中…');
-    if(cW) setClass(cW, 'pc right empty');
+    if(avW){setText(avW,'?');setBg(avW,'var(--muted)');}
+    if(nW) setText(nW,'等待中…');
+    if(cW) setClass(cW,'pc right empty');
   }
-
-  /* 回合高亮 */
-  var cur = currentTurnColor();
-  if(state.room.status === 'playing' && !state.gameOver){
-    if(cB){
-      var clsB = 'pc' + (isHost ? ' me' : '') + (cur === 'black' ? ' active' : '');
-      setClass(cB, clsB);
-    }
-    if(cW && guestNick){
-      var clsW = 'pc right' + (isGuest ? ' me' : '') + (cur === 'white' ? ' active' : '');
-      setClass(cW, clsW);
-    }
+  var cur=currentTurnColor();
+  if(state.room.status==='playing'&&!state.gameOver){
+    if(cB) setClass(cB,'pc'+(isHost?' me':'')+(cur==='black'?' active':''));
+    if(cW&&guestNick) setClass(cW,'pc right'+(isGuest?' me':'')+(cur==='white'?' active':''));
   } else {
-    if(cB) setClass(cB, 'pc' + (isHost ? ' me' : ''));
-    if(cW && guestNick) setClass(cW, 'pc right' + (isGuest ? ' me' : ''));
+    if(cB) setClass(cB,'pc'+(isHost?' me':''));
+    if(cW&&guestNick) setClass(cW,'pc right'+(isGuest?' me':''));
   }
-
-  /* 状态栏 */
-  var st = $('statusBar'), stx = $('statusText');
-  if(st && stx){
-    var newStCls = 'status-bar';
-    var newStxHtml = '';
+  var st=$('statusBar'),stx=$('statusText');
+  if(st&&stx){
+    var newStCls='status-bar', newStxHtml='';
     if(state.gameOver){
-      newStCls += winnerIsMe() ? ' win' : ' lose';
-      newStxHtml = state.winnerNick ? ('<strong>' + esc(state.winnerNick) + '</strong> 胜出') : '对局结束';
-    } else if(state.room.status === 'waiting'){
-      var remain = Math.max(0, Math.ceil((state.waitingDeadline - Date.now())/1000));
-      var cls = remain <= 30 ? 'danger' : '';
-      newStxHtml = '<span class="dot-live"></span>等待对手加入… <span class="sb-count ' + cls + '">' + remain + 's</span> 后自动关闭';
-    } else if(state.room.status === 'playing'){
-      newStCls += ' playing';
+      newStCls+=winnerIsMe()?' win':' lose';
+      newStxHtml=state.winnerNick?('<strong>'+esc(state.winnerNick)+'</strong> 胜出'):'对局结束';
+    } else if(state.room.status==='waiting'){
+      var remain=Math.max(0,Math.ceil((state.waitingDeadline-Date.now())/1000));
+      var cls=remain<=30?'danger':'';
+      newStxHtml='<span class="dot-live"></span>等待对手加入… <span class="sb-count '+cls+'">'+remain+'s</span> 后自动关闭';
+    } else if(state.room.status==='playing'){
+      newStCls+=' playing';
       if(!state.myColor){
-        newStxHtml = '观战中 · 轮到 <strong>' + (cur === 'black' ? esc(hostNick) : esc(guestNick || '白方')) + '</strong>';
-      } else if(cur === state.myColor){
-        newStxHtml = '轮到 <strong>你</strong>落子（' + (state.myColor === 'black' ? '黑' : '白') + '）';
+        newStxHtml='观战中 · 轮到 <strong>'+(cur==='black'?esc(hostNick):esc(guestNick||'白方'))+'</strong>';
+      } else if(cur===state.myColor){
+        newStxHtml='轮到 <strong>你</strong>落子（'+(state.myColor==='black'?'黑':'白')+'）';
       } else {
-        newStxHtml = '对手思考中…';
+        newStxHtml='对手思考中…';
       }
-    } else {
-      newStxHtml = '对局已结束';
-    }
-    setClass(st, newStCls);
-    setHTML(stx, newStxHtml);
+    } else newStxHtml='对局已结束';
+    setClass(st,newStCls);
+    setHTML(stx,newStxHtml);
   }
-
-  var hint = $('waitingHint');
+  var hint=$('waitingHint');
   if(hint){
-    if(state.room.status === 'waiting'){
-      if(hint.style.display !== 'block') hint.style.display = 'block';
-      var hc = $('hintCode');
-      if(hc) setText(hc, roomCode);
-    } else {
-      if(hint.style.display !== 'none') hint.style.display = 'none';
-    }
+    if(state.room.status==='waiting'){
+      hint.classList.add('show');
+      var hc=$('hintCode');
+      if(hc) setText(hc,roomCode);
+      renderQRCode();
+    } else hint.classList.remove('show');
   }
-
-  var rb = $('resignBtn');
-  if(rb){
-    var shouldDisable = !state.myColor || state.gameOver || state.room.status !== 'playing';
-    if(rb.disabled !== shouldDisable) rb.disabled = shouldDisable;
-  }
-
-  var rc = $('roomChip');
-  if(rc) setText(rc, '#' + roomCode);
-
+  var rb=$('resignBtn');
+  if(rb){var shouldDisable=!state.myColor||state.gameOver||state.room.status!=='playing';if(rb.disabled!==shouldDisable)rb.disabled=shouldDisable;}
+  var rc=$('roomChip');
+  if(rc) setText(rc,'#'+roomCode);
   renderCanvas();
 }
-function winnerIsMe(){
-  return state.winnerUid && state.winnerUid === uid;
-}
+function winnerIsMe(){return state.winnerUid&&state.winnerUid===uid;}
 
-/* ============================================================
-   计时
-   ============================================================ */
-var tickTimer = null;
-
-function startTick(){
-  if(tickTimer) return;
-  tickTimer = setInterval(tick, TICK_MS);
+/* 二维码 */
+var qrRendered=false;
+function renderQRCode(){
+  if(qrRendered) return;
+  var box=$('qrBox'); if(!box) return;
+  if(typeof QRCode==='undefined'){box.innerHTML='<div class="wp-qr-loading">二维码加载失败<br>请手动复制房间码</div>';return;}
+  var url=location.origin+location.pathname+'?room='+roomCode;
+  if(LAN_MODE) url=location.origin+location.pathname+'?lan=1&room='+roomCode;
+  box.innerHTML='';
+  try{
+    new QRCode(box,{text:url,width:164,height:164,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    qrRendered=true;
+  }catch(e){box.innerHTML='<div class="wp-qr-loading">二维码生成失败</div>';}
 }
+var copyCodeBtn=$('copyCodeBtn');
+if(copyCodeBtn) copyCodeBtn.addEventListener('click',function(){
+  try{navigator.clipboard.writeText(roomCode);toast('房间码已复制：'+roomCode);}catch(e){toast('房间码：'+roomCode);}
+});
+var copyLinkBtn=$('copyLinkBtn');
+if(copyLinkBtn) copyLinkBtn.addEventListener('click',function(){
+  var url=location.origin+location.pathname+'?room='+roomCode;
+  if(LAN_MODE) url=location.origin+location.pathname+'?lan=1&room='+roomCode;
+  try{navigator.clipboard.writeText(url);toast('链接已复制');}catch(e){toast(url);}
+});
+
+/* 计时 */
+var tickTimer=null;
+function startTick(){if(tickTimer)return;tickTimer=setInterval(tick,TICK_MS);}
 function tick(){
-  if(!state.room){ updateTimers(null); return; }
-
-  if(state.room.status === 'waiting'){
-    updateTimers(null);
-    tickWaiting();
-    return;
-  }
-
-  if(state.room.status !== 'playing'){ updateTimers(null); return; }
-  if(state.gameOver){ updateTimers(null); return; }
-
-  var cur = currentTurnColor();
-  var startAt = state.turnStartedAt || Date.now();
-  var elapsed = Date.now() - startAt;
-  var remain = TURN_LIMIT_MS - elapsed;
-  if(remain < 0) remain = 0;
-
-  updateTimers({ color: cur, remain: remain });
-
-  if(remain <= 0){
-    var loserUid, loserNick, winnerUid, winnerNick;
-    if(cur === 'black'){
-      loserUid = state.room.host_uid;
-      loserNick = state.room.host_nick;
-      winnerUid = state.room.guest_uid;
-      winnerNick = state.room.guest_nick;
+  if(!state.room){updateTimers(null);return;}
+  if(state.room.status==='waiting'){updateTimers(null);tickWaiting();return;}
+  if(state.room.status!=='playing'){updateTimers(null);return;}
+  if(state.gameOver){updateTimers(null);return;}
+  var cur=currentTurnColor();
+  var startAt=state.turnStartedAt||Date.now();
+  var elapsed=Date.now()-startAt;
+  var remain=TURN_LIMIT_MS-elapsed;
+  if(remain<0) remain=0;
+  updateTimers({color:cur,remain:remain});
+  if(remain<=0){
+    var loserUid,loserNick,winnerUid,winnerNick;
+    if(cur==='black'){
+      loserUid=state.room.host_uid;loserNick=state.room.host_nick;
+      winnerUid=state.room.guest_uid;winnerNick=state.room.guest_nick;
     } else {
-      loserUid = state.room.guest_uid;
-      loserNick = state.room.guest_nick;
-      winnerUid = state.room.host_uid;
-      winnerNick = state.room.host_nick;
+      loserUid=state.room.guest_uid;loserNick=state.room.guest_nick;
+      winnerUid=state.room.host_uid;winnerNick=state.room.host_nick;
     }
-    if(winnerUid && winnerNick){
-      finishGame(winnerUid, winnerNick, loserNick, 'timeout');
-    }
+    if(winnerUid&&winnerNick) finishGame(winnerUid,winnerNick,loserNick,'timeout');
   }
 }
-
 function tickWaiting(){
   if(state.waitingTimeoutFired) return;
-  var remain = Math.max(0, Math.ceil((state.waitingDeadline - Date.now())/1000));
-  var stx = $('statusText');
+  var remain=Math.max(0,Math.ceil((state.waitingDeadline-Date.now())/1000));
+  var stx=$('statusText');
   if(stx){
-    var cls = remain <= 30 ? 'danger' : '';
-    setHTML(stx, '<span class="dot-live"></span>等待对手加入… <span class="sb-count ' + cls + '">' + remain + 's</span> 后自动关闭');
+    var cls=remain<=30?'danger':'';
+    setHTML(stx,'<span class="dot-live"></span>等待对手加入… <span class="sb-count '+cls+'">'+remain+'s</span> 后自动关闭');
   }
-  if(remain <= 0){
-    state.waitingTimeoutFired = true;
-    handleWaitingTimeout();
-  }
+  if(remain<=0){state.waitingTimeoutFired=true;handleWaitingTimeout();}
 }
-
 function handleWaitingTimeout(){
-  if(!sb) return;
-  sb.from('gomoku_rooms')
-    .delete()
-    .eq('code', roomCode)
-    .eq('status', 'waiting')
-    .select()
-    .then(function(res){
-      if(res.error){
-        setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
-        return;
-      }
-      if(res.data && res.data.length > 0){
-        toast('房间超时，已自动关闭');
-      }
-      setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
-    }).catch(function(){
-      setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
-    });
-}
-
-function updateTimers(info){
-  var tB = $('timerBlack'), tW = $('timerWhite');
-  if(!tB || !tW) return;
-
-  if(!info){
-    setText(tB, '--'); setClass(tB, 'pc-timer');
-    setText(tW, '--'); setClass(tW, 'pc-timer');
+  if(LAN_MODE){
+    try{
+      var raw=localStorage.getItem('gomoku-lan-rooms');
+      if(raw){var rooms=JSON.parse(raw);delete rooms[roomCode];localStorage.setItem('gomoku-lan-rooms',JSON.stringify(rooms));}
+    }catch(e){}
+    toast('房间超时，已自动关闭');
+    setTimeout(function(){location.href='./wuzi_hotel.html';},1200);
     return;
   }
-
-  var secs = Math.ceil(info.remain / 1000);
-  var cls = 'pc-timer' + (secs <= 5 ? ' danger' : (secs <= 15 ? ' warn' : ''));
-  var txt = secs + 's';
-  if(info.color === 'black'){
-    setText(tB, txt); setClass(tB, cls);
-    setText(tW, '--'); setClass(tW, 'pc-timer');
-  } else {
-    setText(tW, txt); setClass(tW, cls);
-    setText(tB, '--'); setClass(tB, 'pc-timer');
-  }
+  if(!sb) return;
+  sb.from('gomoku_rooms').delete().eq('code',roomCode).eq('status','waiting').select()
+    .then(function(res){
+      if(res.error){setTimeout(function(){location.href='./wuzi_hotel.html';},1200);return;}
+      if(res.data&&res.data.length>0) toast('房间超时，已自动关闭');
+      setTimeout(function(){location.href='./wuzi_hotel.html';},1200);
+    }).catch(function(){setTimeout(function(){location.href='./wuzi_hotel.html';},1200);});
+}
+function updateTimers(info){
+  var tB=$('timerBlack'),tW=$('timerWhite');
+  if(!tB||!tW) return;
+  if(!info){setText(tB,'--');setClass(tB,'pc-timer');setText(tW,'--');setClass(tW,'pc-timer');return;}
+  var secs=Math.ceil(info.remain/1000);
+  var cls='pc-timer'+(secs<=5?' danger':(secs<=15?' warn':''));
+  var txt=secs+'s';
+  if(info.color==='black'){setText(tB,txt);setClass(tB,cls);setText(tW,'--');setClass(tW,'pc-timer');}
+  else{setText(tW,txt);setClass(tW,cls);setText(tB,'--');setClass(tB,'pc-timer');}
 }
 
-/* ============================================================
-   数据加载与订阅
-   ============================================================ */
-var roomsChannel = null;
-var movesChannel = null;
-var heartbeatTimer = null;
+/* 数据加载 */
+var roomsChannel=null,movesChannel=null,heartbeatTimer=null;
 
 function loadRoom(){
   if(!sb) return Promise.reject(new Error('连接未初始化'));
-  return sb.from('gomoku_rooms').select('*').eq('code', roomCode).maybeSingle()
+  return sb.from('gomoku_rooms').select('*').eq('code',roomCode).maybeSingle()
     .then(function(res){
       if(res.error) throw new Error(res.error.message);
       if(!res.data) throw new Error('房间不存在或已关闭');
-      state.room = res.data;
-      state.boardSize = parseInt(res.data.board_size, 10) || 15;
-      if(state.boardSize < 5) state.boardSize = 5;
-      if(state.boardSize > 50) state.boardSize = 50;
-
-      var created = parseInt(res.data.created_at, 10) || Date.now();
-      state.waitingDeadline = created + WAITING_LIMIT_MS;
-
-      if(res.data.host_uid === uid) state.myColor = 'black';
-      else if(res.data.guest_uid === uid) state.myColor = 'white';
-      else state.myColor = null;
-
-      if(state.myColor === 'white' && res.data.status === 'waiting'){
-        sb.from('gomoku_rooms').update({
-          status: 'playing',
-          game_started_at: Date.now(),
-          turn_started_at: Date.now(),
-          last_active: Date.now()
-        }).eq('code', roomCode);
+      state.room=res.data;
+      state.boardSize=parseInt(res.data.board_size,10)||15;
+      if(state.boardSize<5) state.boardSize=5;
+      if(state.boardSize>50) state.boardSize=50;
+      var created=parseInt(res.data.created_at,10)||Date.now();
+      state.waitingDeadline=created+WAITING_LIMIT_MS;
+      if(res.data.host_uid===uid) state.myColor='black';
+      else if(res.data.guest_uid===uid) state.myColor='white';
+      else state.myColor=null;
+      if(state.myColor==='white'&&res.data.status==='waiting'){
+        sb.from('gomoku_rooms').update({status:'playing',game_started_at:Date.now(),turn_started_at:Date.now(),last_active:Date.now()}).eq('code',roomCode);
       }
     });
 }
-
 function loadMoves(){
   if(!sb) return Promise.reject(new Error('连接未初始化'));
-  return sb.from('gomoku_moves').select('*').eq('room_code', roomCode).order('seq', {ascending:true})
+  return sb.from('gomoku_moves').select('*').eq('room_code',roomCode).order('seq',{ascending:true})
     .then(function(res){
       if(res.error) throw new Error(res.error.message);
-      state.moves = (res.data || []).map(function(m){
-        return {
-          x: parseInt(m.x,10), y: parseInt(m.y,10),
-          color: m.color, uid: m.uid,
-          seq: parseInt(m.seq,10), ts: parseInt(m.ts,10)
-        };
+      state.moves=(res.data||[]).map(function(m){
+        return {x:parseInt(m.x,10),y:parseInt(m.y,10),color:m.color,uid:m.uid,seq:parseInt(m.seq,10),ts:parseInt(m.ts,10)};
       });
       rebuildBoard();
     });
 }
-
 function subscribeRoom(){
-  if(!sb || roomsChannel) return;
-  roomsChannel = sb.channel('game-room-'+roomCode)
-    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'gomoku_rooms', filter:'code=eq.'+roomCode}, function(payload){
-      var r = payload.new;
-      if(!r) return;
-      var oldStatus = state.room ? state.room.status : null;
-      state.room = r;
-      state.boardSize = parseInt(r.board_size, 10) || state.boardSize;
-      if(r.host_uid === uid) state.myColor = 'black';
-      else if(r.guest_uid === uid) state.myColor = 'white';
-      else state.myColor = null;
-
-      if(oldStatus === 'waiting' && r.status === 'playing'){
-        state.turnStartedAt = Date.now();
-        toast('对手已加入，对局开始！');
-      }
-      if(r.turn_started_at){
-        state.turnStartedAt = parseInt(r.turn_started_at, 10);
-      }
-      if(r.status === 'finished' && !state.finished){
-        state.finished = true;
-        state.gameOver = true;
-        state.winnerUid = r.winner_uid;
-        state.winnerNick = r.winner_nick;
-        state.loserNick = r.loser_nick;
-        showResult(r.winner_uid, r.finish_reason);
-        setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 3500);
+  if(LAN_MODE||!sb||roomsChannel) return;
+  roomsChannel=sb.channel('game-room-'+roomCode)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'gomoku_rooms',filter:'code=eq.'+roomCode},function(payload){
+      var r=payload.new;if(!r) return;
+      var oldStatus=state.room?state.room.status:null;
+      state.room=r;
+      state.boardSize=parseInt(r.board_size,10)||state.boardSize;
+      if(r.host_uid===uid) state.myColor='black';
+      else if(r.guest_uid===uid) state.myColor='white';
+      else state.myColor=null;
+      if(oldStatus==='waiting'&&r.status==='playing'){state.turnStartedAt=Date.now();toast('对手已加入，对局开始！');}
+      if(r.turn_started_at) state.turnStartedAt=parseInt(r.turn_started_at,10);
+      if(r.status==='finished'&&!state.finished){
+        state.finished=true;state.gameOver=true;
+        state.winnerUid=r.winner_uid;state.winnerNick=r.winner_nick;state.loserNick=r.loser_nick;
+        showResult(r.winner_uid,r.finish_reason);
+        setTimeout(function(){location.href='./wuzi_hotel.html';},3500);
       }
       updateUI();
     })
-    .on('postgres_changes', {event:'DELETE', schema:'public', table:'gomoku_rooms', filter:'code=eq.'+roomCode}, function(){
-      if(!state.finished){
-        toast('房间已关闭');
-        setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
-      }
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'gomoku_rooms',filter:'code=eq.'+roomCode},function(){
+      if(!state.finished){toast('房间已关闭');setTimeout(function(){location.href='./wuzi_hotel.html';},1000);}
     })
     .subscribe(function(status){
-      if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
         console.warn('⚠️ 房间订阅失败，已自动轮询兜底');
       }
     });
 }
-
 function subscribeMoves(){
-  if(!sb || movesChannel) return;
-  movesChannel = sb.channel('game-moves-'+roomCode)
-    .on('postgres_changes', {event:'INSERT', schema:'public', table:'gomoku_moves', filter:'room_code=eq.'+roomCode}, function(payload){
-      var m = payload.new;
-      if(!m) return;
-      var x = parseInt(m.x,10), y = parseInt(m.y,10);
-      if(state.moves.some(function(v){ return v.x === x && v.y === y; })) return;
-      var mv = { x:x, y:y, color:m.color, uid:m.uid, seq:parseInt(m.seq,10), ts:parseInt(m.ts,10) };
-      state.moves.push(mv);
-      rebuildBoard();
-      if(!state.gameOver){
-        var line = checkWin(mv.x, mv.y, mv.color);
-        if(line){
-          state.winLine = line;
-          state.gameOver = true;
-        }
-      }
+  if(LAN_MODE||!sb||movesChannel) return;
+  movesChannel=sb.channel('game-moves-'+roomCode)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'gomoku_moves',filter:'room_code=eq.'+roomCode},function(payload){
+      var m=payload.new;if(!m) return;
+      var x=parseInt(m.x,10),y=parseInt(m.y,10);
+      if(state.moves.some(function(v){return v.x===x&&v.y===y;})) return;
+      var mv={x:x,y:y,color:m.color,uid:m.uid,seq:parseInt(m.seq,10),ts:parseInt(m.ts,10)};
+      state.moves.push(mv);rebuildBoard();
+      if(!state.gameOver){var line=checkWin(mv.x,mv.y,mv.color);if(line){state.winLine=line;state.gameOver=true;}}
       updateUI();
-      if(mv.uid !== uid){
-        state.turnStartedAt = Date.now();
-      }
+      if(mv.uid!==uid) state.turnStartedAt=Date.now();
     })
     .subscribe(function(status){
-      if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
         console.warn('⚠️ 落子订阅失败，已自动轮询兜底');
       }
     });
 }
-
 function startHeartbeat(){
   if(heartbeatTimer) return;
-  heartbeatTimer = setInterval(function(){
-    if(!sb || !state.room) return;
-    if(state.room.status !== 'playing') return;
-    sb.from('gomoku_rooms').update({ last_active: Date.now() }).eq('code', roomCode);
-  }, 10000);
+  heartbeatTimer=setInterval(function(){
+    if(LAN_MODE) return;
+    if(!sb||!state.room) return;
+    if(state.room.status!=='playing') return;
+    sb.from('gomoku_rooms').update({last_active:Date.now()}).eq('code',roomCode);
+  },10000);
 }
-
-/* ============================================================
-   ★ 3 秒轮询兜底：无动画、无 toast、静默同步
-   ============================================================ */
-var pollTimer = null;
-var pollingMoves = false;
-
+var pollTimer=null,pollingMoves=false;
 function startPollingFallback(){
-  if(pollTimer) return;
-  pollTimer = setInterval(function(){
-    if(!sb || !state.room) return;
+  if(LAN_MODE||pollTimer) return;
+  pollTimer=setInterval(function(){
+    if(!sb||!state.room) return;
     if(document.hidden) return;
     if(state.finished) return;
-
-    /* 1. 静默拉房间 */
-    sb.from('gomoku_rooms').select('*').eq('code', roomCode).maybeSingle()
+    sb.from('gomoku_rooms').select('*').eq('code',roomCode).maybeSingle()
       .then(function(res){
         if(res.error) return;
-        if(!res.data){
-          if(!state.finished){
-            toast('房间已关闭');
-            setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
-          }
-          return;
-        }
-        var r = res.data;
-        var oldStatus = state.room ? state.room.status : null;
-        state.room = r;
-        state.boardSize = parseInt(r.board_size, 10) || state.boardSize;
-        if(r.host_uid === uid) state.myColor = 'black';
-        else if(r.guest_uid === uid) state.myColor = 'white';
-        else state.myColor = null;
-
-        if(oldStatus === 'waiting' && r.status === 'playing'){
-          state.turnStartedAt = Date.now();
-          toast('对手已加入，对局开始！');
-        }
-        if(r.turn_started_at){
-          state.turnStartedAt = parseInt(r.turn_started_at, 10);
-        }
-        if(r.status === 'finished' && !state.finished){
-          state.finished = true;
-          state.gameOver = true;
-          state.winnerUid = r.winner_uid;
-          state.winnerNick = r.winner_nick;
-          state.loserNick = r.loser_nick;
-          showResult(r.winner_uid, r.finish_reason);
-          setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 3500);
+        if(!res.data){if(!state.finished){toast('房间已关闭');setTimeout(function(){location.href='./wuzi_hotel.html';},1000);}return;}
+        var r=res.data;
+        var oldStatus=state.room?state.room.status:null;
+        state.room=r;
+        state.boardSize=parseInt(r.board_size,10)||state.boardSize;
+        if(r.host_uid===uid) state.myColor='black';
+        else if(r.guest_uid===uid) state.myColor='white';
+        else state.myColor=null;
+        if(oldStatus==='waiting'&&r.status==='playing'){state.turnStartedAt=Date.now();toast('对手已加入，对局开始！');}
+        if(r.turn_started_at) state.turnStartedAt=parseInt(r.turn_started_at,10);
+        if(r.status==='finished'&&!state.finished){
+          state.finished=true;state.gameOver=true;
+          state.winnerUid=r.winner_uid;state.winnerNick=r.winner_nick;state.loserNick=r.loser_nick;
+          showResult(r.winner_uid,r.finish_reason);
+          setTimeout(function(){location.href='./wuzi_hotel.html';},3500);
           return;
         }
         updateUI();
       }).catch(function(){});
-
-    /* 2. 静默拉新落子 */
-    if(!pollingMoves && state.room && state.room.status === 'playing'){
-      pollingMoves = true;
-      var since = -1;
-      state.moves.forEach(function(m){ if(m.seq > since) since = m.seq; });
-      var q = sb.from('gomoku_moves').select('*').eq('room_code', roomCode);
-      if(since >= 0) q = q.gt('seq', since);
-      q.order('seq', {ascending: true}).then(function(res){
-        pollingMoves = false;
+    if(!pollingMoves&&state.room&&state.room.status==='playing'){
+      pollingMoves=true;
+      var since=-1;
+      state.moves.forEach(function(m){if(m.seq>since) since=m.seq;});
+      var q=sb.from('gomoku_moves').select('*').eq('room_code',roomCode);
+      if(since>=0) q=q.gt('seq',since);
+      q.order('seq',{ascending:true}).then(function(res){
+        pollingMoves=false;
         if(res.error) return;
-        var newOnes = res.data || [];
-        if(newOnes.length === 0) return;
-
-        var added = false;
+        var newOnes=res.data||[];
+        if(newOnes.length===0) return;
+        var added=false;
         newOnes.forEach(function(m){
-          var x = parseInt(m.x,10), y = parseInt(m.y,10);
-          if(state.moves.some(function(v){ return v.x === x && v.y === y; })) return;
-          var mv = {
-            x:x, y:y, color:m.color, uid:m.uid,
-            seq:parseInt(m.seq,10), ts:parseInt(m.ts,10)
-          };
+          var x=parseInt(m.x,10),y=parseInt(m.y,10);
+          if(state.moves.some(function(v){return v.x===x&&v.y===y;})) return;
+          var mv={x:x,y:y,color:m.color,uid:m.uid,seq:parseInt(m.seq,10),ts:parseInt(m.ts,10)};
           state.moves.push(mv);
           if(!state.gameOver){
-            state.board[mv.y][mv.x] = mv.color;
-            var line = checkWin(mv.x, mv.y, mv.color);
-            if(line){
-              state.winLine = line;
-              state.gameOver = true;
-            }
+            state.board[mv.y][mv.x]=mv.color;
+            var line=checkWin(mv.x,mv.y,mv.color);
+            if(line){state.winLine=line;state.gameOver=true;}
           }
-          if(mv.uid !== uid){
-            state.turnStartedAt = Date.now();
-          }
-          added = true;
+          if(mv.uid!==uid) state.turnStartedAt=Date.now();
+          added=true;
         });
-        if(added){
-          rebuildBoard();
-          updateUI();
-        }
-      }).catch(function(){
-        pollingMoves = false;
-      });
+        if(added){rebuildBoard();updateUI();}
+      }).catch(function(){pollingMoves=false;});
     }
-  }, POLL_MS);
+  },POLL_MS);
 }
 
-/* ============================================================
-   认输 / 退出
-   ============================================================ */
-var resignBtn = $('resignBtn');
+/* 认输/退出 */
+var resignBtn=$('resignBtn');
 if(resignBtn){
-  resignBtn.addEventListener('click', function(){
-    if(!state.myColor || state.gameOver) return;
+  resignBtn.addEventListener('click',function(){
+    if(!state.myColor||state.gameOver) return;
     if(!confirm('确定认输？')) return;
-    var winnerUid, winnerNick;
-    if(state.myColor === 'black'){
-      winnerUid = state.room.guest_uid;
-      winnerNick = state.room.guest_nick;
-    } else {
-      winnerUid = state.room.host_uid;
-      winnerNick = state.room.host_nick;
-    }
-    if(!winnerUid || !winnerNick){ toast('对手还没进来'); return; }
-    finishGame(winnerUid, winnerNick, myNick, 'resign');
+    var winnerUid,winnerNick;
+    if(state.myColor==='black'){winnerUid=state.room.guest_uid;winnerNick=state.room.guest_nick;}
+    else{winnerUid=state.room.host_uid;winnerNick=state.room.host_nick;}
+    if(!winnerUid||!winnerNick){toast('对手还没进来');return;}
+    finishGame(winnerUid,winnerNick,myNick,'resign');
   });
 }
-
 function exitRoom(){
-  if(state.room && state.room.status === 'playing' && !state.gameOver){
+  if(state.room&&state.room.status==='playing'&&!state.gameOver){
     if(!confirm('对局进行中，确定退出？退出视为认输')) return;
     if(state.myColor){
-      var winnerUid, winnerNick;
-      if(state.myColor === 'black'){
-        winnerUid = state.room.guest_uid;
-        winnerNick = state.room.guest_nick;
-      } else {
-        winnerUid = state.room.host_uid;
-        winnerNick = state.room.host_nick;
-      }
-      if(winnerUid && winnerNick){
-        finishGame(winnerUid, winnerNick, myNick, 'resign');
-        return;
-      }
+      var winnerUid,winnerNick;
+      if(state.myColor==='black'){winnerUid=state.room.guest_uid;winnerNick=state.room.guest_nick;}
+      else{winnerUid=state.room.host_uid;winnerNick=state.room.host_nick;}
+      if(winnerUid&&winnerNick){finishGame(winnerUid,winnerNick,myNick,'resign');return;}
     }
-  } else if(state.room && state.room.status === 'waiting'){
-    if(sb){
-      sb.from('gomoku_rooms').delete().eq('code', roomCode).eq('status','waiting');
+  } else if(state.room&&state.room.status==='waiting'){
+    if(LAN_MODE){
+      try{
+        var raw=localStorage.getItem('gomoku-lan-rooms');
+        if(raw){var rooms=JSON.parse(raw);delete rooms[roomCode];localStorage.setItem('gomoku-lan-rooms',JSON.stringify(rooms));}
+      }catch(e){}
+    } else if(sb){
+      sb.from('gomoku_rooms').delete().eq('code',roomCode).eq('status','waiting');
     }
   }
-  location.href = './wuzi_hotel.html';
+  location.href='./wuzi_hotel.html';
 }
-var exitBtn = $('exitBtn');
-if(exitBtn) exitBtn.addEventListener('click', exitRoom);
-var leaveBtn = $('leaveBtn');
-if(leaveBtn) leaveBtn.addEventListener('click', exitRoom);
+var exitBtn=$('exitBtn');
+if(exitBtn) exitBtn.addEventListener('click',exitRoom);
+var leaveBtn=$('leaveBtn');
+if(leaveBtn) leaveBtn.addEventListener('click',exitRoom);
 
-/* ============================================================
-   Canvas 交互
-   ============================================================ */
-function onCanvasClick(e){
-  var p = getPointFromEvent(e);
-  if(!p) return;
-  tryPlace(p.x, p.y);
-}
+/* Canvas 交互 */
+function onCanvasClick(e){var p=getPointFromEvent(e);if(!p) return;tryPlace(p.x,p.y);}
 function onCanvasMove(e){
-  var p = getPointFromEvent(e);
-  if(!p){ if(state.hover){ state.hover = null; renderCanvas(); } return; }
-  if(state.hover && state.hover.x === p.x && state.hover.y === p.y) return;
-  state.hover = p;
-  renderCanvas();
+  var p=getPointFromEvent(e);
+  if(!p){if(state.hover){state.hover=null;renderCanvas();}return;}
+  if(state.hover&&state.hover.x===p.x&&state.hover.y===p.y) return;
+  state.hover=p;renderCanvas();
 }
-function onCanvasLeave(){
-  if(state.hover){ state.hover = null; renderCanvas(); }
-}
+function onCanvasLeave(){if(state.hover){state.hover=null;renderCanvas();}}
 function bindCanvas(){
   if(!canvas) return;
-  canvas.addEventListener('click', onCanvasClick);
-  canvas.addEventListener('mousemove', onCanvasMove);
-  canvas.addEventListener('mouseleave', onCanvasLeave);
-  canvas.addEventListener('touchstart', function(e){
-    if(e.touches.length !== 1) return;
+  canvas.addEventListener('click',onCanvasClick);
+  canvas.addEventListener('mousemove',onCanvasMove);
+  canvas.addEventListener('mouseleave',onCanvasLeave);
+  canvas.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1) return;
     e.preventDefault();
-    var t = e.touches[0];
-    onCanvasClick({ clientX: t.clientX, clientY: t.clientY });
-  }, {passive:false});
+    var t=e.touches[0];
+    onCanvasClick({clientX:t.clientX,clientY:t.clientY});
+  },{passive:false});
 }
 
-var roomChip = $('roomChip');
-if(roomChip) roomChip.addEventListener('click', function(){
-  try{
-    navigator.clipboard.writeText(roomCode);
-    toast('房间码已复制：' + roomCode);
-  }catch(e){
-    toast('房间码：' + roomCode);
-  }
+var roomChip=$('roomChip');
+if(roomChip) roomChip.addEventListener('click',function(){
+  try{navigator.clipboard.writeText(roomCode);toast('房间码已复制：'+roomCode);}catch(e){toast('房间码：'+roomCode);}
 });
-var hintCode = $('hintCode');
-if(hintCode) hintCode.addEventListener('click', function(){
-  try{ navigator.clipboard.writeText(roomCode); toast('已复制'); }catch(e){}
+var hintCode=$('hintCode');
+if(hintCode) hintCode.addEventListener('click',function(){
+  try{navigator.clipboard.writeText(roomCode);toast('已复制');}catch(e){}
 });
 
-/* ============================================================
-   主题
-   ============================================================ */
+/* 主题 */
 var THEMES=[
-  {id:'mc-wiki',      name:'🟩 MC Wiki',    desc:'我的世界中文 Wiki', colors:['#3d521f','#fffdf5','#56682c']},
-  {id:'mc-night',     name:'⬛ MC 夜晚',    desc:'Minecraft 夜间模式', colors:['#8ec44a','#1a1a1a','#3d521f']},
-  {id:'mc-nether',    name:'🔥 MC 下界',    desc:'地狱岩浆风',         colors:['#ff6030','#1a0a0a','#8a2010']},
-  {id:'mc-end',       name:'🌌 MC 末地',    desc:'末地虚空紫',         colors:['#a060ff','#0f0a1a','#4a2080']},
-  {id:'sakura',       name:'🌸 樱花',       desc:'粉嫩柔和',           colors:['#d04080','#fffafc','#ff80a0']},
-  {id:'ocean',        name:'🌊 海洋',       desc:'清凉海蓝',           colors:['#0066cc','#f0f8ff','#40a0dc']},
-  {id:'github-light', name:'☀️ GitHub 浅色', desc:'清爽默认',           colors:['#0969da','#f6f8fa','#1f2328']},
-  {id:'github-dark',  name:'🌙 GitHub 暗色', desc:'护眼夜间',           colors:['#4493f8','#161b22','#e6edf3']}
+  {id:'mc-wiki',name:'🟩 MC Wiki',desc:'我的世界中文 Wiki',colors:['#3d521f','#fffdf5','#56682c']},
+  {id:'mc-night',name:'⬛ MC 夜晚',desc:'Minecraft 夜间模式',colors:['#8ec44a','#1a1a1a','#3d521f']},
+  {id:'mc-nether',name:'🔥 MC 下界',desc:'地狱岩浆风',colors:['#ff6030','#1a0a0a','#8a2010']},
+  {id:'mc-end',name:'🌌 MC 末地',desc:'末地虚空紫',colors:['#a060ff','#0f0a1a','#4a2080']},
+  {id:'sakura',name:'🌸 樱花',desc:'粉嫩柔和',colors:['#d04080','#fffafc','#ff80a0']},
+  {id:'ocean',name:'🌊 海洋',desc:'清凉海蓝',colors:['#0066cc','#f0f8ff','#40a0dc']},
+  {id:'github-light',name:'☀️ GitHub 浅色',desc:'清爽默认',colors:['#0969da','#f6f8fa','#1f2328']},
+  {id:'github-dark',name:'🌙 GitHub 暗色',desc:'护眼夜间',colors:['#4493f8','#161b22','#e6edf3']}
 ];
-var curTheme=(function(){
-  var s=storage.get(K_THEME);
-  for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===s)return s;
-  return 'mc-wiki';
-})();
+var curTheme=(function(){var s=storage.get(K_THEME);for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===s)return s;return 'mc-wiki';})();
 function buildThemeGrid(){
   var grid=$('themeGrid');if(!grid)return;
   var html='';
   THEMES.forEach(function(th){
     html+='<button type="button" class="theme-card'+(th.id===curTheme?' active':'')+'" data-theme-val="'+esc(th.id)+'">'+
-      '<div class="theme-prev">'+
-        '<span style="background:'+th.colors[0]+'"></span>'+
-        '<span style="background:'+th.colors[1]+'"></span>'+
-        '<span style="background:'+th.colors[2]+'"></span>'+
-      '</div>'+
+      '<div class="theme-prev"><span style="background:'+th.colors[0]+'"></span><span style="background:'+th.colors[1]+'"></span><span style="background:'+th.colors[2]+'"></span></div>'+
       '<div class="theme-name">'+esc(th.name)+'</div>'+
       '<div class="theme-desc">'+esc(th.desc)+'</div>'+
     '</button>';
@@ -1492,23 +1137,20 @@ function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   storage.set(K_THEME,t);
   curTheme=t;
-  setTimeout(renderCanvas, 50);
+  setTimeout(renderCanvas,50);
 }
-var themeOv=$('themeOv'), themeBtn=$('themeBtn'), themeClose=$('themeClose'), themeGrid=$('themeGrid');
-if(themeBtn) themeBtn.addEventListener('click', function(){ buildThemeGrid(); themeOv.classList.add('show'); });
-if(themeClose) themeClose.addEventListener('click', function(){ themeOv.classList.remove('show'); });
-if(themeOv) themeOv.addEventListener('click', function(e){ if(e.target===themeOv) themeOv.classList.remove('show'); });
-if(themeGrid) themeGrid.addEventListener('click', function(e){
-  var card=e.target.closest('[data-theme-val]'); if(!card)return;
+var themeOv=$('themeOv'),themeBtn=$('themeBtn'),themeClose=$('themeClose'),themeGrid=$('themeGrid');
+if(themeBtn) themeBtn.addEventListener('click',function(){buildThemeGrid();themeOv.classList.add('show');});
+if(themeClose) themeClose.addEventListener('click',function(){themeOv.classList.remove('show');});
+if(themeOv) themeOv.addEventListener('click',function(e){if(e.target===themeOv)themeOv.classList.remove('show');});
+if(themeGrid) themeGrid.addEventListener('click',function(e){
+  var card=e.target.closest('[data-theme-val]');if(!card)return;
   var id=card.getAttribute('data-theme-val');
-  applyTheme(id);
-  themeOv.classList.remove('show');
+  applyTheme(id);themeOv.classList.remove('show');
 });
 
-/* ============================================================
-   粒子
-   ============================================================ */
-var particleCtx=null, particles=[], particleRunning=true, pW=0, pH=0, pDpr=1;
+/* 粒子 */
+var particleCtx=null,particles=[],particleRunning=true,pW=0,pH=0,pDpr=1;
 var themeColors=['61,82,31','106,140,60','140,180,60','180,150,80'];
 function readThemeColors(){
   var cs=getComputedStyle(document.documentElement);
@@ -1520,30 +1162,28 @@ function readThemeColors(){
   ];
 }
 function initParticles(){
-  var cn=$('particles'); if(!cn||!cn.getContext) return;
+  var cn=$('particles');if(!cn||!cn.getContext) return;
   particleCtx=cn.getContext('2d');
   pDpr=Math.min(window.devicePixelRatio||1,2);
-  resizePCanvas();
-  readThemeColors();
+  resizePCanvas();readThemeColors();
   var count=Math.max(14,Math.min(28,Math.floor((pW*pH)/50000)));
   particles=[];
   for(var i=0;i<count;i++){
     particles.push({
-      x:Math.random()*pW, y:Math.random()*pH, size:4+Math.random()*9,
-      vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.4,
-      rot:Math.random()*Math.PI*2, vr:(Math.random()-0.5)*0.012,
-      alpha:0.10+Math.random()*0.22, alphaPhase:Math.random()*Math.PI*2,
-      alphaSpeed:0.008+Math.random()*0.014,
-      hueIdx:Math.floor(Math.random()*4), hueMix:Math.random()
+      x:Math.random()*pW,y:Math.random()*pH,size:4+Math.random()*9,
+      vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,
+      rot:Math.random()*Math.PI*2,vr:(Math.random()-0.5)*0.012,
+      alpha:0.10+Math.random()*0.22,alphaPhase:Math.random()*Math.PI*2,alphaSpeed:0.008+Math.random()*0.014,
+      hueIdx:Math.floor(Math.random()*4),hueMix:Math.random()
     });
   }
   if(particleRunning) drawParticles();
 }
 function resizePCanvas(){
-  var cn=$('particles'); if(!cn) return;
-  pW=window.innerWidth; pH=window.innerHeight;
-  cn.width=pW*pDpr; cn.height=pH*pDpr;
-  cn.style.width=pW+'px'; cn.style.height=pH+'px';
+  var cn=$('particles');if(!cn) return;
+  pW=window.innerWidth;pH=window.innerHeight;
+  cn.width=pW*pDpr;cn.height=pH*pDpr;
+  cn.style.width=pW+'px';cn.style.height=pH+'px';
   if(particleCtx) particleCtx.setTransform(pDpr,0,0,pDpr,0,0);
 }
 function drawParticles(){
@@ -1551,9 +1191,9 @@ function drawParticles(){
   particleCtx.clearRect(0,0,pW,pH);
   for(var i=0;i<particles.length;i++){
     var p=particles[i];
-    p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
-    if(p.x<-40)p.x=pW+40; else if(p.x>pW+40)p.x=-40;
-    if(p.y<-40)p.y=pH+40; else if(p.y>pH+40)p.y=-40;
+    p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;
+    if(p.x<-40)p.x=pW+40;else if(p.x>pW+40)p.x=-40;
+    if(p.y<-40)p.y=pH+40;else if(p.y>pH+40)p.y=-40;
     p.alphaPhase+=p.alphaSpeed;
     var a=p.alpha*(0.55+0.45*Math.sin(p.alphaPhase));
     a=Math.max(0.03,Math.min(0.4,a));
@@ -1564,8 +1204,8 @@ function drawParticles(){
     var g=Math.round(c1[1]*(1-mix)+c2[1]*mix);
     var b=Math.round(c1[2]*(1-mix)+c2[2]*mix);
     particleCtx.save();
-    particleCtx.translate(p.x,p.y); particleCtx.rotate(p.rot);
-    var s=p.size, hs=s/2, rad=Math.min(3,s/3.5);
+    particleCtx.translate(p.x,p.y);particleCtx.rotate(p.rot);
+    var s=p.size,hs=s/2,rad=Math.min(3,s/3.5);
     var grad=particleCtx.createLinearGradient(-hs,-hs,hs,hs);
     grad.addColorStop(0,'rgba('+r+','+g+','+b+','+a+')');
     grad.addColorStop(1,'rgba('+r+','+g+','+b+','+(a*0.3)+')');
@@ -1579,35 +1219,23 @@ function drawParticles(){
   requestAnimationFrame(drawParticles);
 }
 
-/* ============================================================
-   Esc
-   ============================================================ */
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape'){
-    if(themeOv && themeOv.classList.contains('show')) themeOv.classList.remove('show');
-  }
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){if(themeOv&&themeOv.classList.contains('show')) themeOv.classList.remove('show');}
 });
-
-window.addEventListener('resize', function(){
-  resizeCanvas();
-  resizePCanvas();
-}, {passive:true});
-document.addEventListener('visibilitychange', function(){
-  particleRunning = !document.hidden;
+window.addEventListener('resize',function(){resizeCanvas();resizePCanvas();},{passive:true});
+document.addEventListener('visibilitychange',function(){
+  particleRunning=!document.hidden;
   if(particleRunning) drawParticles();
   if(!document.hidden) resizeCanvas();
 });
 
-/* ============================================================
-   启动
-   ============================================================ */
-var lm = $('loadingMask');
-function hideLoading(){ if(lm) lm.classList.remove('show'); }
+/* 启动 */
+var lm=$('loadingMask');
+function hideLoading(){if(lm) lm.classList.remove('show');}
 function showLoadError(msg){
-  var sub = $('loadingSub');
-  var spin = $('loadingSpin');
-  if(sub){ sub.textContent = msg || '出错了'; sub.className = 'ls lerr'; }
-  if(spin) spin.style.display = 'none';
+  var sub=$('loadingSub'),spin=$('loadingSpin');
+  if(sub){sub.textContent=msg||'出错了';sub.className='ls lerr';}
+  if(spin) spin.style.display='none';
 }
 
 async function boot(){
@@ -1617,103 +1245,106 @@ async function boot(){
     initCanvas();
     buildThemeGrid();
     resizeCanvas();
-  }catch(err){
-    console.error('[boot] 初始化失败', err);
-    showLoadError('页面初始化失败');
-    return;
-  }
+  }catch(err){console.error('[boot] 初始化失败',err);showLoadError('页面初始化失败');return;}
 
-  if(!sb){
-    showLoadError('Supabase 未加载，请刷新页面');
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 2500);
-    return;
-  }
-
-  if(!roomCode || roomCode.length !== 6){
-    hideLoading();
-    toast('房间码无效');
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
+  if(!roomCode||roomCode.length!==6){
+    hideLoading();toast('房间码无效');
+    setTimeout(function(){location.href='./wuzi_hotel.html';},1200);
     return;
   }
   if(!myNick){
+    hideLoading();toast('请先设置昵称');
+    setTimeout(function(){location.href='./wuzi_hotel.html';},1200);
+    return;
+  }
+
+  /* ★ 局域网模式分支 */
+  if(LAN_MODE){
+    initLanChannel();
+    var lb=$('lanBadge');
+    if(lb) lb.classList.add('show');
+    try{
+      await loadRoomLan();
+      await loadMovesLan();
+    }catch(err){
+      console.error('[boot] LAN loadRoom 失败',err);
+      showLoadError('局域网房间不存在或已关闭');
+      setTimeout(function(){location.href='./wuzi_hotel.html';},2500);
+      return;
+    }
     hideLoading();
-    toast('请先设置昵称');
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
+    resizeCanvas();
+    bindCanvas();
+    updateUI();
+    startTick();
+    if(state.room.status==='waiting'&&state.room.host_uid===uid){
+      toast('等待对手加入（同一浏览器新开标签页 → 输入房间码）');
+    } else if(state.room.status==='playing'){
+      toast('对局开始，'+(state.myColor==='black'?'你执黑先行':'你执白后手'));
+    }
+    return;
+  }
+
+  /* 服务器模式 */
+  if(!sb){
+    showLoadError('Supabase 未加载，请刷新页面');
+    setTimeout(function(){location.href='./wuzi_hotel.html';},2500);
     return;
   }
 
   try{
     await loadRoom();
   }catch(err){
-    console.error('[boot] loadRoom 失败', err);
+    console.error('[boot] loadRoom 失败',err);
     showLoadError('房间不存在或加载失败');
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 2500);
+    setTimeout(function(){location.href='./wuzi_hotel.html';},2500);
     return;
   }
 
-  if(state.room.status === 'finished'){
-    hideLoading();
-    toast('该房间已结束');
-    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1200);
+  if(state.room.status==='finished'){
+    hideLoading();toast('该房间已结束');
+    setTimeout(function(){location.href='./wuzi_hotel.html';},1200);
     return;
   }
 
-  if(state.room.status === 'waiting'){
-    var created = parseInt(state.room.created_at, 10) || 0;
-    var deadline = created + WAITING_LIMIT_MS;
-    if(Date.now() > deadline){
-      hideLoading();
-      toast('房间已超时');
-      try{
-        sb.from('gomoku_rooms').delete().eq('code', roomCode).eq('status','waiting');
-      }catch(e){}
-      setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 800);
+  if(state.room.status==='waiting'){
+    var created=parseInt(state.room.created_at,10)||0;
+    var deadline=created+WAITING_LIMIT_MS;
+    if(Date.now()>deadline){
+      hideLoading();toast('房间已超时');
+      try{sb.from('gomoku_rooms').delete().eq('code',roomCode).eq('status','waiting');}catch(e){}
+      setTimeout(function(){location.href='./wuzi_hotel.html';},800);
       return;
     }
-    state.waitingDeadline = deadline;
+    state.waitingDeadline=deadline;
   }
 
-  try{
-    await loadMoves();
-  }catch(err){
-    console.error('[boot] loadMoves 失败', err);
-    state.moves = [];
-    rebuildBoard();
-  }
+  try{await loadMoves();}catch(err){console.error('[boot] loadMoves 失败',err);state.moves=[];rebuildBoard();}
 
-  try{
-    resizeCanvas();
-    bindCanvas();
-    updateUI();
-  }catch(err){
-    console.error('[boot] 渲染失败', err);
-  }
+  try{resizeCanvas();bindCanvas();updateUI();}catch(err){console.error('[boot] 渲染失败',err);}
 
   hideLoading();
 
-  try{ subscribeRoom(); }catch(e){ console.warn('订阅房间失败', e); }
-  try{ subscribeMoves(); }catch(e){ console.warn('订阅落子失败', e); }
+  try{subscribeRoom();}catch(e){console.warn('订阅房间失败',e);}
+  try{subscribeMoves();}catch(e){console.warn('订阅落子失败',e);}
   startHeartbeat();
   startTick();
-  startPollingFallback();  /* ★ 3 秒轮询兜底 */
+  startPollingFallback();
 
-  if(state.room.status === 'playing' && !state.room.turn_started_at){
-    state.turnStartedAt = Date.now();
-    try{
-      sb.from('gomoku_rooms').update({ turn_started_at: state.turnStartedAt }).eq('code', roomCode);
-    }catch(e){}
+  if(state.room.status==='playing'&&!state.room.turn_started_at){
+    state.turnStartedAt=Date.now();
+    try{sb.from('gomoku_rooms').update({turn_started_at:state.turnStartedAt}).eq('code',roomCode);}catch(e){}
   } else if(state.room.turn_started_at){
-    state.turnStartedAt = parseInt(state.room.turn_started_at, 10) || Date.now();
+    state.turnStartedAt=parseInt(state.room.turn_started_at,10)||Date.now();
   }
 
-  if(state.room.status === 'playing'){
-    toast('对局开始，' + (state.myColor === 'black' ? '你执黑先行' : '你执白后手'));
-  } else if(state.room.status === 'waiting' && state.room.host_uid === uid){
+  if(state.room.status==='playing'){
+    toast('对局开始，'+(state.myColor==='black'?'你执黑先行':'你执白后手'));
+  } else if(state.room.status==='waiting'&&state.room.host_uid===uid){
     toast('等待对手加入（120 秒后自动关闭）');
   }
 }
-
-if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
 else boot();
 
 })();
