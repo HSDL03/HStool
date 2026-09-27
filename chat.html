@@ -142,7 +142,6 @@ body{
   font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;
   overflow:hidden;transition:background-color .3s,color .3s;
 }
-
 .topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50;transition:background .3s,color .3s}
 [data-theme^="mc-"] .topbar{border-bottom-width:2px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer}
@@ -195,7 +194,6 @@ body{
   mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
 #particles{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.6}
 
-/* 登录界面 */
 .login-wrap{
   position:relative;z-index:1;
   display:flex;align-items:center;justify-content:center;
@@ -257,7 +255,6 @@ body{
 }
 .login-card .roll:hover{text-decoration:underline}
 
-/* 聊天区 */
 .chat-wrap{
   position:relative;z-index:1;
   display:flex;flex-direction:column;
@@ -369,7 +366,6 @@ body{
 [data-theme="ocean"] .toast{background:#004890;color:#e0f0ff;border-color:#002040}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* 右下角刷新倒计时胶囊 */
 .refresh-pill{
   position:fixed;
   right:14px;
@@ -403,9 +399,7 @@ body{
   font-size:12px;
   transition:transform .35s cubic-bezier(.34,1.56,.64,1);
 }
-.refresh-pill.tick .rp-icon{
-  transform:rotate(180deg);
-}
+.refresh-pill.tick .rp-icon{transform:rotate(180deg)}
 .refresh-pill .rp-text{
   white-space:nowrap;
   font-variant-numeric:tabular-nums;
@@ -417,17 +411,11 @@ body{
   min-width:10px;
   text-align:center;
 }
-.refresh-pill.loading .rp-icon{
-  animation:spinIcon .8s linear infinite;
-}
+.refresh-pill.loading .rp-icon{animation:spinIcon .8s linear infinite}
 @keyframes spinIcon{to{transform:rotate(360deg)}}
-.refresh-pill.err{
-  border-color:var(--dgr);
-  color:var(--dgr);
-}
+.refresh-pill.err{border-color:var(--dgr);color:var(--dgr)}
 .refresh-pill.err .rp-text #cdNum{color:var(--dgr)}
 
-/* 昵称弹窗 */
 .nick-ov-body{padding:18px}
 .nick-ov-body label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
 .nick-ov-body input{width:100%;height:42px;padding:0 12px;font-family:inherit;font-size:16px;font-weight:600;color:var(--text);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);outline:none;transition:border-color .2s,box-shadow .2s}
@@ -488,7 +476,6 @@ body{
   <canvas id="particles"></canvas>
 </div>
 
-<!-- 登录界面 -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-card">
     <span class="ic">💬</span>
@@ -507,7 +494,6 @@ body{
   </div>
 </div>
 
-<!-- 聊天界面 -->
 <main class="chat-wrap" id="chatWrap" hidden>
   <div class="messages" id="messages"></div>
 
@@ -519,7 +505,6 @@ body{
   </div>
 </main>
 
-<!-- 主题弹窗 -->
 <div class="ov" id="themeOv">
   <div class="pnl">
     <div class="ph"><strong>选择风格</strong><span class="sp"></span><button class="icon" id="themeClose">✕</button></div>
@@ -529,7 +514,6 @@ body{
   </div>
 </div>
 
-<!-- 改昵称弹窗 -->
 <div class="ov" id="nickOv">
   <div class="pnl">
     <div class="ph"><strong>修改昵称</strong><span class="sp"></span><button class="icon" id="nickClose">✕</button></div>
@@ -547,23 +531,19 @@ body{
 
 <div class="toast" id="toast"></div>
 
-<!-- 右下角刷新倒计时 -->
 <div class="refresh-pill" id="refreshPill" hidden title="点击立即刷新">
   <span class="rp-icon" id="rpIcon">🔄</span>
   <span class="rp-text"><span id="cdNum">5</span> 秒后刷新</span>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 (function(){
 'use strict';
 
 /* ═══════════════════════════════════════════════════════════
-   Supabase 配置
+   ★ Worker 地址
    ═══════════════════════════════════════════════════════════ */
-var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
+var API_BASE = 'https://chat-api.3794723874.workers.dev';
 
 /* ============================================================
    常量
@@ -576,6 +556,7 @@ var MSG_LIMIT = 200;
 var SEND_COOLDOWN = 2000;
 var MSG_MAXLEN = 500;
 var POLL_INTERVAL = 5;
+var ONLINE_REFRESH = 15;
 
 /* ============================================================
    工具
@@ -626,11 +607,35 @@ function toast(msg){
 }
 
 /* ============================================================
-   Supabase 初始化
+   API 请求
    ============================================================ */
-var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  realtime: { params: { eventsPerSecond: 10 } }
-});
+async function api(path, opts){
+  opts = opts || {};
+  try{
+    var res = await fetch(API_BASE + path, opts);
+    var data = await res.json();
+    return data;
+  }catch(e){
+    return { __err: e.message || 'Failed to fetch' };
+  }
+}
+async function apiGet(path){
+  return await api(path, { method: 'GET' });
+}
+async function apiPost(path, body){
+  return await api(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+async function apiDelete(path, body){
+  return await api(path, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
 
 var uid=(function(){
   var u=storage.get(K_UID);
@@ -642,30 +647,20 @@ var uid=(function(){
 })();
 
 var myNick='';
-var presenceChannel=null;
-var msgChannel=null;
 
 /* ============================================================
-   昵称占用
+   昵称
    ============================================================ */
 async function claimNick(nick){
-  try{
-    var ins = await sb.from('nicknames').insert({ nick: nick, uid: uid });
-    if(!ins.error) return { ok:true, mine:true };
-    if(ins.error.code === '23505'){
-      var q = await sb.from('nicknames').select('uid').eq('nick', nick).maybeSingle();
-      if(q.error) return { ok:false, reason:'net', msg:q.error.message };
-      if(q.data && q.data.uid === uid) return { ok:true, mine:true };
-      return { ok:false, reason:'taken' };
-    }
-    return { ok:false, reason:'net', msg:ins.error.message };
-  }catch(e){
-    return { ok:false, reason:'net', msg: e.message || 'Failed to fetch' };
-  }
+  var r = await apiPost('/api/nick', { nick: nick, uid: uid });
+  if(r.__err) return { ok:false, reason:'net', msg:r.__err };
+  if(r.ok) return { ok:true };
+  if(r.reason === 'taken') return { ok:false, reason:'taken' };
+  return { ok:false, reason:'net', msg: r.error || '未知错误' };
 }
 async function releaseNick(nick){
   if(!nick) return;
-  try{ await sb.from('nicknames').delete().eq('nick', nick).eq('uid', uid); }catch(e){}
+  await apiDelete('/api/nick', { nick: nick, uid: uid });
 }
 
 /* ============================================================
@@ -794,7 +789,7 @@ function drawParticles(){
 }
 
 /* ============================================================
-   登录界面
+   登录
    ============================================================ */
 var loginWrap=$('loginWrap');
 var loginNick=$('loginNick');
@@ -874,9 +869,9 @@ function startChat(){
   $('meNick').textContent = myNick;
 
   loadHistory().then(function(){
-    subscribeMessages();
-    subscribePresence();
     startPolling();
+    updateOnline();
+    setInterval(updateOnline, ONLINE_REFRESH * 1000);
   });
 
   setTimeout(function(){ try{ inputEl.focus(); }catch(e){} }, 100);
@@ -924,22 +919,15 @@ async function doSend(){
   autoResize();
   sendBtn.disabled=true;
 
-  try{
-    var res = await sb.from('messages').insert({
-      uid: uid,
-      nick: myNick,
-      text: text,
-      ts: now
-    });
-    if(res.error){
-      toast('发送失败：'+res.error.message);
-      lastSendTime=0;
-    }else{
-      resetPollCountdown();
-    }
-  }catch(e){
-    toast('发送失败：'+(e.message||'网络异常'));
+  var r = await apiPost('/api/messages', {
+    uid: uid, nick: myNick, text: text
+  });
+  if(r.__err || r.error){
+    toast('发送失败：'+(r.__err || r.error));
     lastSendTime=0;
+  }else{
+    resetPollCountdown();
+    updateOnline();
   }
 }
 
@@ -1031,7 +1019,7 @@ function updateLastTs(){
 }
 
 function mergeNewMessages(newOnes){
-  if(newOnes.length === 0) return false;
+  if(!newOnes || newOnes.length === 0) return false;
   var changed = false;
   newOnes.forEach(function(n){
     if(!allMessages.some(function(x){ return x.id===n.id; })){
@@ -1050,139 +1038,53 @@ function mergeNewMessages(newOnes){
 }
 
 async function loadHistory(){
-  try{
-    var res = await sb
-      .from('messages')
-      .select('*')
-      .order('ts', { ascending: false })
-      .limit(MSG_LIMIT);
-
-    if(res.error){
-      console.warn('加载失败', res.error);
-      return;
-    }
-    var arr = (res.data||[]).map(normalizeMsg);
-    arr.reverse();
-    allMessages = arr;
-    updateLastTs();
-    renderAll();
-  }catch(e){
-    console.warn('加载异常', e);
+  var data = await apiGet('/api/messages');
+  if(data.__err){
+    console.warn('加载失败', data.__err);
+    return;
   }
+  if(!Array.isArray(data)) return;
+  allMessages = data.map(normalizeMsg);
+  updateLastTs();
+  renderAll();
 }
 
 async function pollNewMessages(){
-  try{
-    var res;
-    if(lastTs > 0){
-      res = await sb.from('messages')
-        .select('*')
-        .gt('ts', lastTs)
-        .order('ts', { ascending: true })
-        .limit(MSG_LIMIT);
-    }else{
-      res = await sb.from('messages')
-        .select('*')
-        .order('ts', { ascending: false })
-        .limit(MSG_LIMIT);
-      if(res.data) res.data.reverse();
-    }
-    if(res.error){
-      console.warn('轮询失败', res.error);
-      setRpErr();
-      return;
-    }
-    var newOnes = (res.data||[]).map(normalizeMsg);
-    mergeNewMessages(newOnes);
-    clearRpErr();
-  }catch(e){
-    console.warn('轮询异常', e);
+  var path = lastTs > 0 ? '/api/messages?since='+lastTs : '/api/messages';
+  var data = await apiGet(path);
+  if(data.__err){
+    console.warn('轮询失败', data.__err);
     setRpErr();
+    return;
   }
+  clearRpErr();
+  if(!Array.isArray(data)) return;
+  var newOnes = data.map(normalizeMsg);
+  mergeNewMessages(newOnes);
 }
 
-function subscribeMessages(){
-  if(msgChannel) return;
-  msgChannel = sb.channel('chat-messages')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'messages'
-    }, function(payload){
-      var m = payload.new;
-      if(!m) return;
-      var msg = normalizeMsg(m);
-      if(allMessages.some(function(x){ return x.id===msg.id; })) return;
-      allMessages.push(msg);
-      if(allMessages.length > MSG_LIMIT){
-        allMessages = allMessages.slice(-MSG_LIMIT);
-      }
-      allMessages.sort(function(a,b){ return a.ts-b.ts; });
-      renderAll();
-      updateLastTs();
-    })
-    .subscribe(function(status){
-      if(status==='SUBSCRIBED'){
-        console.log('[chat] 实时已连接');
-      }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT'){
-        console.warn('[chat] 实时连接异常：', status);
-      }
-    });
-}
-
-function subscribePresence(){
-  if(presenceChannel) return;
-  presenceChannel = sb.channel('online-users', {
-    config: { presence: { key: uid } }
-  });
-  presenceChannel
-    .on('presence', { event: 'sync' }, function(){
-      var state = presenceChannel.presenceState();
-      var count = 0;
-      Object.keys(state).forEach(function(k){
-        count += (state[k]||[]).length;
-      });
-      onlineNum.textContent = count;
-    })
-    .subscribe(async function(status){
-      if(status==='SUBSCRIBED'){
-        try{
-          await presenceChannel.track({
-            nick: myNick,
-            online_at: Date.now()
-          });
-        }catch(e){}
-      }
-    });
+async function updateOnline(){
+  var data = await apiGet('/api/online');
+  if(data && !data.__err && typeof data.count === 'number'){
+    onlineNum.textContent = data.count;
+  }
 }
 
 /* ============================================================
-   右下角刷新倒计时
+   右下角倒计时
    ============================================================ */
 var refreshPill = $('refreshPill');
 var cdNum = $('cdNum');
-var rpIcon = $('rpIcon');
 var pollCountdown = POLL_INTERVAL;
 var countdownTimer = null;
 
-function updateCdDisplay(){
-  if(cdNum) cdNum.textContent = pollCountdown;
-}
-function setRpErr(){
-  if(refreshPill) refreshPill.classList.add('err');
-}
-function clearRpErr(){
-  if(refreshPill) refreshPill.classList.remove('err');
-}
-function resetPollCountdown(){
-  pollCountdown = POLL_INTERVAL;
-  updateCdDisplay();
-}
+function updateCdDisplay(){ if(cdNum) cdNum.textContent = pollCountdown; }
+function setRpErr(){ if(refreshPill) refreshPill.classList.add('err'); }
+function clearRpErr(){ if(refreshPill) refreshPill.classList.remove('err'); }
+function resetPollCountdown(){ pollCountdown = POLL_INTERVAL; updateCdDisplay(); }
 
 function doPollNow(){
-  if(refreshPill){
-    refreshPill.classList.add('loading');
-  }
+  if(refreshPill) refreshPill.classList.add('loading');
   pollNewMessages().then(function(){
     setTimeout(function(){
       if(refreshPill) refreshPill.classList.remove('loading');
@@ -1283,10 +1185,6 @@ $('nickSave').addEventListener('click', async function(){
   $('meNick').textContent = myNick;
   await releaseNick(oldNick);
 
-  try{
-    if(presenceChannel) await presenceChannel.track({nick:myNick, online_at:Date.now()});
-  }catch(e){}
-
   closeNickDialog();
   toast('昵称已改为「'+myNick+'」');
 });
@@ -1327,9 +1225,7 @@ document.addEventListener('visibilitychange',function(){
     if(!chatWrap.hidden){
       doPollNow();
       resetPollCountdown();
-    }
-    if(presenceChannel){
-      try{ presenceChannel.track({nick:myNick, online_at: Date.now()}); }catch(e){}
+      updateOnline();
     }
   }
 });
