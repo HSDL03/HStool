@@ -290,13 +290,18 @@ html.dense .messages{padding:10px 4px 30px}
 
 .msg.recalled .content,.msg.deleted .content{font-style:italic;opacity:.55;background:transparent;border-style:dashed}
 
-.msg .hover-tools{position:absolute;top:0;display:flex;gap:3px;opacity:0;pointer-events:none;transition:opacity .18s, transform .18s;z-index:5}
-.msg:not(.self) .hover-tools{left:calc(100% + 4px);transform:translateX(-4px)}
-.msg.self .hover-tools{right:calc(100% + 4px);transform:translateX(4px)}
-.msg:hover .hover-tools{opacity:1;pointer-events:auto;transform:translateX(0)}
-.msg .hover-tools button{width:26px;height:26px;display:grid;place-items:center;font-size:12px;font-family:inherit;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:6px;cursor:pointer;transition:all .15s}
-[data-theme^="mc-"] .msg .hover-tools button{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel);background:var(--bg)}
-.msg .hover-tools button:hover{color:var(--ac);border-color:var(--ac);background:var(--acs);transform:translateY(-1px)}
+/* ★ 右键上下文菜单 */
+.ctx-menu{position:fixed;z-index:300;min-width:150px;padding:5px;display:flex;flex-direction:column;gap:2px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:3px 3px 0 rgba(0,0,0,.3);opacity:0;visibility:hidden;transform:translateY(-4px) scale(.97);transition:opacity .14s ease-out,visibility .14s,transform .14s cubic-bezier(.34,1.56,.64,1);user-select:none}
+.ctx-menu.show{opacity:1;visibility:visible;transform:none}
+.ctx-menu button{display:flex;align-items:center;gap:10px;padding:7px 12px;font-size:13px;font-family:inherit;font-weight:600;text-align:left;color:var(--text);background:transparent;border:none;border-radius:calc(var(--r) - 1px);cursor:pointer;transition:background .12s,color .12s}
+.ctx-menu button:hover{background:var(--acs);color:var(--ac)}
+.ctx-menu button .ctx-ic{flex:none;width:16px;text-align:center;font-size:14px;line-height:1}
+.ctx-menu button .ctx-tx{flex:1}
+.ctx-menu button.danger:hover{background:rgba(160,32,32,.12);color:var(--dgr)}
+.ctx-menu button[hidden]{display:none !important}
+.ctx-menu .ctx-sep{height:1px;margin:3px 6px;background:var(--bd);flex:none}
+[data-theme^="github-"] .ctx-menu{border-width:1px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+[data-theme^="github-"] .ctx-menu button{border-radius:6px}
 
 .msg .reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .msg.self .reactions{justify-content:flex-end}
@@ -305,8 +310,7 @@ html.dense .messages{padding:10px 4px 30px}
 .msg .reactions .react:hover{border-color:var(--ac);background:var(--acs)}
 .msg .reactions .react.mine{background:var(--acs);border-color:var(--ac);color:var(--ac);font-weight:700}
 
-/* ★ 修复：emoji 弹窗改成 fixed */
-.emoji-pop{position:fixed;padding:6px;display:grid;grid-template-columns:repeat(6, 1fr);gap:2px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);z-index:200;animation:popIn .15s ease-out}
+.emoji-pop{position:fixed;padding:6px;display:grid;grid-template-columns:repeat(6, 1fr);gap:2px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);z-index:400;animation:popIn .15s ease-out}
 [data-theme^="mc-"] .emoji-pop{box-shadow:3px 3px 0 rgba(0,0,0,.3)}
 @keyframes popIn{from{opacity:0;transform:translateY(-4px) scale(.95)}to{opacity:1;transform:none}}
 .emoji-pop button{width:26px;height:26px;display:grid;place-items:center;font-size:16px;font-family:inherit;background:transparent;border:none;border-radius:4px;cursor:pointer;transition:background .12s, transform .12s}
@@ -534,10 +538,10 @@ html.dense .messages{padding:10px 4px 30px}
   .chat-toolbar{padding:6px 2px 0}
   .style-row label{width:80px;font-size:11px}
   .emoji-grid{grid-template-columns:repeat(7, 1fr)}
-  .msg .hover-tools{display:none}
+  .ctx-menu{min-width:140px}
   .scroll-bottom-btn{right:10px;bottom:90px;font-size:11.5px;padding:6px 12px}
 }
-@media print{.refresh-pill,.offline-mask,.chat-toolbar,.scroll-bottom-btn,.msg .hover-tools{display:none}}
+@media print{.refresh-pill,.offline-mask,.chat-toolbar,.scroll-bottom-btn,.ctx-menu{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -623,7 +627,7 @@ html.dense .messages{padding:10px 4px 30px}
     </div>
     <div class="input-wrap">
       <div class="mention-pop" id="mentionPop" hidden></div>
-      <textarea id="input" rows="1" placeholder="说点什么…（Enter 发送，Shift+Enter 换行）" maxlength="500"></textarea>
+      <textarea id="input" rows="1" placeholder="说点什么…（Enter 发送，Shift+Enter 换行，右键消息可操作）" maxlength="500"></textarea>
     </div>
     <button class="send" id="sendBtn" disabled>发送</button>
   </div>
@@ -806,6 +810,16 @@ html.dense .messages{padding:10px 4px 30px}
 
 <div class="toast" id="toast"></div>
 
+<!-- ★ 右键上下文菜单 -->
+<div class="ctx-menu" id="ctxMenu">
+  <button type="button" data-ctx="reply"><span class="ctx-ic">↩️</span><span class="ctx-tx">回复</span></button>
+  <button type="button" data-ctx="react"><span class="ctx-ic">😊</span><span class="ctx-tx">表情回应</span></button>
+  <button type="button" data-ctx="copy"><span class="ctx-ic">📋</span><span class="ctx-tx">复制文字</span></button>
+  <div class="ctx-sep" data-ctx-sep hidden></div>
+  <button type="button" data-ctx="edit" hidden><span class="ctx-ic">✏️</span><span class="ctx-tx">编辑</span></button>
+  <button type="button" data-ctx="recall" class="danger" hidden><span class="ctx-ic">↺</span><span class="ctx-tx">撤回</span></button>
+</div>
+
 <div class="refresh-pill" id="refreshPill" hidden title="点击立即刷新">
   <span class="rp-icon" id="rpIcon">🔄</span>
   <span class="rp-text"><span id="cdNum">5</span> 秒后刷新</span>
@@ -859,6 +873,8 @@ var RECALL_WINDOW = 5 * 60 * 1000;
 
 var QUICK_EMOJIS = ['👍','❤️','😂','😮','😢','🎉'];
 var AVATAR_EMOJIS = ['😀','😎','🤖','👻','🐱','🐶','🦊','🐼','🐸','🐧','🦄','🐲','🌟','⚡','🔥','🌊','🌸','🍀','🎮','🎵','📚','🎨','🍕','🍺','☕','🍰','🚀','🏆','💎','🎯','🧠','🗿','👾','🐙','🦁','🐯','🐨','🐷','🐵','🦉'];
+
+var LONG_PRESS_MS = 500;
 
 /* ============================================================
    工具
@@ -1675,23 +1691,10 @@ function renderMsg(m, prev){
     reactionsHtml+='</div>';
   }
 
-  var toolsHtml='';
-  if(!m.__local && m.id && !m.recalled && !m.deleted){
-    var canEdit = (m.uid===uid) && (Date.now()-m.ts)<EDIT_WINDOW;
-    var canRecall = (m.uid===uid) && (Date.now()-m.ts)<RECALL_WINDOW;
-    toolsHtml = '<div class="hover-tools">'+
-      '<button type="button" data-tool="reply" title="回复">↩️</button>'+
-      '<button type="button" data-tool="react" title="表情">😊</button>'+
-      '<button type="button" data-tool="copy" title="复制">📋</button>'+
-      (canEdit ? '<button type="button" data-tool="edit" title="编辑">✏️</button>' : '')+
-      (canRecall ? '<button type="button" data-tool="recall" title="撤回">↺</button>' : '')+
-    '</div>';
-  }
-
   div.innerHTML = avatarHtml+
     '<div class="body">'+ replyHtml + headHtml +
       '<div class="content" '+(bubbleStyle?'style="'+bubbleStyle+'"':'')+'>'+bodyHtml+'</div>'+
-      reactionsHtml + toolsHtml +
+      reactionsHtml +
     '</div>';
 
   if(m.id) div.setAttribute('data-mid', m.id);
@@ -2045,11 +2048,164 @@ editInput.addEventListener('keydown', function(e){
 });
 
 /* ============================================================
+   ★ 右键上下文菜单
+   ============================================================ */
+var ctxMenu = $('ctxMenu');
+var ctxTargetMsg = null;
+
+function openCtxMenu(x, y, msg){
+  if(!ctxMenu || !msg) return;
+  ctxTargetMsg = msg;
+
+  /* 权限判断 */
+  var canEdit   = !msg.__local && msg.uid===uid && (Date.now()-msg.ts) < EDIT_WINDOW;
+  var canRecall = !msg.__local && msg.uid===uid && (Date.now()-msg.ts) < RECALL_WINDOW;
+
+  /* 编辑 / 撤回 按钮 + 分隔线显隐 */
+  var editBtn   = ctxMenu.querySelector('[data-ctx="edit"]');
+  var recallBtn = ctxMenu.querySelector('[data-ctx="recall"]');
+  var sep       = ctxMenu.querySelector('[data-ctx-sep]');
+  if(editBtn)   editBtn.hidden   = !canEdit;
+  if(recallBtn) recallBtn.hidden = !canRecall;
+  if(sep)       sep.hidden       = !(canEdit || canRecall);
+
+  /* 先 display 再量尺寸 */
+  ctxMenu.classList.add('show');
+  var w = ctxMenu.offsetWidth  || 160;
+  var h = ctxMenu.offsetHeight || 200;
+
+  /* 边界翻转 */
+  var left = x, top = y;
+  if(left + w > window.innerWidth  - 8) left = Math.max(8, window.innerWidth  - w - 8);
+  if(top  + h > window.innerHeight - 8) top  = Math.max(8, y - h);
+  if(left < 8) left = 8;
+  if(top  < 8) top  = 8;
+
+  ctxMenu.style.left = left + 'px';
+  ctxMenu.style.top  = top  + 'px';
+}
+function closeCtxMenu(){
+  if(!ctxMenu) return;
+  ctxMenu.classList.remove('show');
+  ctxTargetMsg = null;
+}
+
+/* 菜单项点击 */
+ctxMenu.addEventListener('click', function(e){
+  var btn = e.target.closest('[data-ctx]');
+  if(!btn || !ctxTargetMsg) return;
+  var action = btn.getAttribute('data-ctx');
+  var target = ctxTargetMsg;
+
+  if(action === 'reply'){
+    closeCtxMenu();
+    setReply(target);
+    return;
+  }
+  if(action === 'edit'){
+    closeCtxMenu();
+    openEditDialog(target);
+    return;
+  }
+  if(action === 'copy'){
+    closeCtxMenu();
+    try{ navigator.clipboard.writeText(target.text); toast('已复制'); }
+    catch(err){ toast('复制失败'); }
+    return;
+  }
+  if(action === 'recall'){
+    closeCtxMenu();
+    if(!confirm('撤回这条消息？')) return;
+    sbQuery('撤回', function(){ return sb.from('messages').update({ recalled:true }).eq('id', target.id).eq('uid', uid); }, { max:2, silent:true }).then(function(r){
+      if(r.ok){ target.recalled=true; renderAll(); toast('已撤回'); }
+      else toast('撤回失败');
+    });
+    return;
+  }
+  if(action === 'react'){
+    /* 表情弹窗锚定在菜单按钮位置 */
+    var rect = btn.getBoundingClientRect();
+    closeCtxMenu();
+    showEmojiPopAt(rect.left, rect.bottom, target.id);
+    return;
+  }
+});
+
+/* 右键消息 → 打开菜单 */
+messagesEl.addEventListener('contextmenu', function(e){
+  var msgEl = e.target.closest('.msg');
+  if(!msgEl){ closeCtxMenu(); return; }
+  var msgId = msgEl.getAttribute('data-mid');
+  if(!msgId){ closeCtxMenu(); return; }
+  var target = allMessages.find(function(x){ return String(x.id)===String(msgId); });
+  if(!target || target.__local || target.recalled || target.deleted){ closeCtxMenu(); return; }
+  e.preventDefault();
+  openCtxMenu(e.clientX, e.clientY, target);
+});
+
+/* 触屏：长按 500ms 触发 */
+var longPressTimer = null, longPressStart = null, longPressMsg = null;
+messagesEl.addEventListener('touchstart', function(e){
+  if(e.touches.length !== 1) return;
+  var msgEl = e.target.closest('.msg');
+  if(!msgEl) return;
+  var msgId = msgEl.getAttribute('data-mid');
+  if(!msgId) return;
+  var target = allMessages.find(function(x){ return String(x.id)===String(msgId); });
+  if(!target || target.__local || target.recalled || target.deleted) return;
+  var touch = e.touches[0];
+  longPressStart = { x: touch.clientX, y: touch.clientY };
+  longPressMsg = target;
+  clearTimeout(longPressTimer);
+  longPressTimer = setTimeout(function(){
+    longPressTimer = null;
+    if(!longPressMsg) return;
+    if(navigator.vibrate){ try{ navigator.vibrate(20); }catch(e){} }
+    openCtxMenu(longPressStart.x, longPressStart.y, longPressMsg);
+    longPressStart = null;
+    longPressMsg = null;
+  }, LONG_PRESS_MS);
+}, { passive: true });
+
+messagesEl.addEventListener('touchmove', function(e){
+  if(!longPressTimer || !longPressStart) return;
+  var touch = e.touches[0];
+  if(Math.abs(touch.clientX - longPressStart.x) > 10 || Math.abs(touch.clientY - longPressStart.y) > 10){
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+    longPressStart = null;
+    longPressMsg = null;
+  }
+}, { passive: true });
+
+function cancelLongPress(){
+  if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer = null; }
+  longPressStart = null;
+  longPressMsg = null;
+}
+messagesEl.addEventListener('touchend', cancelLongPress);
+messagesEl.addEventListener('touchcancel', cancelLongPress);
+
+/* 点别处关闭菜单 */
+document.addEventListener('click', function(e){
+  if(!ctxMenu || !ctxMenu.classList.contains('show')) return;
+  if(ctxMenu.contains(e.target)) return;
+  closeCtxMenu();
+});
+/* 再右键别处也关闭 */
+document.addEventListener('contextmenu', function(e){
+  if(!ctxMenu || !ctxMenu.classList.contains('show')) return;
+  if(ctxMenu.contains(e.target)) return;
+  if(e.target.closest('.msg')) return; /* 让 messagesEl 处理 */
+  closeCtxMenu();
+});
+
+/* ============================================================
    消息事件
    ============================================================ */
 messagesEl.addEventListener('click', function(e){
   var openU = e.target.closest('[data-open-user]');
-  if(openU && !e.target.closest('[data-tool]')){ openUserCard(openU.getAttribute('data-open-user')); return; }
+  if(openU){ openUserCard(openU.getAttribute('data-open-user')); return; }
 
   var quote = e.target.closest('.reply-quote[data-goto]');
   if(quote){
@@ -2072,41 +2228,17 @@ messagesEl.addEventListener('click', function(e){
 
   var react = e.target.closest('[data-react-emoji]');
   if(react){ toggleReaction(react.getAttribute('data-react-msg'), react.getAttribute('data-react-emoji')); return; }
-
-  var tool = e.target.closest('[data-tool]');
-  if(tool){
-    var toolName=tool.getAttribute('data-tool');
-    var msgEl=tool.closest('.msg');
-    var msgId2=msgEl?msgEl.getAttribute('data-mid'):null;
-    if(!msgId2) return;
-    var target2=allMessages.find(function(x){ return String(x.id)===String(msgId2); });
-    if(!target2) return;
-
-    if(toolName==='reply'){ setReply(target2); return; }
-    if(toolName==='edit'){ openEditDialog(target2); return; }
-    if(toolName==='copy'){
-      try{ navigator.clipboard.writeText(target2.text); toast('已复制'); }catch(err){ toast('复制失败'); }
-      return;
-    }
-    if(toolName==='recall'){
-      if(!confirm('撤回这条消息？')) return;
-      sbQuery('撤回', function(){ return sb.from('messages').update({ recalled:true }).eq('id', msgId2).eq('uid', uid); }, { max:2, silent:true }).then(function(r){
-        if(r.ok){ target2.recalled=true; renderAll(); toast('已撤回'); }
-        else toast('撤回失败');
-      });
-      return;
-    }
-    if(toolName==='react'){ showEmojiPop(tool, msgId2); return; }
-  }
 });
 
-/* ★ 修复：emoji 弹窗改成 fixed 定位 */
+/* ============================================================
+   表情弹窗
+   ============================================================ */
 var emojiPopEl=null;
 function closeEmojiPop(){
   if(emojiPopEl && emojiPopEl.parentNode) emojiPopEl.parentNode.removeChild(emojiPopEl);
   emojiPopEl=null;
 }
-function showEmojiPop(anchor, msgId){
+function showEmojiPopAt(anchorLeft, anchorBottom, msgId){
   closeEmojiPop();
   var pop=document.createElement('div');
   pop.className='emoji-pop';
@@ -2119,23 +2251,22 @@ function showEmojiPop(anchor, msgId){
   document.body.appendChild(pop);
   emojiPopEl=pop;
 
-  var r = anchor.getBoundingClientRect();
-  var popW = pop.offsetWidth || 200;
+  var popW = pop.offsetWidth  || 200;
   var popH = pop.offsetHeight || 38;
-  var left = r.left;
-  var top = r.bottom + 4;
+  var left = anchorLeft;
+  var top  = anchorBottom + 4;
 
-  if(left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
+  if(left + popW > window.innerWidth  - 8) left = window.innerWidth  - popW - 8;
   if(left < 8) left = 8;
-  if(top + popH > window.innerHeight - 8) top = r.top - popH - 4;
-  if(top < 8) top = 8;
+  if(top  + popH > window.innerHeight - 8) top  = anchorBottom - popH - 8;
+  if(top  < 8) top  = 8;
 
   pop.style.left = left + 'px';
-  pop.style.top = top + 'px';
+  pop.style.top  = top  + 'px';
 
   setTimeout(function(){
     document.addEventListener('click', function handler(ev){
-      if(emojiPopEl && !emojiPopEl.contains(ev.target) && !anchor.contains(ev.target)){
+      if(emojiPopEl && !emojiPopEl.contains(ev.target)){
         closeEmojiPop(); document.removeEventListener('click', handler);
       }
     });
@@ -2143,6 +2274,7 @@ function showEmojiPop(anchor, msgId){
 }
 
 messagesEl.addEventListener('scroll', function(){
+  if(ctxMenu.classList.contains('show')) closeCtxMenu();
   if(isAtBottom()){ unreadCount=0; updateUnreadBadge(); }
 });
 scrollBottomBtn.addEventListener('click', function(){
@@ -2469,7 +2601,9 @@ $('onlineOv').addEventListener('click', function(e){ if(e.target===$('onlineOv')
 
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
-    if(themeOv.classList.contains('show'))closeTheme();
+    if(ctxMenu.classList.contains('show'))closeCtxMenu();
+    else if(emojiPopEl)closeEmojiPop();
+    else if(themeOv.classList.contains('show'))closeTheme();
     else if(nickOv.classList.contains('show'))closeNickDialog();
     else if(jumpOv.classList.contains('show'))closeJumpDialog();
     else if(styleOv.classList.contains('show'))closeStyleDialog();
