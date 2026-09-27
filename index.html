@@ -5,8 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>红石的小工具箱</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
+<script>
+(function(){
+  try{
+    var t=localStorage.getItem('wiki-theme');
+    var ok=['mc-wiki','mc-night','github-light','github-dark'];
+    if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
+  }catch(e){}
+})();
+</script>
 <style>
-:root{
+/* ==================== 主题变量 ==================== */
+:root,[data-theme="mc-wiki"]{
   --bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;
   --bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;
   --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
@@ -18,12 +28,81 @@
   --grid:rgba(61,82,31,.04);
   --p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;
   --hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);
+  --tile-accent:linear-gradient(135deg,#7a9c3c,#3d521f);
+  --btn-bg:linear-gradient(180deg,#e8e2cc,#d4ceb8);
+  --btn-fg:#1f1f1f;--btn-bd:#4a4a3a;
+  --topbar-bg:linear-gradient(180deg,#56682c,#3d521f);
+  --topbar-fg:#fff;--topbar-bd:#2a3a1a;
 }
-*,*::before,*::after{box-sizing:border-box}
-html{background:var(--bg);scroll-behavior:smooth}
-body{margin:0;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+[data-theme="mc-night"]{
+  --bg:#1a1a1a;--bg2:#242424;--bg3:#303030;--text:#e0e0e0;--muted:#909090;
+  --bd:#505050;--bd2:#6a6a6a;--ac:#8ec44a;--acs:#2a3a1a;
+  --ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;
+  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(142,196,74,.10);--blob2:rgba(90,140,60,.07);--blob3:rgba(120,90,40,.07);
+  --grid:rgba(255,255,255,.025);
+  --p1:142,196,74;--p2:90,140,60;--p3:200,180,100;--p4:120,90,40;
+  --hero-grad:linear-gradient(135deg,#8ec44a,#3d521f);
+  --tile-accent:linear-gradient(135deg,#8ec44a,#3d521f);
+  --btn-bg:linear-gradient(180deg,#303030,#202020);
+  --btn-fg:#e0e0e0;--btn-bd:#606060;
+  --topbar-bg:linear-gradient(180deg,#2a3a1a,#1a2a0a);
+  --topbar-fg:#e8ffd0;--topbar-bd:#0a1a00;
+}
+[data-theme="github-light"]{
+  --bg:#ffffff;--bg2:#f6f8fa;--bg3:#eef1f4;--text:#1f2328;--muted:#59636e;
+  --bd:#d1d9e0;--bd2:#a0a8b0;--ac:#0969da;--acs:#ddf4ff;
+  --ok:#1a7f37;--warn:#d4a72c;--dgr:#cf222e;
+  --sh:0 1px 4px rgba(31,35,40,.08);--r:6px;
+  --bevel:none;--bevel-in:none;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(9,105,218,.08);--blob2:rgba(163,113,247,.06);--blob3:rgba(219,112,147,.05);
+  --grid:rgba(31,35,40,.02);
+  --p1:9,105,218;--p2:163,113,247;--p3:219,112,147;--p4:31,35,40;
+  --hero-grad:linear-gradient(135deg,#0969da,#a371f7);
+  --tile-accent:linear-gradient(135deg,#0969da,#a371f7);
+  --btn-bg:#f6f8fa;--btn-fg:#1f2328;--btn-bd:#d1d9e0;
+  --topbar-bg:#ffffff;--topbar-fg:#1f2328;--topbar-bd:#d1d9e0;
+}
+[data-theme="github-dark"]{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--text:#e6edf3;--muted:#9198a1;
+  --bd:#30363d;--bd2:#484f58;--ac:#4493f8;--acs:#16233a;
+  --ok:#3fb950;--warn:#d4a72c;--dgr:#f85149;
+  --sh:0 1px 4px rgba(0,0,0,.4);--r:6px;
+  --bevel:none;--bevel-in:none;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(68,147,248,.06);--blob2:rgba(163,113,247,.05);--blob3:rgba(219,112,147,.04);
+  --grid:rgba(230,237,243,.02);
+  --p1:68,147,248;--p2:163,113,247;--p3:219,112,147;--p4:230,237,243;
+  --hero-grad:linear-gradient(135deg,#4493f8,#a371f7);
+  --tile-accent:linear-gradient(135deg,#4493f8,#a371f7);
+  --btn-bg:#161b22;--btn-fg:#e6edf3;--btn-bd:#30363d;
+  --topbar-bg:#161b22;--topbar-fg:#e6edf3;--topbar-bd:#30363d;
+}
 
-/* 背景装饰 */
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);scroll-behavior:smooth;transition:background-color .3s}
+body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background-color .3s,color .3s}
+
+/* ==================== 顶栏 ==================== */
+.topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50;transition:background .3s,border-color .3s,box-shadow .25s}
+[data-theme^="mc-"] .topbar{border-bottom-width:2px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.topbar.scrolled{box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer}
+[data-theme^="mc-"] .logo{text-shadow:1px 1px 0 rgba(0,0,0,.4)}
+.logo-icon{display:inline-block;font-size:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.logo:hover .logo-icon{transform:rotate(-8deg) scale(1.08)}
+.sp{flex:1}
+.icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:var(--muted);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,color .15s,transform .2s}
+.icon:hover{background:var(--bg3);color:var(--text)}
+[data-theme^="mc-"] .icon{color:rgba(255,255,255,.85)}
+[data-theme^="mc-"] .icon:hover{background:rgba(0,0,0,.2);color:#fff}
+.icon:active{transform:scale(.92)}
+
+/* ==================== 背景装饰 ==================== */
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform,opacity}
 .b1{width:420px;height:420px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 30s ease-in-out infinite}
@@ -66,7 +145,7 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   padding:6px 16px;margin-bottom:18px;
   background:var(--bg2);
   border:2px solid var(--bd2);
-  border-radius:2px;
+  border-radius:var(--r);
   box-shadow:var(--bevel);
   font-size:12px;font-weight:700;
   letter-spacing:.06em;text-transform:uppercase;
@@ -151,7 +230,7 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   padding:16px 18px;
   background:linear-gradient(135deg,var(--bg2),var(--bg));
   border:2px solid var(--bd2);
-  border-radius:2px;
+  border-radius:var(--r);
   box-shadow:var(--bevel);
   text-decoration:none;color:inherit;
   overflow:hidden;
@@ -161,13 +240,13 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
 }
 .tool-card::before{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(135deg,#7a9c3c,#3d521f);
+  background:var(--tile-accent);
   opacity:0;transition:opacity .3s;
   pointer-events:none;
 }
 .tool-card:hover{
   transform:translateY(-4px);
-  box-shadow:var(--bevel),0 0 0 2px rgba(142,196,74,.3),0 12px 24px rgba(0,0,0,.15);
+  box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.3),0 12px 24px rgba(0,0,0,.15);
   border-color:var(--ac);
 }
 .tool-card:hover::before{opacity:.08}
@@ -181,6 +260,7 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   font-size:26px;
   background:var(--bg);
   border:2px solid var(--bd2);
+  border-radius:var(--r);
   box-shadow:var(--bevel);
   transition:transform .35s cubic-bezier(.34,1.56,.64,1);
 }
@@ -191,11 +271,15 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   font-size:16px;font-weight:800;
   line-height:1.25;letter-spacing:-.01em;
   margin-bottom:3px;
-  color:#2a3a1a;
-  text-shadow:1px 1px 0 rgba(255,255,255,.4);
+  color:var(--text);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  transition:color .2s;
 }
-.tool-card:hover .tc-name{color:#1a2a0a}
+[data-theme^="mc-"] .tc-name{color:#2a3a1a;text-shadow:1px 1px 0 rgba(255,255,255,.4)}
+[data-theme="mc-night"] .tc-name{color:#e8ffd0;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
+.tool-card:hover .tc-name{color:var(--ac)}
+[data-theme^="mc-"] .tool-card:hover .tc-name{color:#1a2a0a}
+[data-theme="mc-night"] .tool-card:hover .tc-name{color:#c8ff90}
 .tc-desc{
   font-size:12px;
   color:var(--muted);
@@ -212,6 +296,7 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   border:1px solid var(--ac);
   color:var(--ac);
 }
+[data-theme^="github-"] .tc-tag{border-radius:999px}
 
 .tc-arrow{
   flex:none;
@@ -236,7 +321,7 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   border-style:solid;
 }
 .tool-card.deprecated .tc-name{color:var(--muted)}
-.tool-card.deprecated:hover .tc-name{color:#1a2a0a}
+.tool-card.deprecated:hover .tc-name{color:var(--ac)}
 .tool-card.deprecated .tc-tag{
   background:transparent;
   border-color:var(--bd);
@@ -249,7 +334,7 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   text-align:center;
   background:var(--bg2);
   border:2px dashed var(--bd);
-  border-radius:2px;
+  border-radius:var(--r);
   color:var(--muted);
 }
 .empty-col .ic{
@@ -280,9 +365,47 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   color:var(--muted);
   letter-spacing:.02em;
 }
-.foot .heart{color:#a02020}
 
-/* 响应式 */
+/* ==================== 主题切换弹窗 ==================== */
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.ov.show{opacity:1;visibility:visible}
+.pnl{display:flex;flex-direction:column;width:100%;max-width:500px;background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) + 3px);box-shadow:var(--sh);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+[data-theme^="mc-"] .pnl{border:2px solid var(--bd2);border-radius:2px;box-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.ov.show .pnl{transform:none}
+.ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd)}
+[data-theme^="mc-"] .ph{background:linear-gradient(180deg,#7a9c3c,#56682c);color:#fff;border-bottom:2px solid #3d521f;text-shadow:1px 1px 0 rgba(0,0,0,.3);padding:8px 14px}
+[data-theme="mc-night"] .ph{background:linear-gradient(180deg,#5a7a2c,#3d521f);color:#e8ffd0;border-bottom-color:#2a3a1a}
+.ph strong{font-size:14px}
+.ph .sp{flex:1}
+[data-theme^="mc-"] .ph .icon{color:#fff}
+[data-theme^="mc-"] .ph .icon:hover{background:rgba(0,0,0,.2)}
+
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+.theme-card{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);cursor:pointer;font-family:inherit;color:var(--text);box-shadow:var(--bevel);transition:all .2s;text-align:left}
+.theme-card:hover{transform:translateY(-2px);border-color:var(--ac)}
+.theme-card.active{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 2px var(--acs)}
+[data-theme^="github-"] .theme-card{border-width:1px;box-shadow:none}
+[data-theme^="github-"] .theme-card.active{box-shadow:0 0 0 2px var(--acs)}
+.theme-prev{display:flex;height:30px;border:1px solid var(--bd);border-radius:calc(var(--r) - 2px);overflow:hidden}
+.theme-prev span{flex:1;display:block}
+.theme-name{font-size:12.5px;font-weight:700}
+.theme-desc{font-size:10.5px;color:var(--muted);margin-top:-3px}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:20px;max-width:calc(100vw - 32px);padding:8px 16px;font-size:13px;color:var(--bg);background:var(--text);border-radius:var(--r);box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(16px);transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:200}
+[data-theme^="mc-"] .toast{background:#2a3a1a;color:#e8ffd0;border:2px solid #4a4a3a;border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.4)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ==================== GitHub 主题形状覆盖 ==================== */
+[data-theme^="github-"] .hero-badge{border-width:1px}
+[data-theme^="github-"] .section-title .count{border-radius:999px}
+[data-theme^="github-"] .tool-card{border-width:1px;border-radius:10px;background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-theme^="github-"] .tool-card:hover{transform:translateY(-2px);box-shadow:0 0 0 2px rgba(var(--p1),.25),0 8px 20px rgba(0,0,0,.1)}
+[data-theme^="github-"] .tc-icon{border-width:1px;border-radius:10px}
+[data-theme^="github-"] .empty-col{border-radius:10px}
+[data-theme^="github-"] .section-title::before{border-radius:2px}
+
+/* ==================== 响应式 ==================== */
 @media(max-width:900px){
   .columns{grid-template-columns:1fr;gap:32px}
   .tool-grid.deprecated{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
@@ -294,12 +417,21 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   .tool-grid{grid-template-columns:1fr;gap:10px}
   .tc-icon{width:44px;height:44px;font-size:22px}
   .tc-name{font-size:15px}
+  .logo span:last-child{display:none}
+  .theme-grid{grid-template-columns:1fr}
 }
-@media print{.bg-decor,.tc-arrow{display:none}}
+@media print{.bg-decor,.tc-arrow,.topbar,.ov,.toast{display:none}body{padding-top:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
+
+<!-- 顶栏 -->
+<header class="topbar" id="topbar">
+  <a class="logo" href="./index.html"><span class="logo-icon">🧰</span><span>红石的小工具箱</span></a>
+  <span class="sp"></span>
+  <button class="icon" id="themeBtn" title="切换风格">🎨</button>
+</header>
 
 <!-- 背景装饰 -->
 <div class="bg-decor" aria-hidden="true">
@@ -344,10 +476,24 @@ body{margin:0;background:transparent;color:var(--text);font-family:var(--font);f
   </div>
 
   <div class="foot">
-    红石的小工具箱 · 用 <span class="heart">♥</span> 打造
+    红石的小工具箱 · 使用AI制作
   </div>
 
 </div>
+
+<!-- 主题选择 -->
+<div class="ov" id="themeOv">
+  <div class="pnl">
+    <div class="ph">
+      <strong>选择风格</strong>
+      <span class="sp"></span>
+      <button class="icon" id="themeClose">✕</button>
+    </div>
+    <div class="theme-grid" id="themeGrid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 (function(){
@@ -365,9 +511,17 @@ var TOOLS = [
     tag: '已废弃',
     url: './wiki.html',
     deprecated: true
-  }
+  },
 
   /* --- 可用工具（在这里添加新工具） --- */
+  {
+    icon: '📥',
+    name: '下载站',
+    desc: '资源文件 · 便捷下载',
+    tag: '资源',
+    url: './download.html'
+  }
+
   // {
   //   icon: '🎨',
   //   name: '配色工具',
@@ -378,14 +532,68 @@ var TOOLS = [
 ];
 
 /* ============================================================
-   渲染
+   工具函数
    ============================================================ */
+function $(id){return document.getElementById(id);}
 function escapeHtml(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
 
+var storage={
+  get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+  set:function(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+};
+
+/* ============================================================
+   主题系统
+   ============================================================ */
+var K_THEME='wiki-theme';
+var THEMES=[
+  {id:'mc-wiki',name:'🟩 MC Wiki',desc:'我的世界中文 Wiki',colors:['#3d521f','#fffdf5','#56682c']},
+  {id:'mc-night',name:'⬛ MC 夜晚',desc:'Minecraft 夜间模式',colors:['#8ec44a','#1a1a1a','#3d521f']},
+  {id:'github-light',name:'☀️ GitHub 浅色',desc:'清爽默认',colors:['#0969da','#f6f8fa','#1f2328']},
+  {id:'github-dark',name:'🌙 GitHub 暗色',desc:'护眼夜间',colors:['#4493f8','#161b22','#e6edf3']}
+];
+var curTheme=(function(){
+  var s=storage.get(K_THEME);
+  for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===s)return s;
+  return 'mc-wiki';
+})();
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  storage.set(K_THEME,t);
+  curTheme=t;
+  buildThemeGrid();
+  readThemeColors();
+}
+function buildThemeGrid(){
+  var grid=$('themeGrid');
+  if(!grid)return;
+  var html='';
+  THEMES.forEach(function(th){
+    html+='<button type="button" class="theme-card'+(th.id===curTheme?' active':'')+'" data-theme-val="'+escapeHtml(th.id)+'">'+
+      '<div class="theme-prev">'+
+        '<span style="background:'+th.colors[0]+'"></span>'+
+        '<span style="background:'+th.colors[1]+'"></span>'+
+        '<span style="background:'+th.colors[2]+'"></span>'+
+      '</div>'+
+      '<div class="theme-name">'+escapeHtml(th.name)+'</div>'+
+      '<div class="theme-desc">'+escapeHtml(th.desc)+'</div>'+
+    '</button>';
+  });
+  grid.innerHTML=html;
+}
+
+var themeOv=$('themeOv'),themeGrid=$('themeGrid'),themeBtn=$('themeBtn'),themeClose=$('themeClose');
+function openTheme(){buildThemeGrid();themeOv.classList.add('show');}
+function closeTheme(){themeOv.classList.remove('show');}
+
+/* ============================================================
+   渲染工具卡片
+   ============================================================ */
 function renderCard(t, delay){
   var cls = 'tool-card' + (t.deprecated ? ' deprecated' : '');
   var href = t.disabled ? 'javascript:void(0)' : t.url;
@@ -404,10 +612,10 @@ function renderCard(t, delay){
 }
 
 function renderTools(){
-  var activeGrid = document.getElementById('activeGrid');
-  var deprecatedGrid = document.getElementById('deprecatedGrid');
-  var activeCount = document.getElementById('activeCount');
-  var deprecatedCount = document.getElementById('deprecatedCount');
+  var activeGrid = $('activeGrid');
+  var deprecatedGrid = $('deprecatedGrid');
+  var activeCount = $('activeCount');
+  var deprecatedCount = $('deprecatedCount');
 
   var active = TOOLS.filter(function(t){ return !t.deprecated; });
   var deprecated = TOOLS.filter(function(t){ return t.deprecated; });
@@ -446,15 +654,18 @@ function renderTools(){
   deprecatedCount.textContent = deprecated.length;
 
   /* 拦截 disabled 卡片 */
-  document.querySelectorAll('.tool-card[data-disabled="1"]').forEach(function(el){
-    el.addEventListener('click', function(e){
-      e.preventDefault();
-      el.style.animation = 'none';
-      void el.offsetWidth;
-      el.style.animation = 'shake .35s';
-      setTimeout(function(){ el.style.animation = ''; }, 400);
-    });
-  });
+  var disableds = document.querySelectorAll('.tool-card[data-disabled="1"]');
+  for(var i=0;i<disableds.length;i++){
+    (function(el){
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = 'shake .35s';
+        setTimeout(function(){ el.style.animation = ''; }, 400);
+      });
+    })(disableds[i]);
+  }
 }
 
 /* 给卡片加抖动动画 */
@@ -466,7 +677,7 @@ document.head.appendChild(styleEl);
    浮动几何装饰
    ============================================================ */
 function buildFloatDecor(){
-  var wrap = document.getElementById('floatDecor');
+  var wrap = $('floatDecor');
   if(!wrap) return;
   wrap.innerHTML = '';
   var defs = [
@@ -506,7 +717,7 @@ function readThemeColors(){
 }
 
 function initParticles(){
-  var canvas = document.getElementById('particles');
+  var canvas = $('particles');
   if(!canvas || !canvas.getContext) return;
   particleCtx = canvas.getContext('2d');
   pDpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -535,7 +746,7 @@ function initParticles(){
 }
 
 function resizeCanvas(){
-  var canvas = document.getElementById('particles');
+  var canvas = $('particles');
   if(!canvas) return;
   pW = window.innerWidth; pH = window.innerHeight;
   canvas.width = pW * pDpr; canvas.height = pH * pDpr;
@@ -593,18 +804,72 @@ function drawParticles(){
 }
 
 /* ============================================================
+   Toast
+   ============================================================ */
+var toastEl=$('toast'),toastTimer=null;
+function toast(msg){
+  if(!toastEl)return;
+  toastEl.textContent=msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2000);
+}
+
+/* ============================================================
+   滚动阴影
+   ============================================================ */
+var topbarEl=$('topbar'),rafPend=false;
+function onScroll(){
+  if(rafPend)return;rafPend=true;
+  requestAnimationFrame(function(){
+    var top=window.pageYOffset||document.documentElement.scrollTop||0;
+    if(topbarEl)topbarEl.classList.toggle('scrolled',top>4);
+    rafPend=false;
+  });
+}
+
+/* ============================================================
+   事件绑定
+   ============================================================ */
+function bind(){
+  themeBtn.addEventListener('click',openTheme);
+  themeClose.addEventListener('click',closeTheme);
+  themeOv.addEventListener('click',function(e){
+    if(e.target===themeOv)closeTheme();
+  });
+  themeGrid.addEventListener('click',function(e){
+    var card=e.target.closest('[data-theme-val]');
+    if(!card)return;
+    var id=card.getAttribute('data-theme-val');
+    applyTheme(id);
+    closeTheme();
+    var name=id;
+    for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===id)name=THEMES[i].name;
+    toast('已切换到 '+name);
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&themeOv.classList.contains('show')){e.preventDefault();closeTheme();}
+  });
+
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',function(){resizeCanvas();onScroll();},{passive:true});
+  document.addEventListener('visibilitychange',function(){
+    particleRunning=!document.hidden;
+    if(particleRunning)drawParticles();
+  });
+}
+
+/* ============================================================
    启动
    ============================================================ */
 function boot(){
+  applyTheme(curTheme);
   renderTools();
   buildFloatDecor();
   initParticles();
-
-  window.addEventListener('resize', resizeCanvas, { passive: true });
-  document.addEventListener('visibilitychange', function(){
-    particleRunning = !document.hidden;
-    if(particleRunning) drawParticles();
-  });
+  bind();
+  onScroll();
 }
 
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
