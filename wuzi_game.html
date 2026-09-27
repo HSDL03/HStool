@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>对局中 · 五子棋</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚫</text></svg>">
+<script>
+(function(){
+  try{
+    var t=localStorage.getItem('wiki-theme');
+    var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
+    if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
+  }catch(e){}
+})();
+</script>
+<style>
+:root,[data-theme="mc-wiki"]{
+  --bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;
+  --bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;
+  --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
+  --sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(61,82,31,.13);--blob2:rgba(106,140,60,.09);--blob3:rgba(180,150,80,.07);
+  --grid:rgba(61,82,31,.04);
+  --p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;
+  --hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);
+  --tile-accent:linear-gradient(135deg,#7a9c3c,#3d521f);
+  --topbar-bg:linear-gradient(180deg,#56682c,#3d521f);
+  --topbar-fg:#fff;--topbar-bd:#2a3a1a;
+  --board-bg:#dcb980;--board-line:#4a3520;
+}
+[data-theme="mc-night"]{
+  --bg:#1a1a1a;--bg2:#242424;--bg3:#303030;--text:#e0e0e0;--muted:#909090;
+  --bd:#505050;--bd2:#6a6a6a;--ac:#8ec44a;--acs:#2a3a1a;
+  --ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;
+  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(142,196,74,.10);--blob2:rgba(90,140,60,.07);--blob3:rgba(120,90,40,.07);
+  --grid:rgba(255,255,255,.025);
+  --p1:142,196,74;--p2:90,140,60;--p3:200,180,100;--p4:120,90,40;
+  --hero-grad:linear-gradient(135deg,#8ec44a,#3d521f);
+  --tile-accent:linear-gradient(135deg,#8ec44a,#3d521f);
+  --topbar-bg:linear-gradient(180deg,#2a3a1a,#1a2a0a);
+  --topbar-fg:#e8ffd0;--topbar-bd:#0a1a00;
+  --board-bg:#3a2a18;--board-line:#8a7a60;
+}
+[data-theme="mc-nether"]{
+  --bg:#1a0a0a;--bg2:#2a1212;--bg3:#3a1a1a;--text:#f0d0d0;--muted:#a08080;
+  --bd:#6a3030;--bd2:#8a4040;--ac:#ff6030;--acs:#3a1a10;
+  --ok:#5ab05a;--warn:#d4a72c;--dgr:#f85050;
+  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(255,96,48,.12);--blob2:rgba(200,60,30,.09);--blob3:rgba(255,150,80,.07);
+  --grid:rgba(255,150,100,.03);
+  --p1:255,96,48;--p2:200,60,30;--p3:255,150,80;--p4:120,40,20;
+  --hero-grad:linear-gradient(135deg,#ff6030,#8a2010);
+  --tile-accent:linear-gradient(135deg,#ff6030,#8a2010);
+  --topbar-bg:linear-gradient(180deg,#3a1212,#1a0a0a);
+  --topbar-fg:#ffe0d0;--topbar-bd:#0a0500;
+  --board-bg:#3a1a10;--board-line:#c87050;
+}
+[data-theme="mc-end"]{
+  --bg:#0f0a1a;--bg2:#1a1230;--bg3:#251a40;--text:#e0d0f0;--muted:#9080a0;
+  --bd:#4a3a6a;--bd2:#6a5a8a;--ac:#a060ff;--acs:#2a1a3a;
+  --ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;
+  --sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.5),inset -1px -1px 0 rgba(255,255,255,.06);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(160,96,255,.12);--blob2:rgba(120,60,200,.08);--blob3:rgba(200,150,255,.06);
+  --grid:rgba(200,150,255,.025);
+  --p1:160,96,255;--p2:120,60,200;--p3:200,150,255;--p4:80,40,120;
+  --hero-grad:linear-gradient(135deg,#a060ff,#4a2080);
+  --tile-accent:linear-gradient(135deg,#a060ff,#4a2080);
+  --topbar-bg:linear-gradient(180deg,#2a1a3a,#0f0a1a);
+  --topbar-fg:#e0d0ff;--topbar-bd:#0a0510;
+  --board-bg:#2a1a3a;--board-line:#a080d0;
+}
+[data-theme="sakura"]{
+  --bg:#fffafc;--bg2:#fff0f5;--bg3:#ffe0ea;--text:#2a1a20;--muted:#806070;
+  --bd:#e0b0c0;--bd2:#a06080;--ac:#d04080;--acs:#ffe0ea;
+  --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
+  --sh:2px 2px 0 rgba(160,80,120,.2);--r:4px;
+  --bevel:inset -1px -1px 0 rgba(160,80,120,.1),inset 1px 1px 0 rgba(255,255,255,.8);
+  --bevel-in:inset 1px 1px 0 rgba(160,80,120,.1),inset -1px -1px 0 rgba(255,255,255,.8);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(208,64,128,.12);--blob2:rgba(240,120,160,.08);--blob3:rgba(255,180,200,.06);
+  --grid:rgba(208,64,128,.04);
+  --p1:208,64,128;--p2:240,120,160;--p3:255,180,200;--p4:160,80,120;
+  --hero-grad:linear-gradient(135deg,#d04080,#ff80a0);
+  --tile-accent:linear-gradient(135deg,#ff80a0,#d04080);
+  --topbar-bg:linear-gradient(180deg,#d06090,#a04070);
+  --topbar-fg:#fff;--topbar-bd:#802050;
+  --board-bg:#ffe0ea;--board-line:#a06080;
+}
+[data-theme="ocean"]{
+  --bg:#f0f8ff;--bg2:#e0f0fa;--bg3:#c8e0f0;--text:#0a1a2a;--muted:#406080;
+  --bd:#a0c0d8;--bd2:#406080;--ac:#0066cc;--acs:#c8e4ff;
+  --ok:#1a7f37;--warn:#b08800;--dgr:#cf222e;
+  --sh:2px 2px 0 rgba(32,80,140,.2);--r:4px;
+  --bevel:inset -1px -1px 0 rgba(32,80,140,.1),inset 1px 1px 0 rgba(255,255,255,.8);
+  --bevel-in:inset 1px 1px 0 rgba(32,80,140,.1),inset -1px -1px 0 rgba(255,255,255,.8);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(0,102,204,.10);--blob2:rgba(64,160,220,.08);--blob3:rgba(120,200,240,.06);
+  --grid:rgba(0,102,204,.04);
+  --p1:0,102,204;--p2:64,160,220;--p3:120,200,240;--p4:32,80,140;
+  --hero-grad:linear-gradient(135deg,#0066cc,#40a0dc);
+  --tile-accent:linear-gradient(135deg,#40a0dc,#0066cc);
+  --topbar-bg:linear-gradient(180deg,#2080c0,#004890);
+  --topbar-fg:#fff;--topbar-bd:#002040;
+  --board-bg:#c8e4ff;--board-line:#406080;
+}
+[data-theme="github-light"]{
+  --bg:#ffffff;--bg2:#f6f8fa;--bg3:#eef1f4;--text:#1f2328;--muted:#59636e;
+  --bd:#d1d9e0;--bd2:#a0a8b0;--ac:#0969da;--acs:#ddf4ff;
+  --ok:#1a7f37;--warn:#d4a72c;--dgr:#cf222e;
+  --sh:0 1px 4px rgba(31,35,40,.08);--r:6px;
+  --bevel:none;--bevel-in:none;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(9,105,218,.08);--blob2:rgba(163,113,247,.06);--blob3:rgba(219,112,147,.05);
+  --grid:rgba(31,35,40,.02);
+  --p1:9,105,218;--p2:163,113,247;--p3:219,112,147;--p4:31,35,40;
+  --hero-grad:linear-gradient(135deg,#0969da,#a371f7);
+  --tile-accent:linear-gradient(135deg,#0969da,#a371f7);
+  --topbar-bg:#ffffff;--topbar-fg:#1f2328;--topbar-bd:#d1d9e0;
+  --board-bg:#f6f8fa;--board-line:#a0a8b0;
+}
+[data-theme="github-dark"]{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--text:#e6edf3;--muted:#9198a1;
+  --bd:#30363d;--bd2:#484f58;--ac:#4493f8;--acs:#16233a;
+  --ok:#3fb950;--warn:#d4a72c;--dgr:#f85149;
+  --sh:0 1px 4px rgba(0,0,0,.4);--r:6px;
+  --bevel:none;--bevel-in:none;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --blob1:rgba(68,147,248,.06);--blob2:rgba(163,113,247,.05);--blob3:rgba(219,112,147,.04);
+  --grid:rgba(230,237,243,.02);
+  --p1:68,147,248;--p2:163,113,247;--p3:219,112,147;--p4:230,237,243;
+  --hero-grad:linear-gradient(135deg,#4493f8,#a371f7);
+  --tile-accent:linear-gradient(135deg,#4493f8,#a371f7);
+  --topbar-bg:#161b22;--topbar-fg:#e6edf3;--topbar-bd:#30363d;
+  --board-bg:#21262d;--board-line:#484f58;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);transition:background-color .3s}
+body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background-color .3s,color .3s}
+
+.topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:1px solid var(--topbar-bd);z-index:50;transition:background .3s,color .3s}
+[data-theme^="mc-"] .topbar{border-bottom-width:2px;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer}
+[data-theme^="mc-"] .logo{text-shadow:1px 1px 0 rgba(0,0,0,.4)}
+.logo-icon{display:inline-block;font-size:16px}
+.sp{flex:1}
+.room-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(255,255,255,.15);border-radius:999px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;letter-spacing:.06em;cursor:pointer;user-select:none;transition:background .15s;border:none;color:inherit}
+.room-chip:hover{background:rgba(255,255,255,.28)}
+[data-theme="github-light"] .room-chip{background:rgba(0,0,0,.06)}
+[data-theme="github-light"] .room-chip:hover{background:rgba(0,0,0,.1)}
+.icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:var(--muted);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,color .15s,transform .2s}
+.icon:hover{background:var(--bg3);color:var(--text)}
+[data-theme^="mc-"] .icon,[data-theme="sakura"] .icon,[data-theme="ocean"] .icon{color:rgba(255,255,255,.85)}
+[data-theme^="mc-"] .icon:hover,[data-theme="sakura"] .icon:hover,[data-theme="ocean"] .icon:hover{background:rgba(0,0,0,.2);color:#fff}
+.icon:active{transform:scale(.92)}
+
+.bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform,opacity}
+.b1{width:420px;height:420px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 30s ease-in-out infinite}
+.b2{width:480px;height:480px;background:var(--blob2);bottom:-180px;right:-160px;animation:drift2 36s ease-in-out infinite}
+.b3{width:340px;height:340px;background:var(--blob3);top:38%;left:52%;animation:drift3 42s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate(0,0) scale(1);opacity:.85}50%{transform:translate(50px,50px) scale(1.08);opacity:1}}
+@keyframes drift2{0%,100%{transform:translate(0,0) scale(1);opacity:.8}50%{transform:translate(-60px,-50px) scale(1.05);opacity:.95}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1);opacity:.7}50%{transform:translate(-50%,-60px) scale(1.1);opacity:.9}}
+.grid-bg{position:absolute;inset:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:36px 36px;
+  -webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%);
+  mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
+#particles{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:16px 16px 40px}
+
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.pc{position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+[data-theme^="github-"] .pc{border-width:1px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.pc.active{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 2px var(--acs),0 0 16px rgba(var(--p1),.35)}
+[data-theme^="mc-"] .pc.active{box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.5),0 0 12px rgba(var(--p1),.3)}
+.pc.me{background:linear-gradient(135deg,var(--acs) 0%,var(--bg2) 60%)}
+[data-theme^="github-"] .pc.me{background:var(--acs)}
+.pc.right{flex-direction:row-reverse;text-align:right}
+.pc.empty{opacity:.65;border-style:dashed}
+.pc-avatar{flex:none;width:42px;height:42px;display:grid;place-items:center;border-radius:var(--r);font-size:16px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);position:relative}
+[data-theme^="github-"] .pc-avatar{border-radius:50%}
+.pc-avatar .pc-stone{position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.4),0 0 0 2px var(--bg2)}
+.pc-avatar .pc-stone.black{background:radial-gradient(circle at 35% 30%,#6a6a6a,#0d0d0d 70%)}
+.pc-avatar .pc-stone.white{background:radial-gradient(circle at 35% 30%,#ffffff,#c8c4b8 70%)}
+.pc-body{flex:1;min-width:0}
+.pc-name{font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.pc-info{font-size:11.5px;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px;margin-top:2px}
+.pc.right .pc-info{justify-content:flex-end}
+.pc-timer{font-weight:800;color:var(--ac);font-size:14px}
+.pc-timer.warn{color:var(--warn)}
+.pc-timer.danger{color:var(--dgr);animation:timerPulse .8s ease-in-out infinite}
+@keyframes timerPulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.status-bar{padding:9px 14px;margin-bottom:12px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);text-align:center;font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px;min-height:40px}
+[data-theme^="github-"] .status-bar{border-width:1px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.status-bar strong{color:var(--text);font-weight:800}
+.status-bar.playing strong{color:var(--ac)}
+.status-bar.win strong{color:var(--ok)}
+.status-bar.lose strong{color:var(--dgr)}
+.status-bar .dot-live{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(45,122,45,.18);animation:livePulse 2s ease-in-out infinite;flex:none}
+[data-theme^="mc-"] .status-bar .dot-live{border-radius:0}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.board-wrap{display:flex;justify-content:center;margin-bottom:14px}
+.board-frame{position:relative;padding:10px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 8px 24px rgba(0,0,0,.1)}
+[data-theme^="mc-"] .board-frame{box-shadow:3px 3px 0 rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.15)}
+[data-theme^="github-"] .board-frame{border-width:1px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.board-frame canvas{display:block;background:var(--board-bg);border-radius:calc(var(--r) - 1px);cursor:crosshair;touch-action:manipulation}
+[data-theme^="github-"] .board-frame canvas{border-radius:8px}
+.board-frame.locked canvas{cursor:not-allowed}
+.board-frame.waiting{opacity:.85}
+
+.action-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;font-size:13.5px;font-family:inherit;font-weight:700;color:var(--text);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;box-shadow:var(--bevel);transition:all .15s}
+[data-theme^="github-"] .btn{border-width:1px;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.btn:hover:not(:disabled){filter:brightness(1.05);transform:translateY(-1px)}
+[data-theme^="mc-"] .btn:hover:not(:disabled){transform:none;filter:brightness(1.08);box-shadow:var(--bevel),0 0 8px rgba(var(--p1),.3)}
+.btn:active:not(:disabled){transform:translateY(0);box-shadow:var(--bevel-in)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-danger{color:var(--dgr);border-color:var(--dgr)}
+.btn-danger:hover:not(:disabled){background:rgba(160,32,32,.1)}
+
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:100;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.ov.show{opacity:1;visibility:visible}
+.pnl{display:flex;flex-direction:column;width:100%;max-width:480px;max-height:calc(100vh - 32px);background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) + 3px);box-shadow:var(--sh);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+[data-theme^="mc-"] .pnl{border:2px solid var(--bd2);border-radius:2px;box-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.ov.show .pnl{transform:none}
+.ph{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd);flex:none;color:#fff}
+[data-theme="mc-wiki"] .ph{background:linear-gradient(180deg,#7a9c3c,#56682c);border-bottom:2px solid #3d521f;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
+[data-theme="mc-night"] .ph{background:linear-gradient(180deg,#5a7a2c,#3d521f);color:#e8ffd0}
+[data-theme="mc-nether"] .ph{background:linear-gradient(180deg,#8a2010,#4a1008);color:#ffe0d0}
+[data-theme="mc-end"] .ph{background:linear-gradient(180deg,#4a2080,#2a1050);color:#e0d0ff}
+[data-theme="sakura"] .ph{background:linear-gradient(180deg,#e07090,#c05070)}
+[data-theme="ocean"] .ph{background:linear-gradient(180deg,#2080c0,#004890)}
+.ph strong{font-size:14px}
+.ph .sp{flex:1}
+.ph .icon{color:inherit}
+.ph .icon:hover{background:rgba(0,0,0,.2);color:#fff}
+
+.result-body{padding:26px 20px 20px;text-align:center}
+.result-icon{font-size:64px;line-height:1;margin-bottom:14px;display:block;animation:resPop .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes resPop{from{transform:scale(.5) rotate(-15deg);opacity:0}60%{transform:scale(1.15) rotate(8deg)}to{transform:scale(1) rotate(0);opacity:1}}
+.result-title{font-size:1.5rem;font-weight:800;margin:0 0 8px;letter-spacing:-.02em}
+.result-title.win{color:var(--ok)}
+.result-title.lose{color:var(--dgr)}
+.result-title.draw{color:var(--warn)}
+.result-sub{font-size:13.5px;color:var(--muted);margin:0 0 6px;line-height:1.6}
+.result-note{font-size:12px;color:var(--muted);opacity:.8;margin:12px 0 0;padding-top:10px;border-top:1px dashed var(--bd)}
+
+.form-foot{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd)}
+.form-foot button{padding:9px 20px;font-size:14px;font-family:inherit;font-weight:700;border-radius:var(--r);cursor:pointer;transition:all .15s}
+.form-foot .save{color:#fff;background:var(--hero-grad);border:2px solid var(--bd2);box-shadow:var(--bevel);flex:1}
+[data-theme^="github-"] .form-foot .save{border-width:1px;border-radius:6px}
+[data-theme^="mc-"] .form-foot .save{text-shadow:1px 1px 0 rgba(0,0,0,.3)}
+.form-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+
+.theme-body{padding:14px;overflow-y:auto}
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.theme-card{display:flex;flex-direction:column;gap:8px;padding:12px;background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);cursor:pointer;font-family:inherit;color:var(--text);box-shadow:var(--bevel);transition:all .2s;text-align:left}
+.theme-card:hover{transform:translateY(-2px);border-color:var(--ac)}
+.theme-card.active{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 2px var(--acs)}
+[data-theme^="github-"] .theme-card{border-width:1px;box-shadow:none}
+[data-theme^="github-"] .theme-card.active{box-shadow:0 0 0 2px var(--acs)}
+.theme-prev{display:flex;height:30px;border:1px solid var(--bd);border-radius:calc(var(--r) - 2px);overflow:hidden}
+.theme-prev span{flex:1;display:block}
+.theme-name{font-size:12.5px;font-weight:700}
+.theme-desc{font-size:10.5px;color:var(--muted);margin-top:-3px}
+
+.toast{position:fixed;left:50%;bottom:20px;max-width:calc(100vw - 32px);padding:8px 16px;font-size:13px;color:var(--bg);background:var(--text);border-radius:var(--r);box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(16px);transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:600}
+[data-theme^="mc-"] .toast{background:#2a3a1a;color:#e8ffd0;border:2px solid #4a4a3a;border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.4)}
+[data-theme="mc-nether"] .toast{background:#2a0800;color:#ffe0d0;border-color:#5a2010}
+[data-theme="mc-end"] .toast{background:#1a0f30;color:#e0d0ff;border-color:#3a2060}
+[data-theme="sakura"] .toast{background:#a04060;color:#ffe0ea;border-color:#802050}
+[data-theme="ocean"] .toast{background:#004890;color:#e0f0ff;border-color:#002040}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.loading-mask{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.loading-mask.show{opacity:1;visibility:visible}
+.loading-card{padding:24px 28px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 12px 32px rgba(0,0,0,.3);text-align:center;color:var(--text);max-width:340px}
+[data-theme^="github-"] .loading-card{border-width:1px;border-radius:12px}
+.loading-card .spin{display:inline-block;width:28px;height:28px;margin-bottom:12px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spinIcon .8s linear infinite}
+@keyframes spinIcon{to{transform:rotate(360deg)}}
+.loading-card .lt{font-size:15px;font-weight:700;margin-bottom:4px}
+.loading-card .ls{font-size:12.5px;color:var(--muted);line-height:1.6}
+
+.waiting-hint{margin-top:14px;padding:10px 14px;background:var(--bg2);border:2px dashed var(--bd2);border-radius:var(--r);font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}
+[data-theme^="github-"] .waiting-hint{border-width:1px}
+.waiting-hint strong{color:var(--ac);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;letter-spacing:.08em;font-weight:800;cursor:pointer;padding:1px 6px;background:var(--acs);border-radius:3px}
+
+@media(max-width:640px){
+  .wrap{padding:10px 10px 30px}
+  .logo span:last-child{display:none}
+  .room-chip{font-size:11px;padding:2px 8px}
+  .pc{padding:8px 10px;gap:8px}
+  .pc-avatar{width:36px;height:36px;font-size:14px}
+  .pc-avatar .pc-stone{width:14px;height:14px}
+  .pc-name{font-size:13px}
+  .pc-timer{font-size:13px}
+  .pc-info{font-size:11px}
+  .board-frame{padding:6px}
+  .status-bar{padding:8px 10px;font-size:12.5px;min-height:38px}
+  .btn{padding:8px 14px;font-size:13px}
+  .theme-grid{grid-template-columns:1fr}
+  .result-icon{font-size:52px}
+  .result-title{font-size:1.25rem}
+}
+@media print{.bg-decor,.topbar,.ov,.toast,.loading-mask{display:none}body{padding-top:0}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="logo" href="./wuzi_hotel.html"><span class="logo-icon">⚫</span><span>对局中</span></a>
+  <span class="sp"></span>
+  <button class="room-chip" id="roomChip" title="点击复制房间码">#------</button>
+  <button class="icon" id="themeBtn" title="切换风格">🎨</button>
+  <button class="icon" id="exitBtn" title="离开对局">🚪</button>
+</header>
+
+<div class="bg-decor" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="grid-bg"></div>
+  <canvas id="particles"></canvas>
+</div>
+
+<div class="wrap">
+  <div class="players">
+    <div class="pc" id="cardBlack">
+      <div class="pc-avatar" id="avatarBlack">?
+        <span class="pc-stone black"></span>
+      </div>
+      <div class="pc-body">
+        <div class="pc-name" id="nameBlack">黑方</div>
+        <div class="pc-info">
+          <span class="pc-timer" id="timerBlack">--</span>
+        </div>
+      </div>
+    </div>
+    <div class="pc right" id="cardWhite">
+      <div class="pc-avatar" id="avatarWhite">?
+        <span class="pc-stone white"></span>
+      </div>
+      <div class="pc-body">
+        <div class="pc-name" id="nameWhite">白方</div>
+        <div class="pc-info">
+          <span class="pc-timer" id="timerWhite">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    <span class="dot-live"></span>
+    <span id="statusText">正在连接…</span>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board-frame" id="boardFrame">
+      <canvas id="board"></canvas>
+    </div>
+  </div>
+
+  <div class="waiting-hint" id="waitingHint" style="display:none">
+    把这个房间码发给好友 → <strong id="hintCode">------</strong>
+  </div>
+
+  <div class="action-row" id="actionRow" style="margin-top:14px">
+    <button class="btn btn-danger" id="resignBtn" disabled>🏳️ 认输</button>
+    <button class="btn" id="leaveBtn">← 返回大厅</button>
+  </div>
+</div>
+
+<!-- 结算弹窗 -->
+<div class="ov" id="resultOv">
+  <div class="pnl">
+    <div class="ph"><strong>对局结束</strong><span class="sp"></span></div>
+    <div class="result-body">
+      <span class="result-icon" id="resultIcon">🏆</span>
+      <h2 class="result-title win" id="resultTitle">你赢了！</h2>
+      <p class="result-sub" id="resultSub">恭喜获得胜利</p>
+      <p class="result-note">即将自动返回大厅…</p>
+    </div>
+  </div>
+</div>
+
+<!-- 主题弹窗 -->
+<div class="ov" id="themeOv">
+  <div class="pnl">
+    <div class="ph"><strong>选择风格</strong><span class="sp"></span><button class="icon" id="themeClose">✕</button></div>
+    <div class="theme-body"><div class="theme-grid" id="themeGrid"></div></div>
+  </div>
+</div>
+
+<!-- 加载遮罩 -->
+<div class="loading-mask show" id="loadingMask">
+  <div class="loading-card">
+    <span class="spin"></span>
+    <div class="lt" id="loadingTitle">正在进入房间</div>
+    <div class="ls" id="loadingSub">连接服务器中…</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   配置
+   ============================================================ */
+var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
+
+var K_THEME = 'wiki-theme';
+var K_NICK  = 'gomoku-nick';
+var K_UID   = 'gomoku-uid';
+
+var TURN_LIMIT_MS = 30 * 1000;      /* 每步 30 秒 */
+var TICK_MS = 200;
+var WIN_COUNT = 5;
+
+/* ============================================================
+   工具
+   ============================================================ */
+function $(id){return document.getElementById(id);}
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+var storage={
+  get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+  set:function(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+};
+var toastEl=$('toast'),toastTimer=null;
+function toast(msg){
+  if(!toastEl)return;
+  toastEl.textContent=msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2200);
+}
+function nickColor(nick){
+  var h=0;
+  for(var i=0;i<nick.length;i++){h=(h*31+nick.charCodeAt(i))>>>0;}
+  var palette=[
+    '#e57373','#f06292','#ba68c8','#9575cd','#7986cb',
+    '#64b5f6','#4fc3f7','#4dd0e1','#4db6ac','#81c784',
+    '#aed581','#dce775','#ffd54f','#ffb74d','#ff8a65',
+    '#a1887f','#90a4ae','#e91e63','#9c27b0','#2196f3'
+  ];
+  return palette[h%palette.length];
+}
+
+/* ============================================================
+   身份与 URL
+   ============================================================ */
+var uid = storage.get(K_UID) || '';
+var myNick = storage.get(K_NICK) || '';
+function getQuery(name){
+  var m = location.search.match(new RegExp('[?&]'+name+'=([^&#]*)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
+var roomCode = getQuery('room').toUpperCase().trim();
+
+/* ============================================================
+   Supabase
+   ============================================================ */
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  realtime: { params: { eventsPerSecond: 10 } }
+});
+
+/* ============================================================
+   游戏状态
+   ============================================================ */
+var state = {
+  room: null,
+  boardSize: 15,
+  board: [],
+  moves: [],
+  myColor: null,
+  lastMove: null,
+  gameOver: false,
+  finished: false,
+  winnerUid: null,
+  winnerNick: null,
+  loserNick: null,
+  winLine: null,
+  hover: null,
+  placing: false,
+  turnStartedAt: 0
+};
+
+/* ============================================================
+   Canvas
+   ============================================================ */
+var canvas, ctx;
+var dpr = 1;
+var cssW = 0, cssH = 0;
+var padding = 0, cell = 0, stoneR = 0;
+
+function initCanvas(){
+  canvas = $('board');
+  ctx = canvas.getContext('2d');
+  dpr = Math.min(window.devicePixelRatio||1, 2);
+}
+function resizeCanvas(){
+  if(!canvas) return;
+  var frame = $('boardFrame');
+  if(!frame) return;
+  var wrap = frame.parentNode;
+  var maxW = Math.min(wrap.clientWidth - 20, 560);
+  if(maxW < 200) maxW = 200;
+
+  var size = state.boardSize;
+  cell = maxW / (size + 0.4);
+  if(cell > 36) cell = 36;
+  if(cell < 4) cell = 4;
+  padding = cell * 0.7;
+  stoneR = cell * 0.42;
+
+  cssW = (size - 1) * cell + 2 * padding;
+  cssH = cssW;
+
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  renderCanvas();
+}
+
+function readCssVar(name){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function renderCanvas(){
+  if(!ctx) return;
+  var size = state.boardSize;
+  var boardBg = readCssVar('--board-bg') || '#dcb980';
+  var boardLine = readCssVar('--board-line') || '#4a3520';
+
+  ctx.clearRect(0, 0, cssW, cssH);
+  ctx.fillStyle = boardBg;
+  ctx.fillRect(0, 0, cssW, cssH);
+
+  ctx.strokeStyle = boardLine;
+  ctx.lineWidth = Math.max(1, Math.min(1.5, cell/20));
+  ctx.beginPath();
+  var i;
+  for(i=0;i<size;i++){
+    var y = padding + i * cell;
+    ctx.moveTo(padding, y);
+    ctx.lineTo(padding + (size-1)*cell, y);
+  }
+  for(i=0;i<size;i++){
+    var x = padding + i * cell;
+    ctx.moveTo(x, padding);
+    ctx.lineTo(x, padding + (size-1)*cell);
+  }
+  ctx.stroke();
+
+  /* 星位 */
+  if(size >= 9 && size <= 25){
+    var starPoints = [];
+    if(size === 15){
+      starPoints = [[3,3],[3,11],[11,3],[11,11],[7,7]];
+    } else if(size === 19){
+      starPoints = [[3,3],[3,9],[3,15],[9,3],[9,9],[9,15],[15,3],[15,9],[15,15]];
+    } else {
+      var mid = Math.floor((size-1)/2);
+      var q1 = Math.floor((size-1)/4);
+      var q3 = size - 1 - q1;
+      starPoints = [[q1,q1],[q1,q3],[q3,q1],[q3,q3],[mid,mid]];
+    }
+    ctx.fillStyle = boardLine;
+    starPoints.forEach(function(p){
+      if(p[0] < 0 || p[0] >= size || p[1] < 0 || p[1] >= size) return;
+      ctx.beginPath();
+      ctx.arc(padding + p[0]*cell, padding + p[1]*cell, Math.max(1.5, cell*0.08), 0, Math.PI*2);
+      ctx.fill();
+    });
+  }
+
+  function makeStoneGrad(cx, cy, isBlack){
+    var grad = ctx.createRadialGradient(
+      cx - stoneR*0.35, cy - stoneR*0.35, stoneR*0.05,
+      cx, cy, stoneR
+    );
+    if(isBlack){
+      grad.addColorStop(0, '#6a6a6a');
+      grad.addColorStop(0.55, '#2a2a2a');
+      grad.addColorStop(1, '#0d0d0d');
+    } else {
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.6, '#f0f0e8');
+      grad.addColorStop(1, '#c8c4b8');
+    }
+    return grad;
+  }
+
+  for(var yy=0;yy<size;yy++){
+    for(var xx=0;xx<size;xx++){
+      var c = state.board[yy] && state.board[yy][xx];
+      if(!c) continue;
+      var px = padding + xx * cell;
+      var py = padding + yy * cell;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,.35)';
+      ctx.shadowBlur = stoneR * 0.3;
+      ctx.shadowOffsetY = stoneR * 0.12;
+      ctx.beginPath();
+      ctx.arc(px, py, stoneR, 0, Math.PI*2);
+      ctx.fillStyle = makeStoneGrad(px, py, c === 'black');
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /* 最后一步红点 */
+  if(state.lastMove){
+    var lm = state.lastMove;
+    if(state.board[lm.y] && state.board[lm.y][lm.x]){
+      var lx = padding + lm.x * cell;
+      var ly = padding + lm.y * cell;
+      ctx.beginPath();
+      ctx.arc(lx, ly, Math.max(2, stoneR * 0.22), 0, Math.PI*2);
+      ctx.fillStyle = '#ff4444';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.6)';
+      ctx.lineWidth = Math.max(1, cell * 0.04);
+      ctx.stroke();
+    }
+  }
+
+  /* 五连高亮 */
+  if(state.winLine && state.winLine.length){
+    ctx.save();
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = Math.max(2, stoneR * 0.28);
+    ctx.shadowColor = 'rgba(255,215,0,.8)';
+    ctx.shadowBlur = stoneR * 0.6;
+    state.winLine.forEach(function(p){
+      var px = padding + p.x * cell;
+      var py = padding + p.y * cell;
+      ctx.beginPath();
+      ctx.arc(px, py, stoneR * 0.9, 0, Math.PI*2);
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  /* 悬停预览 */
+  if(state.hover && !state.gameOver && canIPlayNow()){
+    var hx = state.hover.x, hy = state.hover.y;
+    if(hx >= 0 && hx < size && hy >= 0 && hy < size && !state.board[hy][hx]){
+      var hpx = padding + hx * cell;
+      var hpy = padding + hy * cell;
+      ctx.save();
+      ctx.globalAlpha = 0.45;
+      ctx.beginPath();
+      ctx.arc(hpx, hpy, stoneR, 0, Math.PI*2);
+      ctx.fillStyle = makeStoneGrad(hpx, hpy, state.myColor === 'black');
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+/* ============================================================
+   坐标
+   ============================================================ */
+function getPointFromEvent(e){
+  if(!canvas) return null;
+  var rect = canvas.getBoundingClientRect();
+  var scaleX = cssW / rect.width;
+  var scaleY = cssH / rect.height;
+  var px = (e.clientX - rect.left) * scaleX;
+  var py = (e.clientY - rect.top) * scaleY;
+  var col = Math.round((px - padding) / cell);
+  var row = Math.round((py - padding) / cell);
+  if(col < 0 || col >= state.boardSize || row < 0 || row >= state.boardSize) return null;
+  var cx = padding + col * cell;
+  var cy = padding + row * cell;
+  if(Math.abs(px - cx) > cell * 0.5 || Math.abs(py - cy) > cell * 0.5) return null;
+  return {x: col, y: row};
+}
+
+/* ============================================================
+   游戏逻辑
+   ============================================================ */
+function emptyBoard(size){
+  var b = [];
+  for(var y=0;y<size;y++){
+    var row = [];
+    for(var x=0;x<size;x++) row.push(null);
+    b.push(row);
+  }
+  return b;
+}
+function rebuildBoard(){
+  var size = state.boardSize;
+  state.board = emptyBoard(size);
+  state.moves.sort(function(a,b){return a.seq - b.seq;});
+  state.moves.forEach(function(m){
+    if(m.y >= 0 && m.y < size && m.x >= 0 && m.x < size){
+      state.board[m.y][m.x] = m.color;
+    }
+  });
+  if(state.moves.length){
+    var last = state.moves[state.moves.length-1];
+    state.lastMove = { x: last.x, y: last.y };
+  } else {
+    state.lastMove = null;
+  }
+}
+function currentTurnColor(){
+  return state.moves.length % 2 === 0 ? 'black' : 'white';
+}
+function canIPlayNow(){
+  if(state.gameOver) return false;
+  if(state.room && state.room.status !== 'playing') return false;
+  if(!state.myColor) return false;
+  return currentTurnColor() === state.myColor;
+}
+
+function checkWin(x, y, color){
+  var size = state.boardSize;
+  var dirs = [[1,0],[0,1],[1,1],[1,-1]];
+  for(var d=0;d<dirs.length;d++){
+    var dx = dirs[d][0], dy = dirs[d][1];
+    var line = [{x:x, y:y}];
+    var cx = x + dx, cy = y + dy;
+    while(cx >= 0 && cx < size && cy >= 0 && cy < size && state.board[cy][cx] === color){
+      line.push({x:cx, y:cy});
+      cx += dx; cy += dy;
+    }
+    cx = x - dx; cy = y - dy;
+    while(cx >= 0 && cx < size && cy >= 0 && cy < size && state.board[cy][cx] === color){
+      line.unshift({x:cx, y:cy});
+      cx -= dx; cy -= dy;
+    }
+    if(line.length >= WIN_COUNT) return line;
+  }
+  return null;
+}
+
+/* ============================================================
+   落子
+   ============================================================ */
+function tryPlace(x, y){
+  if(state.placing) return;
+  if(state.gameOver) return;
+  if(!state.room || state.room.status !== 'playing'){ toast('对局还没开始'); return; }
+  if(!state.myColor){ toast('你是观战者'); return; }
+  if(currentTurnColor() !== state.myColor){ toast('还没轮到你'); return; }
+  if(state.board[y][x]){ toast('这里已有棋子'); return; }
+
+  var move = {
+    room_code: roomCode,
+    seq: state.moves.length,
+    x: x,
+    y: y,
+    uid: uid,
+    color: state.myColor,
+    ts: Date.now()
+  };
+
+  state.placing = true;
+
+  /* 乐观更新 */
+  state.moves.push(move);
+  state.board[y][x] = state.myColor;
+  state.lastMove = { x:x, y:y };
+  state.winLine = null;
+
+  /* 五连判定 */
+  var line = checkWin(x, y, state.myColor);
+  if(line){
+    state.winLine = line;
+    state.gameOver = true;
+  }
+
+  renderCanvas();
+  updateUI();
+
+  /* 写库 */
+  sb.from('gomoku_moves').insert(move).then(function(res){
+    state.placing = false;
+    if(res.error){
+      /* 回滚 */
+      state.moves = state.moves.filter(function(m){ return !(m.x === x && m.y === y); });
+      state.board[y][x] = null;
+      state.lastMove = state.moves.length ? { x: state.moves[state.moves.length-1].x, y: state.moves[state.moves.length-1].y } : null;
+      state.winLine = null;
+      state.gameOver = false;
+      renderCanvas();
+      updateUI();
+      toast('落子失败：' + res.error.message);
+      return;
+    }
+    if(state.gameOver && line){
+      /* 我赢了 */
+      var oppUid = state.myColor === 'black' ? state.room.guest_uid : state.room.host_uid;
+      var oppNick = state.myColor === 'black' ? state.room.guest_nick : state.room.host_nick;
+      finishGame(uid, myNick, oppNick, 'five');
+    } else {
+      /* 更新房间时间戳 */
+      state.turnStartedAt = Date.now();
+      sb.from('gomoku_rooms')
+        .update({ turn_started_at: state.turnStartedAt, last_active: Date.now() })
+        .eq('code', roomCode);
+      updateUI();
+    }
+  });
+}
+
+/* ============================================================
+   结束对局
+   ============================================================ */
+function finishGame(winnerUid, winnerNick, loserNick, reason){
+  if(state.finished) return;
+  state.finished = true;
+  state.gameOver = true;
+
+  /* 用 CAS 保证只有一个客户端能写成功 */
+  sb.from('gomoku_rooms')
+    .update({
+      status: 'finished',
+      winner_uid: winnerUid,
+      winner_nick: winnerNick,
+      loser_nick: loserNick,
+      finish_reason: reason,
+      finished_at: Date.now(),
+      last_active: Date.now()
+    })
+    .eq('code', roomCode)
+    .eq('status', 'playing')
+    .select()
+    .then(function(res){
+      if(res.error){
+        console.warn('结束失败', res.error);
+        return;
+      }
+      /* 只有真正改动的那一个客户端写公告 */
+      if(res.data && res.data.length > 0){
+        sb.from('gomoku_announcements').insert({
+          winner_nick: winnerNick,
+          loser_nick: loserNick,
+          text: winnerNick + ' vs ' + loserNick + ' — ' + winnerNick + ' 胜出！',
+          created_at: Date.now()
+        }).then(function(){});
+        /* 5 秒后删房间 */
+        setTimeout(function(){
+          sb.from('gomoku_rooms').delete().eq('code', roomCode);
+        }, 5000);
+      }
+    });
+
+  /* 本地立刻展示 */
+  showResult(winnerUid, reason);
+
+  /* 3 秒后自动返回大厅 */
+  setTimeout(function(){
+    location.href = './wuzi_hotel.html';
+  }, 3500);
+}
+
+function showResult(winnerUid, reason){
+  var ov = $('resultOv');
+  var icon = $('resultIcon');
+  var title = $('resultTitle');
+  var sub = $('resultSub');
+  if(!ov) return;
+
+  var iWon = (winnerUid === uid);
+  var isObserver = !state.myColor;
+
+  if(isObserver){
+    icon.textContent = '🏆';
+    title.textContent = '对局结束';
+    title.className = 'result-title';
+    sub.textContent = state.winnerNick ? (state.winnerNick + ' 胜出') : '对局已结束';
+  } else if(iWon){
+    icon.textContent = '🏆';
+    title.textContent = '你赢了！';
+    title.className = 'result-title win';
+    if(reason === 'timeout') sub.textContent = '对手超时，你获得胜利';
+    else if(reason === 'resign') sub.textContent = '对手认输，你获得胜利';
+    else sub.textContent = '五子连珠，恭喜获胜';
+  } else {
+    icon.textContent = '😢';
+    title.textContent = '你输了';
+    title.className = 'result-title lose';
+    if(reason === 'timeout') sub.textContent = '超时判负，下次快一点';
+    else if(reason === 'resign') sub.textContent = '你认输了';
+    else sub.textContent = '对手先连成了五子';
+  }
+  ov.classList.add('show');
+}
+
+/* ============================================================
+   UI 更新
+   ============================================================ */
+function updateUI(){
+  if(!state.room) return;
+
+  var hostNick = state.room.host_nick || '黑方';
+  var guestNick = state.room.guest_nick || '';
+  var isHost = state.room.host_uid === uid;
+  var isGuest = state.room.guest_uid === uid;
+
+  var avB = $('avatarBlack'), nB = $('nameBlack'), cB = $('cardBlack');
+  var avW = $('avatarWhite'), nW = $('nameWhite'), cW = $('cardWhite');
+
+  if(avB){ avB.textContent = hostNick.charAt(0).toUpperCase(); avB.style.background = nickColor(hostNick); }
+  if(nB) nB.textContent = hostNick + (isHost ? ' (你)' : '');
+  if(cB){
+    cB.classList.toggle('me', isHost);
+    cB.classList.remove('empty');
+  }
+
+  if(guestNick){
+    if(avW){ avW.textContent = guestNick.charAt(0).toUpperCase(); avW.style.background = nickColor(guestNick); }
+    if(nW) nW.textContent = guestNick + (isGuest ? ' (你)' : '');
+    if(cW){
+      cW.classList.toggle('me', isGuest);
+      cW.classList.remove('empty');
+    }
+  } else {
+    if(avW){ avW.textContent = '?'; avW.style.background = 'var(--muted)'; }
+    if(nW) nW.textContent = '等待中…';
+    if(cW) cW.classList.add('empty');
+  }
+
+  /* 当前回合高亮 */
+  var cur = currentTurnColor();
+  if(state.room.status === 'playing' && !state.gameOver){
+    if(cB) cB.classList.toggle('active', cur === 'black');
+    if(cW) cW.classList.toggle('active', cur === 'white');
+  } else {
+    if(cB) cB.classList.remove('active');
+    if(cW) cW.classList.remove('active');
+  }
+
+  /* 状态栏 */
+  var st = $('statusBar'), stx = $('statusText');
+  if(st && stx){
+    st.className = 'status-bar';
+    if(state.gameOver){
+      st.classList.add(winnerIsMe() ? 'win' : 'lose');
+      stx.innerHTML = state.winnerNick ? ('<strong>' + esc(state.winnerNick) + '</strong> 胜出') : '对局结束';
+    } else if(state.room.status === 'waiting'){
+      stx.innerHTML = '<span class="dot-live"></span>等待对手加入…';
+    } else if(state.room.status === 'playing'){
+      st.classList.add('playing');
+      if(!state.myColor){
+        stx.innerHTML = '观战中 · 轮到 <strong>' + (cur === 'black' ? esc(hostNick) : esc(guestNick || '白方')) + '</strong>';
+      } else if(cur === state.myColor){
+        stx.innerHTML = '轮到 <strong>你</strong>落子（' + (state.myColor === 'black' ? '黑' : '白') + '）';
+      } else {
+        stx.innerHTML = '对手思考中…';
+      }
+    } else {
+      stx.textContent = '对局已结束';
+    }
+  }
+
+  /* 等待提示 */
+  var hint = $('waitingHint');
+  if(hint){
+    if(state.room.status === 'waiting'){
+      hint.style.display = 'block';
+      var hc = $('hintCode');
+      if(hc) hc.textContent = roomCode;
+    } else {
+      hint.style.display = 'none';
+    }
+  }
+
+  /* 认输按钮 */
+  var rb = $('resignBtn');
+  if(rb){
+    rb.disabled = !state.myColor || state.gameOver || state.room.status !== 'playing';
+  }
+
+  /* 房间码 chip */
+  var rc = $('roomChip');
+  if(rc) rc.textContent = '#' + roomCode;
+
+  renderCanvas();
+}
+function winnerIsMe(){
+  return state.winnerUid && state.winnerUid === uid;
+}
+
+/* ============================================================
+   计时
+   ============================================================ */
+var tickTimer = null;
+function startTick(){
+  if(tickTimer) return;
+  tickTimer = setInterval(tick, TICK_MS);
+}
+function tick(){
+  if(!state.room || state.room.status !== 'playing'){ updateTimers(null); return; }
+  if(state.gameOver){ updateTimers(null); return; }
+
+  var cur = currentTurnColor();
+  var startAt = state.turnStartedAt || state.room.turn_started_at || Date.now();
+  var elapsed = Date.now() - startAt;
+  var remain = TURN_LIMIT_MS - elapsed;
+  if(remain < 0) remain = 0;
+
+  updateTimers({ color: cur, remain: remain });
+
+  /* 超时判定 */
+  if(remain <= 0){
+    var timeoutColor = cur;
+    var loserUid, loserNick, winnerUid, winnerNick;
+    if(timeoutColor === 'black'){
+      loserUid = state.room.host_uid;
+      loserNick = state.room.host_nick;
+      winnerUid = state.room.guest_uid;
+      winnerNick = state.room.guest_nick;
+    } else {
+      loserUid = state.room.guest_uid;
+      loserNick = state.room.guest_nick;
+      winnerUid = state.room.host_uid;
+      winnerNick = state.room.host_nick;
+    }
+    if(winnerUid && winnerNick){
+      finishGame(winnerUid, winnerNick, loserNick, 'timeout');
+    }
+  }
+}
+function updateTimers(info){
+  var tB = $('timerBlack'), tW = $('timerWhite');
+  if(!tB || !tW) return;
+
+  if(!info){
+    tB.textContent = '--';
+    tW.textContent = '--';
+    tB.className = 'pc-timer';
+    tW.className = 'pc-timer';
+    return;
+  }
+
+  var secs = Math.ceil(info.remain / 1000);
+  var cls = 'pc-timer' + (secs <= 5 ? ' danger' : (secs <= 15 ? ' warn' : ''));
+  var txt = secs + 's';
+  if(info.color === 'black'){
+    tB.textContent = txt; tB.className = cls;
+    tW.textContent = '--'; tW.className = 'pc-timer';
+  } else {
+    tW.textContent = txt; tW.className = cls;
+    tB.textContent = '--'; tB.className = 'pc-timer';
+  }
+}
+
+/* ============================================================
+   数据加载与订阅
+   ============================================================ */
+var roomsChannel = null;
+var movesChannel = null;
+var heartbeatTimer = null;
+
+function loadRoom(){
+  return sb.from('gomoku_rooms').select('*').eq('code', roomCode).maybeSingle()
+    .then(function(res){
+      if(res.error) throw new Error(res.error.message);
+      if(!res.data) throw new Error('房间不存在或已关闭');
+      state.room = res.data;
+      state.boardSize = parseInt(res.data.board_size, 10) || 15;
+      if(state.boardSize < 5) state.boardSize = 5;
+      if(state.boardSize > 50) state.boardSize = 50;
+
+      /* 判断角色 */
+      if(res.data.host_uid === uid) state.myColor = 'black';
+      else if(res.data.guest_uid === uid) state.myColor = 'white';
+      else state.myColor = null;
+
+      /* 兜底：如果我是 guest 但状态还是 waiting，改成 playing */
+      if(state.myColor === 'white' && res.data.status === 'waiting'){
+        sb.from('gomoku_rooms').update({
+          status: 'playing',
+          game_started_at: Date.now(),
+          turn_started_at: Date.now(),
+          last_active: Date.now()
+        }).eq('code', roomCode);
+      }
+    });
+}
+
+function loadMoves(){
+  return sb.from('gomoku_moves').select('*').eq('room_code', roomCode).order('seq', {ascending:true})
+    .then(function(res){
+      if(res.error) throw new Error(res.error.message);
+      state.moves = (res.data || []).map(function(m){
+        return { x: parseInt(m.x,10), y: parseInt(m.y,10), color: m.color, uid: m.uid, seq: parseInt(m.seq,10), ts: parseInt(m.ts,10) };
+      });
+      rebuildBoard();
+    });
+}
+
+function subscribeRoom(){
+  if(roomsChannel) return;
+  roomsChannel = sb.channel('game-room-'+roomCode)
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'gomoku_rooms', filter:'code=eq.'+roomCode}, function(payload){
+      var r = payload.new;
+      if(!r) return;
+      var oldStatus = state.room ? state.room.status : null;
+      state.room = r;
+      state.boardSize = parseInt(r.board_size, 10) || state.boardSize;
+      /* 玩家角色可能变化（新加入者） */
+      if(r.host_uid === uid) state.myColor = 'black';
+      else if(r.guest_uid === uid) state.myColor = 'white';
+      else state.myColor = null;
+
+      /* 对手刚进来 → 开始计时 */
+      if(oldStatus === 'waiting' && r.status === 'playing'){
+        state.turnStartedAt = Date.now();
+        toast('对手已加入，对局开始！');
+      }
+      if(r.turn_started_at){
+        state.turnStartedAt = parseInt(r.turn_started_at, 10);
+      }
+      /* 房间被结束 */
+      if(r.status === 'finished' && !state.finished){
+        state.finished = true;
+        state.gameOver = true;
+        state.winnerUid = r.winner_uid;
+        state.winnerNick = r.winner_nick;
+        state.loserNick = r.loser_nick;
+        showResult(r.winner_uid, r.finish_reason);
+        setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 3500);
+      }
+      updateUI();
+    })
+    .on('postgres_changes', {event:'DELETE', schema:'public', table:'gomoku_rooms', filter:'code=eq.'+roomCode}, function(){
+      if(!state.finished){
+        /* 房间被删了但不是我这边的结束流程 → 直接回大厅 */
+        location.href = './wuzi_hotel.html';
+      }
+    })
+    .subscribe();
+}
+
+function subscribeMoves(){
+  if(movesChannel) return;
+  movesChannel = sb.channel('game-moves-'+roomCode)
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'gomoku_moves', filter:'room_code=eq.'+roomCode}, function(payload){
+      var m = payload.new;
+      if(!m) return;
+      var x = parseInt(m.x,10), y = parseInt(m.y,10);
+      /* 去重 */
+      if(state.moves.some(function(v){ return v.x === x && v.y === y; })) return;
+      var mv = { x:x, y:y, color:m.color, uid:m.uid, seq:parseInt(m.seq,10), ts:parseInt(m.ts,10) };
+      state.moves.push(mv);
+      rebuildBoard();
+      /* 本地重新判定五连 */
+      if(!state.gameOver){
+        var line = checkWin(mv.x, mv.y, mv.color);
+        if(line){
+          state.winLine = line;
+          state.gameOver = true;
+        }
+      }
+      updateUI();
+      /* 若是对手落子，刷新本地回合开始时间 */
+      if(mv.uid !== uid){
+        state.turnStartedAt = Date.now();
+      }
+    })
+    .subscribe();
+}
+
+function startHeartbeat(){
+  if(heartbeatTimer) return;
+  heartbeatTimer = setInterval(function(){
+    if(!state.room) return;
+    if(state.room.status !== 'playing') return;
+    sb.from('gomoku_rooms').update({ last_active: Date.now() }).eq('code', roomCode);
+  }, 10000);
+}
+
+/* ============================================================
+   认输
+   ============================================================ */
+var resignBtn = $('resignBtn');
+if(resignBtn){
+  resignBtn.addEventListener('click', function(){
+    if(!state.myColor || state.gameOver) return;
+    if(!confirm('确定认输？')) return;
+    var winnerUid, winnerNick;
+    if(state.myColor === 'black'){
+      winnerUid = state.room.guest_uid;
+      winnerNick = state.room.guest_nick;
+    } else {
+      winnerUid = state.room.host_uid;
+      winnerNick = state.room.host_nick;
+    }
+    if(!winnerUid || !winnerNick){ toast('对手还没进来'); return; }
+    finishGame(winnerUid, winnerNick, myNick, 'resign');
+  });
+}
+
+/* ============================================================
+   退出
+   ============================================================ */
+function exitRoom(){
+  if(state.room && state.room.status === 'playing' && !state.gameOver){
+    if(!confirm('对局进行中，确定退出？退出视为认输')) return;
+    if(state.myColor){
+      var winnerUid, winnerNick;
+      if(state.myColor === 'black'){
+        winnerUid = state.room.guest_uid;
+        winnerNick = state.room.guest_nick;
+      } else {
+        winnerUid = state.room.host_uid;
+        winnerNick = state.room.host_nick;
+      }
+      if(winnerUid && winnerNick){
+        finishGame(winnerUid, winnerNick, myNick, 'resign');
+        return;
+      }
+    }
+  } else if(state.room && state.room.status === 'waiting' && state.room.host_uid === uid){
+    /* 房主等待中退出 → 删房间 */
+    sb.from('gomoku_rooms').delete().eq('code', roomCode);
+  }
+  location.href = './wuzi_hotel.html';
+}
+var exitBtn = $('exitBtn');
+if(exitBtn) exitBtn.addEventListener('click', exitRoom);
+var leaveBtn = $('leaveBtn');
+if(leaveBtn) leaveBtn.addEventListener('click', exitRoom);
+
+/* ============================================================
+   Canvas 交互
+   ============================================================ */
+function onCanvasClick(e){
+  if(e.touches && e.touches.length > 0){
+    e = { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+  }
+  var p = getPointFromEvent(e);
+  if(!p) return;
+  tryPlace(p.x, p.y);
+}
+function onCanvasMove(e){
+  var p = getPointFromEvent(e);
+  if(!p){ if(state.hover){ state.hover = null; renderCanvas(); } return; }
+  if(state.hover && state.hover.x === p.x && state.hover.y === p.y) return;
+  state.hover = p;
+  renderCanvas();
+}
+function onCanvasLeave(){
+  if(state.hover){ state.hover = null; renderCanvas(); }
+}
+
+function bindCanvas(){
+  canvas.addEventListener('click', onCanvasClick);
+  canvas.addEventListener('mousemove', onCanvasMove);
+  canvas.addEventListener('mouseleave', onCanvasLeave);
+  /* 触屏：用 touchstart 直接落子 */
+  canvas.addEventListener('touchstart', function(e){
+    if(e.touches.length !== 1) return;
+    e.preventDefault();
+    onCanvasClick(e.touches[0]);
+  }, {passive:false});
+}
+
+/* ============================================================
+   房间码 chip 复制
+   ============================================================ */
+var roomChip = $('roomChip');
+if(roomChip) roomChip.addEventListener('click', function(){
+  try{
+    navigator.clipboard.writeText(roomCode);
+    toast('房间码已复制：' + roomCode);
+  }catch(e){
+    toast('房间码：' + roomCode);
+  }
+});
+var hintCode = $('hintCode');
+if(hintCode) hintCode.addEventListener('click', function(){
+  try{ navigator.clipboard.writeText(roomCode); toast('已复制'); }catch(e){}
+});
+
+/* ============================================================
+   主题
+   ============================================================ */
+var THEMES=[
+  {id:'mc-wiki',      name:'🟩 MC Wiki',    desc:'我的世界中文 Wiki', colors:['#3d521f','#fffdf5','#56682c']},
+  {id:'mc-night',     name:'⬛ MC 夜晚',    desc:'Minecraft 夜间模式', colors:['#8ec44a','#1a1a1a','#3d521f']},
+  {id:'mc-nether',    name:'🔥 MC 下界',    desc:'地狱岩浆风',         colors:['#ff6030','#1a0a0a','#8a2010']},
+  {id:'mc-end',       name:'🌌 MC 末地',    desc:'末地虚空紫',         colors:['#a060ff','#0f0a1a','#4a2080']},
+  {id:'sakura',       name:'🌸 樱花',       desc:'粉嫩柔和',           colors:['#d04080','#fffafc','#ff80a0']},
+  {id:'ocean',        name:'🌊 海洋',       desc:'清凉海蓝',           colors:['#0066cc','#f0f8ff','#40a0dc']},
+  {id:'github-light', name:'☀️ GitHub 浅色', desc:'清爽默认',           colors:['#0969da','#f6f8fa','#1f2328']},
+  {id:'github-dark',  name:'🌙 GitHub 暗色', desc:'护眼夜间',           colors:['#4493f8','#161b22','#e6edf3']}
+];
+var curTheme=(function(){
+  var s=storage.get(K_THEME);
+  for(var i=0;i<THEMES.length;i++)if(THEMES[i].id===s)return s;
+  return 'mc-wiki';
+})();
+function buildThemeGrid(){
+  var grid=$('themeGrid');if(!grid)return;
+  var html='';
+  THEMES.forEach(function(th){
+    html+='<button type="button" class="theme-card'+(th.id===curTheme?' active':'')+'" data-theme-val="'+esc(th.id)+'">'+
+      '<div class="theme-prev">'+
+        '<span style="background:'+th.colors[0]+'"></span>'+
+        '<span style="background:'+th.colors[1]+'"></span>'+
+        '<span style="background:'+th.colors[2]+'"></span>'+
+      '</div>'+
+      '<div class="theme-name">'+esc(th.name)+'</div>'+
+      '<div class="theme-desc">'+esc(th.desc)+'</div>'+
+    '</button>';
+  });
+  grid.innerHTML=html;
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  storage.set(K_THEME,t);
+  curTheme=t;
+  setTimeout(renderCanvas, 50);
+}
+var themeOv=$('themeOv'), themeBtn=$('themeBtn'), themeClose=$('themeClose'), themeGrid=$('themeGrid');
+if(themeBtn) themeBtn.addEventListener('click', function(){ buildThemeGrid(); themeOv.classList.add('show'); });
+if(themeClose) themeClose.addEventListener('click', function(){ themeOv.classList.remove('show'); });
+if(themeOv) themeOv.addEventListener('click', function(e){ if(e.target===themeOv) themeOv.classList.remove('show'); });
+if(themeGrid) themeGrid.addEventListener('click', function(e){
+  var card=e.target.closest('[data-theme-val]'); if(!card)return;
+  var id=card.getAttribute('data-theme-val');
+  applyTheme(id);
+  themeOv.classList.remove('show');
+});
+
+/* ============================================================
+   粒子
+   ============================================================ */
+var particleCtx=null, particles=[], particleRunning=true, pW=0, pH=0, pDpr=1;
+var themeColors=['61,82,31','106,140,60','140,180,60','180,150,80'];
+function readThemeColors(){
+  var cs=getComputedStyle(document.documentElement);
+  themeColors=[
+    (cs.getPropertyValue('--p1')||'61,82,31').trim(),
+    (cs.getPropertyValue('--p2')||'106,140,60').trim(),
+    (cs.getPropertyValue('--p3')||'140,180,60').trim(),
+    (cs.getPropertyValue('--p4')||'180,150,80').trim()
+  ];
+}
+function initParticles(){
+  var cn=$('particles'); if(!cn||!cn.getContext) return;
+  particleCtx=cn.getContext('2d');
+  pDpr=Math.min(window.devicePixelRatio||1,2);
+  resizePCanvas();
+  readThemeColors();
+  var count=Math.max(14,Math.min(28,Math.floor((pW*pH)/50000)));
+  particles=[];
+  for(var i=0;i<count;i++){
+    particles.push({
+      x:Math.random()*pW, y:Math.random()*pH, size:4+Math.random()*9,
+      vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.4,
+      rot:Math.random()*Math.PI*2, vr:(Math.random()-0.5)*0.012,
+      alpha:0.10+Math.random()*0.22, alphaPhase:Math.random()*Math.PI*2,
+      alphaSpeed:0.008+Math.random()*0.014,
+      hueIdx:Math.floor(Math.random()*4), hueMix:Math.random()
+    });
+  }
+  if(particleRunning) drawParticles();
+}
+function resizePCanvas(){
+  var cn=$('particles'); if(!cn) return;
+  pW=window.innerWidth; pH=window.innerHeight;
+  cn.width=pW*pDpr; cn.height=pH*pDpr;
+  cn.style.width=pW+'px'; cn.style.height=pH+'px';
+  if(particleCtx) particleCtx.setTransform(pDpr,0,0,pDpr,0,0);
+}
+function drawParticles(){
+  if(!particleRunning||!particleCtx) return;
+  particleCtx.clearRect(0,0,pW,pH);
+  for(var i=0;i<particles.length;i++){
+    var p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+    if(p.x<-40)p.x=pW+40; else if(p.x>pW+40)p.x=-40;
+    if(p.y<-40)p.y=pH+40; else if(p.y>pH+40)p.y=-40;
+    p.alphaPhase+=p.alphaSpeed;
+    var a=p.alpha*(0.55+0.45*Math.sin(p.alphaPhase));
+    a=Math.max(0.03,Math.min(0.4,a));
+    var c1=(themeColors[p.hueIdx]||themeColors[0]).split(',').map(function(n){return parseInt(n,10)||0;});
+    var c2=(themeColors[(p.hueIdx+1)%4]||themeColors[0]).split(',').map(function(n){return parseInt(n,10)||0;});
+    var mix=p.hueMix;
+    var r=Math.round(c1[0]*(1-mix)+c2[0]*mix);
+    var g=Math.round(c1[1]*(1-mix)+c2[1]*mix);
+    var b=Math.round(c1[2]*(1-mix)+c2[2]*mix);
+    particleCtx.save();
+    particleCtx.translate(p.x,p.y); particleCtx.rotate(p.rot);
+    var s=p.size, hs=s/2, rad=Math.min(3,s/3.5);
+    var grad=particleCtx.createLinearGradient(-hs,-hs,hs,hs);
+    grad.addColorStop(0,'rgba('+r+','+g+','+b+','+a+')');
+    grad.addColorStop(1,'rgba('+r+','+g+','+b+','+(a*0.3)+')');
+    particleCtx.fillStyle=grad;
+    particleCtx.beginPath();
+    if(particleCtx.roundRect) particleCtx.roundRect(-hs,-hs,s,s,rad);
+    else particleCtx.rect(-hs,-hs,s,s);
+    particleCtx.fill();
+    particleCtx.restore();
+  }
+  requestAnimationFrame(drawParticles);
+}
+
+/* ============================================================
+   Esc
+   ============================================================ */
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    if(themeOv && themeOv.classList.contains('show')) themeOv.classList.remove('show');
+  }
+});
+
+/* ============================================================
+   生命周期
+   ============================================================ */
+window.addEventListener('resize', function(){
+  resizeCanvas();
+  resizePCanvas();
+}, {passive:true});
+document.addEventListener('visibilitychange', function(){
+  particleRunning = !document.hidden;
+  if(particleRunning) drawParticles();
+  if(!document.hidden) resizeCanvas();
+});
+
+/* ============================================================
+   启动
+   ============================================================ */
+async function boot(){
+  applyTheme(curTheme);
+  initParticles();
+  initCanvas();
+  buildThemeGrid();
+
+  if(!roomCode || roomCode.length !== 6){
+    toast('房间码无效');
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
+    return;
+  }
+  if(!myNick){
+    toast('请先设置昵称');
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
+    return;
+  }
+
+  try{
+    await loadRoom();
+  }catch(err){
+    var ls = $('loadingSub');
+    if(ls) ls.textContent = err.message || '房间不存在';
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1500);
+    return;
+  }
+
+  /* 房间已结束 → 直接返回 */
+  if(state.room.status === 'finished'){
+    toast('该房间已结束');
+    setTimeout(function(){ location.href = './wuzi_hotel.html'; }, 1000);
+    return;
+  }
+
+  await loadMoves();
+  resizeCanvas();
+  bindCanvas();
+  updateUI();
+
+  /* 隐藏 loading */
+  var lm = $('loadingMask');
+  if(lm) lm.classList.remove('show');
+
+  /* 订阅 */
+  subscribeRoom();
+  subscribeMoves();
+  startHeartbeat();
+  startTick();
+
+  /* 房间已经开始但本地没 turn_started_at → 补上 */
+  if(state.room.status === 'playing' && !state.room.turn_started_at){
+    state.turnStartedAt = Date.now();
+    sb.from('gomoku_rooms').update({ turn_started_at: state.turnStartedAt }).eq('code', roomCode);
+  } else if(state.room.turn_started_at){
+    state.turnStartedAt = parseInt(state.room.turn_started_at, 10);
+  }
+
+  /* 播放提示 */
+  if(state.room.status === 'playing'){
+    toast('对局开始，' + (state.myColor === 'black' ? '你执黑先行' : '你执白后手'));
+  } else if(state.room.status === 'waiting' && state.room.host_uid === uid){
+    toast('等待对手加入…');
+  }
+}
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+})();
+</script>
+</body>
+</html>
