@@ -35,10 +35,10 @@
   {
     "id": "tool-muj8wcsf-b1dc",
     "icon": "🧰",
-    "name": "测试",
+    "name": "点击游戏",
     "desc": "用来测试嗯对",
-    "tag": "测试",
-    "url": "",
+    "tag": "游戏",
+    "url": "./game.html",
     "deprecated": false,
     "disabled": true,
     "hidden": false
