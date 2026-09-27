@@ -3,10 +3,10 @@
     "id": "wiki",
     "icon": "📚",
     "name": "红石答辩wiki",
-    "desc": "轻量知识库 · 已停止维护",
+    "desc": "暂时没用",
     "tag": "已废弃",
     "url": "./wiki.html",
-    "deprecated": true,
+    "deprecated": false,
     "disabled": false,
     "hidden": false
   },
@@ -29,7 +29,7 @@
     "tag": "综合",
     "url": "./misc.html",
     "deprecated": false,
-    "disabled": false,
+    "disabled": true,
     "hidden": false
   },
   {
@@ -38,9 +38,9 @@
     "name": "点击游戏",
     "desc": "用来测试嗯对",
     "tag": "游戏",
-    "url": "./game.html",
+    "url": "https://hsdl03.github.io/Click-the-game/",
     "deprecated": false,
-    "disabled": true,
+    "disabled": false,
     "hidden": false
   }
 ]
