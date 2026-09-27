@@ -44,23 +44,23 @@
     "hidden": false
   },
   {
-    "id": "tool-muj8wcsf-b1dc",
-    "icon": "🧰",
-    "name": "点击游戏",
-    "desc": "用来测试嗯对",
-    "tag": "游戏",
-    "url": "https://hsdl03.github.io/Click-the-game/",
-    "deprecated": false,
-    "disabled": false,
-    "hidden": false
-  },
-  {
     "id": "tool-mujaf3w7-bq61",
     "icon": "🏷️",
     "name": "admin",
     "desc": "菜单嗯对",
     "tag": "管理",
     "url": "./admin.html",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-muj8wcsf-b1dc",
+    "icon": "🧰",
+    "name": "点击游戏",
+    "desc": "用来测试嗯对",
+    "tag": "游戏",
+    "url": "https://hsdl03.github.io/Click-the-game/",
     "deprecated": false,
     "disabled": false,
     "hidden": false
