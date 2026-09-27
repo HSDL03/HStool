@@ -1,0 +1,33 @@
+{
+  "repo": "HSDL03/HSwiki",
+  "exclude": [],
+  "apps": [
+    {
+      "file": "wiki.html",
+      "name": "知识库",
+      "desc": "前端知识库，支持分类目录、实时搜索、明暗主题与上下页翻页。",
+      "icon": "📚",
+      "color": "#3b6ef6",
+      "tags": ["文档", "搜索"],
+      "order": 1
+    },
+    {
+      "file": "scoreboard.html",
+      "name": "个人主页",
+      "desc": "个人介绍与联系方式页面。",
+      "icon": "🧑‍💻",
+      "color": "#8b5cf6",
+      "tags": ["个人"],
+      "order": 2
+    },
+    {
+      "file": "admin.html",
+      "name": "管理后台",
+      "desc": "用于维护 wiki 文章与站点数据的管理页面。",
+      "icon": "⚙️",
+      "color": "#0ea5e9",
+      "tags": ["管理"],
+      "order": 3
+    }
+  ]
+}
