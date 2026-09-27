@@ -1,13 +1,32 @@
 [
   {
-    "id": "tool-muj8rnla-u5rd",
-    "icon": "🧰",
-    "name": "a",
-    "desc": "awaa",
-    "tag": "工具",
-    "url": "w",
+    "id": "wiki",
+    "icon": "📚",
+    "name": "红石答辩wiki",
+    "desc": "轻量知识库 · 已停止维护",
+    "tag": "已废弃",
+    "url": "./wiki.html",
+    "deprecated": true,
+    "hidden": false
+  },
+  {
+    "id": "download",
+    "icon": "📥",
+    "name": "下载站",
+    "desc": "资源文件 · 便捷下载",
+    "tag": "资源",
+    "url": "./download.html",
     "deprecated": false,
-    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "misc",
+    "icon": "🧩",
+    "name": "杂类",
+    "desc": "零散工具 · 各种小玩意儿",
+    "tag": "综合",
+    "url": "./misc.html",
+    "deprecated": false,
     "hidden": false
   }
 ]
