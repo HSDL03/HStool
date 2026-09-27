@@ -303,6 +303,46 @@ html.dense .messages{padding:10px 4px 30px}
 [data-theme^="github-"] .ctx-menu{border-width:1px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
 [data-theme^="github-"] .ctx-menu button{border-radius:6px}
 
+/* ★ 电脑端两侧说明 / 状态面板 */
+.side-note{position:fixed;top:60px;width:172px;max-height:calc(100vh - 120px);overflow-y:auto;padding:10px 12px 12px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);font-size:11.5px;line-height:1.55;color:var(--text);z-index:20;display:none;transition:background .3s,color .3s}
+[data-theme^="github-"] .side-note{border-width:1px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.side-note.visible{display:block;animation:sideIn .35s cubic-bezier(.22,1,.36,1) both}
+@keyframes sideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.side-note-left{left:14px}
+.side-note-right{right:14px}
+.side-note::-webkit-scrollbar{width:6px}
+.side-note::-webkit-scrollbar-track{background:transparent}
+.side-note::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+.side-note .sn-head{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+[data-theme^="mc-"] .side-note .sn-head{border-bottom:2px solid var(--bd2);padding-bottom:5px}
+.side-note .sn-item{padding:2.5px 0;color:var(--muted)}
+.side-note .sn-item b{color:var(--text);font-weight:700}
+
+.conn-sum-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bd);font-size:11px;font-weight:600}
+[data-theme^="mc-"] .conn-sum-row{border-bottom:2px solid var(--bd2)}
+.conn-sum-text{color:var(--muted);transition:color .25s}
+.conn-sum-text.on{color:var(--ok)}
+.conn-sum-text.err{color:var(--dgr);font-weight:700}
+.conn-sum-text.busy{color:var(--ac)}
+
+.conn-list{display:flex;flex-direction:column;gap:2px}
+.conn-item{display:flex;align-items:center;gap:6px;padding:3px 0}
+.conn-dot{width:7px;height:7px;flex:none;border-radius:50%;background:var(--muted);transition:background .3s,box-shadow .3s}
+[data-theme^="mc-"] .conn-dot{border-radius:0}
+.conn-dot.on{background:var(--ok);box-shadow:0 0 0 2px rgba(45,122,45,.18)}
+.conn-dot.err{background:var(--dgr);box-shadow:0 0 0 2px rgba(160,32,32,.18)}
+.conn-dot.busy{background:var(--ac);box-shadow:0 0 0 2px var(--acs);animation:connPulse 1.2s ease-in-out infinite}
+@keyframes connPulse{0%,100%{opacity:1}50%{opacity:.35}}
+.conn-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
+.conn-tag{font-size:10px;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.conn-tag.on{color:var(--ok)}
+.conn-tag.err{color:var(--dgr);font-weight:700}
+.conn-tag.busy{color:var(--ac)}
+
+.settings-help{font-size:12.5px;color:var(--muted);line-height:1.75}
+.settings-help b{color:var(--text);font-weight:700}
+.settings-help div{padding:1px 0}
+
 .msg .reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .msg.self .reactions{justify-content:flex-end}
 .msg .reactions .react{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:999px;cursor:pointer;transition:all .15s;font-variant-numeric:tabular-nums}
@@ -484,7 +524,7 @@ html.dense .messages{padding:10px 4px 30px}
 .edit-foot .save{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
 .edit-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 
-.settings-body{padding:14px}
+.settings-body{padding:14px;max-height:calc(100vh - 140px);overflow-y:auto}
 .settings-group{padding:10px 12px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:8px}
 [data-theme^="mc-"] .settings-group{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
 .settings-group .sg-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px}
@@ -524,6 +564,11 @@ html.dense .messages{padding:10px 4px 30px}
 .style-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 .style-foot .save:disabled{opacity:.5;cursor:not-allowed}
 
+/* 窄屏隐藏侧边面板 */
+@media(max-width:1320px){
+  .side-note{display:none !important}
+}
+
 @media(max-width:640px){
   .chat-wrap{padding:0 10px}
   .messages{padding:10px 2px 36px}
@@ -541,7 +586,7 @@ html.dense .messages{padding:10px 4px 30px}
   .ctx-menu{min-width:140px}
   .scroll-bottom-btn{right:10px;bottom:90px;font-size:11.5px;padding:6px 12px}
 }
-@media print{.refresh-pill,.offline-mask,.chat-toolbar,.scroll-bottom-btn,.ctx-menu{display:none}}
+@media print{.refresh-pill,.offline-mask,.chat-toolbar,.scroll-bottom-btn,.ctx-menu,.side-note{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -632,6 +677,27 @@ html.dense .messages{padding:10px 4px 30px}
     <button class="send" id="sendBtn" disabled>发送</button>
   </div>
 </main>
+
+<!-- ★ 电脑端左侧：操作说明 -->
+<aside class="side-note side-note-left" id="sideNoteLeft">
+  <div class="sn-head">📖 操作说明</div>
+  <div class="sn-item"><b>右键</b>消息 → 回复 / 表情 / 编辑 / 撤回</div>
+  <div class="sn-item"><b>长按</b>消息（触屏）→ 同上</div>
+  <div class="sn-item"><b>@</b> 触发成员补全</div>
+  <div class="sn-item"><b>↑</b> 空输入框按下 → 编辑最近一条</div>
+  <div class="sn-item"><b>Esc</b> 关闭当前弹层</div>
+  <div class="sn-item"><b>↑↓</b> 在补全列表里选择</div>
+</aside>
+
+<!-- ★ 电脑端右侧：连接状态 -->
+<aside class="side-note side-note-right" id="sideNoteRight">
+  <div class="sn-head">📡 连接状态</div>
+  <div class="conn-sum-row">
+    <span class="conn-dot" data-conn-sum></span>
+    <span class="conn-sum-text" data-conn-sum-text>未连接</span>
+  </div>
+  <div class="conn-list" id="connListSide"></div>
+</aside>
 
 <div class="ov" id="themeOv">
   <div class="pnl">
@@ -794,6 +860,30 @@ html.dense .messages{padding:10px 4px 30px}
           </div>
         </div>
       </div>
+
+      <!-- ★ 连接状态（手机端） -->
+      <div class="settings-group">
+        <div class="sg-label">连接状态</div>
+        <div class="conn-sum-row">
+          <span class="conn-dot" data-conn-sum></span>
+          <span class="conn-sum-text" data-conn-sum-text>未连接</span>
+        </div>
+        <div class="conn-list" id="connListMobile"></div>
+      </div>
+
+      <!-- ★ 操作说明（手机端） -->
+      <div class="settings-group">
+        <div class="sg-label">操作说明</div>
+        <div class="settings-help">
+          <div>· <b>右键</b>消息 → 回复 / 表情 / 编辑 / 撤回</div>
+          <div>· <b>长按</b>消息（触屏）→ 同上</div>
+          <div>· <b>@</b> 触发成员补全</div>
+          <div>· <b>↑</b> 空输入框按下 → 编辑最近一条</div>
+          <div>· <b>Esc</b> 关闭当前弹层</div>
+          <div>· <b>↑↓</b> 在补全列表里选择</div>
+        </div>
+      </div>
+
       <div class="settings-group">
         <div class="sg-label">屏蔽用户</div>
         <div id="blockListWrap" style="font-size:12.5px;color:var(--muted);line-height:1.8">
@@ -810,7 +900,7 @@ html.dense .messages{padding:10px 4px 30px}
 
 <div class="toast" id="toast"></div>
 
-<!-- ★ 右键上下文菜单 -->
+<!-- 右键上下文菜单 -->
 <div class="ctx-menu" id="ctxMenu">
   <button type="button" data-ctx="reply"><span class="ctx-ic">↩️</span><span class="ctx-tx">回复</span></button>
   <button type="button" data-ctx="react"><span class="ctx-ic">😊</span><span class="ctx-tx">表情回应</span></button>
@@ -875,6 +965,22 @@ var QUICK_EMOJIS = ['👍','❤️','😂','😮','😢','🎉'];
 var AVATAR_EMOJIS = ['😀','😎','🤖','👻','🐱','🐶','🦊','🐼','🐸','🐧','🦄','🐲','🌟','⚡','🔥','🌊','🌸','🍀','🎮','🎵','📚','🎨','🍕','🍺','☕','🍰','🚀','🏆','💎','🎯','🧠','🗿','👾','🐙','🦁','🐯','🐨','🐷','🐵','🦉'];
 
 var LONG_PRESS_MS = 500;
+
+/* 连接状态标签 */
+var CONN_LABELS = {
+  messages:  '📨 消息推送',
+  presence:  '👥 在线同步',
+  reactions: '😊 表情同步',
+  typing:    '⌨️ 输入状态',
+  polling:   '🔄 数据轮询'
+};
+var connState = {
+  messages:  'idle',
+  presence:  'idle',
+  reactions: 'idle',
+  typing:    'idle',
+  polling:   'idle'
+};
 
 /* ============================================================
    工具
@@ -946,6 +1052,58 @@ function toast(msg){
   toastEl.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2400);
+}
+
+/* ============================================================
+   ★ 连接状态渲染
+   ============================================================ */
+function setConnState(key, state){
+  if(connState[key] === state) return;
+  connState[key] = state;
+  renderConnStatus();
+}
+function renderConnStatus(){
+  var keys = Object.keys(CONN_LABELS);
+  var total = keys.length;
+  var onCount = 0, errCount = 0, busyCount = 0;
+  keys.forEach(function(k){
+    var st = connState[k];
+    if(st === 'on') onCount++;
+    else if(st === 'err') errCount++;
+    else if(st === 'busy') busyCount++;
+  });
+
+  var sumCls, sumTx;
+  if(errCount > 0){ sumCls = 'err'; sumTx = '连接失败（' + errCount + '/' + total + '）'; }
+  else if(busyCount > 0){ sumCls = 'busy'; sumTx = '连接中…'; }
+  else if(onCount === total){ sumCls = 'on'; sumTx = '全部正常'; }
+  else { sumCls = ''; sumTx = '未连接'; }
+
+  /* 汇总圆点 + 文本（两侧 + 设置面板里都有） */
+  var sumDots = document.querySelectorAll('[data-conn-sum]');
+  for(var i=0;i<sumDots.length;i++) sumDots[i].className = 'conn-dot ' + sumCls;
+  var sumTexts = document.querySelectorAll('[data-conn-sum-text]');
+  for(var j=0;j<sumTexts.length;j++){
+    sumTexts[j].textContent = sumTx;
+    sumTexts[j].className = 'conn-sum-text ' + sumCls;
+  }
+
+  /* 分项列表 */
+  var html = '';
+  keys.forEach(function(k){
+    var st = connState[k];
+    var cls = (st === 'on') ? 'on' : (st === 'err') ? 'err' : (st === 'busy') ? 'busy' : '';
+    var tag = (st === 'on') ? '已连接' : (st === 'err') ? '连接失败' : (st === 'busy') ? '连接中…' : '未连接';
+    html += '<div class="conn-item">'
+      + '<span class="conn-dot ' + cls + '"></span>'
+      + '<span class="conn-name">' + CONN_LABELS[k] + '</span>'
+      + '<span class="conn-tag ' + cls + '">' + tag + '</span>'
+      + '</div>';
+  });
+  ['connListSide', 'connListMobile'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.innerHTML = html;
+  });
 }
 
 /* ============================================================
@@ -1141,6 +1299,8 @@ window.addEventListener('online', function(){ toast('网络已恢复'); hideRetr
 window.addEventListener('offline', function(){
   toast('网络已断开');
   if(offlineMask){ $('offlineTitle').textContent = '网络已断开'; $('offlineSub').innerHTML = '等待网络恢复…'; offlineMask.classList.add('show'); }
+  /* 网络断开时，所有通道标红 */
+  Object.keys(connState).forEach(function(k){ setConnState(k, 'err'); });
 });
 
 /* ============================================================
@@ -1457,6 +1617,12 @@ function startChat(){
   $('meNick').textContent=myNick;
   updateSoundIcon();
   restoreDraft();
+
+  /* ★ 显示电脑端两侧面板 */
+  var snl = $('sideNoteLeft'); if(snl) snl.classList.add('visible');
+  var snr = $('sideNoteRight'); if(snr) snr.classList.add('visible');
+  renderConnStatus();
+
   loadHistory().then(function(){
     subscribeMessages(); subscribePresence(); subscribeReactions(); subscribeTyping();
     startPolling();
@@ -1845,11 +2011,12 @@ async function loadMoreHistory(){
 }
 
 async function loadHistory(){
+  setConnState('polling', 'busy');
   var r = await sbQuery('加载历史', function(){
     return sb.from('messages').select('*').order('ts', { ascending:false }).limit(MSG_LIMIT);
   });
-  if(!r.ok){ setPillErr(); setTimeout(loadHistory, 5000); return; }
-  hideRetryOverlay(); setPillOK();
+  if(!r.ok){ setConnState('polling','err'); setPillErr(); setTimeout(loadHistory, 5000); return; }
+  hideRetryOverlay(); setPillOK(); setConnState('polling','on');
   var data = r.data && r.data.data;
   if(!Array.isArray(data)) return;
   var localPending = allMessages.filter(function(x){ return x.__local; });
@@ -1872,8 +2039,8 @@ async function pollNewMessages(){
   if(lastTs>0) q = q.gt('ts', lastTs).order('ts', { ascending:true }).limit(MSG_LIMIT);
   else q = q.order('ts', { ascending:false }).limit(MSG_LIMIT);
   var r = await sbQuery('轮询消息', function(){ return q; });
-  if(!r.ok){ setPillErr(); return; }
-  hideRetryOverlay(); setPillOK();
+  if(!r.ok){ setConnState('polling','err'); setPillErr(); return; }
+  hideRetryOverlay(); setPillOK(); setConnState('polling','on');
   var data = r.data && r.data.data;
   if(!Array.isArray(data)) return;
   if(lastTs===0) data.reverse();
@@ -1883,6 +2050,7 @@ async function pollNewMessages(){
 
 function subscribeMessages(){
   if(msgChannel) return;
+  setConnState('messages', 'busy');
   msgChannel = sb.channel('chat-messages')
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, function(payload){
       var m=payload.new; if(!m) return;
@@ -1894,8 +2062,9 @@ function subscribeMessages(){
       if(idx>=0){ allMessages[idx]=normalizeMsg(m); renderAll(); }
     })
     .subscribe(function(status, err){
-      if(status==='SUBSCRIBED'){ setPillOK(); }
+      if(status==='SUBSCRIBED'){ setConnState('messages','on'); setPillOK(); }
       else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+        setConnState('messages','err');
         setPillErr();
         setTimeout(function(){
           try{ if(msgChannel) sb.removeChannel(msgChannel); }catch(e){}
@@ -1906,6 +2075,7 @@ function subscribeMessages(){
 }
 function subscribeReactions(){
   if(reactionChannel) return;
+  setConnState('reactions','busy');
   reactionChannel = sb.channel('chat-reactions')
     .on('postgres_changes', { event:'*', schema:'public', table:'reactions' }, function(payload){
       var row=payload.new || payload.old; if(!row) return;
@@ -1917,7 +2087,9 @@ function subscribeReactions(){
       });
     })
     .subscribe(function(status){
-      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+      if(status==='SUBSCRIBED'){ setConnState('reactions','on'); }
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+        setConnState('reactions','err');
         setTimeout(function(){
           try{ if(reactionChannel) sb.removeChannel(reactionChannel); }catch(e){}
           reactionChannel=null; subscribeReactions();
@@ -1927,6 +2099,7 @@ function subscribeReactions(){
 }
 function subscribePresence(){
   if(presenceChannel) return;
+  setConnState('presence','busy');
   presenceChannel = sb.channel('online-users', { config:{ presence:{ key: uid } } });
   presenceChannel
     .on('presence', { event:'sync' }, function(){
@@ -1940,8 +2113,12 @@ function subscribePresence(){
       if($('onlineOv').classList.contains('show')) renderOnlineList();
     })
     .subscribe(async function(status){
-      if(status==='SUBSCRIBED'){ try{ await presenceChannel.track({ nick:myNick, joinedAt: Date.now() }); }catch(e){} }
+      if(status==='SUBSCRIBED'){
+        setConnState('presence','on');
+        try{ await presenceChannel.track({ nick:myNick, joinedAt: Date.now() }); }catch(e){}
+      }
       else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+        setConnState('presence','err');
         setTimeout(function(){
           try{ if(presenceChannel) sb.removeChannel(presenceChannel); }catch(e){}
           presenceChannel=null; subscribePresence();
@@ -1964,11 +2141,21 @@ function updateTypingBar(){
 }
 function subscribeTyping(){
   if(typingChannel) return;
+  setConnState('typing','busy');
   typingChannel = sb.channel('chat-typing', { config:{ broadcast:{ self:false } } });
   typingChannel.on('broadcast', { event:'typing' }, function(payload){
     var p=payload.payload||{}; if(!p.uid||p.uid===uid) return;
     typingUsers[p.uid]={ nick:p.nick, ts:Date.now() }; updateTypingBar();
-  }).subscribe(function(){});
+  }).subscribe(function(status){
+    if(status==='SUBSCRIBED'){ setConnState('typing','on'); }
+    else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+      setConnState('typing','err');
+      setTimeout(function(){
+        try{ if(typingChannel) sb.removeChannel(typingChannel); }catch(e){}
+        typingChannel=null; subscribeTyping();
+      }, 5000);
+    }
+  });
   setInterval(updateTypingBar, 800);
 }
 
@@ -2057,11 +2244,9 @@ function openCtxMenu(x, y, msg){
   if(!ctxMenu || !msg) return;
   ctxTargetMsg = msg;
 
-  /* 权限判断 */
   var canEdit   = !msg.__local && msg.uid===uid && (Date.now()-msg.ts) < EDIT_WINDOW;
   var canRecall = !msg.__local && msg.uid===uid && (Date.now()-msg.ts) < RECALL_WINDOW;
 
-  /* 编辑 / 撤回 按钮 + 分隔线显隐 */
   var editBtn   = ctxMenu.querySelector('[data-ctx="edit"]');
   var recallBtn = ctxMenu.querySelector('[data-ctx="recall"]');
   var sep       = ctxMenu.querySelector('[data-ctx-sep]');
@@ -2069,12 +2254,10 @@ function openCtxMenu(x, y, msg){
   if(recallBtn) recallBtn.hidden = !canRecall;
   if(sep)       sep.hidden       = !(canEdit || canRecall);
 
-  /* 先 display 再量尺寸 */
   ctxMenu.classList.add('show');
   var w = ctxMenu.offsetWidth  || 160;
   var h = ctxMenu.offsetHeight || 200;
 
-  /* 边界翻转 */
   var left = x, top = y;
   if(left + w > window.innerWidth  - 8) left = Math.max(8, window.innerWidth  - w - 8);
   if(top  + h > window.innerHeight - 8) top  = Math.max(8, y - h);
@@ -2090,7 +2273,6 @@ function closeCtxMenu(){
   ctxTargetMsg = null;
 }
 
-/* 菜单项点击 */
 ctxMenu.addEventListener('click', function(e){
   var btn = e.target.closest('[data-ctx]');
   if(!btn || !ctxTargetMsg) return;
@@ -2123,7 +2305,6 @@ ctxMenu.addEventListener('click', function(e){
     return;
   }
   if(action === 'react'){
-    /* 表情弹窗锚定在菜单按钮位置 */
     var rect = btn.getBoundingClientRect();
     closeCtxMenu();
     showEmojiPopAt(rect.left, rect.bottom, target.id);
@@ -2131,7 +2312,6 @@ ctxMenu.addEventListener('click', function(e){
   }
 });
 
-/* 右键消息 → 打开菜单 */
 messagesEl.addEventListener('contextmenu', function(e){
   var msgEl = e.target.closest('.msg');
   if(!msgEl){ closeCtxMenu(); return; }
@@ -2143,7 +2323,6 @@ messagesEl.addEventListener('contextmenu', function(e){
   openCtxMenu(e.clientX, e.clientY, target);
 });
 
-/* 触屏：长按 500ms 触发 */
 var longPressTimer = null, longPressStart = null, longPressMsg = null;
 messagesEl.addEventListener('touchstart', function(e){
   if(e.touches.length !== 1) return;
@@ -2186,17 +2365,15 @@ function cancelLongPress(){
 messagesEl.addEventListener('touchend', cancelLongPress);
 messagesEl.addEventListener('touchcancel', cancelLongPress);
 
-/* 点别处关闭菜单 */
 document.addEventListener('click', function(e){
   if(!ctxMenu || !ctxMenu.classList.contains('show')) return;
   if(ctxMenu.contains(e.target)) return;
   closeCtxMenu();
 });
-/* 再右键别处也关闭 */
 document.addEventListener('contextmenu', function(e){
   if(!ctxMenu || !ctxMenu.classList.contains('show')) return;
   if(ctxMenu.contains(e.target)) return;
-  if(e.target.closest('.msg')) return; /* 让 messagesEl 处理 */
+  if(e.target.closest('.msg')) return;
   closeCtxMenu();
 });
 
@@ -2467,6 +2644,7 @@ function openSettings(){
   $('animBtn').classList.toggle('active', noAnim);
   $('sendKeyBtn').textContent = sendKey==='ctrl-enter' ? 'Ctrl+Enter' : 'Enter';
   renderBlockList();
+  renderConnStatus();  /* ★ 打开设置时刷新一次连接状态 */
   settingsOv.classList.add('show');
 }
 function closeSettings(){ settingsOv.classList.remove('show'); }
@@ -2712,6 +2890,7 @@ initParticles();
 autoResize();
 updateLoginBtn();
 updateSoundIcon();
+renderConnStatus();  /* ★ 首屏渲染一次连接状态 */
 
 (async function autoLogin(){
   var saved=storage.get(K_NICK);
