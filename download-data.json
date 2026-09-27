@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "releaseTag": "饿",
+    "fileName": "w.mcstructure",
+    "icon": "📦",
+    "name": "w.mcstructure",
+    "desc": "测试",
+    "tag": "测试",
+    "version": "饿",
+    "hidden": false,
+    "offline": false
+  },
+  {
+    "releaseTag": "下载源",
+    "fileName": "default.txt",
+    "icon": "📝",
+    "name": "default.txt",
+    "desc": "无",
+    "tag": "测试",
+    "version": "下载源",
+    "hidden": false,
+    "offline": false
+  },
+  {
+    "releaseTag": "",
+    "fileName": "",
+    "icon": "📦",
+    "name": "别的下载源测试",
+    "desc": "a",
+    "tag": "测试",
+    "version": "v1.0",
+    "hidden": false,
+    "url": "https://developer4.lanrar.com/file/?AGZXaVprDj8FDFBoAjdTP1doBDwDulbhV9sB71GiBJADLVZ1Ci8HJwd3ATEKN1I/BzgFXwUzBGJRawQxVjhQYQA5VzZaPg5jBWBQMAJwUzRXfgQ8A2pWclcgAXdRMAQ3AzNWMwphB3wHYQFuCnFSYQdqBS8FbwRjUWMEM1Y+UGUAMFdlWjMOaQU3UDECM1NmVz8ENgM/VmFXMgE/UToEZANgVjMKbwdrBzABYApqUmoHawVhBXQEclEuBHZWLFAkAHNXZVp1DjMFN1A7AmJTalc4BDkDblZjV2EBIVF5BGwDblZkCjEHbgdgAWAKZ1JjB2kFNwViBDBRZwQ7ViRQfwAmV2Zaaw4tBW5QNgJwUydXfQR2A2FWZVdnAT5RPQQxAzRWNgpmB2EHYQFxCitSOgctBT0FawQ+UWUELFY4UGMAOFcuWjYObAVlUCgCZFNgVz0ELwN6VjBXPwFwUWMEWgNgVmoKagdjB38BcQoqUioHLQVlBQUEc1E3BD9WOg==&toolsdown",
+    "size": "",
+    "date": "",
+    "offline": false
+  }
+]
