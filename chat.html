@@ -136,12 +136,7 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%}
 html{background:var(--bg);transition:background-color .3s}
-body{
-  margin:0;padding-top:46px;
-  background:transparent;color:var(--text);font-family:var(--font);
-  font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;
-  overflow:hidden;transition:background-color .3s,color .3s;
-}
+body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow:hidden;transition:background-color .3s,color .3s}
 
 .offline-mask{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:opacity .25s, visibility .25s;pointer-events:none}
 .offline-mask.show{opacity:1;visibility:visible;pointer-events:auto}
@@ -189,7 +184,10 @@ body{
   mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
 #particles{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:.6}
 
+/* ★ 修复：hidden 时强制隐藏 */
 .login-wrap{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;height:calc(100vh - 46px);padding:20px}
+.login-wrap[hidden]{display:none !important}
+
 .login-card{width:100%;max-width:420px;padding:32px 28px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel),0 12px 32px rgba(0,0,0,.12);text-align:center;animation:heroIn .5s cubic-bezier(.22,1,.36,1) both}
 @keyframes heroIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 [data-theme^="mc-"] .login-card{box-shadow:3px 3px 0 rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.12)}
@@ -213,10 +211,9 @@ body{
 .login-card .roll:hover{text-decoration:underline}
 
 .chat-wrap{position:relative;z-index:1;display:flex;flex-direction:column;height:calc(100vh - 46px);max-width:900px;margin:0 auto;padding:0 16px}
-.chat-wrap[hidden]{display:none}
+.chat-wrap[hidden]{display:none !important}
 
-/* 顶部工具条：跳转时间 */
-.chat-toolbar{flex:none;display:flex;align-items:center;gap:8px;padding:8px 4px 0}
+.chat-toolbar{flex:none;display:flex;align-items:center;gap:8px;padding:8px 4px 0;flex-wrap:wrap}
 .chat-toolbar .tb-btn{
   display:inline-flex;align-items:center;gap:4px;
   padding:4px 10px;
@@ -263,10 +260,7 @@ body{
 .msg.failed .status-tag{color:var(--dgr);font-weight:700;font-style:normal}
 .msg.failed .status-tag::before{content:"⚠ "}
 
-/* 跳转高亮 */
-.msg.highlight .content{
-  animation:highlightFlash 2.2s ease-out;
-}
+.msg.highlight .content{animation:highlightFlash 2.2s ease-out}
 @keyframes highlightFlash{
   0%{box-shadow:var(--bevel), 0 0 0 3px var(--ac);}
   70%{box-shadow:var(--bevel), 0 0 0 3px var(--ac);}
@@ -342,19 +336,11 @@ body{
 
 .nick-ov-body{padding:18px}
 .nick-ov-body label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
-.nick-ov-body input{width:100%;height:42px;padding:0 12px;font-family:inherit;font-size:16px;font-weight:600;color:var(--text);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);outline:none;transition:border-color .2s,box-shadow .2s}
-.nick-ov-body input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.nick-ov-body input[type=text]{width:100%;height:42px;padding:0 12px;font-family:inherit;font-size:16px;font-weight:600;color:var(--text);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);outline:none;transition:border-color .2s,box-shadow .2s}
+.nick-ov-body input[type=text]:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
 .nick-ov-body .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
 .nick-ov-body .hint.err{color:var(--dgr);font-weight:600}
-.nick-ov-body .quota{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:2px 8px;
-  font-size:11px;
-  background:var(--acs);
-  color:var(--ac);
-  border-radius:999px;
-  font-family:ui-monospace,Menlo,Consolas,monospace;
-}
+.nick-ov-body .quota{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:11px;background:var(--acs);color:var(--ac);border-radius:999px;font-family:ui-monospace,Menlo,Consolas,monospace}
 .nick-ov-foot{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd)}
 .nick-ov-foot button{padding:7px 16px;font-size:14px;font-family:inherit;font-weight:600;border-radius:var(--r);cursor:pointer;transition:all .15s}
 .nick-ov-foot .cancel{color:var(--text);background:var(--bg);border:1px solid var(--bd)}
@@ -363,31 +349,12 @@ body{
 .nick-ov-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 .nick-ov-foot .save:disabled{opacity:.5;cursor:not-allowed}
 
-/* 跳转时间弹窗 */
 .jump-body{padding:18px}
 .jump-body label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
-.jump-body input[type=datetime-local]{
-  width:100%;height:42px;padding:0 12px;
-  font-family:inherit;font-size:15px;
-  color:var(--text);background:var(--bg2);
-  border:2px solid var(--bd2);border-radius:var(--r);
-  outline:none;
-}
+.jump-body input[type=datetime-local]{width:100%;height:42px;padding:0 12px;font-family:inherit;font-size:15px;color:var(--text);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);outline:none}
 .jump-body input[type=datetime-local]:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
-.jump-body .quick{
-  display:flex;flex-wrap:wrap;gap:6px;
-  margin-top:12px;
-}
-.jump-body .quick button{
-  padding:4px 10px;
-  font-size:12px;font-family:inherit;
-  color:var(--muted);
-  background:var(--bg2);
-  border:1px solid var(--bd);
-  border-radius:999px;
-  cursor:pointer;
-  transition:all .15s;
-}
+.jump-body .quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.jump-body .quick button{padding:4px 10px;font-size:12px;font-family:inherit;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:999px;cursor:pointer;transition:all .15s}
 [data-theme^="mc-"] .jump-body .quick button{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
 .jump-body .quick button:hover{color:var(--ac);border-color:var(--ac);transform:translateY(-1px)}
 .jump-foot{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--bd)}
@@ -396,6 +363,50 @@ body{
 .jump-foot .cancel:hover{background:var(--bg3)}
 .jump-foot .go{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
 .jump-foot .go:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+
+.style-body{padding:18px}
+.style-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.style-row label{flex:none;width:100px;font-size:12px;font-weight:700;color:var(--muted)}
+.style-row input[type=color]{
+  flex:1;height:36px;padding:2px;
+  background:var(--bg2);
+  border:2px solid var(--bd2);
+  border-radius:var(--r);
+  cursor:pointer;
+  outline:none;
+}
+.style-row input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+.style-row input[type=color]::-webkit-color-swatch{border:none;border-radius:0}
+.style-row .reset-one{
+  flex:none;padding:5px 10px;
+  font-size:11.5px;font-family:inherit;
+  color:var(--muted);
+  background:var(--bg2);
+  border:1px solid var(--bd);
+  border-radius:var(--r);
+  cursor:pointer;
+  transition:all .15s;
+}
+.style-row .reset-one:hover{color:var(--ac);border-color:var(--ac)}
+.style-preview{
+  margin-top:16px;padding:14px;
+  background:var(--bg2);
+  border:1px dashed var(--bd);
+  border-radius:var(--r);
+}
+[data-theme^="mc-"] .style-preview{border-width:2px;border-style:solid;border-color:var(--bd2);box-shadow:var(--bevel)}
+.style-preview .pv-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:10px}
+.style-preview .msg{margin-bottom:0}
+.style-foot{padding:12px 18px;display:flex;gap:8px;border-top:1px solid var(--bd)}
+.style-foot .sp{flex:1}
+.style-foot button{padding:7px 16px;font-size:14px;font-family:inherit;font-weight:600;border-radius:var(--r);cursor:pointer;transition:all .15s}
+.style-foot .reset-all{color:var(--muted);background:transparent;border:1px solid var(--bd)}
+.style-foot .reset-all:hover{color:var(--dgr);border-color:var(--dgr)}
+.style-foot .cancel{color:var(--text);background:var(--bg);border:1px solid var(--bd)}
+.style-foot .cancel:hover{background:var(--bg3)}
+.style-foot .save{color:var(--self-fg);background:var(--self-bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
+.style-foot .save:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+.style-foot .save:disabled{opacity:.5;cursor:not-allowed}
 
 @media(max-width:640px){
   .chat-wrap{padding:0 10px}
@@ -409,6 +420,7 @@ body{
   .login-card{padding:24px 20px}
   .refresh-pill{right:8px;bottom:8px;padding:5px 10px 5px 8px;font-size:10px;opacity:.65}
   .chat-toolbar{padding:6px 2px 0}
+  .style-row label{width:80px;font-size:11px}
 }
 @media print{.refresh-pill,.offline-mask,.chat-toolbar{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -426,6 +438,7 @@ body{
     </span>
     <span class="me-nick" id="meNick" hidden></span>
   </div>
+  <button class="icon" id="styleBtn" title="自定义颜色" hidden>🖌️</button>
   <button class="icon" id="nickBtn" title="修改昵称" hidden>👤</button>
   <button class="icon" id="themeBtn" title="切换风格">🎨</button>
   <button class="icon" id="homeBtn" title="返回小站" onclick="location.href='./index.html'">🧰</button>
@@ -534,6 +547,48 @@ body{
   </div>
 </div>
 
+<div class="ov" id="styleOv">
+  <div class="pnl">
+    <div class="ph"><strong>自定义颜色</strong><span class="sp"></span><button class="icon" id="styleClose">✕</button></div>
+    <div class="style-body">
+      <div class="style-row">
+        <label>头像背景</label>
+        <input type="color" id="cAvatar" value="#3d521f">
+        <button class="reset-one" data-target="avatar">重置</button>
+      </div>
+      <div class="style-row">
+        <label>发言框背景</label>
+        <input type="color" id="cBubble" value="#7a9c3c">
+        <button class="reset-one" data-target="bubble">重置</button>
+      </div>
+      <div class="style-row">
+        <label>文字颜色</label>
+        <input type="color" id="cText" value="#ffffff">
+        <button class="reset-one" data-target="text">重置</button>
+      </div>
+      <div class="style-preview">
+        <div class="pv-label">预览</div>
+        <div class="msg self">
+          <div class="avatar" id="pvAvatar" style="background:#3d521f">我</div>
+          <div class="body">
+            <div class="head"><span class="nick">我</span><span class="time">刚刚</span></div>
+            <div class="content" id="pvBubble" style="background:#7a9c3c;color:#ffffff">这是一条示例消息</div>
+          </div>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6">
+        颜色只影响你自己的消息，其他人也能看到你设置的样式。
+      </div>
+    </div>
+    <div class="style-foot">
+      <button class="reset-all" id="styleResetAll">全部重置</button>
+      <span class="sp"></span>
+      <button class="cancel" id="styleCancel">取消</button>
+      <button class="save" id="styleSave">保存</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="refresh-pill" id="refreshPill" hidden title="点击立即刷新">
@@ -559,6 +614,7 @@ var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 var K_NICK  = 'chat-nick';
 var K_UID   = 'chat-uid';
 var K_THEME = 'wiki-theme';
+var K_STYLE = 'chat-style';
 
 var MSG_LIMIT = 200;
 var SEND_COOLDOWN = 2000;
@@ -570,11 +626,10 @@ var RETRY_BASE = 800;
 var RETRY_FACTOR = 2;
 var RETRY_MAX_DELAY = 12000;
 
-/* 业务规则 */
-var NICK_CHANGE_MAX_PER_DAY = 5;         /* 每天最多改 5 次 */
-var NICK_INACTIVE_DAYS = 3;              /* 昵称 3 天不用就释放 */
-var MSG_KEEP_DAYS = 5;                   /* 消息保留 5 天 */
-var CLEAN_INTERVAL = 30 * 60 * 1000;     /* 每 30 分钟清理一次 */
+var NICK_CHANGE_MAX_PER_DAY = 5;
+var NICK_INACTIVE_DAYS = 3;
+var MSG_KEEP_DAYS = 5;
+var CLEAN_INTERVAL = 30 * 60 * 1000;
 
 /* ============================================================
    工具
@@ -599,11 +654,13 @@ function fmtTime(ts){
   }
   return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
 }
-/* datetime-local 格式：YYYY-MM-DDTHH:mm */
 function toLocalInput(ts){
   var d = new Date(ts);
   return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())
     +'T'+pad2(d.getHours())+':'+pad2(d.getMinutes());
+}
+function isValidHex(h){
+  return typeof h === 'string' && /^#[0-9a-fA-F]{6}$/.test(h);
 }
 
 var storage={
@@ -709,14 +766,6 @@ function hideRetryOverlay(){
   if(offlineMask) offlineMask.classList.remove('show');
   clearTimeout(retryHideTimer);
 }
-function showFailOverlay(label){
-  if(!offlineMask) return;
-  offlineTitle.textContent = '连接失败';
-  offlineSub.innerHTML = '已重试 ' + RETRY_MAX + ' 次还是连不上 · ' + label;
-  offlineMask.classList.add('show');
-  clearTimeout(retryHideTimer);
-  retryHideTimer = setTimeout(hideRetryOverlay, 8000);
-}
 
 /* ============================================================
    Supabase 初始化
@@ -737,6 +786,28 @@ var uid=(function(){
 var myNick='';
 var presenceChannel=null;
 var msgChannel=null;
+
+/* 我的样式 */
+var myStyle=(function(){
+  try{
+    var raw = storage.get(K_STYLE);
+    if(raw){
+      var o = JSON.parse(raw);
+      if(o && typeof o === 'object') return {
+        avatar: isValidHex(o.avatar) ? o.avatar : null,
+        bubble: isValidHex(o.bubble) ? o.bubble : null,
+        text: isValidHex(o.text) ? o.text : null
+      };
+    }
+  }catch(e){}
+  return { avatar:null, bubble:null, text:null };
+})();
+
+var styleMap={};
+
+function saveMyStyleLocal(){
+  try{ storage.set(K_STYLE, JSON.stringify(myStyle)); }catch(e){}
+}
 
 /* ============================================================
    网络事件
@@ -767,17 +838,14 @@ async function autoClean(){
   var msgCutoff  = now - MSG_KEEP_DAYS * 24 * 3600 * 1000;
   var changeCutoff = now - 24 * 3600 * 1000;
 
-  /* 清理超过 3 天未活跃的昵称 */
   await sbQuery('清理过期昵称', function(){
     return sb.from('nicknames').delete().lt('last_active', nickCutoff);
   }, { max: 2, silent: true });
 
-  /* 清理超过 5 天的消息 */
   await sbQuery('清理过期消息', function(){
     return sb.from('messages').delete().lt('ts', msgCutoff);
   }, { max: 2, silent: true });
 
-  /* 清理 24 小时前的改名记录 */
   await sbQuery('清理改名记录', function(){
     return sb.from('nick_changes').delete().lt('changed_at', changeCutoff);
   }, { max: 2, silent: true });
@@ -797,7 +865,7 @@ async function getNickChangeQuota(){
   var dayAgo = Date.now() - 24 * 3600 * 1000;
   var r = await sbQuery('查询改名次数', function(){
     return sb.from('nick_changes').select('id').eq('uid', uid).gte('changed_at', dayAgo);
-  }, { max: 2 });
+  }, { max: 2, silent: true });
   if(!r.ok) return { ok:false, used:NICK_CHANGE_MAX_PER_DAY, left:0 };
   var used = (r.data && r.data.data ? r.data.data.length : 0);
   return { ok:true, used: used, left: Math.max(0, NICK_CHANGE_MAX_PER_DAY - used) };
@@ -831,7 +899,6 @@ async function claimNick(nick){
     }
     var row = q.data && q.data.data;
     if(row && row.uid === uid){
-      /* 是自己的，更新活跃时间 */
       await updateActivity();
       return { ok:true, mine:true };
     }
@@ -847,7 +914,6 @@ async function releaseNick(nick){
   });
 }
 
-/* 改名后同步服务器和本地所有属于我的消息的 nick */
 async function syncMyMessagesNick(newNick){
   var r = await sbQuery('同步消息昵称', function(){
     return sb.from('messages').update({ nick: newNick }).eq('uid', uid);
@@ -861,6 +927,59 @@ async function syncMyMessagesNick(newNick){
     if(m.uid === uid) m.nick = newNick;
   });
   renderAll();
+}
+
+/* ============================================================
+   样式
+   ============================================================ */
+async function loadStylesFor(uids){
+  if(!uids || uids.length === 0) return;
+  var uniq = [];
+  var seen = {};
+  uids.forEach(function(u){
+    if(u && !seen[u]){ seen[u]=1; uniq.push(u); }
+  });
+  if(uniq.length === 0) return;
+
+  var r = await sbQuery('加载样式', function(){
+    return sb.from('user_styles').select('*').in('uid', uniq);
+  }, { max: 2, silent: true });
+
+  if(!r.ok) return;
+
+  (r.data && r.data.data || []).forEach(function(s){
+    styleMap[s.uid] = {
+      avatar: isValidHex(s.avatar_color) ? s.avatar_color : null,
+      bubble: isValidHex(s.bubble_bg) ? s.bubble_bg : null,
+      text: isValidHex(s.text_color) ? s.text_color : null
+    };
+  });
+}
+
+async function saveMyStyle(){
+  var r = await sbQuery('保存样式', function(){
+    return sb.from('user_styles').upsert({
+      uid: uid,
+      avatar_color: myStyle.avatar,
+      bubble_bg: myStyle.bubble,
+      text_color: myStyle.text,
+      updated_at: Date.now()
+    }, { onConflict: 'uid' });
+  }, { max: 3 });
+
+  return r.ok;
+}
+
+function getStyleFor(m){
+  if(m.uid === uid && myStyle){
+    var sm = styleMap[uid] || {};
+    return {
+      avatar: myStyle.avatar || sm.avatar || null,
+      bubble: myStyle.bubble || sm.bubble || null,
+      text:   myStyle.text   || sm.text   || null
+    };
+  }
+  return styleMap[m.uid] || null;
 }
 
 /* ============================================================
@@ -1038,7 +1157,6 @@ async function tryLogin(){
   loginBtn.disabled = true;
   setLoginStatus('检查中…', 'busy');
 
-  /* 登录前顺手清理一次过期数据 */
   autoClean();
 
   var r = await claimNick(nick);
@@ -1064,21 +1182,23 @@ loginBtn.addEventListener('click', tryLogin);
    进入聊天
    ============================================================ */
 function startChat(){
+  /* ★ 双保险：hidden + display */
   loginWrap.hidden = true;
+  loginWrap.style.display = 'none';
   chatWrap.hidden = false;
+  chatWrap.style.display = '';
 
   $('onlineBadge').hidden = false;
   $('meNick').hidden = false;
   $('nickBtn').hidden = false;
+  $('styleBtn').hidden = false;
   $('meNick').textContent = myNick;
 
   loadHistory().then(function(){
     subscribeMessages();
     subscribePresence();
     startPolling();
-    /* 每 30 分钟自动清理一次 */
     setInterval(autoClean, CLEAN_INTERVAL);
-    /* 每 60 秒更新一次活跃时间 */
     setInterval(updateActivity, 60 * 1000);
   });
 
@@ -1162,7 +1282,6 @@ async function doSend(){
     resetPollCountdown();
     setPillOK();
     setTimeout(function(){ doPollNow(); }, 400);
-    /* 更新活跃时间 */
     updateActivity();
   }else{
     allMessages[idx].__pending = false;
@@ -1171,7 +1290,6 @@ async function doSend(){
     renderAll();
     toast('发送失败，已重试 ' + RETRY_MAX + ' 次');
     setPillErr();
-    showFailOverlay('发送消息');
   }
 }
 
@@ -1206,11 +1324,14 @@ function renderMsg(m, prev){
   }
 
   var isCompact=div.classList.contains('compact');
-  var color=m.uid===uid ? 'var(--ac)' : nickColor(m.nick);
+
+  var st = getStyleFor(m) || {};
+  var defaultAvatarColor = (m.uid===uid) ? 'var(--ac)' : nickColor(m.nick);
+  var avatarColor = st.avatar || defaultAvatarColor;
 
   var avatarHtml=isCompact
     ? '<div class="avatar empty"></div>'
-    : '<div class="avatar" style="background:'+color+'">'+esc(m.nick.charAt(0).toUpperCase())+'</div>';
+    : '<div class="avatar" style="background:'+avatarColor+'">'+esc(m.nick.charAt(0).toUpperCase())+'</div>';
 
   var statusTag = '';
   if(m.__pending) statusTag = '<span class="status-tag">发送中</span>';
@@ -1220,15 +1341,24 @@ function renderMsg(m, prev){
     ? '<div class="head" style="visibility:hidden"><span class="nick">&nbsp;</span></div>'
     : '<div class="head"><span class="nick">'+esc(m.nick)+'</span><span class="time">'+esc(fmtTime(m.ts))+'</span>'+statusTag+'</div>';
 
+  var bubbleStyle = '';
+  if(st.bubble || st.text){
+    if(m.uid === uid && st.bubble){
+      bubbleStyle = 'background:'+st.bubble+';';
+    }
+    if(st.text){
+      bubbleStyle += 'color:'+st.text+';';
+    }
+  }
+
   div.innerHTML=
     avatarHtml+
     '<div class="body">'+
       headHtml+
-      '<div class="content">'+esc(m.text)+'</div>'+
+      '<div class="content" '+(bubbleStyle?'style="'+bubbleStyle+'"':'')+'>'+esc(m.text)+'</div>'+
     '</div>';
 
   if(m.id) div.setAttribute('data-mid', m.id);
-
   return div;
 }
 
@@ -1274,15 +1404,24 @@ function updateLastTs(){
   lastTs = 0;
 }
 
+function collectUids(list){
+  var seen = {};
+  var out = [];
+  (list||[]).forEach(function(m){
+    if(m.uid && !seen[m.uid]){ seen[m.uid]=1; out.push(m.uid); }
+  });
+  return out;
+}
+
 function mergeNewMessages(newOnes){
   if(!newOnes || newOnes.length === 0) return false;
   var changed = false;
+  var needStyles = false;
 
   newOnes.forEach(function(n){
     if(allMessages.some(function(x){ return !x.__local && String(x.id)===String(n.id); })){
       return;
     }
-
     var localIdx = allMessages.findIndex(function(x){
       return x.__local &&
         !x.__failed &&
@@ -1291,11 +1430,11 @@ function mergeNewMessages(newOnes){
         x.text === n.text &&
         Math.abs(x.ts - n.ts) < 5000;
     });
-
     if(localIdx >= 0){
       allMessages[localIdx] = n;
     }else{
       allMessages.push(n);
+      if(!styleMap[n.uid]) needStyles = true;
     }
     changed = true;
   });
@@ -1311,6 +1450,13 @@ function mergeNewMessages(newOnes){
   if(allMessages.length > MSG_LIMIT){
     allMessages = allMessages.slice(-MSG_LIMIT);
   }
+
+  if(needStyles){
+    loadStylesFor(collectUids(allMessages)).then(function(){
+      renderAll();
+    });
+  }
+
   renderAll();
   updateLastTs();
   return true;
@@ -1349,6 +1495,8 @@ async function loadHistory(){
 
   allMessages = arr;
   updateLastTs();
+
+  await loadStylesFor(collectUids(allMessages));
   renderAll();
 }
 
@@ -1445,7 +1593,7 @@ var jumpOv=$('jumpOv'), jumpInput=$('jumpInput');
 
 function openJumpDialog(){
   var now = Date.now();
-  jumpInput.value = toLocalInput(now - 3600000);   /* 默认 1 小时前 */
+  jumpInput.value = toLocalInput(now - 3600000);
   jumpOv.classList.add('show');
   setTimeout(function(){ try{ jumpInput.focus(); }catch(e){} }, 40);
 }
@@ -1458,7 +1606,7 @@ async function jumpToTime(targetTs){
       .lte('ts', targetTs)
       .order('ts', { ascending: false })
       .limit(100);
-  });
+  }, { max: 2, silent: true });
 
   if(!r.ok){
     toast('跳转失败：' + (r.err && r.err.message || '请重试'));
@@ -1467,14 +1615,13 @@ async function jumpToTime(targetTs){
 
   var data = r.data && r.data.data;
   if(!data || data.length === 0){
-    /* 该时间之前没数据，试试往后找最近的 */
     var r2 = await sbQuery('往后查询', function(){
       return sb.from('messages')
         .select('*')
         .gt('ts', targetTs)
         .order('ts', { ascending: true })
         .limit(100);
-    });
+    }, { max: 2, silent: true });
     if(!r2.ok || !r2.data || !r2.data.data || r2.data.data.length === 0){
       toast('该时间附近没有消息');
       return;
@@ -1484,7 +1631,6 @@ async function jumpToTime(targetTs){
 
   var arr = data.map(normalizeMsg).reverse();
 
-  /* 找到最接近 targetTs 的那条消息，做高亮 */
   var bestIdx = 0;
   var bestDist = Infinity;
   arr.forEach(function(m, i){
@@ -1492,21 +1638,25 @@ async function jumpToTime(targetTs){
     if(d < bestDist){ bestDist = d; bestIdx = i; }
   });
 
-  /* 全部清掉旧的高亮 */
   arr.forEach(function(m){ m.__highlight = false; });
   if(arr[bestIdx]) arr[bestIdx].__highlight = true;
 
   allMessages = arr;
   updateLastTs();
+
+  await loadStylesFor(collectUids(allMessages));
   renderAll();
 
-  /* 滚到高亮那条 */
+  /* ★ 修复：只滚 messagesEl，不用 scrollIntoView */
   setTimeout(function(){
     var target = arr[bestIdx];
     if(!target) return;
     var el = messagesEl.querySelector('[data-mid="' + target.id + '"]');
     if(el){
-      el.scrollIntoView({behavior:'smooth', block:'center'});
+      var elRect = el.getBoundingClientRect();
+      var wrapRect = messagesEl.getBoundingClientRect();
+      var offsetInWrap = elRect.top - wrapRect.top + messagesEl.scrollTop;
+      messagesEl.scrollTop = offsetInWrap - (wrapRect.height - elRect.height) / 2;
       setTimeout(function(){ el.classList.remove('highlight'); }, 2500);
     }else{
       messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -1542,6 +1692,114 @@ $('jumpLatestBtn').addEventListener('click', function(){
     messagesEl.scrollTop = messagesEl.scrollHeight;
     toast('已回到最新');
   });
+});
+
+/* ============================================================
+   自定义颜色弹窗
+   ============================================================ */
+var styleOv=$('styleOv');
+var cAvatar=$('cAvatar'), cBubble=$('cBubble'), cText=$('cText');
+var pvAvatar=$('pvAvatar'), pvBubble=$('pvBubble');
+
+function getThemeDefaultColors(){
+  var cs = getComputedStyle(document.documentElement);
+  function pick(name){
+    var v = cs.getPropertyValue(name).trim();
+    return v || '#3d521f';
+  }
+  var ac = pick('--ac');
+  var selfFg = pick('--self-fg');
+  var bubbleBg = ac;
+  if(bubbleBg.indexOf('linear-gradient') !== -1) bubbleBg = '#3d521f';
+  if(bubbleBg[0] !== '#') bubbleBg = '#3d521f';
+  if(!/^#[0-9a-fA-F]{6}$/.test(bubbleBg)) bubbleBg = '#3d521f';
+
+  var avatar = ac;
+  if(avatar[0] !== '#') avatar = '#3d521f';
+  if(!/^#[0-9a-fA-F]{6}$/.test(avatar)) avatar = '#3d521f';
+
+  var text = selfFg;
+  if(text[0] !== '#') text = '#ffffff';
+  if(!/^#[0-9a-fA-F]{6}$/.test(text)) text = '#ffffff';
+
+  return { avatar: avatar, bubble: bubbleBg, text: text };
+}
+
+function updatePreview(){
+  var a = cAvatar.value || '#3d521f';
+  var b = cBubble.value || '#7a9c3c';
+  var t = cText.value || '#ffffff';
+  pvAvatar.style.background = a;
+  pvBubble.style.background = b;
+  pvBubble.style.color = t;
+}
+
+[cAvatar, cBubble, cText].forEach(function(el){
+  el.addEventListener('input', updatePreview);
+});
+
+document.querySelectorAll('.style-row .reset-one').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var target = btn.getAttribute('data-target');
+    var defs = getThemeDefaultColors();
+    if(target === 'avatar') cAvatar.value = defs.avatar;
+    else if(target === 'bubble') cBubble.value = defs.bubble;
+    else if(target === 'text') cText.value = defs.text;
+    updatePreview();
+  });
+});
+
+function openStyleDialog(){
+  var defs = getThemeDefaultColors();
+  cAvatar.value = myStyle.avatar || defs.avatar;
+  cBubble.value = myStyle.bubble || defs.bubble;
+  cText.value = myStyle.text || defs.text;
+  updatePreview();
+  styleOv.classList.add('show');
+}
+function closeStyleDialog(){ styleOv.classList.remove('show'); }
+
+$('styleBtn').addEventListener('click', openStyleDialog);
+$('styleClose').addEventListener('click', closeStyleDialog);
+$('styleCancel').addEventListener('click', closeStyleDialog);
+styleOv.addEventListener('click', function(e){ if(e.target===styleOv) closeStyleDialog(); });
+
+$('styleResetAll').addEventListener('click', function(){
+  var defs = getThemeDefaultColors();
+  cAvatar.value = defs.avatar;
+  cBubble.value = defs.bubble;
+  cText.value = defs.text;
+  updatePreview();
+});
+
+$('styleSave').addEventListener('click', async function(){
+  var defs = getThemeDefaultColors();
+
+  var newAvatar = (cAvatar.value === defs.avatar) ? null : cAvatar.value;
+  var newBubble = (cBubble.value === defs.bubble) ? null : cBubble.value;
+  var newText   = (cText.value === defs.text)   ? null : cText.value;
+
+  myStyle = {
+    avatar: isValidHex(newAvatar) ? newAvatar : null,
+    bubble: isValidHex(newBubble) ? newBubble : null,
+    text:   isValidHex(newText)   ? newText   : null
+  };
+  saveMyStyleLocal();
+
+  styleMap[uid] = myStyle;
+  renderAll();
+
+  $('styleSave').disabled = true;
+  var ok = await saveMyStyle();
+  $('styleSave').disabled = false;
+
+  closeStyleDialog();
+
+  if(ok){
+    toast('颜色已保存');
+  }else{
+    toast('已应用到本地，服务器同步失败');
+  }
 });
 
 /* ============================================================
@@ -1635,9 +1893,6 @@ if(refreshPill){
   });
 }
 
-/* ============================================================
-   相对时间刷新
-   ============================================================ */
 setInterval(function(){
   if(allMessages.length===0)return;
   var real = allMessages.filter(function(m){ return !m.__local; });
@@ -1663,7 +1918,6 @@ async function openNickDialog(){
   nickOv.classList.add('show');
   setTimeout(function(){try{nickInput.focus();nickInput.select();}catch(e){}},40);
 
-  /* 异步查额度 */
   var q = await getNickChangeQuota();
   if(nickQuotaLeftEl){
     nickQuotaLeftEl.textContent = q.ok ? q.left : '?';
@@ -1671,6 +1925,8 @@ async function openNickDialog(){
   if(q.ok && q.left <= 0){
     $('nickSave').disabled = true;
     nickHint.innerHTML = '今天已经改了 5 次了，明天再来吧。<br><span class="quota">今日还可改 0 / 5 次</span>';
+  }else{
+    $('nickSave').disabled = false;
   }
 }
 function closeNickDialog(){ nickOv.classList.remove('show'); }
@@ -1689,7 +1945,6 @@ $('nickSave').addEventListener('click', async function(){
   nickHint.textContent='检查中…';
   nickHint.className='hint';
 
-  /* 检查额度 */
   var quota = await getNickChangeQuota();
   if(!quota.ok){
     nickHint.textContent='网络异常，请重试';
@@ -1703,7 +1958,6 @@ $('nickSave').addEventListener('click', async function(){
     return;
   }
 
-  /* 尝试占用新昵称 */
   var r = await claimNick(v);
   hideRetryOverlay();
 
@@ -1724,16 +1978,10 @@ $('nickSave').addEventListener('click', async function(){
   storage.set(K_NICK, myNick);
   $('meNick').textContent = myNick;
 
-  /* 记录改名 */
   await logNickChange();
-
-  /* 释放旧昵称 */
   await releaseNick(oldNick);
-
-  /* 关键修复：同步所有历史消息的 nick */
   await syncMyMessagesNick(myNick);
 
-  /* 更新在线状态 */
   try{
     if(presenceChannel) await presenceChannel.track({nick:myNick, online_at:Date.now()});
   }catch(e){}
@@ -1767,6 +2015,7 @@ document.addEventListener('keydown',function(e){
     if(themeOv.classList.contains('show'))closeTheme();
     else if(nickOv.classList.contains('show'))closeNickDialog();
     else if(jumpOv.classList.contains('show'))closeJumpDialog();
+    else if(styleOv.classList.contains('show'))closeStyleDialog();
   }
 });
 
