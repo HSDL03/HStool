@@ -82,20 +82,8 @@ body:hover .cursor-follow{opacity:.55}
 .hero-badge .dot::after{content:"";position:absolute;inset:0;background:var(--ac);animation:badgePulse 2s ease-out infinite;pointer-events:none}
 [data-theme^="github-"] .hero-badge .dot::after{border-radius:50%}
 @keyframes badgePulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(3);opacity:0}}
-
-/* ★ 标题：修复 - 渐变裁剪应用到每个字 */
 .hero h1{margin:0 0 12px;font-size:clamp(2rem,4.5vw,3.2rem);font-weight:800;line-height:1.12;letter-spacing:-.03em;overflow:visible}
-.hero h1 .char{
-  display:inline-block;
-  opacity:0;
-  transform:translateY(28px) rotate(-12deg) scale(.85);
-  animation:charIn .55s cubic-bezier(.34,1.56,.64,1) forwards;
-  background:var(--hero-grad);
-  -webkit-background-clip:text;
-  background-clip:text;
-  -webkit-text-fill-color:transparent;
-  color:transparent;
-}
+.hero h1 .char{display:inline-block;opacity:0;transform:translateY(28px) rotate(-12deg) scale(.85);animation:charIn .55s cubic-bezier(.34,1.56,.64,1) forwards;background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 @keyframes charIn{60%{opacity:1}to{opacity:1;transform:none}}
 .hero-sub{margin:0 auto 6px;max-width:520px;font-size:15px;color:var(--muted);line-height:1.65;opacity:0;animation:heroIn .7s cubic-bezier(.22,1,.36,1) .5s forwards}
 .hero-line{display:inline-block;margin-top:12px;padding-top:12px;border-top:1px dashed var(--bd);font-size:12.5px;color:var(--muted);letter-spacing:.02em;opacity:0;animation:heroIn .7s cubic-bezier(.22,1,.36,1) .65s forwards}
@@ -123,12 +111,14 @@ body:hover .cursor-follow{opacity:.55}
 .card-ring{position:absolute;width:22px;height:22px;border:2px solid var(--ac);border-radius:50%;transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:3;box-shadow:0 0 14px rgba(var(--p1),.65);animation:cardRing .65s cubic-bezier(.22,1,.36,1) forwards}
 [data-theme^="mc-"] .card-ring{border-radius:2px}
 @keyframes cardRing{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(12);opacity:0}}
-.tool-card:hover{box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.3),0 16px 32px rgba(0,0,0,.18);border-color:var(--ac)}
-[data-theme^="mc-"] .tool-card:hover{box-shadow:var(--bevel),0 0 0 2px rgba(var(--p1),.4),0 10px 22px rgba(0,0,0,.2)}
-[data-theme^="github-"] .tool-card:hover{box-shadow:0 0 0 2px rgba(var(--p1),.25),0 10px 26px rgba(0,0,0,.12)}
-.tool-card.hit{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 3px rgba(var(--p1),.55),0 0 32px rgba(var(--p1),.5)}
-[data-theme^="mc-"] .tool-card.hit{box-shadow:var(--bevel),0 0 0 3px rgba(var(--p1),.6),0 0 26px rgba(var(--p1),.45)}
-[data-theme^="github-"] .tool-card.hit{box-shadow:0 0 0 2px rgba(var(--p1),.4),0 0 26px rgba(var(--p1),.35)}
+
+/* ★ 已去掉悬停/撞击时叠加在边框外的 box-shadow 环，避免描边被"加粗" */
+.tool-card:hover{box-shadow:var(--bevel),0 16px 32px rgba(0,0,0,.18);border-color:var(--ac)}
+[data-theme^="mc-"] .tool-card:hover{box-shadow:var(--bevel),0 10px 22px rgba(0,0,0,.2)}
+[data-theme^="github-"] .tool-card:hover{box-shadow:0 10px 26px rgba(0,0,0,.12)}
+.tool-card.hit{border-color:var(--ac);box-shadow:var(--bevel),0 0 32px rgba(var(--p1),.5)}
+[data-theme^="mc-"] .tool-card.hit{box-shadow:var(--bevel),0 0 26px rgba(var(--p1),.45)}
+[data-theme^="github-"] .tool-card.hit{box-shadow:0 0 26px rgba(var(--p1),.35)}
 
 .tc-icon{flex:none;width:52px;height:52px;display:grid;place-items:center;font-size:26px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
 [data-theme^="github-"] .tc-icon{border-width:1px;border-radius:10px}
@@ -355,7 +345,6 @@ function closeTheme(){themeOv.classList.remove('show');}
 var toastEl=$('toast'),toastTimer=null;
 function toast(msg){if(!toastEl)return;toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2400);}
 
-/* ★ 状态珠 - 简单直接 */
 var spPill=$('statusPill'),spDot=$('spDot'),spTime=$('spTime'),spLat=$('spLat');
 function spSetBusy(){if(spPill)spPill.className='status-pill busy';}
 function spSetOK(){if(spPill)spPill.className='status-pill';}
@@ -957,7 +946,6 @@ function bind(){
   });
 }
 
-/* ★ 定时器 - 内联启动，不依赖封装 */
 var refreshTimer=null,latTimer=null,clockTimer=null;
 
 function doPing(){
@@ -983,20 +971,16 @@ function boot(){
   bind();
   onScroll();
 
-  /* ★ 时钟：立即刷新一次 + 每秒刷新 */
   if(spTime)spTime.textContent=fmtTime(Date.now());
   clockTimer=setInterval(function(){
     if(spTime)spTime.textContent=fmtTime(Date.now());
   },CLOCK_MS);
 
-  /* ★ 延迟：立即 ping 一次 + 每 3 秒 ping 一次 */
   doPing();
   latTimer=setInterval(doPing,LAT_PING_MS);
 
-  /* ★ 工具数据刷新：每 120 秒 */
   refreshTimer=setInterval(silentRefresh,REFRESH_MS);
 
-  /* 首次加载工具列表 */
   loadTools().then(function(res){
     if(res&&res.ok)renderIfChanged();
   });
