@@ -35,7 +35,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 body.touch-mode{cursor:auto}
 body.touch-mode .cursor-follow{display:none!important}
 
-/* ═══════════════ 顶栏 ═══════════════ */
 .topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:2px solid var(--topbar-bd);z-index:50;box-shadow:0 2px 0 rgba(0,0,0,.12);transition:box-shadow .25s}
 .topbar.scrolled{box-shadow:0 4px 0 rgba(0,0,0,.18)}
 .logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
@@ -46,7 +45,6 @@ body.touch-mode .cursor-follow{display:none!important}
 .icon:hover{background:rgba(0,0,0,.2);color:#fff}
 .icon:active{transform:scale(.92)}
 
-/* ═══════════════ 背景装饰 ═══════════════ */
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform,opacity}
 .b1{width:420px;height:420px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 30s ease-in-out infinite}
@@ -71,7 +69,6 @@ body.touch-mode .cursor-follow{display:none!important}
 @keyframes spinSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 #particles{position:absolute;inset:0;width:100%;height:100%;display:block}
 
-/* ═══════════════ 自定义光标 ═══════════════ */
 .cursor-follow{position:fixed;pointer-events:none;z-index:9999;width:22px;height:22px;transform:translate(-50%,-50%);opacity:0;transition:opacity .25s;mix-blend-mode:difference;will-change:left,top}
 .cursor-follow::before,.cursor-follow::after{content:"";position:absolute;background:#fff}
 .cursor-follow::before{left:50%;top:0;width:2px;height:22px;margin-left:-1px}
@@ -81,7 +78,6 @@ body:hover .cursor-follow{opacity:.55}
 .cursor-follow.hovering{transform:translate(-50%,-50%) rotate(45deg) scale(1.3);opacity:.9}
 .cursor-follow.clicking{transform:translate(-50%,-50%) rotate(45deg) scale(0.75);opacity:1}
 
-/* ═══════════════ 主内容 ═══════════════ */
 .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:80px 24px 80px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 46px)}
 
 .hero{text-align:center;padding:0 0 32px}
@@ -95,7 +91,6 @@ body:hover .cursor-follow{opacity:.55}
 .hero-sub{margin:0 auto;max-width:520px;font-size:15px;color:var(--muted);line-height:1.65;opacity:0;animation:heroIn .7s cubic-bezier(.22,1,.36,1) .5s forwards}
 @keyframes heroIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
 
-/* ═══════════════ 助力数字 ═══════════════ */
 .boost-display{
   display:flex;flex-direction:column;align-items:center;gap:6px;
   margin-bottom:24px;
@@ -125,27 +120,94 @@ body:hover .cursor-follow{opacity:.55}
   color:var(--muted);
 }
 
-/* ═══════════════ 进度条 ═══════════════ */
+/* ═══════════════ 融合进度条（多目标） ═══════════════ */
 .progress-section{
-  width:100%;max-width:520px;
+  width:100%;max-width:640px;
   margin-bottom:32px;
   opacity:0;animation:heroIn .7s cubic-bezier(.22,1,.36,1) .75s forwards;
 }
-.progress-header{
-  display:flex;align-items:baseline;justify-content:space-between;
-  margin-bottom:8px;
-  font-size:12.5px;font-weight:700;
-  color:var(--muted);
+.progress-empty{
+  padding:24px;text-align:center;
+  color:var(--muted);font-size:13px;
+  background:var(--bg2);
+  border:2px dashed var(--bd2);
+  border-radius:var(--r);
 }
-.progress-header .progress-current{color:var(--ac);font-variant-numeric:tabular-nums}
-.progress-header .progress-target{font-variant-numeric:tabular-nums}
-.progress-track{
-  position:relative;
-  height:18px;
+.progress-card{
+  padding:20px 26px 18px;
   background:var(--bg2);
   border:2px solid var(--bd2);
   border-radius:var(--r);
-  box-shadow:var(--bevel-in);
+  box-shadow:var(--bevel);
+}
+.progress-header{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:10px;margin-bottom:14px;
+}
+.progress-title{
+  font-size:13px;font-weight:800;color:var(--text);
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.progress-count{
+  font-size:13px;font-weight:700;color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.progress-count .progress-current{color:var(--ac)}
+
+/* 里程碑标签层 */
+.progress-bar-labels{
+  position:relative;
+  height:38px;
+  margin-bottom:6px;
+}
+.milestone-label{
+  position:absolute;
+  bottom:0;
+  transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;
+  gap:1px;
+  padding:3px 8px;
+  background:var(--bg2);
+  border:1px solid var(--bd);
+  border-radius:3px;
+  font-size:10.5px;font-weight:700;
+  color:var(--muted);
+  white-space:nowrap;
+  line-height:1.15;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;
+  z-index:1;
+}
+.milestone-label .ml-name{
+  color:var(--text);font-weight:800;
+  max-width:90px;overflow:hidden;text-overflow:ellipsis;
+  font-size:10.5px;
+}
+.milestone-label .ml-value{
+  font-size:9.5px;font-variant-numeric:tabular-nums;
+  opacity:.7;letter-spacing:.02em;
+}
+.milestone-label.done{
+  border-color:var(--ok);
+  background:#e8f5e8;
+  box-shadow:0 0 8px rgba(45,122,45,.25);
+}
+.milestone-label.done .ml-name{color:var(--ok)}
+.milestone-label.done .ml-value{color:var(--ok);opacity:1}
+.milestone-label.done .ml-name::after{
+  content:" ✓";font-weight:900;
+}
+
+/* 进度条主体 */
+.progress-bar-wrap{
+  position:relative;
+  height:26px;
+}
+.progress-bar-track{
+  position:absolute;inset:0;
+  background:var(--bg3);
+  border-radius:var(--r);
+  box-shadow:inset 0 0 0 2px var(--bd2);
   overflow:hidden;
 }
 .progress-fill{
@@ -158,7 +220,7 @@ body:hover .cursor-follow{opacity:.55}
 }
 .progress-fill::after{
   content:"";position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.35) 50%,transparent 100%);
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.4) 50%,transparent 100%);
   background-size:200% 100%;
   animation:progressShine 2s linear infinite;
 }
@@ -166,27 +228,62 @@ body:hover .cursor-follow{opacity:.55}
   0%{background-position:200% 0}
   100%{background-position:-200% 0}
 }
-.progress-glow{
-  position:absolute;top:-2px;bottom:-2px;width:24px;
-  background:radial-gradient(ellipse at center,rgba(255,222,0,.85) 0%,transparent 70%);
+
+/* 刻度层 */
+.progress-bar-marks{
+  position:absolute;inset:0;
   pointer-events:none;
-  transition:left .8s cubic-bezier(.34,1.56,.64,1);
-  opacity:0;
 }
-.progress-fill.has-progress + .progress-glow,
-.progress-track:hover .progress-glow{opacity:1}
+.milestone-tick{
+  position:absolute;top:0;bottom:0;
+  width:2px;
+  background:rgba(138,32,24,.28);
+  transform:translateX(-1px);
+  transition:background .3s,opacity .3s;
+  z-index:1;
+}
+.milestone-tick.done{
+  background:rgba(255,255,255,.85);
+  box-shadow:0 0 6px rgba(255,255,255,.5);
+}
+.milestone-dot{
+  position:absolute;top:50%;
+  width:14px;height:14px;
+  transform:translate(-50%,-50%);
+  background:var(--bg2);
+  border:2px solid var(--bd2);
+  border-radius:50%;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  z-index:2;
+  box-shadow:0 0 0 2px var(--bg2);
+}
+.milestone-dot.done{
+  background:#1a7f37;
+  border-color:#0f5a23;
+  box-shadow:0 0 0 2px var(--bg2),0 0 12px rgba(26,127,55,.7);
+}
+
+/* 底部信息 */
 .progress-footer{
   display:flex;align-items:center;justify-content:space-between;
-  margin-top:8px;
-  font-size:11.5px;color:var(--muted);
+  margin-top:14px;
+  font-size:12px;color:var(--muted);
+  gap:12px;
 }
 .progress-footer .progress-percent{
-  font-weight:800;color:var(--ac);
+  font-weight:900;color:var(--ac);
   font-variant-numeric:tabular-nums;
-  font-size:13px;
+  font-size:16px;
+  flex:none;
 }
-.progress-footer .progress-remain{font-variant-numeric:tabular-nums}
-.progress-footer .progress-remain strong{color:var(--ac)}
+.progress-footer .progress-remain{
+  font-variant-numeric:tabular-nums;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  text-align:right;
+}
+.progress-footer .progress-remain strong{color:var(--ac);font-weight:800}
+.progress-footer.all-done .progress-percent{color:var(--ok)}
+.progress-footer.all-done .progress-remain strong{color:var(--ok)}
 
 /* ═══════════════ 助力按钮 ═══════════════ */
 .action-area{display:flex;align-items:center;justify-content:center;padding:0 0 40px}
@@ -340,11 +437,9 @@ body:hover .cursor-follow{opacity:.55}
 .theme-name{font-size:12.5px;font-weight:700}
 .theme-desc{font-size:10.5px;color:var(--muted);margin-top:-3px}
 
-/* ═══════════════ Toast ═══════════════ */
 .toast{position:fixed;left:50%;bottom:24px;max-width:calc(100vw - 32px);padding:10px 20px;font-size:13.5px;font-weight:700;color:#ffe0e0;background:#6a0810;border:2px solid #c8102e;border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.4);opacity:0;transform:translateX(-50%) translateY(20px);transition:opacity .22s,transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:200}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ═══════════════ 状态胶囊 ═══════════════ */
 .status-pill{position:fixed;right:14px;bottom:14px;z-index:80;display:flex;align-items:center;gap:8px;padding:6px 10px 6px 8px;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--muted);background:var(--bg2);border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel);cursor:pointer;user-select:none;transition:opacity .25s,transform .25s,border-color .25s,color .25s;opacity:.85}
 .status-pill:hover{opacity:1;transform:translateY(-2px);color:var(--text);border-color:var(--ac)}
 .status-pill:active{transform:translateY(0) scale(.97)}
@@ -368,6 +463,10 @@ body:hover .cursor-follow{opacity:.55}
   .action-btn .btn-icon{font-size:20px}
   .boost-num{font-size:3rem}
   .progress-section{max-width:100%}
+  .progress-card{padding:16px 16px 14px}
+  .milestone-label{padding:2px 6px;font-size:9.5px}
+  .milestone-label .ml-name{font-size:9.5px;max-width:60px}
+  .milestone-label .ml-value{font-size:8.5px}
 }
 @media print{.status-pill,.bg-decor,.topbar,.ov,.toast,.cursor-follow,.action-btn{display:none}body{padding-top:0;cursor:auto}}
 @media (prefers-reduced-motion:reduce){
@@ -410,19 +509,8 @@ body:hover .cursor-follow{opacity:.55}
     <div class="boost-label">总助力点</div>
   </div>
 
-  <div class="progress-section">
-    <div class="progress-header">
-      <span>助力进度</span>
-      <span><span class="progress-current" id="progressCurrent">0</span> / <span class="progress-target" id="progressTarget">--</span></span>
-    </div>
-    <div class="progress-track">
-      <div class="progress-fill" id="progressFill"></div>
-      <div class="progress-glow" id="progressGlow"></div>
-    </div>
-    <div class="progress-footer">
-      <span class="progress-percent" id="progressPercent">0%</span>
-      <span class="progress-remain">还差 <strong id="progressRemain">--</strong> 点达成</span>
-    </div>
+  <div class="progress-section" id="progressSection">
+    <div class="progress-empty">加载中…</div>
   </div>
 
   <div class="action-area">
@@ -469,7 +557,7 @@ body:hover .cursor-follow{opacity:.55}
 var SUPABASE_URL='https://lxdyrajbsjftduesvosh.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 var TABLE_BOOST='welfare_boost';
-var TABLE_CONFIG='welfare_config';
+var TABLE_TARGETS='welfare_targets';
 var COOLDOWN_MS=1000;
 
 var sb=null;
@@ -555,19 +643,14 @@ function spSetOK(){if(spPill)spPill.className='status-pill';}
 function spSetErr(){if(spPill)spPill.className='status-pill err';}
 function spSetLat(lat){if(spLat)spLat.textContent=lat>=0?(lat+'ms'):'超时';}
 
-/* ═══════════════ 进度条 ═══════════════ */
+/* ═══════════════ 助力 & 融合进度条 ═══════════════ */
 var totalBoost=0;
-var targetValue=0;
 var boostLoaded=false;
 var cooling=false;
 var boostNumEl=$('boostNum');
 var actionBtn=$('actionBtn');
-var progressFillEl=$('progressFill');
-var progressGlowEl=$('progressGlow');
-var progressCurrentEl=$('progressCurrent');
-var progressTargetEl=$('progressTarget');
-var progressPercentEl=$('progressPercent');
-var progressRemainEl=$('progressRemain');
+var progressSectionEl=$('progressSection');
+var welfTargets=[];
 
 function renderBoost(){
   if(!boostNumEl)return;
@@ -575,19 +658,81 @@ function renderBoost(){
 }
 
 function renderProgress(){
-  if(!progressFillEl)return;
-  var pct = targetValue>0 ? Math.min(100, (totalBoost/targetValue)*100) : 0;
-  progressFillEl.style.width = pct+'%';
-  if(progressGlowEl){
-    progressGlowEl.style.left = 'calc('+pct+'% - 12px)';
+  var el=progressSectionEl;
+  if(!el)return;
+  if(!boostLoaded){
+    el.innerHTML='<div class="progress-empty">加载中…</div>';
+    return;
   }
-  if(progressCurrentEl) progressCurrentEl.textContent = String(totalBoost);
-  if(progressTargetEl) progressTargetEl.textContent = targetValue>0 ? String(targetValue) : '--';
-  if(progressPercentEl) progressPercentEl.textContent = pct.toFixed(1)+'%';
-  if(progressRemainEl){
-    var remain = Math.max(0, targetValue - totalBoost);
-    progressRemainEl.textContent = remain>0 ? String(remain) : '已达成';
+  if(welfTargets.length===0){
+    el.innerHTML='<div class="progress-empty">暂无目标</div>';
+    return;
   }
+
+  /* 按值升序排列 */
+  var targets = welfTargets.slice().sort(function(a,b){
+    return (parseInt(a.value,10)||0) - (parseInt(b.value,10)||0);
+  });
+  var maxTarget = parseInt(targets[targets.length-1].value,10)||1;
+  if(maxTarget<1) maxTarget=1;
+
+  var overallPct = Math.min(100,(totalBoost/maxTarget)*100);
+
+  /* 找下一个未达成目标 */
+  var nextTarget=null;
+  for(var i=0;i<targets.length;i++){
+    var tv=parseInt(targets[i].value,10)||0;
+    if(tv>0 && totalBoost<tv){nextTarget=targets[i];break;}
+  }
+
+  /* 渲染标签 + 刻度 */
+  var labelsHtml='';
+  var marksHtml='';
+  targets.forEach(function(t){
+    var tv=parseInt(t.value,10)||0;
+    if(tv<=0)return;
+    var pct=Math.min(100,(tv/maxTarget)*100);
+    var done=totalBoost>=tv;
+    var doneCls=done?' done':'';
+
+    labelsHtml+='<div class="milestone-label'+doneCls+'" style="left:'+pct+'%">'
+      + '<span class="ml-name">'+escapeHtml(t.name||'目标')+'</span>'
+      + '<span class="ml-value">'+tv+'</span>'
+      + '</div>';
+
+    marksHtml+='<span class="milestone-tick'+doneCls+'" style="left:'+pct+'%"></span>'
+      + '<span class="milestone-dot'+doneCls+'" style="left:'+pct+'%"></span>';
+  });
+
+  var allDone=!nextTarget;
+  var footerCls=allDone?' all-done':'';
+  var footerText;
+  if(nextTarget){
+    var nv=parseInt(nextTarget.value,10)||0;
+    var remain=Math.max(0,nv-totalBoost);
+    footerText='还差 <strong>'+remain+'</strong> 点达成「'+escapeHtml(nextTarget.name||'目标')+'」';
+  } else {
+    footerText='<strong>全部目标已达成 ✓</strong>';
+  }
+
+  el.innerHTML=
+    '<div class="progress-card">'
+    + '<div class="progress-header">'
+    +   '<span class="progress-title">助力进度</span>'
+    +   '<span class="progress-count"><span class="progress-current">'+totalBoost+'</span> / '+maxTarget+'</span>'
+    + '</div>'
+    + '<div class="progress-bar-labels">'+labelsHtml+'</div>'
+    + '<div class="progress-bar-wrap">'
+    +   '<div class="progress-bar-track">'
+    +     '<div class="progress-fill" style="width:'+overallPct+'%"></div>'
+    +   '</div>'
+    +   '<div class="progress-bar-marks">'+marksHtml+'</div>'
+    + '</div>'
+    + '<div class="progress-footer'+footerCls+'">'
+    +   '<span class="progress-percent">'+overallPct.toFixed(1)+'%</span>'
+    +   '<span class="progress-remain">'+footerText+'</span>'
+    + '</div>'
+    + '</div>';
 }
 
 function bumpNumber(){
@@ -603,20 +748,21 @@ function refreshCount(){
   refreshing=true;
   Promise.all([
     sb.from(TABLE_BOOST).select('*',{count:'exact',head:true}),
-    sb.from(TABLE_CONFIG).select('target_value').eq('id',1).maybeSingle()
+    sb.from(TABLE_TARGETS).select('*').order('sort_order',{ascending:true})
   ]).then(function(results){
     refreshing=false;
     var countRes=results[0];
-    var cfgRes=results[1];
+    var targetsRes=results[1];
     if(countRes.error){console.warn('[boost] count failed',countRes.error);spSetErr();}
     else{
       spSetOK();
-      if(typeof countRes.count==='number'){totalBoost=countRes.count;boostLoaded=true;renderBoost();renderProgress();}
+      if(typeof countRes.count==='number'){totalBoost=countRes.count;boostLoaded=true;}
     }
-    if(!cfgRes.error && cfgRes.data && typeof cfgRes.data.target_value==='number'){
-      targetValue=cfgRes.data.target_value;
-      renderProgress();
+    if(!targetsRes.error && Array.isArray(targetsRes.data)){
+      welfTargets=targetsRes.data;
     }
+    renderBoost();
+    renderProgress();
   }).catch(function(err){
     refreshing=false;
     console.warn('[boost] refresh error',err);
@@ -676,7 +822,6 @@ function doBoost(){
   });
 }
 
-/* realtime */
 var boostChannel=null;
 function subscribeBoost(){
   if(!sb||boostChannel)return;
@@ -690,13 +835,8 @@ function subscribeBoost(){
       renderProgress();
       bumpNumber();
     })
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:TABLE_CONFIG},function(payload){
-      var row=payload.new;
-      if(!row)return;
-      if(typeof row.target_value==='number'){
-        targetValue=row.target_value;
-        renderProgress();
-      }
+    .on('postgres_changes',{event:'*',schema:'public',table:TABLE_TARGETS},function(payload){
+      refreshCount();
     })
     .subscribe(function(status){
       if(status==='SUBSCRIBED'){spSetOK();}
