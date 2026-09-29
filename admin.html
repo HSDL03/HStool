@@ -110,25 +110,6 @@ header.head .back{font-size:14px;color:var(--ac);text-decoration:none;display:in
 .welf-stat .l{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .welf-panel{padding:18px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:20px}
 .welf-panel h3{margin:0 0 12px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-/* 守卫遮罩 */
-.guard-mask{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0d1117;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;opacity:1;visibility:visible;transition:opacity .3s,visibility .3s}
-.guard-mask.hide{opacity:0;visibility:hidden;pointer-events:none}
-.guard-card{width:100%;max-width:420px;padding:36px 30px;background:#161b22;border:1px solid #30363d;border-radius:14px;text-align:center;color:#e6edf3;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.guard-icon{font-size:52px;line-height:1;margin-bottom:16px;display:block}
-.guard-card h2{margin:0 0 8px;font-size:1.35rem;font-weight:800;color:#e6edf3;letter-spacing:-.02em}
-.guard-card .guard-sub{margin:0 0 22px;font-size:13px;color:#9198a1;line-height:1.6;word-break:break-word}
-.guard-card .guard-status{min-height:22px;margin:14px 0 0;font-size:13px;color:#9198a1;line-height:1.5}
-.guard-card .guard-status.err{color:#f85149;font-weight:600}
-.guard-card .guard-status.ok{color:#3fb950;font-weight:600}
-.guard-card .guard-status.busy{color:#4493f8;font-weight:600}
-.guard-card button{width:100%;height:46px;margin-top:6px;font-family:inherit;font-size:15px;font-weight:700;color:#fff;background:#238636;border:none;border-radius:8px;cursor:pointer;transition:background .15s}
-.guard-card button:hover:not(:disabled){background:#2ea043}
-.guard-card button:active:not(:disabled){transform:scale(.98)}
-.guard-card button:disabled{opacity:.5;cursor:not-allowed}
-.guard-card button.guard-btn-secondary{background:transparent;color:#9198a1;border:1px solid #30363d;margin-top:10px;height:40px;font-size:13.5px}
-.guard-card button.guard-btn-secondary:hover:not(:disabled){background:#21262d;color:#e6edf3}
-.guard-card .guard-user{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;margin-bottom:14px;background:#0d1117;border:1px solid #30363d;border-radius:999px;font-size:12px;color:#9198a1}
-.guard-card .guard-user img{width:18px;height:18px;border-radius:50%}
 @media(max-width:640px){
   .wrap{padding:20px 14px 80px}
   .grid2{grid-template-columns:1fr}
@@ -140,18 +121,9 @@ header.head .back{font-size:14px;color:var(--ac);text-decoration:none;display:in
 </head>
 <body>
 
-<!-- 守卫遮罩 -->
-<div class="guard-mask" id="guardMask">
-  <div class="guard-card" id="guardCard">
-    <span class="guard-icon">⏳</span>
-    <h2>正在验证</h2>
-    <p class="guard-sub">读取守卫配置…</p>
-  </div>
-</div>
-
 <div class="bg-error" id="bgError"></div>
 
-<div class="wrap" id="adminWrap" style="display:none">
+<div class="wrap">
   <header class="head">
     <h1>🗂️ 数据管理</h1>
     <span class="sp"></span>
@@ -277,8 +249,8 @@ header.head .back{font-size:14px;color:var(--ac);text-decoration:none;display:in
       <div class="help" style="margin-top:14px">
         <h3>Token 要求</h3>
         <ul>
-          <li>GitHub 账号必须在 <code>admin-guard.json</code> 白名单里</li>
           <li>Token 需要 <strong>Contents: Read and write</strong> 权限</li>
+          <li>Token 只存你本机浏览器，不上传</li>
         </ul>
       </div>
     </div>
@@ -335,13 +307,6 @@ var T_BOOST='welfare_boost';
 var T_ORDERS='welfare_orders';
 var ADMIN_KEY='YOUR_ADMIN_SECRET';
 
-/* 守卫 */
-var GUARD_FILE='admin-guard.json';
-var GUARD_URL_RAW='https://raw.githubusercontent.com/'+DEFAULT_OWNER+'/'+DEFAULT_REPO+'/'+DEFAULT_BRANCH+'/'+GUARD_FILE;
-var GUARD_URL_CDN='https://cdn.jsdelivr.net/gh/'+DEFAULT_OWNER+'/'+DEFAULT_REPO+'@'+DEFAULT_BRANCH+'/'+GUARD_FILE;
-var GUARD_CACHE_KEY='admin-guard-cache';
-var GUARD_CACHE_TTL=5*60*1000;
-
 var EMOJI_PRESETS=['📦','📥','🗜','🎨','🖼','🎵','🎬','📄','📝','📊','🧩','🎮','🕹','🔧','⚙','💎','🌟','🔥','⚡','🌊','🌲','❄','🏹','🛡','⚔','🧪','📜','🗺','🧭','🔮','🎯','🏆','🎁','🗂','📁','💾','🖥','📱','🎓'];
 var TOOL_EMOJI_PRESETS=['🧰','📚','📥','🧩','🎨','🔧','⚙','🔮','🎯','📊','🗺','🧪','📝','🌐','💡','🔍','🎮','🕹','📷','🎵','📖','✏️','🎁','🏷️','🧮','🔨','🪓','⛏','🌿','🎬'];
 
@@ -395,162 +360,16 @@ function getSb(){
   return sb;
 }
 
-/* ============ 守卫 ============ */
-var guardConfig=null;
-var guardVerifiedUser=null;
-
-function loadGuardConfig(force){
-  if(!force){
-    try{
-      var raw=sstorage.get(GUARD_CACHE_KEY);
-      if(raw){
-        var o=JSON.parse(raw);
-        if(o&&o.t&&(Date.now()-o.t)<GUARD_CACHE_TTL&&o.data)return Promise.resolve(o.data);
-      }
-    }catch(e){}
-  }
-  function tryFetch(url){
-    return fetch(url+'?_='+Date.now(),{cache:'no-store'}).then(function(r){
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      return r.json();
-    });
-  }
-  return tryFetch(GUARD_URL_CDN).catch(function(){return tryFetch(GUARD_URL_RAW);})
-    .then(function(data){
-      if(!data||typeof data!=='object')throw new Error('守卫文件格式错误');
-      try{sstorage.set(GUARD_CACHE_KEY,JSON.stringify({t:Date.now(),data:data}));}catch(e){}
-      return data;
-    });
-}
-
-function verifyToken(token,owner,repo){
-  var headers={
-    'Authorization':'Bearer '+token,
-    'Accept':'application/vnd.github+json',
-    'X-GitHub-Api-Version':'2022-11-28'
-  };
-  var userInfo=null;
-  return fetch('https://api.github.com/user',{headers:headers})
-    .then(function(r){
-      if(r.status===401)throw new Error('Token 无效或已过期');
-      if(!r.ok)throw new Error('GitHub API 错误 '+r.status);
-      return r.json();
-    })
-    .then(function(user){
-      userInfo=user;
-      if(!guardConfig||!guardConfig.enabled)throw new Error('守卫已关闭');
-      var owners=(guardConfig.owners||[]).map(function(s){return String(s).toLowerCase();});
-      if(owners.indexOf(String(user.login).toLowerCase())===-1){
-        throw new Error('账号 '+user.login+' 不在管理员白名单');
-      }
-      var repos=(guardConfig.repos||[]).map(function(s){return String(s).toLowerCase();});
-      if(repos.indexOf(String(repo).toLowerCase())===-1){
-        throw new Error('仓库 '+repo+' 不在允许列表');
-      }
-      return fetch('https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo),{headers:headers})
-        .then(function(r){
-          if(r.status===404)throw new Error('仓库不存在或 Token 无权限');
-          if(!r.ok)throw new Error('仓库访问失败 '+r.status);
-          return r.json();
-        })
-        .then(function(repoData){return {user:userInfo,repo:repoData};});
-    });
-}
-
-function renderGuard(html){var card=$('guardCard');if(card)card.innerHTML=html;}
-function showGuard(html){
-  var mask=$('guardMask');
-  if(mask)mask.classList.remove('hide');
-  renderGuard(html);
-}
-function hideGuard(){
-  var mask=$('guardMask');
-  if(mask)mask.classList.add('hide');
-}
-
-function renderGuardDenied(reason,details){
-  renderGuard(
-    '<span class="guard-icon">🔒</span>'
-    +'<h2>未授权访问</h2>'
-    +'<p class="guard-sub">'+esc(reason)+'</p>'
-    +(details?'<p class="guard-sub" style="color:#f85149;font-size:12px">'+esc(details)+'</p>':'')
-    +'<button type="button" id="guardConnectBtn">用 GitHub Token 验证</button>'
-    +'<button type="button" class="guard-btn-secondary" id="guardRefreshBtn">重新读取守卫配置</button>'
-    +'<div class="guard-status" id="guardStatus"></div>'
-  );
-  bindGuardBtns();
-}
-function renderGuardNeedToken(reason){
-  renderGuard(
-    '<span class="guard-icon">🔑</span>'
-    +'<h2>需要授权</h2>'
-    +'<p class="guard-sub">'+(reason||'请填写 GitHub Personal Access Token 验证身份')+'</p>'
-    +'<button type="button" id="guardConnectBtn">填写 Token</button>'
-    +'<div class="guard-status" id="guardStatus"></div>'
-  );
-  bindGuardBtns();
-}
-function renderGuardVerified(user){
-  var avatar=user.avatar_url?'<img src="'+esc(user.avatar_url)+'" alt="">':'<span>👤</span>';
-  renderGuard(
-    '<span class="guard-icon">✅</span>'
-    +'<h2>欢迎，'+esc(user.login)+'</h2>'
-    +'<div class="guard-user">'+avatar+'<span>'+esc(user.login)+'</span></div>'
-    +'<p class="guard-sub">身份验证通过，正在进入管理后台…</p>'
-  );
-}
-function renderGuardLoading(text){
-  renderGuard(
-    '<span class="guard-icon">⏳</span>'
-    +'<h2>正在验证</h2>'
-    +'<p class="guard-sub">'+esc(text||'检查授权…')+'</p>'
-  );
-}
-function bindGuardBtns(){
-  var c=$('guardConnectBtn'),r=$('guardRefreshBtn');
-  if(c)c.addEventListener('click',openConn);
-  if(r)r.addEventListener('click',function(){sstorage.del(GUARD_CACHE_KEY);bootGuard(true);});
-}
-
-function bootGuard(force){
-  showGuard();
-  renderGuardLoading('读取守卫配置…');
-  loadGuardConfig(force).then(function(cfg){
-    guardConfig=cfg;
-    if(!cfg.enabled){renderGuardDenied('守卫已关闭','管理员暂时停用了后台访问');return;}
-    var raw=storage.get(K_GH);
-    if(!raw){renderGuardNeedToken();return;}
-    var c=null;
-    try{c=JSON.parse(raw);}catch(e){}
-    if(!c||!c.token){renderGuardNeedToken();return;}
-    renderGuardLoading('验证身份中…');
-    verifyToken(c.token,c.owner||DEFAULT_OWNER,c.repo||DEFAULT_REPO).then(function(res){
-      guardVerifiedUser=res.user;
-      renderGuardVerified(res.user);
-      setTimeout(function(){
-        hideGuard();
-        if($('adminWrap'))$('adminWrap').style.display='';
-        boot();
-      },700);
-    }).catch(function(err){
-      storage.del(K_GH);gh=null;
-      renderGuardDenied('授权失败',err.message||'Token 无效或已过期');
-    });
-  }).catch(function(err){
-    renderGuardDenied('守卫配置读取失败',err.message||'网络错误');
-  });
-}
-
 /* ============ 全局状态 ============ */
 var gh=null;
 var curTab='wiki';
 var busy=false;
 
-var wikiArticles=[],wikiTags=[],wikiSnapshot='',mergingFrom=null,deletingName=null;
-var files=[],fileSnapshot='',dlTagFilter='__all__',editingFileIdx=-1;
-var tools=[],toolsSnapshot='',toolsStatusFilter='__all__',editingToolIdx=-1;
+var wikiArticles=[],wikiTags=[],wikiSnapshot='';
+var files=[],fileSnapshot='',dlTagFilter='__all__';
+var tools=[],toolsSnapshot='',toolsStatusFilter='__all__';
 
-var welfTotal=0,welfLoaded=false,welfLoading=false,welfTargets=[],welfDeletedIds=[];
+var welfTotal=0,welfLoaded=false,welfLoading=false,welfTargets=[];
 var shopItems=[],shopLoading=false,editingShopId=null;
 var orders=[],orderFilter='__all__',orderLoading=false;
 
@@ -651,6 +470,32 @@ function fmtSize(bytes){
   return (mb/1024).toFixed(2)+' GB';
 }
 
+/* ============ 验证 Token ============ */
+function verifyToken(token,owner,repo){
+  var headers={
+    'Authorization':'Bearer '+token,
+    'Accept':'application/vnd.github+json',
+    'X-GitHub-Api-Version':'2022-11-28'
+  };
+  return fetch('https://api.github.com/user',{headers:headers})
+    .then(function(r){
+      if(r.status===401)throw new Error('Token 无效或已过期');
+      if(!r.ok)throw new Error('GitHub API 错误 '+r.status);
+      return r.json();
+    })
+    .then(function(user){
+      return fetch('https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo),{headers:headers})
+        .then(function(r){
+          if(r.status===404)throw new Error('仓库不存在或 Token 无权限访问');
+          if(!r.ok)throw new Error('仓库访问失败 '+r.status);
+          return r.json();
+        })
+        .then(function(repoData){
+          return {user:user,repo:repoData};
+        });
+    });
+}
+
 /* ============ 状态栏 ============ */
 function setStatus(kind,text){
   var dot=$('dot'),st=$('statusText');
@@ -678,6 +523,9 @@ function updateButtons(){
   if($('btnAddFile'))$('btnAddFile').disabled=!hasGh||busy;
   if($('btnSyncReleases'))$('btnSyncReleases').disabled=!hasGh||busy;
   if($('btnAddTool'))$('btnAddTool').disabled=!hasGh||busy;
+  if($('btnWelfAddTarget'))$('btnWelfAddTarget').disabled=!hasGh||busy;
+  if($('welfSaveTargets'))$('welfSaveTargets').disabled=!hasGh||busy;
+  if($('btnAddShop'))$('btnAddShop').disabled=!hasGh||busy;
   if($('wikiBadge'))$('wikiBadge').textContent=hasGh?String(wikiTags.length):'0';
   if($('dlBadge'))$('dlBadge').textContent=hasGh?String(files.filter(function(f){return !f.hidden;}).length):'0';
   if($('toolsBadge'))$('toolsBadge').textContent=hasGh?String(tools.filter(function(t){return !t.hidden;}).length):'0';
@@ -732,14 +580,6 @@ function buildWikiTags(){
     counts[c]++;
   });
   wikiTags=order.map(function(name){return {name:name,count:counts[name]};});
-}
-function recomputeWikiCounts(){
-  var counts={};
-  wikiArticles.forEach(function(a){
-    var c=(a&&a.category)?String(a.category):'未分类';
-    counts[c]=(counts[c]||0)+1;
-  });
-  wikiTags.forEach(function(t){t.count=counts[t.name]||0;});
 }
 function snapshotWiki(){return JSON.stringify({order:wikiTags.map(function(t){return t.name;}),data:wikiArticles});}
 function renderWiki(){
@@ -855,7 +695,6 @@ function refreshWelfare(){
           sort_order:parseInt(t.sort_order,10)||(i+1)
         };
       });
-      welfDeletedIds=[];
       renderWelfareStats();
       renderWelfareTargets();
       if($('welfHint'))$('welfHint').textContent='数据来自 GitHub · '+FILE_TARGETS;
@@ -867,6 +706,7 @@ function refreshWelfare(){
     });
 }
 function addWelfareTarget(){
+  if(!gh){toast('请先连接 GitHub');return;}
   welfTargets.push({id:null,name:'新目标',value:100,sort_order:welfTargets.length+1});
   renderWelfareTargets();
   renderWelfareStats();
@@ -911,7 +751,6 @@ function saveWelfareTargets(){
     .then(function(){
       if($('welfSaveTargets'))$('welfSaveTargets').disabled=false;
       welfTargets=data;
-      welfDeletedIds=[];
       toast('✓ 已保存 '+data.length+' 个目标到 GitHub');
       renderWelfareTargets();
     })
@@ -968,6 +807,7 @@ function refreshShop(){
     });
 }
 function openShopEdit(id){
+  if(!gh){toast('请先连接 GitHub');return;}
   editingShopId=id||null;
   var it=null;
   if(id){for(var i=0;i<shopItems.length;i++)if(String(shopItems[i].id)===String(id)){it=shopItems[i];break;}}
@@ -1092,10 +932,6 @@ function deleteOrder(id){
 
 /* ============ 连接 GitHub ============ */
 function openConn(){
-  if(!guardConfig){
-    toast('守卫配置未加载，请刷新页面');
-    return;
-  }
   $('ghToken').value=gh?gh.token:'';
   $('ghOwner').value=gh?gh.owner:DEFAULT_OWNER;
   $('ghRepo').value=gh?gh.repo:DEFAULT_REPO;
@@ -1114,7 +950,6 @@ function doConnect(){
   var repo=($('ghRepo').value||'').trim();
   if(!token){toast('请填 Token');return;}
   if(!owner||!repo){toast('请填 Owner 和 Repo');return;}
-  if(!guardConfig){toast('守卫配置未加载，请刷新页面');return;}
 
   var btn=$('connSave');
   var oldText=btn.textContent;
@@ -1134,7 +969,6 @@ function doConnect(){
       branch:($('ghBranch').value||'').trim()||DEFAULT_BRANCH
     };
     storage.set(K_GH,JSON.stringify(gh));
-    guardVerifiedUser=res.user;
     closeConn();
     toast('✓ 已验证：'+res.user.login);
     updateButtons();
@@ -1154,10 +988,9 @@ function doDisconnect(){
   wikiArticles=[];wikiTags=[];files=[];tools=[];welfTargets=[];shopItems=[];
   wikiSnapshot=fileSnapshot=toolsSnapshot='';
   renderWiki();renderFiles();renderTools();
+  renderWelfareStats();renderWelfareTargets();renderShop();
   updateButtons();
-  guardVerifiedUser=null;
-  if($('adminWrap'))$('adminWrap').style.display='none';
-  bootGuard(true);
+  toast('已断开');
 }
 function reload(silent,force){
   if(!gh)return;
@@ -1320,10 +1153,7 @@ function bind(){
 }
 
 /* ============ 启动 ============ */
-var __booted=false;
 function boot(){
-  if(__booted)return;
-  __booted=true;
   try{
     bind();
     var t=storage.get(K_TAB);
@@ -1352,12 +1182,8 @@ function boot(){
   }catch(e){showError('启动失败：'+e.message);}
 }
 
-function initApp(){
-  bootGuard(false);
-}
-
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initApp);
-else initApp();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);
+else boot();
 
 })();
 </script>
