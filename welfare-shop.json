@@ -1,0 +1,5 @@
+[
+  {"id":"s-1","icon":"🌹","name":"玫瑰花束","description":"游戏内一束玫瑰花","price":1,"available":true,"sort_order":1},
+  {"id":"s-2","icon":"⚔️","name":"钻石剑","description":"附魔钻石剑一把","price":3,"available":true,"sort_order":2},
+  {"id":"s-3","icon":"🏆","name":"专属称号","description":"限时专属头衔","price":5,"available":true,"sort_order":3}
+]
