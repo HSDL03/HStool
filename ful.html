@@ -30,7 +30,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 body.touch-mode{cursor:auto}
 body.touch-mode .cursor-follow{display:none!important}
 
-/* 顶栏 */
 .topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:2px solid var(--topbar-bd);z-index:50;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 .logo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none;white-space:nowrap;cursor:pointer;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
 .logo-icon{display:inline-block;font-size:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
@@ -44,7 +43,6 @@ body.touch-mode .cursor-follow{display:none!important}
 .icon:hover{background:rgba(0,0,0,.2);color:#fff}
 .icon:active{transform:scale(.92)}
 
-/* 背景装饰 */
 .bg-decor{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 .blob{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform,opacity}
 .b1{width:420px;height:420px;background:var(--blob1);top:-140px;left:-120px;animation:drift1 30s ease-in-out infinite}
@@ -56,7 +54,6 @@ body.touch-mode .cursor-follow{display:none!important}
 .grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 85% 75% at 50% 40%,#000 20%,transparent 75%)}
 #particles{position:absolute;inset:0;width:100%;height:100%;display:block}
 
-/* 光标 */
 .cursor-follow{position:fixed;pointer-events:none;z-index:9999;width:22px;height:22px;transform:translate(-50%,-50%);opacity:0;transition:opacity .25s;mix-blend-mode:difference;will-change:left,top}
 .cursor-follow::before,.cursor-follow::after{content:"";position:absolute;background:#fff}
 .cursor-follow::before{left:50%;top:0;width:2px;height:22px;margin-left:-1px}
@@ -66,29 +63,24 @@ body:hover .cursor-follow{opacity:.55}
 .cursor-follow.hovering{transform:translate(-50%,-50%) rotate(45deg) scale(1.3);opacity:.9}
 .cursor-follow.clicking{transform:translate(-50%,-50%) rotate(45deg) scale(0.75);opacity:1}
 
-/* 布局 */
 .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:32px 20px 80px}
 .main-grid{display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start}
 
-/* 左侧商店 */
 .shop-panel{position:sticky;top:70px;padding:0;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);overflow:hidden}
 .shop-head{padding:10px 14px;background:linear-gradient(180deg,#e0202e,#a01020);color:#fff;font-size:13.5px;font-weight:800;text-shadow:1px 1px 0 rgba(0,0,0,.3);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .shop-head .shop-points{font-size:11.5px;padding:2px 8px;background:rgba(255,222,0,.9);color:#6a0810;border-radius:999px;font-weight:800;font-variant-numeric:tabular-nums}
 .shop-list{padding:10px;display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto}
 .shop-empty{padding:24px 12px;text-align:center;font-size:12.5px;color:var(--muted)}
-.shop-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);transition:all .2s}
+.shop-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);transition:all .2s;font-family:inherit;color:inherit;cursor:pointer;text-align:left}
 .shop-item:hover{border-color:var(--ac);transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.06)}
-.shop-item.unavailable{opacity:.5;filter:grayscale(.5);cursor:not-allowed}
-.shop-item.unavailable:hover{transform:none;border-color:var(--bd);box-shadow:none}
 .shop-item.cant-afford .shop-price{color:var(--dgr)}
 .shop-icon{flex:none;width:40px;height:40px;display:grid;place-items:center;font-size:20px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r)}
 .shop-info{flex:1;min-width:0}
-.shop-name{font-size:13.5px;font-weight:800;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.shop-desc{font-size:11px;color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.shop-name{font-size:13.5px;font-weight:800;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.shop-desc{font-size:11px;color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;display:block}
 .shop-price{flex:none;font-size:12.5px;font-weight:900;color:var(--ac);font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:2px}
 .shop-price::before{content:"⭐";font-size:11px}
 
-/* 主体 */
 .main-col{min-width:0}
 .hero{text-align:center;padding:8px 0 24px}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;margin-bottom:14px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ac)}
@@ -105,7 +97,6 @@ body:hover .cursor-follow{opacity:.55}
 @keyframes numBump{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
 .boost-label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
-/* 融合进度条 */
 .progress-section{width:100%;margin-bottom:22px}
 .progress-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg2);border:2px dashed var(--bd2);border-radius:var(--r)}
 .progress-card{padding:18px 22px 16px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
@@ -120,14 +111,7 @@ body:hover .cursor-follow{opacity:.55}
 .progress-count{font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
 .progress-count .progress-current{color:var(--ac)}
 
-/* 缩放视口 */
-.progress-zoom-viewport{
-  overflow-x:auto;overflow-y:hidden;
-  -webkit-overflow-scrolling:touch;
-  touch-action:pan-x;
-  cursor:grab;
-  scrollbar-width:thin;
-}
+.progress-zoom-viewport{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;cursor:grab;scrollbar-width:thin}
 .progress-zoom-viewport.dragging{cursor:grabbing}
 .progress-zoom-viewport::-webkit-scrollbar{height:8px}
 .progress-zoom-viewport::-webkit-scrollbar-track{background:var(--bg3);border-radius:4px}
@@ -150,7 +134,6 @@ body:hover .cursor-follow{opacity:.55}
 @keyframes progressShine{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 .progress-bar-marks{position:absolute;inset:0;pointer-events:none}
-/* 细刻度：每 5% */
 .minor-tick{position:absolute;top:50%;width:1px;height:8px;margin-top:-4px;background:rgba(138,32,24,.22);transform:translateX(-.5px)}
 .minor-tick.major{height:14px;margin-top:-7px;background:rgba(138,32,24,.35)}
 .milestone-tick{position:absolute;top:0;bottom:0;width:2px;background:rgba(138,32,24,.28);transform:translateX(-1px);z-index:1;transition:background .3s}
@@ -165,7 +148,6 @@ body:hover .cursor-follow{opacity:.55}
 .progress-footer.all-done .progress-percent{color:var(--ok)}
 .progress-footer.all-done .progress-remain strong{color:var(--ok)}
 
-/* 助力按钮 */
 .action-area{display:flex;align-items:center;justify-content:center;padding:0 0 32px}
 .action-btn{position:relative;display:inline-flex;align-items:center;gap:14px;padding:18px 48px;font-family:inherit;font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff;background:linear-gradient(135deg,#e0202e 0%,#c8102e 50%,#a01020 100%);border:3px solid var(--bd2);border-radius:var(--r);cursor:pointer;text-shadow:1px 1px 0 rgba(0,0,0,.35);overflow:hidden;isolation:isolate;box-shadow:3px 3px 0 rgba(0,0,0,.3),0 0 24px rgba(200,16,46,.45);transition:border-color .25s,color .25s,filter .25s}
 .action-btn .pulse-ring{position:absolute;inset:-3px;border:2px solid var(--ac);border-radius:var(--r);pointer-events:none;animation:pulseRingOut 2.4s ease-out infinite;z-index:-1}
@@ -189,7 +171,6 @@ body:hover .cursor-follow{opacity:.55}
 @keyframes cardRing{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-50%) scale(14);opacity:0}}
 .action-btn .btn-inner{position:relative;z-index:3;display:flex;align-items:center;gap:14px;--press:1;transform:scale(var(--press));transition:transform .34s cubic-bezier(.34,1.56,.64,1);transform-origin:center}
 
-/* 动态流 */
 .feed-panel{padding:0;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);overflow:hidden;margin-top:20px}
 .feed-head{padding:10px 14px;background:linear-gradient(180deg,#e0202e,#a01020);color:#fff;font-size:13px;font-weight:800;text-shadow:1px 1px 0 rgba(0,0,0,.3)}
 .feed-list{padding:10px 12px;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto}
@@ -201,7 +182,6 @@ body:hover .cursor-follow{opacity:.55}
 .feed-item .fi-time{flex:none;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .feed-empty{padding:24px;text-align:center;color:var(--muted);font-size:12.5px}
 
-/* 弹层通用 */
 .ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:100;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
 .ov.show{opacity:1;visibility:visible}
 .pnl{display:flex;flex-direction:column;width:100%;max-width:420px;max-height:calc(100vh - 32px);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:3px 3px 0 rgba(0,0,0,.3);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
@@ -231,7 +211,6 @@ body:hover .cursor-follow{opacity:.55}
 .auth-status.err{color:var(--dgr);font-weight:700}
 .auth-status.ok{color:var(--ok);font-weight:700}
 
-/* 主题弹层 */
 .theme-body{padding:14px;overflow-y:auto}
 .theme-lock{margin-bottom:12px;padding:8px 12px;font-size:12.5px;font-weight:700;color:var(--ac);background:var(--acs);border:2px solid var(--ac);border-radius:var(--r);text-align:center}
 .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -239,8 +218,7 @@ body:hover .cursor-follow{opacity:.55}
 .theme-card:hover{transform:translateY(-2px);border-color:var(--ac)}
 .theme-card.active{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 2px var(--acs)}
 .theme-card.locked-other{opacity:.55;cursor:not-allowed}
-.theme-card.locked-other:hover{transform:none;border-color:var(--bd)}
-.theme-prev{display:flex;height:30px;border:1px solid var(--bd);border-radius:0;overflow:hidden}
+.theme-prev{display:flex;height:30px;border:1px solid var(--bd);overflow:hidden}
 .theme-prev span{flex:1;display:block}
 .theme-name{font-size:12.5px;font-weight:700}
 .theme-desc{font-size:10.5px;color:var(--muted);margin-top:-3px}
@@ -316,7 +294,6 @@ body:hover .cursor-follow{opacity:.55}
 
 <div class="wrap">
   <div class="main-grid">
-    <!-- 商店 -->
     <aside class="shop-panel">
       <div class="shop-head">
         <span>🛒 商店</span>
@@ -327,7 +304,6 @@ body:hover .cursor-follow{opacity:.55}
       </div>
     </aside>
 
-    <!-- 主体 -->
     <main class="main-col">
       <div class="hero">
         <div class="hero-badge"><span class="dot"></span>NATIONAL DAY · 国庆</div>
@@ -367,7 +343,6 @@ body:hover .cursor-follow{opacity:.55}
   </div>
 </div>
 
-<!-- 登录弹层 -->
 <div class="ov" id="authOv">
   <div class="pnl">
     <div class="ph"><strong>账号</strong><span class="sp"></span><button class="icon" id="authClose">✕</button></div>
@@ -387,7 +362,6 @@ body:hover .cursor-follow{opacity:.55}
   </div>
 </div>
 
-<!-- 购买弹层 -->
 <div class="ov" id="buyOv">
   <div class="pnl">
     <div class="ph"><strong>购买确认</strong><span class="sp"></span><button class="icon" id="buyClose">✕</button></div>
@@ -405,7 +379,6 @@ body:hover .cursor-follow{opacity:.55}
   </div>
 </div>
 
-<!-- 账号操作弹层 -->
 <div class="ov" id="acctOv">
   <div class="pnl">
     <div class="ph"><strong>账号</strong><span class="sp"></span><button class="icon" id="acctClose">✕</button></div>
@@ -422,7 +395,6 @@ body:hover .cursor-follow{opacity:.55}
   </div>
 </div>
 
-<!-- 主题弹层 -->
 <div class="ov" id="themeOv">
   <div class="pnl" style="max-width:560px">
     <div class="ph"><strong>选择风格</strong><span class="sp"></span><button class="icon" id="themeClose">✕</button></div>
@@ -452,12 +424,18 @@ body:hover .cursor-follow{opacity:.55}
 var SUPABASE_URL='https://lxdyrajbsjftduesvosh.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 var T_BOOST='welfare_boost';
-var T_TARGETS='welfare_targets';
 var T_USERS='welfare_users';
-var T_SHOP='welfare_shop';
 var T_ORDERS='welfare_orders';
 var COOLDOWN_MS=1000;
 var POINT_DROP_RATE=0.25;
+
+/* GitHub 存储的数据 */
+var GH_OWNER='HSDL03';
+var GH_REPO='HSwiki';
+var GH_BRANCH='main';
+var RAW_BASE='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/'+GH_BRANCH+'/';
+var FILE_TARGETS='welfare-targets.json';
+var FILE_SHOP='welfare-shop.json';
 
 var sb=null;
 try{
@@ -477,6 +455,13 @@ function fmtRelTime(ts){
   if(diff<86400000)return Math.floor(diff/3600000)+' 小时前';
   return Math.floor(diff/86400000)+' 天前';
 }
+function loadJsonFromGitHub(filename){
+  return fetch(RAW_BASE+filename+'?_='+Date.now(),{cache:'no-store'})
+    .then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    });
+}
 var storage={
   get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
   set:function(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}},
@@ -492,7 +477,6 @@ function toast(msg){
   toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2400);
 }
 
-/* 哈希密码 */
 function hashPwd(pwd){
   return new Promise(function(resolve,reject){
     try{
@@ -500,14 +484,13 @@ function hashPwd(pwd){
       crypto.subtle.digest('SHA-256',buf).then(function(hash){
         var arr=new Uint8Array(hash);
         var hex='';
-        for(var i=0;i<arr.length;i++){hex+=('0'+arr[i].toString(16)).slice(-2);}
+        for(var i=0;i<arr.length;i++)hex+=('0'+arr[i].toString(16)).slice(-2);
         resolve(hex);
       }).catch(reject);
     }catch(e){reject(e);}
   });
 }
 
-/* 当前用户 */
 var currentUser=null;
 function loadUserSession(){
   try{
@@ -537,7 +520,6 @@ function renderUserChip(){
   renderShop();
 }
 
-/* 主题 */
 var LOCKED_THEME='cn-red';
 var THEMES=[
   {id:'cn-red',name:'🇨🇳 中国红',desc:'国庆专属 · 已锁定',colors:['#c8102e','#fff8f0','#e0202e']},
@@ -568,14 +550,12 @@ var themeOv=$('themeOv');
 function openTheme(){buildThemeGrid();themeOv.classList.add('show');}
 function closeTheme(){themeOv.classList.remove('show');}
 
-/* 状态胶囊 */
 var spPill=$('statusPill'),spTime=$('spTime'),spLat=$('spLat');
 function spSetBusy(){if(spPill)spPill.className='status-pill busy';}
 function spSetOK(){if(spPill)spPill.className='status-pill';}
 function spSetErr(){if(spPill)spPill.className='status-pill err';}
 function spSetLat(lat){if(spLat)spLat.textContent=lat>=0?(lat+'ms'):'超时';}
 
-/* 状态 */
 var totalBoost=0;
 var boostLoaded=false;
 var cooling=false;
@@ -586,11 +566,8 @@ var boostNumEl=$('boostNum');
 var actionBtn=$('actionBtn');
 var progressSectionEl=$('progressSection');
 
-/* 缩放 */
 var zoomLevel=1;
-var ZOOM_MIN=1;
-var ZOOM_MAX=5;
-var ZOOM_STEP=0.3;
+var ZOOM_MIN=1,ZOOM_MAX=5,ZOOM_STEP=0.3;
 
 function applyZoom(){
   var content=$('progressZoomContent');
@@ -603,26 +580,14 @@ function applyZoom(){
   if(minus)minus.disabled=zoomLevel<=ZOOM_MIN+0.01;
   if(plus)plus.disabled=zoomLevel>=ZOOM_MAX-0.01;
 }
-
 function setupZoomControls(){
-  var minus=$('progressZoomMinus');
-  var plus=$('progressZoomPlus');
-  if(minus)minus.addEventListener('click',function(){
-    zoomLevel=Math.max(ZOOM_MIN,zoomLevel-ZOOM_STEP);
-    applyZoom();
-  });
-  if(plus)plus.addEventListener('click',function(){
-    zoomLevel=Math.min(ZOOM_MAX,zoomLevel+ZOOM_STEP);
-    applyZoom();
-  });
+  var minus=$('progressZoomMinus'),plus=$('progressZoomPlus');
+  if(minus)minus.addEventListener('click',function(){zoomLevel=Math.max(ZOOM_MIN,zoomLevel-ZOOM_STEP);applyZoom();});
+  if(plus)plus.addEventListener('click',function(){zoomLevel=Math.min(ZOOM_MAX,zoomLevel+ZOOM_STEP);applyZoom();});
 }
-
-/* 滚轮缩放 */
 function setupWheelZoom(){
-  var vp=$('progressZoomViewport');
-  if(!vp)return;
+  var vp=$('progressZoomViewport');if(!vp)return;
   vp.addEventListener('wheel',function(e){
-    if(!e.ctrlKey && Math.abs(e.deltaY)<3) return;
     e.preventDefault();
     var dir=e.deltaY<0?1:-1;
     var oldZoom=zoomLevel;
@@ -632,23 +597,14 @@ function setupWheelZoom(){
       var mx=(e.clientX-rect.left+vp.scrollLeft)/vp.scrollWidth;
       applyZoom();
       requestAnimationFrame(function(){
-        var newLeft=mx*vp.scrollWidth-(e.clientX-rect.left);
-        vp.scrollLeft=newLeft;
+        vp.scrollLeft=mx*vp.scrollWidth-(e.clientX-rect.left);
       });
     }
   },{passive:false});
 }
-
-/* 双指缩放 + 拖动 */
 function setupTouchZoom(){
-  var vp=$('progressZoomViewport');
-  if(!vp)return;
-  var pinchStartDist=0;
-  var pinchStartZoom=1;
-  var dragging=false;
-  var dragStartX=0;
-  var dragStartScroll=0;
-
+  var vp=$('progressZoomViewport');if(!vp)return;
+  var pinchStartDist=0,pinchStartZoom=1,dragging=false,dragStartX=0,dragStartScroll=0;
   vp.addEventListener('touchstart',function(e){
     if(e.touches.length===2){
       var dx=e.touches[0].clientX-e.touches[1].clientX;
@@ -657,44 +613,32 @@ function setupTouchZoom(){
       pinchStartZoom=zoomLevel;
       dragging=false;
     }else if(e.touches.length===1){
-      dragging=true;
-      dragStartX=e.touches[0].clientX;
-      dragStartScroll=vp.scrollLeft;
+      dragging=true;dragStartX=e.touches[0].clientX;dragStartScroll=vp.scrollLeft;
       vp.classList.add('dragging');
     }
   },{passive:true});
-
   vp.addEventListener('touchmove',function(e){
-    if(e.touches.length===2 && pinchStartDist>0){
+    if(e.touches.length===2&&pinchStartDist>0){
       e.preventDefault();
       var dx=e.touches[0].clientX-e.touches[1].clientX;
       var dy=e.touches[0].clientY-e.touches[1].clientY;
       var dist=Math.sqrt(dx*dx+dy*dy);
-      var scale=dist/pinchStartDist;
-      zoomLevel=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,pinchStartZoom*scale));
+      zoomLevel=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,pinchStartZoom*(dist/pinchStartDist)));
       applyZoom();
-    }else if(dragging && e.touches.length===1){
-      var cx=e.touches[0].clientX;
-      vp.scrollLeft=dragStartScroll-(cx-dragStartX);
+    }else if(dragging&&e.touches.length===1){
+      vp.scrollLeft=dragStartScroll-(e.touches[0].clientX-dragStartX);
     }
   },{passive:false});
-
   vp.addEventListener('touchend',function(e){
     if(e.touches.length<2)pinchStartDist=0;
     if(e.touches.length===0){dragging=false;vp.classList.remove('dragging');}
   },{passive:true});
 }
 
-/* 渲染总助力点 */
-function renderBoost(){
-  if(!boostNumEl)return;
-  boostNumEl.textContent=boostLoaded?String(totalBoost):'--';
-}
+function renderBoost(){if(boostNumEl)boostNumEl.textContent=boostLoaded?String(totalBoost):'--';}
 
-/* 渲染融合进度条 */
 function renderProgress(){
-  var el=progressSectionEl;
-  if(!el)return;
+  var el=progressSectionEl;if(!el)return;
   if(!boostLoaded){el.innerHTML='<div class="progress-empty">加载中…</div>';return;}
   if(welfTargets.length===0){el.innerHTML='<div class="progress-empty">暂无目标</div>';return;}
 
@@ -706,30 +650,20 @@ function renderProgress(){
   var nextTarget=null;
   for(var i=0;i<targets.length;i++){
     var tv=parseInt(targets[i].value,10)||0;
-    if(tv>0 && totalBoost<tv){nextTarget=targets[i];break;}
+    if(tv>0&&totalBoost<tv){nextTarget=targets[i];break;}
   }
 
-  /* 细刻度层（每 5%） */
   var minorTicksHtml='';
-  for(var p=5;p<100;p+=5){
-    var isMajor=(p%25===0);
-    minorTicksHtml+='<span class="minor-tick'+(isMajor?' major':'')+'" style="left:'+p+'%"></span>';
-  }
+  for(var p=5;p<100;p+=5){minorTicksHtml+='<span class="minor-tick'+((p%25===0)?' major':'')+'" style="left:'+p+'%"></span>';}
 
-  var labelsHtml='';
-  var marksHtml='';
+  var labelsHtml='',marksHtml='';
   targets.forEach(function(t){
-    var tv=parseInt(t.value,10)||0;
-    if(tv<=0)return;
+    var tv=parseInt(t.value,10)||0;if(tv<=0)return;
     var pct=Math.min(100,(tv/maxTarget)*100);
     var done=totalBoost>=tv;
     var doneCls=done?' done':'';
-    labelsHtml+='<div class="milestone-label'+doneCls+'" style="left:'+pct+'%">'
-      +'<span class="ml-name">'+escapeHtml(t.name||'目标')+'</span>'
-      +'<span class="ml-value">'+tv+'</span>'
-      +'</div>';
-    marksHtml+='<span class="milestone-tick'+doneCls+'" style="left:'+pct+'%"></span>'
-      +'<span class="milestone-dot'+doneCls+'" style="left:'+pct+'%"></span>';
+    labelsHtml+='<div class="milestone-label'+doneCls+'" style="left:'+pct+'%"><span class="ml-name">'+escapeHtml(t.name||'目标')+'</span><span class="ml-value">'+tv+'</span></div>';
+    marksHtml+='<span class="milestone-tick'+doneCls+'" style="left:'+pct+'%"></span><span class="milestone-dot'+doneCls+'" style="left:'+pct+'%"></span>';
   });
 
   var allDone=!nextTarget;
@@ -760,9 +694,7 @@ function renderProgress(){
     +  '<div class="progress-zoom-content" id="progressZoomContent">'
     +    '<div class="progress-bar-labels">'+labelsHtml+'</div>'
     +    '<div class="progress-bar-wrap">'
-    +      '<div class="progress-bar-track">'
-    +        '<div class="progress-fill" style="width:'+overallPct+'%"></div>'
-    +      '</div>'
+    +      '<div class="progress-bar-track"><div class="progress-fill" style="width:'+overallPct+'%"></div></div>'
     +      '<div class="progress-bar-marks">'+minorTicksHtml+marksHtml+'</div>'
     +    '</div>'
     +  '</div>'
@@ -780,24 +712,17 @@ function renderProgress(){
   setupTouchZoom();
 }
 
-/* 渲染商店 */
 function renderShop(){
-  var el=$('shopList');
-  if(!el)return;
-  if(!shopItems.length){
-    el.innerHTML='<div class="shop-empty">暂无商品</div>';
-    return;
-  }
+  var el=$('shopList');if(!el)return;
+  if(!shopItems.length){el.innerHTML='<div class="shop-empty">暂无商品</div>';return;}
   var points=currentUser?currentUser.points:0;
   var html='';
   shopItems.forEach(function(it){
-    if(!it.available)return;
+    if(it.available===false)return;
     var price=parseInt(it.price,10)||0;
-    var canAfford=currentUser && points>=price;
-    var cls='shop-item';
-    if(!currentUser)cls+=' cant-afford';
-    else if(!canAfford)cls+=' cant-afford';
-    html+='<button type="button" class="'+cls+'" data-shop-id="'+it.id+'">'
+    var canAfford=currentUser&&points>=price;
+    var cls='shop-item'+(canAfford?'':' cant-afford');
+    html+='<button type="button" class="'+cls+'" data-shop-id="'+escapeHtml(String(it.id))+'" data-shop-name="'+escapeHtml(it.name||'')+'" data-shop-icon="'+escapeHtml(it.icon||'🎁')+'" data-shop-price="'+price+'">'
       +'<span class="shop-icon">'+escapeHtml(it.icon||'🎁')+'</span>'
       +'<span class="shop-info">'
       +  '<span class="shop-name">'+escapeHtml(it.name||'')+'</span>'
@@ -809,14 +734,9 @@ function renderShop(){
   el.innerHTML=html||'<div class="shop-empty">暂无商品</div>';
 }
 
-/* 渲染动态 */
 function renderFeed(){
-  var el=$('feedList');
-  if(!el)return;
-  if(!feedOrders.length){
-    el.innerHTML='<div class="feed-empty">暂无动态</div>';
-    return;
-  }
+  var el=$('feedList');if(!el)return;
+  if(!feedOrders.length){el.innerHTML='<div class="feed-empty">暂无动态</div>';return;}
   var html='';
   feedOrders.forEach(function(o){
     html+='<div class="feed-item">'
@@ -835,35 +755,40 @@ function bumpNumber(){
   boostNumEl.classList.add('bump');
 }
 
-/* 加载数据 */
 var refreshing=false;
 function refreshAll(){
   if(!sb||refreshing)return;
   refreshing=true;
   Promise.all([
     sb.from(T_BOOST).select('*',{count:'exact',head:true}),
-    sb.from(T_TARGETS).select('*').order('sort_order',{ascending:true}),
-    sb.from(T_SHOP).select('*').eq('available',true).order('sort_order',{ascending:true}),
+    loadJsonFromGitHub(FILE_TARGETS).catch(function(){return [];}),
+    loadJsonFromGitHub(FILE_SHOP).catch(function(){return [];}),
     sb.from(T_ORDERS).select('*').order('created_at',{ascending:false}).limit(30)
   ]).then(function(results){
     refreshing=false;
     var countRes=results[0];
-    var targetsRes=results[1];
-    var shopRes=results[2];
+    var targetsData=results[1];
+    var shopData=results[2];
     var ordersRes=results[3];
+
     if(countRes.error){spSetErr();}
     else{
       spSetOK();
       if(typeof countRes.count==='number'){totalBoost=countRes.count;boostLoaded=true;}
     }
-    if(!targetsRes.error&&Array.isArray(targetsRes.data))welfTargets=targetsRes.data;
-    if(!shopRes.error&&Array.isArray(shopRes.data))shopItems=shopRes.data;
+    welfTargets=targetsData||[];
+    shopItems=shopData||[];
     if(!ordersRes.error&&Array.isArray(ordersRes.data))feedOrders=ordersRes.data;
+
     renderBoost();
     renderProgress();
     renderShop();
     renderFeed();
-  }).catch(function(err){refreshing=false;console.warn(err);spSetErr();});
+  }).catch(function(err){
+    refreshing=false;
+    console.warn('[ful] refresh error',err);
+    spSetErr();
+  });
 }
 
 function refreshUser(){
@@ -876,7 +801,14 @@ function refreshUser(){
   }).catch(function(){});
 }
 
-/* 冷却 */
+function startGitHubPolling(){
+  setInterval(function(){
+    if(document.hidden)return;
+    loadJsonFromGitHub(FILE_TARGETS).then(function(d){welfTargets=d||[];renderProgress();}).catch(function(){});
+    loadJsonFromGitHub(FILE_SHOP).then(function(d){shopItems=d||[];renderShop();}).catch(function(){});
+  },30000);
+}
+
 function startCooldown(){
   cooling=true;
   if(actionBtn)actionBtn.classList.add('cooling');
@@ -895,7 +827,6 @@ function startCooldown(){
   requestAnimationFrame(tick);
 }
 
-/* 助力 */
 function doBoost(){
   if(cooling)return;
   if(!sb){toast('连接未初始化');return;}
@@ -908,7 +839,7 @@ function doBoost(){
   bumpNumber();
 
   var gotPoint=false;
-  if(currentUser && Math.random()<POINT_DROP_RATE){
+  if(currentUser&&Math.random()<POINT_DROP_RATE){
     gotPoint=true;
     currentUser.points++;
     saveUserSession();
@@ -938,22 +869,15 @@ function doBoost(){
   });
 }
 
-/* 订阅 */
 var chan=null;
 function subscribeAll(){
   if(!sb||chan)return;
   chan=sb.channel('welfare-live')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:T_BOOST},function(payload){
-      var row=payload.new;
-      if(!row)return;
-      totalBoost++;
-      boostLoaded=true;
-      renderBoost();
-      renderProgress();
-      bumpNumber();
+      var row=payload.new;if(!row)return;
+      totalBoost++;boostLoaded=true;
+      renderBoost();renderProgress();bumpNumber();
     })
-    .on('postgres_changes',{event:'*',schema:'public',table:T_TARGETS},function(){refreshAll();})
-    .on('postgres_changes',{event:'*',schema:'public',table:T_SHOP},function(){refreshAll();})
     .on('postgres_changes',{event:'*',schema:'public',table:T_ORDERS},function(){refreshAll();})
     .on('postgres_changes',{event:'*',schema:'public',table:T_USERS},function(payload){
       var row=payload.new;
@@ -974,7 +898,6 @@ function subscribeAll(){
     });
 }
 
-/* 交互 - 光标、粒子 */
 var mouseX=-9999,mouseY=-9999;
 var speedRing={cx:-9999,cy:-9999,tx:-9999,ty:-9999,rot:0,speed:0,visible:0};
 var cardBoxes=[],boxesDirty=true;
@@ -984,14 +907,9 @@ function refreshCardBoxes(){
   cardBoxes=[];
   var els=document.querySelectorAll(INTERACTIVE);
   for(var i=0;i<els.length;i++){
-    var el=els[i];
-    var inner=el.querySelector('.btn-inner');
-    if(!inner)continue;
+    var el=els[i];var inner=el.querySelector('.btn-inner');if(!inner)continue;
     var r=el.getBoundingClientRect();
-    cardBoxes.push({el:el,inner:inner,glow:el.querySelector('.card-glow'),
-      left:r.left,top:r.top,right:r.right,bottom:r.bottom,
-      halfW:(r.right-r.left)/2,halfH:(r.bottom-r.top)/2,
-      cx:(r.left+r.right)/2,cy:(r.top+r.bottom)/2,hitCooldown:0});
+    cardBoxes.push({el:el,inner:inner,glow:el.querySelector('.card-glow'),left:r.left,top:r.top,right:r.right,bottom:r.bottom,halfW:(r.right-r.left)/2,halfH:(r.bottom-r.top)/2,cx:(r.left+r.right)/2,cy:(r.top+r.bottom)/2,hitCooldown:0});
   }
   boxesDirty=false;
 }
@@ -1062,7 +980,6 @@ document.addEventListener('mousedown',function(e){
   }
 });
 
-/* 光标 */
 function bindCursorFollow(){
   var cf=$('cursorFollow');if(!cf)return;
   if(matchMedia('(hover: none)').matches){document.body.classList.add('touch-mode');return;}
@@ -1074,7 +991,6 @@ function bindCursorFollow(){
   document.addEventListener('mouseenter',function(){cf.style.opacity='';});
 }
 
-/* hero 逐字 */
 function splitHeroTitle(){
   var h1=$('heroTitle');if(!h1)return;
   var text=h1.textContent.trim();
@@ -1088,7 +1004,6 @@ function splitHeroTitle(){
   }
 }
 
-/* 粒子 */
 var particleCtx=null,particles=[],particleRunning=true,pW=0,pH=0,pDpr=1;
 var themeColors=['200,16,46','255,80,60','255,180,120','180,30,20'];
 var ATTRACT_RADIUS=160,ATTRACT_STRENGTH=0.10;
@@ -1198,7 +1113,6 @@ function drawParticles(){
   requestAnimationFrame(drawParticles);
 }
 
-/* 滚动 / 探测 */
 var topbarEl=$('topbar'),rafPend=false;
 function onScroll(){
   if(rafPend)return;rafPend=true;
@@ -1226,18 +1140,14 @@ function doPing(){
 /* 认证 */
 var authMode='login';
 function setAuthStatus(text,cls){
-  var el=$('authStatus');
-  if(!el)return;
-  el.textContent=text||'';
-  el.className='auth-status'+(cls?' '+cls:'');
+  var el=$('authStatus');if(!el)return;
+  el.textContent=text||'';el.className='auth-status'+(cls?' '+cls:'');
 }
 function openAuth(){
   if(currentUser){openAcct();return;}
   authMode='login';
   switchAuthMode('login');
-  $('authName').value='';
-  $('authPwd').value='';
-  setAuthStatus('');
+  $('authName').value='';$('authPwd').value='';setAuthStatus('');
   $('authOv').classList.add('show');
   setTimeout(function(){try{$('authName').focus();}catch(e){}},80);
 }
@@ -1249,7 +1159,6 @@ function switchAuthMode(m){
   $('authSubmit').textContent=m==='login'?'登录':'注册';
   setAuthStatus('');
 }
-
 function doAuth(){
   var name=($('authName').value||'').trim();
   var pwd=$('authPwd').value||'';
@@ -1264,14 +1173,9 @@ function doAuth(){
         if(res.error){$('authSubmit').disabled=false;setAuthStatus('网络异常','err');return;}
         if(res.data){$('authSubmit').disabled=false;setAuthStatus('用户名已存在','err');return;}
         sb.from(T_USERS).insert({username:name,password_hash:hash,points:0,created_at:Date.now(),last_login:Date.now()}).then(function(ins){
-          if(ins.error){
-            $('authSubmit').disabled=false;
-            setAuthStatus('注册失败：'+(ins.error.code==='23505'?'用户名已被占用':'网络错误'),'err');
-            return;
-          }
+          if(ins.error){$('authSubmit').disabled=false;setAuthStatus('注册失败：'+(ins.error.code==='23505'?'用户名已被占用':'网络错误'),'err');return;}
           currentUser={username:name,points:0};
-          saveUserSession();
-          renderUserChip();
+          saveUserSession();renderUserChip();
           $('authSubmit').disabled=false;
           setAuthStatus('注册成功 ✓','ok');
           toast('欢迎，'+name);
@@ -1299,7 +1203,6 @@ function doAuth(){
   });
 }
 
-/* 账号面板 */
 function openAcct(){
   if(!currentUser)return;
   $('acctName').textContent=currentUser.username;
@@ -1315,7 +1218,6 @@ function doLogout(){
   toast('已退出登录');
 }
 
-/* 购买 */
 var buyingItem=null;
 function openBuy(item){
   if(!currentUser){toast('请先登录');openAuth();return;}
@@ -1353,8 +1255,7 @@ function doBuy(){
       return;
     }
     currentUser.points=newPoints;
-    saveUserSession();
-    renderUserChip();
+    saveUserSession();renderUserChip();
     sb.from(T_ORDERS).insert({
       username:currentUser.username,
       game_name:gameName,
@@ -1376,14 +1277,13 @@ function doBuy(){
       toast('购买成功，等待管理员发放');
       setTimeout(function(){closeBuy();refreshAll();},900);
     });
-  }).catch(function(e){
+  }).catch(function(){
     $('buyConfirm').disabled=false;
     $('buyStatus').textContent='网络异常';
     $('buyStatus').className='auth-status err';
   });
 }
 
-/* 事件绑定 */
 function bind(){
   $('themeBtn').addEventListener('click',openTheme);
   $('themeClose').addEventListener('click',closeTheme);
@@ -1416,10 +1316,12 @@ function bind(){
   $('shopList').addEventListener('click',function(e){
     var item=e.target.closest('[data-shop-id]');
     if(!item)return;
-    var id=item.getAttribute('data-shop-id');
-    var found=null;
-    for(var i=0;i<shopItems.length;i++){if(String(shopItems[i].id)===String(id)){found=shopItems[i];break;}}
-    if(found)openBuy(found);
+    openBuy({
+      id:item.getAttribute('data-shop-id'),
+      name:item.getAttribute('data-shop-name'),
+      icon:item.getAttribute('data-shop-icon'),
+      price:parseInt(item.getAttribute('data-shop-price'),10)||0
+    });
   });
 
   actionBtn.addEventListener('click',function(e){
@@ -1449,7 +1351,6 @@ function bind(){
   });
 }
 
-/* 启动 */
 function boot(){
   loadUserSession();
   buildThemeGrid();
@@ -1469,6 +1370,7 @@ function boot(){
   refreshAll();
   refreshUser();
   subscribeAll();
+  startGitHubPolling();
   setTimeout(function(){boxesDirty=true;},300);
   setInterval(refreshAll,30000);
   setInterval(refreshUser,15000);
