@@ -163,10 +163,21 @@ header.head .back:hover{gap:8px}
 .welf-stat .wl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .welf-panel{padding:18px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:20px}
 .welf-panel h3{margin:0 0 12px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.welf-progress-track{position:relative;height:16px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin:10px 0}
-.welf-progress-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#0969da,#4493f8);transition:width .7s cubic-bezier(.34,1.56,.64,1)}
-.welf-progress-meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-.welf-progress-meta strong{color:var(--ac)}
+
+.welf-targets{display:flex;flex-direction:column;gap:8px;min-height:40px}
+.welf-target-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);transition:border-color .2s,transform .2s,box-shadow .2s}
+.welf-target-row:hover{border-color:var(--ac);box-shadow:0 4px 14px rgba(0,0,0,.05)}
+[data-theme=dark] .welf-target-row:hover{box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.welf-target-row.dragging{opacity:.4}
+.welf-target-row.over{border-color:var(--ac);border-style:dashed;background:var(--acs)}
+.welf-target-row .wt-grip{width:18px;height:18px;flex:none;display:grid;place-items:center;color:var(--muted);cursor:grab;user-select:none;font-size:15px}
+.welf-target-row .wt-name{flex:1;min-width:0;height:36px;padding:0 10px;font-family:inherit;font-size:14px;font-weight:600;color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:6px;outline:none;transition:border-color .15s,box-shadow .15s}
+.welf-target-row .wt-value{flex:none;width:130px;height:36px;padding:0 10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;font-weight:700;color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:6px;outline:none;text-align:right;font-variant-numeric:tabular-nums;transition:border-color .15s,box-shadow .15s}
+.welf-target-row .wt-name:focus,.welf-target-row .wt-value:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.welf-target-row .wt-del{width:34px;height:34px;flex:none;display:grid;place-items:center;font-size:14px;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;transition:all .18s}
+.welf-target-row .wt-del:hover{color:var(--dgr);border-color:var(--dgr);background:rgba(207,34,46,.08)}
+.welf-target-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border:1px dashed var(--bd);border-radius:var(--r)}
+
 .welf-recent{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto}
 .welf-recent-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;font-size:12.5px}
 .welf-recent-item .wr-dot{width:8px;height:8px;flex:none;background:var(--ac);border-radius:50%}
@@ -189,6 +200,9 @@ header.head .back:hover{gap:8px}
   .grid2{grid-template-columns:1fr}
   .toolbar .hint{display:none}
   .welf-stat-grid{grid-template-columns:1fr 1fr}
+  .welf-target-row{flex-wrap:wrap}
+  .welf-target-row .wt-name{flex-basis:calc(100% - 100px)}
+  .welf-target-row .wt-value{width:100px}
 }
 </style>
 </head>
@@ -203,7 +217,7 @@ header.head .back:hover{gap:8px}
     <a class="back" href="./index.html">← 返回工具箱</a>
   </header>
 
-  <p class="lede" id="lede">管理 Wiki 分类、下载站资源、首页工具箱、国庆福利。改动先存在页面内，点「💾 保存并推送」才写入仓库。</p>
+  <p class="lede" id="lede">管理 Wiki 分类、下载站资源、首页工具箱、国庆福利。</p>
 
   <div class="tabs">
     <button type="button" class="tab active" data-tab="wiki">
@@ -306,37 +320,24 @@ header.head .back:hover{gap:8px}
   <!-- ==================== Tab: 国庆福利 ==================== -->
   <div class="pane" id="paneWelfare" hidden>
     <div class="toolbar">
-      <button class="btn p" id="btnWelfRefresh" type="button">🔄 刷新数据</button>
-      <span class="hint" id="welfHint">数据来自 Supabase · welfare_boost / welfare_config</span>
+      <button class="btn p" id="btnWelfAddTarget" type="button">＋ 添加目标</button>
+      <button class="btn" id="btnWelfRefresh" type="button">🔄 刷新数据</button>
+      <span class="hint" id="welfHint">数据来自 Supabase · welfare_boost / welfare_targets</span>
       <span class="sp"></span>
     </div>
 
     <div class="welf-stat-grid">
       <div class="welf-stat"><div class="wv" id="welfBoostCount">--</div><div class="wl">当前助力点</div></div>
-      <div class="welf-stat"><div class="wv" id="welfTarget">--</div><div class="wl">目标值</div></div>
-      <div class="welf-stat"><div class="wv" id="welfPercent">--</div><div class="wl">完成度</div></div>
-      <div class="welf-stat"><div class="wv" id="welfRemain">--</div><div class="wl">还差</div></div>
+      <div class="welf-stat"><div class="wv" id="welfTargetCount">--</div><div class="wl">目标数量</div></div>
+      <div class="welf-stat"><div class="wv" id="welfDoneCount">--</div><div class="wl">已达成</div></div>
     </div>
 
     <div class="welf-panel">
-      <h3>🎯 目标设置</h3>
-      <div class="fld">
-        <span>目标助力点</span>
-        <input type="number" id="welfTargetInput" min="1" step="1" placeholder="例如 1000">
-        <div class="sub">保存后福利页 ful.html 进度条实时更新</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-        <button class="btn p" id="welfSaveTarget" type="button">💾 保存目标值</button>
-        <button class="btn" id="welfQuick1000" type="button">1000</button>
-        <button class="btn" id="welfQuick5000" type="button">5000</button>
-        <button class="btn" id="welfQuick10000" type="button">10000</button>
-      </div>
-      <div class="welf-progress-track" style="margin-top:14px">
-        <div class="welf-progress-fill" id="welfPvFill"></div>
-      </div>
-      <div class="welf-progress-meta">
-        <span><strong id="welfPvCurrent">0</strong> / <span id="welfPvTarget">--</span></span>
-        <span><strong id="welfPvPercent">0%</strong></span>
+      <h3>🎯 目标列表（可编辑名称和数值 · 拖拽排序）</h3>
+      <div class="welf-targets" id="welfTargetsList"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center">
+        <button class="btn p" id="welfSaveTargets" type="button">💾 保存目标</button>
+        <span class="hint">修改后点保存，立即写入 Supabase 并同步到福利页</span>
       </div>
     </div>
 
@@ -350,10 +351,12 @@ header.head .back:hover{gap:8px}
     <div class="help">
       <h3>操作说明 · 国庆福利</h3>
       <ul>
-        <li>数据存储：Supabase <code>welfare_boost</code>（助力记录）+ <code>welfare_config</code>（单行目标配置）</li>
-        <li>福利页 <code>ful.html</code> 实时订阅这两个表的变化</li>
-        <li>目标值修改后立即生效，无需「保存并推送」</li>
-        <li>其他 Tab 的操作仍走 GitHub API，跟福利 Tab 无关</li>
+        <li><strong>添加目标</strong>：点左上「＋ 添加目标」新增一行，填名称和数值</li>
+        <li><strong>编辑</strong>：直接点名称/数值输入框修改</li>
+        <li><strong>排序</strong>：拖动左侧 ⠿ 手柄调整顺序</li>
+        <li><strong>删除</strong>：点右侧 🗑 从列表移除</li>
+        <li><strong>保存</strong>：点「💾 保存目标」写入 Supabase，福利页 <code>ful.html</code> 实时同步</li>
+        <li>数据表：<code>welfare_boost</code>（助力记录）+ <code>welfare_targets</code>（多目标）</li>
       </ul>
     </div>
   </div>
@@ -557,7 +560,7 @@ header.head .back:hover{gap:8px}
   var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
   var SB_BOOST = 'welfare_boost';
-  var SB_CONFIG = 'welfare_config';
+  var SB_TARGETS = 'welfare_targets';
 
   var EMOJI_PRESETS = ['📦','📥','🗜','🎨','🖼','🎵','🎬','📄','📝','📊','🧩','🎮','🕹','🔧','⚙','💎','🌟','🔥','⚡','🌊','🌲','❄','🏹','🛡','⚔','🧪','📜','🗺','🧭','🔮','🎯','🏆','🎁','🗂','📁','💾','🖥','📱','🎓'];
   var TOOL_EMOJI_PRESETS = ['🧰','📚','📥','🧩','🎨','🔧','⚙','🔮','🎯','📊','🗺','🧪','📝','🌐','💡','🔍','🎮','🕹','📷','🎵','📖','✏️','🎁','🏷️','🧮','🔨','🪓','⛏','🌿','🎬'];
@@ -611,7 +614,7 @@ header.head .back:hover{gap:8px}
   }
 
   /* ==========================================================
-     Supabase 客户端（懒加载，只在 welfare Tab 用到）
+     Supabase 客户端
      ========================================================== */
   var sb = null;
   function getSb(){
@@ -652,8 +655,10 @@ header.head .back:hover{gap:8px}
 
   /* 福利 */
   var welfTotal = 0;
-  var welfTarget = 0;
   var welfLoaded = false;
+  var welfLoading = false;
+  var welfTargets = [];
+  var welfDeletedIds = [];
 
   /* ==========================================================
      DOM
@@ -700,15 +705,10 @@ header.head .back:hover{gap:8px}
     toolEmojiQuick: $('toolEmojiQuick'),
     /* 福利 */
     welfHint: $('welfHint'),
-    welfBoostCount: $('welfBoostCount'), welfTarget: $('welfTarget'),
-    welfPercent: $('welfPercent'), welfRemain: $('welfRemain'),
-    welfTargetInput: $('welfTargetInput'),
-    welfSaveTarget: $('welfSaveTarget'),
-    welfQuick1000: $('welfQuick1000'), welfQuick5000: $('welfQuick5000'), welfQuick10000: $('welfQuick10000'),
-    welfPvFill: $('welfPvFill'), welfPvCurrent: $('welfPvCurrent'),
-    welfPvTarget: $('welfPvTarget'), welfPvPercent: $('welfPvPercent'),
+    welfBoostCount: $('welfBoostCount'), welfTargetCount: $('welfTargetCount'), welfDoneCount: $('welfDoneCount'),
+    welfTargetsList: $('welfTargetsList'), welfSaveTargets: $('welfSaveTargets'),
     welfRecentList: $('welfRecentList'),
-    btnWelfRefresh: $('btnWelfRefresh')
+    btnWelfRefresh: $('btnWelfRefresh'), btnWelfAddTarget: $('btnWelfAddTarget')
   };
 
   /* ==========================================================
@@ -1032,7 +1032,6 @@ header.head .back:hover{gap:8px}
     if (els.paneTools) els.paneTools.hidden = (tab !== 'tools');
     if (els.paneWelfare) els.paneWelfare.hidden = (tab !== 'welfare');
 
-    /* 福利 Tab 隐藏时禁用「保存并推送」 */
     var isWelfare = (tab === 'welfare');
     if (els.btnSave) els.btnSave.style.display = isWelfare ? 'none' : '';
     if (els.btnReload) els.btnReload.style.display = isWelfare ? 'none' : '';
@@ -1045,7 +1044,7 @@ header.head .back:hover{gap:8px}
           ? '管理下载站资源：自动读取 GitHub Releases，手动编辑作为覆盖层。改动先存在页面内，点「💾 保存并推送」才写入仓库。'
           : tab === 'tools'
             ? '管理首页工具箱：图标、名称、描述、分类、链接、废弃状态、禁用点击、隐藏。改动先存在页面内，点「💾 保存并推送」才写入仓库。'
-            : '管理国庆福利：设置目标助力值、查看实时助力点、查看最近记录。数据存储于 Supabase，修改立即生效。';
+            : '管理国庆福利：编辑目标名称和数值、添加/删除目标、拖拽排序。数据存储于 Supabase，修改立即生效。';
     }
 
     if (isWelfare) refreshWelfare();
@@ -1719,7 +1718,7 @@ header.head .back:hover{gap:8px}
   }
 
   /* ==========================================================
-     国庆福利（Supabase）
+     国庆福利（Supabase · 多目标）
      ========================================================== */
   function fmtLocalTime(ms){
     var d = new Date(ms);
@@ -1729,18 +1728,33 @@ header.head .back:hover{gap:8px}
 
   function renderWelfareStats(){
     if (els.welfBoostCount) els.welfBoostCount.textContent = welfLoaded ? String(welfTotal) : '--';
-    if (els.welfTarget) els.welfTarget.textContent = welfTarget > 0 ? String(welfTarget) : '--';
-    var pct = welfTarget > 0 ? Math.min(100, (welfTotal / welfTarget) * 100) : 0;
-    if (els.welfPercent) els.welfPercent.textContent = welfTarget > 0 ? pct.toFixed(1) + '%' : '--';
-    var remain = Math.max(0, welfTarget - welfTotal);
-    if (els.welfRemain) els.welfRemain.textContent = welfTarget > 0 ? (remain > 0 ? String(remain) : '已达成') : '--';
-
-    if (els.welfPvFill) els.welfPvFill.style.width = pct + '%';
-    if (els.welfPvCurrent) els.welfPvCurrent.textContent = String(welfTotal);
-    if (els.welfPvTarget) els.welfPvTarget.textContent = welfTarget > 0 ? String(welfTarget) : '--';
-    if (els.welfPvPercent) els.welfPvPercent.textContent = pct.toFixed(1) + '%';
-
+    if (els.welfTargetCount) els.welfTargetCount.textContent = String(welfTargets.length);
+    var done = welfTargets.filter(function(t){
+      var v = parseInt(t.value, 10) || 0;
+      return v > 0 && welfTotal >= v;
+    }).length;
+    if (els.welfDoneCount) els.welfDoneCount.textContent = String(done);
     if (els.welfBadge) els.welfBadge.textContent = welfLoaded ? String(welfTotal) : '--';
+  }
+
+  function renderWelfareTargets(){
+    var el = els.welfTargetsList;
+    if (!el) return;
+    if (welfTargets.length === 0) {
+      el.innerHTML = '<div class="welf-target-empty">还没有目标，点上方「＋ 添加目标」开始添加</div>';
+      return;
+    }
+    var html = '';
+    welfTargets.forEach(function(t, i){
+      var idAttr = t.id ? ' data-id="' + t.id + '"' : '';
+      html += '<div class="welf-target-row" draggable="true" data-idx="' + i + '"' + idAttr + '>'
+        + '<span class="wt-grip" title="拖动排序">⠿</span>'
+        + '<input class="wt-name" type="text" value="' + esc(t.name || '') + '" placeholder="目标名称（1-20 字）" maxlength="20" autocomplete="off">'
+        + '<input class="wt-value" type="number" min="1" step="1" value="' + (parseInt(t.value, 10) || 100) + '" placeholder="目标值" autocomplete="off">'
+        + '<button class="wt-del" type="button" title="删除">🗑</button>'
+        + '</div>';
+    });
+    el.innerHTML = html;
   }
 
   function renderWelfareRecent(list){
@@ -1762,7 +1776,6 @@ header.head .back:hover{gap:8px}
     el.innerHTML = html;
   }
 
-  var welfLoading = false;
   function refreshWelfare(){
     var client = getSb();
     if (!client) {
@@ -1776,14 +1789,13 @@ header.head .back:hover{gap:8px}
     Promise.all([
       client.from(SB_BOOST).select('*', { count: 'exact', head: true }),
       client.from(SB_BOOST).select('uid,created_at').order('created_at', { ascending: false }).limit(20),
-      client.from(SB_CONFIG).select('target_value').eq('id', 1).maybeSingle()
+      client.from(SB_TARGETS).select('*').order('sort_order', { ascending: true })
     ]).then(function(results){
       welfLoading = false;
       var countRes = results[0];
       var recentRes = results[1];
-      var cfgRes = results[2];
-
-      var err = countRes.error || recentRes.error || cfgRes.error;
+      var targetsRes = results[2];
+      var err = countRes.error || recentRes.error || targetsRes.error;
       if (err) {
         console.warn('[admin] 福利加载失败', err);
         if (els.welfHint) els.welfHint.textContent = '⚠ 加载失败：' + (err.message || err.code || '未知错误');
@@ -1791,13 +1803,14 @@ header.head .back:hover{gap:8px}
       }
       welfTotal = typeof countRes.count === 'number' ? countRes.count : 0;
       welfLoaded = true;
-      renderWelfareRecent(recentRes.data || []);
-      if (cfgRes.data && typeof cfgRes.data.target_value === 'number') {
-        welfTarget = cfgRes.data.target_value;
-        if (els.welfTargetInput) els.welfTargetInput.value = String(welfTarget);
-      }
+      welfTargets = (targetsRes.data || []).map(function(t){
+        return { id: t.id, name: t.name || '', value: t.value || 0, sort_order: t.sort_order || 0 };
+      });
+      welfDeletedIds = [];
       renderWelfareStats();
-      if (els.welfHint) els.welfHint.textContent = '数据来自 Supabase · welfare_boost / welfare_config';
+      renderWelfareTargets();
+      renderWelfareRecent(recentRes.data || []);
+      if (els.welfHint) els.welfHint.textContent = '数据来自 Supabase · welfare_boost / welfare_targets';
     }).catch(function(e){
       welfLoading = false;
       console.warn('[admin] 福利加载异常', e);
@@ -1805,48 +1818,124 @@ header.head .back:hover{gap:8px}
     });
   }
 
-  function saveWelfareTarget(){
+  function addWelfareTarget(){
+    welfTargets.push({
+      id: null,
+      name: '新目标',
+      value: 100,
+      sort_order: welfTargets.length + 1
+    });
+    renderWelfareTargets();
+    renderWelfareStats();
+    var rows = els.welfTargetsList ? els.welfTargetsList.querySelectorAll('.welf-target-row') : [];
+    var last = rows[rows.length - 1];
+    if (last) {
+      var nameInput = last.querySelector('.wt-name');
+      if (nameInput) { nameInput.focus(); nameInput.select(); }
+    }
+  }
+
+  function deleteWelfareTarget(idx){
+    var t = welfTargets[idx];
+    if (!t) return;
+    if (t.id) welfDeletedIds.push(t.id);
+    welfTargets.splice(idx, 1);
+    renderWelfareTargets();
+    renderWelfareStats();
+    toast('已从列表移除，点「保存目标」生效');
+  }
+
+  function syncTargetsFromInputs(){
+    if (!els.welfTargetsList) return;
+    var rows = els.welfTargetsList.querySelectorAll('.welf-target-row');
+    for (var i = 0; i < rows.length; i++) {
+      if (i >= welfTargets.length) break;
+      var nameEl = rows[i].querySelector('.wt-name');
+      var valEl = rows[i].querySelector('.wt-value');
+      if (nameEl) welfTargets[i].name = nameEl.value;
+      if (valEl) welfTargets[i].value = parseInt(valEl.value, 10) || 0;
+    }
+  }
+
+  function saveWelfareTargets(){
     var client = getSb();
     if (!client) { toast('Supabase 未加载'); return; }
-    var v = parseInt(els.welfTargetInput && els.welfTargetInput.value, 10);
-    if (isNaN(v) || v < 1) { toast('请输入大于 0 的整数'); return; }
+    syncTargetsFromInputs();
 
-    if (els.welfSaveTarget) els.welfSaveTarget.disabled = true;
-    client.from(SB_CONFIG).upsert({
-      id: 1,
-      target_value: v,
-      updated_at: Date.now()
-    }, { onConflict: 'id' }).then(function(res){
-      if (els.welfSaveTarget) els.welfSaveTarget.disabled = false;
-      if (res.error) {
-        console.warn('[admin] 保存目标失败', res.error);
-        toast('保存失败：' + (res.error.message || res.error.code));
+    for (var i = 0; i < welfTargets.length; i++) {
+      var t = welfTargets[i];
+      if (!t.name || !String(t.name).trim()) { toast('第 ' + (i+1) + ' 个目标名称不能为空'); return; }
+      if (!t.value || t.value < 1) { toast('第 ' + (i+1) + ' 个目标值必须大于 0'); return; }
+    }
+
+    var updates = [];
+    var inserts = [];
+    welfTargets.forEach(function(t, i){
+      var row = {
+        name: String(t.name).trim(),
+        value: parseInt(t.value, 10),
+        sort_order: i + 1,
+        updated_at: Date.now()
+      };
+      if (t.id) {
+        row.id = t.id;
+        updates.push(row);
+      } else {
+        row.created_at = Date.now();
+        inserts.push(row);
+      }
+    });
+
+    var ops = [];
+    if (updates.length > 0) ops.push(client.from(SB_TARGETS).upsert(updates, { onConflict: 'id' }));
+    if (inserts.length > 0) ops.push(client.from(SB_TARGETS).insert(inserts));
+    if (welfDeletedIds.length > 0) ops.push(client.from(SB_TARGETS).delete().in('id', welfDeletedIds));
+
+    if (ops.length === 0) { toast('没有改动'); return; }
+
+    if (els.welfSaveTargets) els.welfSaveTargets.disabled = true;
+    Promise.all(ops).then(function(results){
+      if (els.welfSaveTargets) els.welfSaveTargets.disabled = false;
+      var err = results.find(function(r){ return r && r.error; });
+      if (err) {
+        console.warn('[admin] 保存目标失败', err.error);
+        toast('保存失败：' + (err.error.message || err.error.code));
         return;
       }
-      welfTarget = v;
-      renderWelfareStats();
-      toast('已保存目标值：' + v);
+      welfDeletedIds = [];
+      toast('已保存 ' + welfTargets.length + ' 个目标');
+      refreshWelfare();
     }).catch(function(e){
-      if (els.welfSaveTarget) els.welfSaveTarget.disabled = false;
+      if (els.welfSaveTargets) els.welfSaveTargets.disabled = false;
       toast('保存异常：' + (e.message || e));
     });
   }
 
   function bindWelfareEvents(){
     if (els.btnWelfRefresh) els.btnWelfRefresh.addEventListener('click', refreshWelfare);
-    if (els.welfSaveTarget) els.welfSaveTarget.addEventListener('click', saveWelfareTarget);
-    if (els.welfQuick1000) els.welfQuick1000.addEventListener('click', function(){
-      if (els.welfTargetInput) els.welfTargetInput.value = '1000';
-      saveWelfareTarget();
-    });
-    if (els.welfQuick5000) els.welfQuick5000.addEventListener('click', function(){
-      if (els.welfTargetInput) els.welfTargetInput.value = '5000';
-      saveWelfareTarget();
-    });
-    if (els.welfQuick10000) els.welfQuick10000.addEventListener('click', function(){
-      if (els.welfTargetInput) els.welfTargetInput.value = '10000';
-      saveWelfareTarget();
-    });
+    if (els.btnWelfAddTarget) els.btnWelfAddTarget.addEventListener('click', addWelfareTarget);
+    if (els.welfSaveTargets) els.welfSaveTargets.addEventListener('click', saveWelfareTargets);
+
+    if (els.welfTargetsList) {
+      els.welfTargetsList.addEventListener('click', function(e){
+        var btn = e.target.closest('.wt-del');
+        if (!btn) return;
+        var row = btn.closest('.welf-target-row');
+        if (!row) return;
+        var idx = parseInt(row.getAttribute('data-idx'), 10);
+        if (isNaN(idx)) return;
+        deleteWelfareTarget(idx);
+      });
+
+      bindDragFor(els.welfTargetsList, '.welf-target-row', 'data-idx', function(fromIdx, toIdx){
+        syncTargetsFromInputs();
+        var item = welfTargets.splice(fromIdx, 1)[0];
+        if (!item) return;
+        welfTargets.splice(toIdx, 0, item);
+        renderWelfareTargets();
+        renderWelfareStats();
+      });
+    }
   }
 
   /* ==========================================================
