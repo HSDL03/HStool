@@ -35,10 +35,11 @@ body.touch-mode .cursor-follow{display:none!important}
 .logo-icon{display:inline-block;font-size:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
 .logo:hover .logo-icon{transform:rotate(-8deg) scale(1.08)}
 .sp{flex:1}
-.user-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(255,255,255,.15);border:none;border-radius:999px;font-family:inherit;font-size:12px;color:inherit;cursor:pointer;max-width:220px;overflow:hidden}
+.user-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(255,255,255,.15);border:none;border-radius:999px;font-family:inherit;font-size:12px;color:inherit;cursor:pointer;max-width:260px;overflow:hidden}
 .user-chip:hover{background:rgba(255,255,255,.28)}
 .user-chip .uc-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-chip .uc-points{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;background:rgba(255,222,0,.9);color:#6a0810;border-radius:999px;font-weight:800;font-size:11px;font-variant-numeric:tabular-nums}
+.user-chip .uc-level{display:inline-flex;align-items:center;padding:1px 8px;background:rgba(255,255,255,.22);color:#fff;border-radius:999px;font-weight:800;font-size:11px;font-variant-numeric:tabular-nums;text-shadow:0 1px 1px rgba(0,0,0,.2)}
 .icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:rgba(255,255,255,.85);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,color .15s,transform .2s}
 .icon:hover{background:rgba(0,0,0,.2);color:#fff}
 .icon:active{transform:scale(.92)}
@@ -82,7 +83,7 @@ body:hover .cursor-follow{opacity:.55}
 .shop-price::before{content:"⭐";font-size:11px}
 
 .main-col{min-width:0}
-.hero{text-align:center;padding:8px 0 24px}
+.hero{text-align:center;padding:8px 0 20px}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;margin-bottom:14px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ac)}
 .hero-badge .dot{width:8px;height:8px;background:var(--ac);box-shadow:0 0 0 3px var(--acs);position:relative;animation:badgePulse 2s ease-out infinite}
 @keyframes badgePulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(3);opacity:0}}
@@ -91,11 +92,21 @@ body:hover .cursor-follow{opacity:.55}
 @keyframes charIn{60%{opacity:1}to{opacity:1;transform:none}}
 .hero-sub{margin:0 auto;max-width:520px;font-size:13.5px;color:var(--muted);line-height:1.6}
 
-.boost-display{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:20px}
+.boost-display{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:10px}
 .boost-num{font-size:clamp(2.8rem,6vw,4.4rem);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.04em;background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;transform-origin:center}
 .boost-num.bump{animation:numBump .5s cubic-bezier(.34,1.56,.64,1)}
 @keyframes numBump{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
 .boost-label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* 等级条 */
+.level-display{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:560px;padding:8px 14px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);font-size:12.5px;color:var(--muted);transition:all .3s}
+.level-display[hidden]{display:none!important}
+.level-display .ld-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 12px;background:var(--hero-grad);color:#fff;border-radius:999px;font-weight:900;font-variant-numeric:tabular-nums;font-size:12px;text-shadow:1px 1px 0 rgba(0,0,0,.35);box-shadow:0 2px 0 rgba(0,0,0,.15);flex:none}
+.level-display .ld-badge.pulse{animation:ldPulse .7s cubic-bezier(.34,1.56,.64,1)}
+@keyframes ldPulse{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+.level-display .ld-text{font-variant-numeric:tabular-nums;line-height:1.4}
+.level-display .ld-text b{color:var(--ac);font-weight:800}
+.level-display .ld-text .max{color:var(--warn);font-weight:800}
 
 .progress-section{width:100%;margin-bottom:22px}
 .progress-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg2);border:2px dashed var(--bd2);border-radius:var(--r)}
@@ -258,6 +269,7 @@ body:hover .cursor-follow{opacity:.55}
   .milestone-label .ml-name{font-size:9.5px;max-width:60px}
   .milestone-label .ml-value{font-size:8.5px}
   .status-pill{right:8px;bottom:8px;font-size:10px;opacity:.7}
+  .level-display{font-size:11.5px;padding:6px 10px}
 }
 @media print{.status-pill,.bg-decor,.topbar,.ov,.toast,.cursor-follow,.action-btn{display:none}body{padding-top:0;cursor:auto}}
 @media (prefers-reduced-motion:reduce){
@@ -276,6 +288,7 @@ body:hover .cursor-follow{opacity:.55}
   <span class="sp"></span>
   <button class="user-chip" id="userChip" style="display:none">
     <span class="uc-name" id="ucName"></span>
+    <span class="uc-level" id="ucLevel">Lv.1</span>
     <span class="uc-points" id="ucPoints">⭐ <span id="ucPointsNum">0</span></span>
   </button>
   <button class="icon" id="authBtn" title="登录/注册">👤</button>
@@ -308,12 +321,17 @@ body:hover .cursor-follow{opacity:.55}
       <div class="hero">
         <div class="hero-badge"><span class="dot"></span>NATIONAL DAY · 国庆</div>
         <h1 id="heroTitle">国庆福利</h1>
-        <p class="hero-sub">点击下方按钮助力 · 每次助力 25% 概率获得个人点</p>
+        <p class="hero-sub">每次助力都会获得当前等级的个人点 · 10% 概率升级</p>
       </div>
 
       <div class="boost-display">
         <div class="boost-num" id="boostNum">--</div>
         <div class="boost-label">总助力点</div>
+      </div>
+
+      <div class="level-display" id="levelDisplay" hidden>
+        <span class="ld-badge" id="ldBadge">Lv.<span id="ldLevel">1</span></span>
+        <span class="ld-text">每次点击 +<b id="ldGain">1</b> 个人点 · <b>10%</b> 概率升级 · 满级 <span class="max">50</span></span>
       </div>
 
       <div class="progress-section" id="progressSection">
@@ -385,7 +403,8 @@ body:hover .cursor-follow{opacity:.55}
     <div class="pb">
       <p style="margin:0 0 14px;font-size:14px">
         已登录为 <strong id="acctName"></strong><br>
-        个人点：<strong id="acctPoints"></strong>
+        个人点：<strong id="acctPoints"></strong><br>
+        点击等级：<strong id="acctLevel">Lv.1</strong>
       </p>
     </div>
     <div class="pf">
@@ -427,7 +446,10 @@ var T_BOOST='welfare_boost';
 var T_USERS='welfare_users';
 var T_ORDERS='welfare_orders';
 var COOLDOWN_MS=1000;
-var POINT_DROP_RATE=0.25;
+
+/* 点击等级机制 */
+var LEVEL_UP_RATE=0.10;   /* 每次点击有 10% 概率升级 */
+var MAX_LEVEL=50;         /* 满级 50 */
 
 /* GitHub 存储的数据 */
 var GH_OWNER='HSDL03';
@@ -491,13 +513,27 @@ function hashPwd(pwd){
   });
 }
 
+/* 归一化 level（1..50） */
+function normalizeLevel(v){
+  var n = parseInt(v, 10);
+  if(isNaN(n) || n < 1) n = 1;
+  if(n > MAX_LEVEL) n = MAX_LEVEL;
+  return n;
+}
+
 var currentUser=null;
 function loadUserSession(){
   try{
     var raw=storage.get('welfare-user');
     if(!raw)return;
     var o=JSON.parse(raw);
-    if(o&&o.username)currentUser={username:o.username,points:Number(o.points)||0};
+    if(o&&o.username){
+      currentUser={
+        username:o.username,
+        points:Number(o.points)||0,
+        clickLevel:normalizeLevel(o.clickLevel)
+      };
+    }
   }catch(e){}
 }
 function saveUserSession(){
@@ -506,16 +542,26 @@ function saveUserSession(){
 }
 function renderUserChip(){
   var chip=$('userChip'),btn=$('authBtn');
+  var lvDisp = $('levelDisplay');
   if(currentUser){
+    var lv = normalizeLevel(currentUser.clickLevel);
     chip.style.display='';
     btn.style.display='none';
     $('ucName').textContent=currentUser.username;
+    $('ucLevel').textContent='Lv.'+lv;
     $('ucPointsNum').textContent=String(currentUser.points);
     $('shopPoints').textContent='⭐ '+currentUser.points;
+    /* 显示等级条 */
+    if(lvDisp){
+      lvDisp.hidden = false;
+      $('ldLevel').textContent = String(lv);
+      $('ldGain').textContent = String(lv);
+    }
   }else{
     chip.style.display='none';
     btn.style.display='';
     $('shopPoints').textContent='⭐ 未登录';
+    if(lvDisp) lvDisp.hidden = true;
   }
   renderShop();
 }
@@ -793,9 +839,10 @@ function refreshAll(){
 
 function refreshUser(){
   if(!currentUser||!sb)return Promise.resolve();
-  return sb.from(T_USERS).select('points,username').eq('username',currentUser.username).maybeSingle().then(function(res){
+  return sb.from(T_USERS).select('points,username,click_level').eq('username',currentUser.username).maybeSingle().then(function(res){
     if(res.error||!res.data)return;
     currentUser.points=Number(res.data.points)||0;
+    currentUser.clickLevel=normalizeLevel(res.data.click_level);
     saveUserSession();
     renderUserChip();
   }).catch(function(){});
@@ -838,20 +885,49 @@ function doBoost(){
   renderProgress();
   bumpNumber();
 
-  var gotPoint=false;
-  if(currentUser&&Math.random()<POINT_DROP_RATE){
-    gotPoint=true;
-    currentUser.points++;
+  /* 结算个人点：每次固定获得当前等级的点数 + 10% 概率升级 */
+  var gainedPoints = 0;
+  var leveledUp = false;
+  var oldLevel = 1;
+  var newLevel = 1;
+
+  if(currentUser){
+    oldLevel = normalizeLevel(currentUser.clickLevel);
+    gainedPoints = oldLevel;                /* 每次点击 = 当前等级点数 */
+    currentUser.points += gainedPoints;     /* 稳定收益 */
+
+    if(oldLevel < MAX_LEVEL && Math.random() < LEVEL_UP_RATE){
+      currentUser.clickLevel = oldLevel + 1;
+      leveledUp = true;
+    }
+    newLevel = normalizeLevel(currentUser.clickLevel);
     saveUserSession();
     renderUserChip();
-    sb.from(T_USERS).update({points:currentUser.points}).eq('username',currentUser.username).then(function(res){
-      if(res.error){currentUser.points=Math.max(0,currentUser.points-1);saveUserSession();renderUserChip();}
-    });
+
+    if(leveledUp){
+      var badge=$('ldBadge');
+      if(badge){
+        badge.classList.remove('pulse');
+        void badge.offsetWidth;
+        badge.classList.add('pulse');
+      }
+    }
   }
 
-  sb.from(T_BOOST).insert({uid:currentUser?currentUser.username:('guest_'+Date.now()),created_at:Date.now()}).then(function(res){
+  /* 写入助力记录 */
+  sb.from(T_BOOST).insert({
+    uid: currentUser ? currentUser.username : ('guest_' + Date.now()),
+    created_at: Date.now()
+  }).then(function(res){
     if(res.error){
-      totalBoost=Math.max(0,totalBoost-1);
+      /* 回滚 */
+      totalBoost = Math.max(0, totalBoost - 1);
+      if(currentUser){
+        currentUser.points = Math.max(0, currentUser.points - gainedPoints);
+        if(leveledUp) currentUser.clickLevel = oldLevel;
+        saveUserSession();
+        renderUserChip();
+      }
       renderBoost();
       renderProgress();
       spSetErr();
@@ -859,10 +935,36 @@ function doBoost(){
       return;
     }
     spSetOK();
-    if(gotPoint)toast('🎉 获得 1 个个人点！');
-    setTimeout(refreshAll,400);
+
+    /* 更新用户点数与等级 */
+    if(currentUser){
+      sb.from(T_USERS).update({
+        points: currentUser.points,
+        click_level: newLevel
+      }).eq('username', currentUser.username).then(function(r2){
+        if(r2.error)console.warn('[ful] 更新用户失败', r2.error);
+      });
+    }
+
+    /* 提示 */
+    if(currentUser){
+      var msg = '💪 获得 ' + gainedPoints + ' 点';
+      if(leveledUp) msg += '，升至 Lv.' + newLevel + '！';
+      toast(msg);
+    }else{
+      toast('感谢助力');
+    }
+
+    setTimeout(refreshAll, 400);
   }).catch(function(){
-    totalBoost=Math.max(0,totalBoost-1);
+    /* 网络异常回滚 */
+    totalBoost = Math.max(0, totalBoost - 1);
+    if(currentUser){
+      currentUser.points = Math.max(0, currentUser.points - gainedPoints);
+      if(leveledUp) currentUser.clickLevel = oldLevel;
+      saveUserSession();
+      renderUserChip();
+    }
     renderBoost();
     renderProgress();
     toast('助力失败：网络异常');
@@ -883,6 +985,7 @@ function subscribeAll(){
       var row=payload.new;
       if(row&&currentUser&&row.username===currentUser.username){
         currentUser.points=Number(row.points)||0;
+        currentUser.clickLevel=normalizeLevel(row.click_level);
         saveUserSession();
         renderUserChip();
       }
@@ -1172,9 +1275,16 @@ function doAuth(){
       sb.from(T_USERS).select('id').eq('username',name).maybeSingle().then(function(res){
         if(res.error){$('authSubmit').disabled=false;setAuthStatus('网络异常','err');return;}
         if(res.data){$('authSubmit').disabled=false;setAuthStatus('用户名已存在','err');return;}
-        sb.from(T_USERS).insert({username:name,password_hash:hash,points:0,created_at:Date.now(),last_login:Date.now()}).then(function(ins){
+        sb.from(T_USERS).insert({
+          username:name,
+          password_hash:hash,
+          points:0,
+          click_level:1,
+          created_at:Date.now(),
+          last_login:Date.now()
+        }).then(function(ins){
           if(ins.error){$('authSubmit').disabled=false;setAuthStatus('注册失败：'+(ins.error.code==='23505'?'用户名已被占用':'网络错误'),'err');return;}
-          currentUser={username:name,points:0};
+          currentUser={username:name,points:0,clickLevel:1};
           saveUserSession();renderUserChip();
           $('authSubmit').disabled=false;
           setAuthStatus('注册成功 ✓','ok');
@@ -1183,11 +1293,15 @@ function doAuth(){
         });
       });
     }else{
-      sb.from(T_USERS).select('username,password_hash,points').eq('username',name).maybeSingle().then(function(res){
+      sb.from(T_USERS).select('username,password_hash,points,click_level').eq('username',name).maybeSingle().then(function(res){
         if(res.error){$('authSubmit').disabled=false;setAuthStatus('网络异常','err');return;}
         if(!res.data){$('authSubmit').disabled=false;setAuthStatus('用户不存在','err');return;}
         if(res.data.password_hash!==hash){$('authSubmit').disabled=false;setAuthStatus('密码错误','err');return;}
-        currentUser={username:res.data.username,points:Number(res.data.points)||0};
+        currentUser={
+          username:res.data.username,
+          points:Number(res.data.points)||0,
+          clickLevel:normalizeLevel(res.data.click_level)
+        };
         saveUserSession();
         sb.from(T_USERS).update({last_login:Date.now()}).eq('username',name).then(function(){});
         renderUserChip();
@@ -1205,8 +1319,10 @@ function doAuth(){
 
 function openAcct(){
   if(!currentUser)return;
+  var lv = normalizeLevel(currentUser.clickLevel);
   $('acctName').textContent=currentUser.username;
   $('acctPoints').textContent=String(currentUser.points);
+  $('acctLevel').textContent='Lv.'+lv+' · 每次 +'+lv+' 点';
   $('acctOv').classList.add('show');
 }
 function closeAcct(){$('acctOv').classList.remove('show');}
