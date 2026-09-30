@@ -35,11 +35,12 @@ body.touch-mode .cursor-follow{display:none!important}
 .logo-icon{display:inline-block;font-size:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
 .logo:hover .logo-icon{transform:rotate(-8deg) scale(1.08)}
 .sp{flex:1}
-.user-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(255,255,255,.15);border:none;border-radius:999px;font-family:inherit;font-size:12px;color:inherit;cursor:pointer;max-width:260px;overflow:hidden}
+.user-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:rgba(255,255,255,.15);border:none;border-radius:999px;font-family:inherit;font-size:12px;color:inherit;cursor:pointer;max-width:280px;overflow:hidden}
 .user-chip:hover{background:rgba(255,255,255,.28)}
 .user-chip .uc-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-chip .uc-points{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;background:rgba(255,222,0,.9);color:#6a0810;border-radius:999px;font-weight:800;font-size:11px;font-variant-numeric:tabular-nums}
 .user-chip .uc-level{display:inline-flex;align-items:center;padding:1px 8px;background:rgba(255,255,255,.22);color:#fff;border-radius:999px;font-weight:800;font-size:11px;font-variant-numeric:tabular-nums;text-shadow:0 1px 1px rgba(0,0,0,.2)}
+.user-chip .uc-auto{display:inline-flex;align-items:center;padding:1px 6px;background:rgba(74,222,128,.9);color:#0f2a17;border-radius:999px;font-weight:800;font-size:10px}
 .icon{display:grid;place-items:center;width:30px;height:30px;flex:none;font-size:14px;font-family:inherit;color:rgba(255,255,255,.85);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,color .15s,transform .2s}
 .icon:hover{background:rgba(0,0,0,.2);color:#fff}
 .icon:active{transform:scale(.92)}
@@ -98,15 +99,25 @@ body:hover .cursor-follow{opacity:.55}
 @keyframes numBump{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
 .boost-label{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 
-/* 等级条 */
-.level-display{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:560px;padding:8px 14px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);font-size:12.5px;color:var(--muted);transition:all .3s}
-.level-display[hidden]{display:none!important}
-.level-display .ld-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 12px;background:var(--hero-grad);color:#fff;border-radius:999px;font-weight:900;font-variant-numeric:tabular-nums;font-size:12px;text-shadow:1px 1px 0 rgba(0,0,0,.35);box-shadow:0 2px 0 rgba(0,0,0,.15);flex:none}
-.level-display .ld-badge.pulse{animation:ldPulse .7s cubic-bezier(.34,1.56,.64,1)}
-@keyframes ldPulse{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
-.level-display .ld-text{font-variant-numeric:tabular-nums;line-height:1.4}
-.level-display .ld-text b{color:var(--ac);font-weight:800}
-.level-display .ld-text .max{color:var(--warn);font-weight:800}
+/* 升级面板 */
+.upgrade-panel{margin:0 auto 18px;max-width:560px;padding:14px 16px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);display:flex;flex-direction:column;gap:10px}
+.upgrade-panel[hidden]{display:none!important}
+.up-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.up-lv{display:inline-flex;align-items:baseline;gap:6px;padding:4px 12px;background:var(--hero-grad);color:#fff;border-radius:999px;font-weight:900;text-shadow:1px 1px 0 rgba(0,0,0,.35);box-shadow:0 2px 0 rgba(0,0,0,.15);font-variant-numeric:tabular-nums}
+.up-lv .lv-big{font-size:16px;letter-spacing:-.02em}
+.up-lv .lv-max{font-size:11px;opacity:.75;font-weight:700}
+.up-lv.pulse{animation:ldPulse .7s cubic-bezier(.34,1.56,.64,1)}
+@keyframes ldPulse{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.up-stats{font-size:12px;color:var(--muted);line-height:1.5;flex:1;min-width:0}
+.up-stats b{color:var(--ac);font-weight:800}
+.up-stats .p{color:var(--ok)}
+.up-action{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:9px 14px;font-family:inherit;font-size:13.5px;font-weight:800;color:#fff;background:linear-gradient(135deg,#e0202e,#a01020);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;text-shadow:1px 1px 0 rgba(0,0,0,.3);box-shadow:var(--bevel);transition:all .15s}
+.up-action:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+.up-action:active:not(:disabled){transform:scale(.98)}
+.up-action:disabled{opacity:.5;cursor:not-allowed;filter:grayscale(.4)}
+.up-action .up-action-price{display:inline-flex;align-items:center;gap:3px;padding:2px 10px;background:rgba(255,222,0,.9);color:#6a0810;border-radius:999px;font-weight:900;font-size:12.5px;text-shadow:none;font-variant-numeric:tabular-nums}
+.up-action.purchased{background:linear-gradient(135deg,#2d7a2d,#1f5a1f)}
+.up-action.purchased .up-action-price{background:rgba(255,255,255,.35);color:#fff}
 
 .progress-section{width:100%;margin-bottom:22px}
 .progress-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg2);border:2px dashed var(--bd2);border-radius:var(--r)}
@@ -176,6 +187,7 @@ body:hover .cursor-follow{opacity:.55}
 .action-btn .btn-text{position:relative;z-index:3}
 .action-btn:hover:not(.cooling){border-color:#ffde00;box-shadow:3px 3px 0 rgba(0,0,0,.35),0 0 48px rgba(255,222,0,.65)}
 .action-btn.cooling{cursor:not-allowed;filter:saturate(.75) brightness(.88)}
+.action-btn.auto-running{box-shadow:3px 3px 0 rgba(0,0,0,.35),0 0 0 3px rgba(74,222,128,.4),0 0 32px rgba(74,222,128,.6)}
 .card-ripple{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,rgba(255,222,0,.7) 0%,rgba(255,150,80,.35) 40%,rgba(255,222,0,0) 72%);transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:4;animation:cardRipple .8s cubic-bezier(.22,1,.36,1) forwards}
 @keyframes cardRipple{0%{transform:translate(-50%,-50%) scale(0);opacity:.95}100%{transform:translate(-50%,-50%) scale(28);opacity:0}}
 .card-ring{position:absolute;width:22px;height:22px;border:2px solid #ffde00;border-radius:50%;transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:5;box-shadow:0 0 18px rgba(255,222,0,.85);animation:cardRing .72s cubic-bezier(.22,1,.36,1) forwards}
@@ -269,7 +281,9 @@ body:hover .cursor-follow{opacity:.55}
   .milestone-label .ml-name{font-size:9.5px;max-width:60px}
   .milestone-label .ml-value{font-size:8.5px}
   .status-pill{right:8px;bottom:8px;font-size:10px;opacity:.7}
-  .level-display{font-size:11.5px;padding:6px 10px}
+  .upgrade-panel{padding:12px 12px}
+  .up-lv .lv-big{font-size:14px}
+  .up-action{font-size:12.5px;padding:8px 12px}
 }
 @media print{.status-pill,.bg-decor,.topbar,.ov,.toast,.cursor-follow,.action-btn{display:none}body{padding-top:0;cursor:auto}}
 @media (prefers-reduced-motion:reduce){
@@ -289,6 +303,7 @@ body:hover .cursor-follow{opacity:.55}
   <button class="user-chip" id="userChip" style="display:none">
     <span class="uc-name" id="ucName"></span>
     <span class="uc-level" id="ucLevel">Lv.1</span>
+    <span class="uc-auto" id="ucAuto" hidden>🤖</span>
     <span class="uc-points" id="ucPoints">⭐ <span id="ucPointsNum">0</span></span>
   </button>
   <button class="icon" id="authBtn" title="登录/注册">👤</button>
@@ -321,7 +336,7 @@ body:hover .cursor-follow{opacity:.55}
       <div class="hero">
         <div class="hero-badge"><span class="dot"></span>NATIONAL DAY · 国庆</div>
         <h1 id="heroTitle">国庆福利</h1>
-        <p class="hero-sub">每次助力都会获得当前等级的个人点 · 10% 概率升级</p>
+        <p class="hero-sub">每次点击 = 当前等级助力点 · 10% 概率暴击获得个人点</p>
       </div>
 
       <div class="boost-display">
@@ -329,9 +344,26 @@ body:hover .cursor-follow{opacity:.55}
         <div class="boost-label">总助力点</div>
       </div>
 
-      <div class="level-display" id="levelDisplay" hidden>
-        <span class="ld-badge" id="ldBadge">Lv.<span id="ldLevel">1</span></span>
-        <span class="ld-text">每次点击 +<b id="ldGain">1</b> 个人点 · <b>10%</b> 概率升级 · 满级 <span class="max">50</span></span>
+      <!-- 升级面板 -->
+      <div class="upgrade-panel" id="upgradePanel" hidden>
+        <div class="up-header">
+          <span class="up-lv" id="upLvBadge">
+            <span class="lv-big">Lv.<span id="upLevel">1</span></span>
+            <span class="lv-max">/ 1000</span>
+          </span>
+          <span class="up-stats">
+            每次点击 <b>+<span id="upGain">1</span></b> 助力点 · 
+            10% 概率 <b class="p">+<span id="upGainP">1</span></b> 个人点
+          </span>
+        </div>
+        <button class="up-action" id="upgradeBtn" type="button">
+          <span>⬆️ 升级</span>
+          <span class="up-action-price">⭐ <span id="upPrice">50</span></span>
+        </button>
+        <button class="up-action" id="autoBtn" type="button">
+          <span id="autoBtnLabel">🤖 解锁自动点击</span>
+          <span class="up-action-price" id="autoBtnPrice">⭐ 120</span>
+        </button>
       </div>
 
       <div class="progress-section" id="progressSection">
@@ -401,11 +433,12 @@ body:hover .cursor-follow{opacity:.55}
   <div class="pnl">
     <div class="ph"><strong>账号</strong><span class="sp"></span><button class="icon" id="acctClose">✕</button></div>
     <div class="pb">
-      <p style="margin:0 0 14px;font-size:14px">
-        已登录为 <strong id="acctName"></strong><br>
+      <div style="font-size:14px;line-height:1.9">
+        用户名：<strong id="acctName"></strong><br>
         个人点：<strong id="acctPoints"></strong><br>
-        点击等级：<strong id="acctLevel">Lv.1</strong>
-      </p>
+        点击等级：<strong id="acctLevel">Lv.1</strong><br>
+        自动点击：<strong id="acctAuto">未解锁</strong>
+      </div>
     </div>
     <div class="pf">
       <button class="btn" id="acctCancel">关闭</button>
@@ -447,9 +480,13 @@ var T_USERS='welfare_users';
 var T_ORDERS='welfare_orders';
 var COOLDOWN_MS=1000;
 
-/* 点击等级机制 */
-var LEVEL_UP_RATE=0.10;   /* 每次点击有 10% 概率升级 */
-var MAX_LEVEL=50;         /* 满级 50 */
+/* 等级机制 */
+var MAX_LEVEL=1000;
+var UPGRADE_BASE_PRICE=50;
+var UPGRADE_MULTIPLIER=1.1;
+var AUTO_CLICK_PRICE=120;
+var AUTO_CLICK_INTERVAL=2000;
+var POINT_CRIT_RATE=0.10;
 
 /* GitHub 存储的数据 */
 var GH_OWNER='HSDL03';
@@ -513,12 +550,23 @@ function hashPwd(pwd){
   });
 }
 
-/* 归一化 level（1..50） */
+/* 等级归一化 */
 function normalizeLevel(v){
   var n = parseInt(v, 10);
   if(isNaN(n) || n < 1) n = 1;
   if(n > MAX_LEVEL) n = MAX_LEVEL;
   return n;
+}
+
+/* 升级价格：从 level 升到 level+1 */
+var _priceList = [0, UPGRADE_BASE_PRICE];
+function upgradePrice(level){
+  if(level >= MAX_LEVEL) return Infinity;
+  while(_priceList.length <= level){
+    var last = _priceList[_priceList.length - 1];
+    _priceList.push(Math.ceil(last * UPGRADE_MULTIPLIER));
+  }
+  return _priceList[level];
 }
 
 var currentUser=null;
@@ -531,7 +579,8 @@ function loadUserSession(){
       currentUser={
         username:o.username,
         points:Number(o.points)||0,
-        clickLevel:normalizeLevel(o.clickLevel)
+        clickLevel:normalizeLevel(o.clickLevel),
+        autoClickUnlocked:!!o.autoClickUnlocked
       };
     }
   }catch(e){}
@@ -542,7 +591,6 @@ function saveUserSession(){
 }
 function renderUserChip(){
   var chip=$('userChip'),btn=$('authBtn');
-  var lvDisp = $('levelDisplay');
   if(currentUser){
     var lv = normalizeLevel(currentUser.clickLevel);
     chip.style.display='';
@@ -550,22 +598,58 @@ function renderUserChip(){
     $('ucName').textContent=currentUser.username;
     $('ucLevel').textContent='Lv.'+lv;
     $('ucPointsNum').textContent=String(currentUser.points);
+    $('ucAuto').hidden = !currentUser.autoClickUnlocked;
     $('shopPoints').textContent='⭐ '+currentUser.points;
-    /* 显示等级条 */
-    if(lvDisp){
-      lvDisp.hidden = false;
-      $('ldLevel').textContent = String(lv);
-      $('ldGain').textContent = String(lv);
-    }
   }else{
     chip.style.display='none';
     btn.style.display='';
     $('shopPoints').textContent='⭐ 未登录';
-    if(lvDisp) lvDisp.hidden = true;
   }
+  renderUpgradePanel();
   renderShop();
 }
 
+/* 升级面板渲染 */
+function renderUpgradePanel(){
+  var panel=$('upgradePanel');
+  if(!panel)return;
+  if(!currentUser){panel.hidden=true;return;}
+  panel.hidden=false;
+
+  var lv = normalizeLevel(currentUser.clickLevel);
+  var price = upgradePrice(lv);
+
+  $('upLevel').textContent = String(lv);
+  $('upGain').textContent = String(lv);
+  $('upGainP').textContent = String(lv);
+
+  var btn = $('upgradeBtn');
+  var priceEl = $('upPrice');
+  if(lv >= MAX_LEVEL){
+    btn.disabled = true;
+    priceEl.textContent = '已满级';
+  }else{
+    priceEl.textContent = String(price);
+    btn.disabled = currentUser.points < price;
+  }
+
+  var autoBtn = $('autoBtn');
+  var autoLabel = $('autoBtnLabel');
+  var autoPrice = $('autoBtnPrice');
+  if(currentUser.autoClickUnlocked){
+    autoLabel.textContent = '🤖 自动点击已开启';
+    autoPrice.textContent = '运行中';
+    autoBtn.classList.add('purchased');
+    autoBtn.disabled = true;
+  }else{
+    autoLabel.textContent = '🤖 解锁自动点击';
+    autoPrice.textContent = '⭐ ' + AUTO_CLICK_PRICE;
+    autoBtn.classList.remove('purchased');
+    autoBtn.disabled = currentUser.points < AUTO_CLICK_PRICE;
+  }
+}
+
+/* 主题 */
 var LOCKED_THEME='cn-red';
 var THEMES=[
   {id:'cn-red',name:'🇨🇳 中国红',desc:'国庆专属 · 已锁定',colors:['#c8102e','#fff8f0','#e0202e']},
@@ -611,6 +695,7 @@ var feedOrders=[];
 var boostNumEl=$('boostNum');
 var actionBtn=$('actionBtn');
 var progressSectionEl=$('progressSection');
+var autoClickTimer=null;
 
 var zoomLevel=1;
 var ZOOM_MIN=1,ZOOM_MAX=5,ZOOM_STEP=0.3;
@@ -801,31 +886,48 @@ function bumpNumber(){
   boostNumEl.classList.add('bump');
 }
 
+/* 求助力总和：用 rpc sum(amount) */
+function fetchTotalBoost(){
+  if(!sb)return Promise.resolve(0);
+  return sb.rpc('welfare_boost_total').then(function(res){
+    if(res.error){
+      /* 回退：如果 rpc 不存在，用 count */
+      console.warn('[ful] rpc 失败，回退到 count', res.error);
+      return sb.from(T_BOOST).select('*',{count:'exact',head:true}).then(function(r){
+        return typeof r.count === 'number' ? r.count : 0;
+      });
+    }
+    var data = res.data;
+    if(Array.isArray(data) && data.length > 0){
+      var row = data[0];
+      if(typeof row === 'object' && row !== null){
+        return Number(row.total) || 0;
+      }
+      return Number(row) || 0;
+    }
+    return 0;
+  }).catch(function(){return 0;});
+}
+
 var refreshing=false;
 function refreshAll(){
   if(!sb||refreshing)return;
   refreshing=true;
   Promise.all([
-    sb.from(T_BOOST).select('*',{count:'exact',head:true}),
+    fetchTotalBoost(),
     loadJsonFromGitHub(FILE_TARGETS).catch(function(){return [];}),
     loadJsonFromGitHub(FILE_SHOP).catch(function(){return [];}),
     sb.from(T_ORDERS).select('*').order('created_at',{ascending:false}).limit(30)
   ]).then(function(results){
     refreshing=false;
-    var countRes=results[0];
-    var targetsData=results[1];
-    var shopData=results[2];
-    var ordersRes=results[3];
+    totalBoost = Number(results[0]) || 0;
+    boostLoaded = true;
+    welfTargets = results[1] || [];
+    shopItems = results[2] || [];
+    var ordersRes = results[3];
+    if(!ordersRes.error && Array.isArray(ordersRes.data)) feedOrders = ordersRes.data;
 
-    if(countRes.error){spSetErr();}
-    else{
-      spSetOK();
-      if(typeof countRes.count==='number'){totalBoost=countRes.count;boostLoaded=true;}
-    }
-    welfTargets=targetsData||[];
-    shopItems=shopData||[];
-    if(!ordersRes.error&&Array.isArray(ordersRes.data))feedOrders=ordersRes.data;
-
+    spSetOK();
     renderBoost();
     renderProgress();
     renderShop();
@@ -839,12 +941,14 @@ function refreshAll(){
 
 function refreshUser(){
   if(!currentUser||!sb)return Promise.resolve();
-  return sb.from(T_USERS).select('points,username,click_level').eq('username',currentUser.username).maybeSingle().then(function(res){
+  return sb.from(T_USERS).select('points,username,click_level,auto_click_unlocked').eq('username',currentUser.username).maybeSingle().then(function(res){
     if(res.error||!res.data)return;
     currentUser.points=Number(res.data.points)||0;
     currentUser.clickLevel=normalizeLevel(res.data.click_level);
+    currentUser.autoClickUnlocked=!!res.data.auto_click_unlocked;
     saveUserSession();
     renderUserChip();
+    if(currentUser.autoClickUnlocked) startAutoClick();
   }).catch(function(){});
 }
 
@@ -856,6 +960,7 @@ function startGitHubPolling(){
   },30000);
 }
 
+/* 冷却 */
 function startCooldown(){
   cooling=true;
   if(actionBtn)actionBtn.classList.add('cooling');
@@ -874,57 +979,42 @@ function startCooldown(){
   requestAnimationFrame(tick);
 }
 
+/* 助力 */
 function doBoost(){
   if(cooling)return;
   if(!sb){toast('连接未初始化');return;}
+
+  var lv = currentUser ? normalizeLevel(currentUser.clickLevel) : 1;
+  var boostGain = lv;
+
   startCooldown();
 
-  totalBoost++;
-  boostLoaded=true;
+  totalBoost += boostGain;
+  boostLoaded = true;
   renderBoost();
   renderProgress();
   bumpNumber();
 
-  /* 结算个人点：每次固定获得当前等级的点数 + 10% 概率升级 */
+  /* 10% 概率暴击获得个人点 */
   var gainedPoints = 0;
-  var leveledUp = false;
-  var oldLevel = 1;
-  var newLevel = 1;
-
-  if(currentUser){
-    oldLevel = normalizeLevel(currentUser.clickLevel);
-    gainedPoints = oldLevel;                /* 每次点击 = 当前等级点数 */
-    currentUser.points += gainedPoints;     /* 稳定收益 */
-
-    if(oldLevel < MAX_LEVEL && Math.random() < LEVEL_UP_RATE){
-      currentUser.clickLevel = oldLevel + 1;
-      leveledUp = true;
-    }
-    newLevel = normalizeLevel(currentUser.clickLevel);
+  if(currentUser && Math.random() < POINT_CRIT_RATE){
+    gainedPoints = lv;
+    currentUser.points += gainedPoints;
     saveUserSession();
     renderUserChip();
-
-    if(leveledUp){
-      var badge=$('ldBadge');
-      if(badge){
-        badge.classList.remove('pulse');
-        void badge.offsetWidth;
-        badge.classList.add('pulse');
-      }
-    }
   }
 
-  /* 写入助力记录 */
+  /* 写记录 */
   sb.from(T_BOOST).insert({
     uid: currentUser ? currentUser.username : ('guest_' + Date.now()),
+    amount: boostGain,
     created_at: Date.now()
   }).then(function(res){
     if(res.error){
       /* 回滚 */
-      totalBoost = Math.max(0, totalBoost - 1);
-      if(currentUser){
+      totalBoost = Math.max(0, totalBoost - boostGain);
+      if(currentUser && gainedPoints > 0){
         currentUser.points = Math.max(0, currentUser.points - gainedPoints);
-        if(leveledUp) currentUser.clickLevel = oldLevel;
         saveUserSession();
         renderUserChip();
       }
@@ -936,32 +1026,29 @@ function doBoost(){
     }
     spSetOK();
 
-    /* 更新用户点数与等级 */
-    if(currentUser){
-      sb.from(T_USERS).update({
-        points: currentUser.points,
-        click_level: newLevel
-      }).eq('username', currentUser.username).then(function(r2){
-        if(r2.error)console.warn('[ful] 更新用户失败', r2.error);
+    /* 更新用户点数 */
+    if(currentUser && gainedPoints > 0){
+      sb.from(T_USERS).update({points: currentUser.points}).eq('username', currentUser.username).then(function(r){
+        if(r.error)console.warn('[ful] 更新点数失败', r.error);
       });
     }
 
     /* 提示 */
     if(currentUser){
-      var msg = '💪 获得 ' + gainedPoints + ' 点';
-      if(leveledUp) msg += '，升至 Lv.' + newLevel + '！';
-      toast(msg);
+      if(gainedPoints > 0){
+        toast('💪 +' + boostGain + ' 助力 · 暴击 +' + gainedPoints + ' 个人点！');
+      }else{
+        toast('💪 +' + boostGain + ' 助力');
+      }
     }else{
-      toast('感谢助力');
+      toast('感谢助力 +' + boostGain);
     }
 
     setTimeout(refreshAll, 400);
   }).catch(function(){
-    /* 网络异常回滚 */
-    totalBoost = Math.max(0, totalBoost - 1);
-    if(currentUser){
+    totalBoost = Math.max(0, totalBoost - boostGain);
+    if(currentUser && gainedPoints > 0){
       currentUser.points = Math.max(0, currentUser.points - gainedPoints);
-      if(leveledUp) currentUser.clickLevel = oldLevel;
       saveUserSession();
       renderUserChip();
     }
@@ -971,13 +1058,105 @@ function doBoost(){
   });
 }
 
+/* 升级 */
+function doUpgrade(){
+  if(!currentUser){toast('请先登录');openAuth();return;}
+  var lv = normalizeLevel(currentUser.clickLevel);
+  if(lv >= MAX_LEVEL){toast('已满级');return;}
+  var price = upgradePrice(lv);
+  if(currentUser.points < price){toast('个人点不足（需要 ' + price + '）');return;}
+
+  var newPoints = currentUser.points - price;
+  var newLevel = lv + 1;
+
+  $('upgradeBtn').disabled = true;
+
+  sb.from(T_USERS).update({
+    points: newPoints,
+    click_level: newLevel
+  }).eq('username', currentUser.username).then(function(res){
+    if(res.error){
+      toast('升级失败：' + res.error.message);
+      renderUpgradePanel();
+      return;
+    }
+    currentUser.points = newPoints;
+    currentUser.clickLevel = newLevel;
+    saveUserSession();
+    renderUserChip();
+    toast('🎉 升级到 Lv.' + newLevel);
+    var badge = $('upLvBadge');
+    if(badge){
+      badge.classList.remove('pulse');
+      void badge.offsetWidth;
+      badge.classList.add('pulse');
+    }
+  }).catch(function(err){
+    toast('升级失败：' + (err.message || '网络异常'));
+    renderUpgradePanel();
+  });
+}
+
+/* 解锁自动点击 */
+function doUnlockAuto(){
+  if(!currentUser){toast('请先登录');openAuth();return;}
+  if(currentUser.autoClickUnlocked){toast('已解锁');return;}
+  if(currentUser.points < AUTO_CLICK_PRICE){toast('个人点不足（需要 ' + AUTO_CLICK_PRICE + '）');return;}
+
+  var newPoints = currentUser.points - AUTO_CLICK_PRICE;
+  $('autoBtn').disabled = true;
+
+  sb.from(T_USERS).update({
+    points: newPoints,
+    auto_click_unlocked: true
+  }).eq('username', currentUser.username).then(function(res){
+    if(res.error){
+      toast('解锁失败：' + res.error.message);
+      renderUpgradePanel();
+      return;
+    }
+    currentUser.points = newPoints;
+    currentUser.autoClickUnlocked = true;
+    saveUserSession();
+    renderUserChip();
+    startAutoClick();
+    toast('🚀 已解锁自动点击！每 2 秒自动助力一次');
+  }).catch(function(err){
+    toast('解锁失败：' + (err.message || '网络异常'));
+    renderUpgradePanel();
+  });
+}
+
+/* 自动点击循环 */
+function startAutoClick(){
+  if(autoClickTimer)return;
+  if(!currentUser || !currentUser.autoClickUnlocked)return;
+  if(actionBtn) actionBtn.classList.add('auto-running');
+  autoClickTimer = setInterval(function(){
+    if(document.hidden)return;
+    if(cooling)return;
+    if(!currentUser || !currentUser.autoClickUnlocked){
+      stopAutoClick();
+      return;
+    }
+    doBoost();
+  }, AUTO_CLICK_INTERVAL);
+}
+function stopAutoClick(){
+  if(autoClickTimer){clearInterval(autoClickTimer);autoClickTimer=null;}
+  if(actionBtn) actionBtn.classList.remove('auto-running');
+}
+
+/* 订阅 */
 var chan=null;
 function subscribeAll(){
   if(!sb||chan)return;
   chan=sb.channel('welfare-live')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:T_BOOST},function(payload){
       var row=payload.new;if(!row)return;
-      totalBoost++;boostLoaded=true;
+      var amt = Number(row.amount) || 1;
+      totalBoost += amt;
+      boostLoaded=true;
       renderBoost();renderProgress();bumpNumber();
     })
     .on('postgres_changes',{event:'*',schema:'public',table:T_ORDERS},function(){refreshAll();})
@@ -986,8 +1165,11 @@ function subscribeAll(){
       if(row&&currentUser&&row.username===currentUser.username){
         currentUser.points=Number(row.points)||0;
         currentUser.clickLevel=normalizeLevel(row.click_level);
+        currentUser.autoClickUnlocked=!!row.auto_click_unlocked;
         saveUserSession();
         renderUserChip();
+        if(currentUser.autoClickUnlocked) startAutoClick();
+        else stopAutoClick();
       }
     })
     .subscribe(function(status){
@@ -1280,11 +1462,12 @@ function doAuth(){
           password_hash:hash,
           points:0,
           click_level:1,
+          auto_click_unlocked:false,
           created_at:Date.now(),
           last_login:Date.now()
         }).then(function(ins){
           if(ins.error){$('authSubmit').disabled=false;setAuthStatus('注册失败：'+(ins.error.code==='23505'?'用户名已被占用':'网络错误'),'err');return;}
-          currentUser={username:name,points:0,clickLevel:1};
+          currentUser={username:name,points:0,clickLevel:1,autoClickUnlocked:false};
           saveUserSession();renderUserChip();
           $('authSubmit').disabled=false;
           setAuthStatus('注册成功 ✓','ok');
@@ -1293,18 +1476,20 @@ function doAuth(){
         });
       });
     }else{
-      sb.from(T_USERS).select('username,password_hash,points,click_level').eq('username',name).maybeSingle().then(function(res){
+      sb.from(T_USERS).select('username,password_hash,points,click_level,auto_click_unlocked').eq('username',name).maybeSingle().then(function(res){
         if(res.error){$('authSubmit').disabled=false;setAuthStatus('网络异常','err');return;}
         if(!res.data){$('authSubmit').disabled=false;setAuthStatus('用户不存在','err');return;}
         if(res.data.password_hash!==hash){$('authSubmit').disabled=false;setAuthStatus('密码错误','err');return;}
         currentUser={
           username:res.data.username,
           points:Number(res.data.points)||0,
-          clickLevel:normalizeLevel(res.data.click_level)
+          clickLevel:normalizeLevel(res.data.click_level),
+          autoClickUnlocked:!!res.data.auto_click_unlocked
         };
         saveUserSession();
         sb.from(T_USERS).update({last_login:Date.now()}).eq('username',name).then(function(){});
         renderUserChip();
+        if(currentUser.autoClickUnlocked) startAutoClick();
         $('authSubmit').disabled=false;
         setAuthStatus('登录成功 ✓','ok');
         toast('欢迎回来，'+name);
@@ -1322,11 +1507,13 @@ function openAcct(){
   var lv = normalizeLevel(currentUser.clickLevel);
   $('acctName').textContent=currentUser.username;
   $('acctPoints').textContent=String(currentUser.points);
-  $('acctLevel').textContent='Lv.'+lv+' · 每次 +'+lv+' 点';
+  $('acctLevel').textContent='Lv.'+lv+' · 每次 +'+lv+' 助力';
+  $('acctAuto').textContent=currentUser.autoClickUnlocked?'已解锁 🤖':'未解锁';
   $('acctOv').classList.add('show');
 }
 function closeAcct(){$('acctOv').classList.remove('show');}
 function doLogout(){
+  stopAutoClick();
   currentUser=null;
   saveUserSession();
   renderUserChip();
@@ -1375,7 +1562,7 @@ function doBuy(){
     sb.from(T_ORDERS).insert({
       username:currentUser.username,
       game_name:gameName,
-      shop_id:buyingItem.id,
+      shop_id:String(buyingItem.id),
       shop_name:buyingItem.name,
       shop_icon:buyingItem.icon||'🎁',
       price:price,
@@ -1429,6 +1616,9 @@ function bind(){
   $('buyConfirm').addEventListener('click',doBuy);
   $('buyOv').addEventListener('click',function(e){if(e.target===this)closeBuy();});
 
+  $('upgradeBtn').addEventListener('click',doUpgrade);
+  $('autoBtn').addEventListener('click',doUnlockAuto);
+
   $('shopList').addEventListener('click',function(e){
     var item=e.target.closest('[data-shop-id]');
     if(!item)return;
@@ -1477,6 +1667,8 @@ function boot(){
   onScroll();
   renderUserChip();
   applyZoom();
+
+  if(currentUser && currentUser.autoClickUnlocked) startAutoClick();
 
   if(spTime)spTime.textContent=fmtTime(Date.now());
   setInterval(function(){if(spTime)spTime.textContent=fmtTime(Date.now());},1000);
