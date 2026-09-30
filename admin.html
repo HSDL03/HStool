@@ -95,6 +95,8 @@ header.head .back:hover{gap:8px}
 [data-theme=dark] .fstatus.s-standalone{background:#0f2a17;color:var(--ok)}
 .fstatus.s-hidden{background:#fde2e2;border:1px solid var(--dgr);color:var(--dgr)}
 [data-theme=dark] .fstatus.s-hidden{background:#2a0f0f;color:var(--dgr)}
+.fstatus.s-pending{background:#fff4cc;border:1px solid #c8a000;color:#8a6800}
+[data-theme=dark] .fstatus.s-pending{background:#2a220a;color:#d4a72c}
 .file .fmeta .sep{opacity:.4}
 .file .fmeta .furl{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;opacity:.75}
 .file.offline{opacity:.6}
@@ -156,23 +158,23 @@ header.head .back:hover{gap:8px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .bg-error{position:fixed;top:0;left:0;right:0;padding:12px 20px;background:var(--dgr);color:#fff;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;z-index:999;white-space:pre-wrap;word-break:break-all;display:none}
 
-/* ═══════════════ 福利管理专用 ═══════════════ */
+/* 福利目标（多目标） */
 .welf-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .welf-stat{padding:14px 16px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);text-align:center}
 .welf-stat .wv{font-size:1.9rem;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ac);margin-bottom:4px}
 .welf-stat .wl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .welf-panel{padding:18px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:20px}
 .welf-panel h3{margin:0 0 12px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.welf-progress-track{position:relative;height:16px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin:10px 0}
-.welf-progress-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,#0969da,#4493f8);transition:width .7s cubic-bezier(.34,1.56,.64,1)}
-.welf-progress-meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-.welf-progress-meta strong{color:var(--ac)}
-.welf-recent{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto}
-.welf-recent-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;font-size:12.5px}
-.welf-recent-item .wr-dot{width:8px;height:8px;flex:none;background:var(--ac);border-radius:50%}
-.welf-recent-item .wr-uid{flex:1;min-width:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.welf-recent-item .wr-time{flex:none;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.welf-recent-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px}
+.welf-targets{display:flex;flex-direction:column;gap:8px}
+.welf-target-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);transition:border-color .2s}
+.welf-target-row:hover{border-color:var(--ac)}
+.welf-target-row .wt-grip{width:18px;height:18px;flex:none;display:grid;place-items:center;color:var(--muted);cursor:grab;font-size:15px}
+.welf-target-row .wt-name{flex:1;min-width:0;height:36px;padding:0 10px;font-size:14px;font-weight:600;color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:6px;outline:none;font-family:inherit}
+.welf-target-row .wt-name:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.welf-target-row .wt-value{flex:none;width:120px;height:36px;padding:0 10px;font-size:14px;font-weight:700;text-align:right;color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:6px;outline:none;font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace}
+.welf-target-row .wt-value:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.welf-target-row .wt-del{width:34px;height:34px;flex:none;display:grid;place-items:center;font-size:14px;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;transition:all .18s}
+.welf-target-row .wt-del:hover{color:var(--dgr);border-color:var(--dgr);background:rgba(207,34,46,.08)}
 
 @media(max-width:640px){
   .wrap{padding:20px 14px 80px}
@@ -189,6 +191,9 @@ header.head .back:hover{gap:8px}
   .grid2{grid-template-columns:1fr}
   .toolbar .hint{display:none}
   .welf-stat-grid{grid-template-columns:1fr 1fr}
+  .welf-target-row{flex-wrap:wrap}
+  .welf-target-row .wt-name{flex-basis:calc(100% - 100px)}
+  .welf-target-row .wt-value{width:100px}
 }
 </style>
 </head>
@@ -219,7 +224,13 @@ header.head .back:hover{gap:8px}
       <span class="dot-dirty" id="toolsDirty" hidden></span>
     </button>
     <button type="button" class="tab" data-tab="welfare">
-      🎉 国庆福利 <span class="badge" id="welfBadge">--</span>
+      🎉 福利目标 <span class="badge" id="welfBadge">--</span>
+    </button>
+    <button type="button" class="tab" data-tab="shop">
+      🛒 商店管理 <span class="badge" id="shopBadge">0</span>
+    </button>
+    <button type="button" class="tab" data-tab="orders">
+      📦 订单管理 <span class="badge" id="orderBadge">0</span>
     </button>
   </div>
 
@@ -303,57 +314,88 @@ header.head .back:hover{gap:8px}
     </div>
   </div>
 
-  <!-- ==================== Tab: 国庆福利 ==================== -->
+  <!-- ==================== Tab: 福利目标 ==================== -->
   <div class="pane" id="paneWelfare" hidden>
     <div class="toolbar">
-      <button class="btn p" id="btnWelfRefresh" type="button">🔄 刷新数据</button>
-      <span class="hint" id="welfHint">数据来自 Supabase · welfare_boost / welfare_config</span>
+      <button class="btn p" id="btnWelfAddTarget" type="button">＋ 添加目标</button>
+      <button class="btn" id="btnWelfRefresh" type="button">🔄 刷新数据</button>
+      <span class="hint" id="welfHint">目标来自 GitHub · welfare-targets.json</span>
       <span class="sp"></span>
     </div>
 
     <div class="welf-stat-grid">
       <div class="welf-stat"><div class="wv" id="welfBoostCount">--</div><div class="wl">当前助力点</div></div>
-      <div class="welf-stat"><div class="wv" id="welfTarget">--</div><div class="wl">目标值</div></div>
-      <div class="welf-stat"><div class="wv" id="welfPercent">--</div><div class="wl">完成度</div></div>
-      <div class="welf-stat"><div class="wv" id="welfRemain">--</div><div class="wl">还差</div></div>
+      <div class="welf-stat"><div class="wv" id="welfTargetCount">--</div><div class="wl">目标数</div></div>
+      <div class="welf-stat"><div class="wv" id="welfDoneCount">--</div><div class="wl">已达成</div></div>
     </div>
 
     <div class="welf-panel">
-      <h3>🎯 目标设置</h3>
-      <div class="fld">
-        <span>目标助力点</span>
-        <input type="number" id="welfTargetInput" min="1" step="1" placeholder="例如 1000">
-        <div class="sub">保存后福利页 ful.html 进度条实时更新</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-        <button class="btn p" id="welfSaveTarget" type="button">💾 保存目标值</button>
-        <button class="btn" id="welfQuick1000" type="button">1000</button>
-        <button class="btn" id="welfQuick5000" type="button">5000</button>
-        <button class="btn" id="welfQuick10000" type="button">10000</button>
-      </div>
-      <div class="welf-progress-track" style="margin-top:14px">
-        <div class="welf-progress-fill" id="welfPvFill"></div>
-      </div>
-      <div class="welf-progress-meta">
-        <span><strong id="welfPvCurrent">0</strong> / <span id="welfPvTarget">--</span></span>
-        <span><strong id="welfPvPercent">0%</strong></span>
-      </div>
-    </div>
-
-    <div class="welf-panel">
-      <h3>📋 最近 20 条助力记录</h3>
-      <div class="welf-recent" id="welfRecentList">
-        <div class="welf-recent-empty">加载中…</div>
+      <h3>🎯 目标列表（名称 + 数值）</h3>
+      <div class="welf-targets" id="welfTargetsList"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center">
+        <button class="btn p" id="welfSaveTargets" type="button">💾 保存目标到 GitHub</button>
+        <span style="font-size:13px;color:var(--muted)">保存后福利页实时同步</span>
       </div>
     </div>
 
     <div class="help">
-      <h3>操作说明 · 国庆福利</h3>
+      <h3>操作说明 · 福利目标</h3>
       <ul>
-        <li>数据存储：Supabase <code>welfare_boost</code>（助力记录）+ <code>welfare_config</code>（单行目标配置）</li>
-        <li>福利页 <code>ful.html</code> 实时订阅这两个表的变化</li>
-        <li>目标值修改后立即生效，无需「保存并推送」</li>
-        <li>其他 Tab 的操作仍走 GitHub API，跟福利 Tab 无关</li>
+        <li><strong>添加目标</strong>：点左上「＋ 添加目标」新增一行</li>
+        <li><strong>编辑</strong>：直接点名称/数值输入框修改</li>
+        <li><strong>删除</strong>：点右侧 🗑</li>
+        <li><strong>排序</strong>：拖动 ⠿ 手柄调整顺序</li>
+        <li><strong>保存</strong>：点「💾 保存目标到 GitHub」写入仓库</li>
+        <li>写入文件：<code>welfare-targets.json</code> · 助力数来自 Supabase <code>welfare_boost</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== Tab: 商店管理 ==================== -->
+  <div class="pane" id="paneShop" hidden>
+    <div class="toolbar">
+      <button class="btn p" id="btnAddShop" type="button">＋ 添加商品</button>
+      <button class="btn" id="btnRefreshShop" type="button">🔄 刷新</button>
+      <span class="hint" id="shopHint">商品来自 GitHub · welfare-shop.json</span>
+      <span class="sp"></span>
+    </div>
+
+    <div class="cards" id="shopCards"></div>
+
+    <div class="help">
+      <h3>操作说明 · 商店管理</h3>
+      <ul>
+        <li><strong>添加商品</strong>：点左上「＋ 添加商品」</li>
+        <li><strong>编辑</strong>：点卡片右侧 ✏️</li>
+        <li><strong>下架</strong>：编辑时取消勾选「上架」</li>
+        <li><strong>删除</strong>：编辑弹窗里点「删除」</li>
+        <li>写入文件：<code>welfare-shop.json</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== Tab: 订单管理 ==================== -->
+  <div class="pane" id="paneOrders" hidden>
+    <div class="toolbar">
+      <button class="btn" id="btnRefreshOrders" type="button">🔄 刷新</button>
+      <span class="hint" id="orderHint">数据来自 Supabase · welfare_orders</span>
+      <span class="sp"></span>
+      <select class="select" id="orderStatusFilter">
+        <option value="__all__">全部</option>
+        <option value="pending">待发放</option>
+        <option value="delivered">已发放</option>
+      </select>
+    </div>
+
+    <div class="cards" id="orderCards"></div>
+
+    <div class="help">
+      <h3>操作说明 · 订单管理</h3>
+      <ul>
+        <li><strong>标记已发放</strong>：点卡片右侧 ✓ 表示你已在游戏中把道具发给用户</li>
+        <li><strong>改回待发放</strong>：点 ↩️</li>
+        <li><strong>删除订单</strong>：点 🗑</li>
+        <li>发放前请核对用户填写的游戏名是否正确</li>
       </ul>
     </div>
   </div>
@@ -533,6 +575,48 @@ header.head .back:hover{gap:8px}
   </div>
 </div>
 
+<!-- ==================== 商品编辑弹窗 ==================== -->
+<div class="ov" id="shopEditOv">
+  <div class="pnl">
+    <div class="ph"><strong id="shopEditTitle">编辑商品</strong><span class="sp"></span><button class="x" id="shopEditClose" type="button">✕</button></div>
+    <div class="pb">
+      <div class="fld">
+        <span>图标（Emoji）</span>
+        <div class="emoji-row">
+          <input id="shopIcon" type="text" maxlength="4" placeholder="🎁" autocomplete="off" spellcheck="false">
+          <div class="emoji-quick" id="shopEmojiQuick"></div>
+        </div>
+      </div>
+
+      <div class="fld">
+        <span>商品名称<span class="req">*</span></span>
+        <input id="shopName" type="text" maxlength="30" placeholder="如：玫瑰花束" autocomplete="off">
+      </div>
+
+      <div class="fld">
+        <span>描述</span>
+        <textarea id="shopDesc" rows="2" maxlength="100" placeholder="简短介绍，可空"></textarea>
+      </div>
+
+      <div class="grid2">
+        <div class="fld"><span>价格（个人点）<span class="req">*</span></span><input id="shopPrice" type="number" min="1" step="1" value="1"></div>
+        <div class="fld"><span>排序（小在前）</span><input id="shopSort" type="number" min="0" step="1" value="0"></div>
+      </div>
+
+      <label class="row-check" style="margin-top:8px">
+        <input type="checkbox" id="shopAvailable" checked>
+        <span>上架（取消勾选则前台不显示）</span>
+      </label>
+    </div>
+    <div class="pf">
+      <button class="btn d" id="shopDel" type="button" hidden>删除</button>
+      <span class="sp"></span>
+      <button class="btn" id="shopCancel" type="button">取消</button>
+      <button class="btn p" id="shopSaveBtn" type="button">保存到 GitHub</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -549,18 +633,21 @@ header.head .back:hover{gap:8px}
   var DEFAULT_DL_PATH    = 'download-data.json';
   var DEFAULT_TOOLS_PATH = 'tools-data.json';
   var DEFAULT_BRANCH     = 'main';
+  var FILE_TARGETS       = 'welfare-targets.json';
+  var FILE_SHOP          = 'welfare-shop.json';
   var K_GH               = 'wiki-gh';
   var K_TAB              = 'admin-tab';
   var RELEASES_TTL       = 5 * 60 * 1000;
 
-  /* Supabase（福利 Tab 专用） */
+  /* Supabase（福利助力数、订单） */
   var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
-  var SB_BOOST = 'welfare_boost';
-  var SB_CONFIG = 'welfare_config';
+  var SB_BOOST  = 'welfare_boost';
+  var SB_ORDERS = 'welfare_orders';
 
   var EMOJI_PRESETS = ['📦','📥','🗜','🎨','🖼','🎵','🎬','📄','📝','📊','🧩','🎮','🕹','🔧','⚙','💎','🌟','🔥','⚡','🌊','🌲','❄','🏹','🛡','⚔','🧪','📜','🗺','🧭','🔮','🎯','🏆','🎁','🗂','📁','💾','🖥','📱','🎓'];
   var TOOL_EMOJI_PRESETS = ['🧰','📚','📥','🧩','🎨','🔧','⚙','🔮','🎯','📊','🗺','🧪','📝','🌐','💡','🔍','🎮','🕹','📷','🎵','📖','✏️','🎁','🏷️','🧮','🔨','🪓','⛏','🌿','🎬'];
+  var SHOP_EMOJI_PRESETS = ['🌹','⚔️','🏆','🎁','💎','👑','🛡️','🏹','🧪','🍎','🍖','🎂','🧁','📜','🗝️','🔮','⚡','🔥','❄️','🌈','⭐','💫','🎯','🎮','🎨','🐾','🦄','🐉','☕','🍺','🧸','🎈','🎀','🎊','🎉'];
 
   /* ==========================================================
      全局错误
@@ -611,7 +698,7 @@ header.head .back:hover{gap:8px}
   }
 
   /* ==========================================================
-     Supabase 客户端（懒加载，只在 welfare Tab 用到）
+     Supabase 客户端
      ========================================================== */
   var sb = null;
   function getSb(){
@@ -650,10 +737,21 @@ header.head .back:hover{gap:8px}
   var toolsStatusFilter = '__all__';
   var editingToolIdx = -1;
 
-  /* 福利 */
+  /* 福利目标（GitHub） */
   var welfTotal = 0;
-  var welfTarget = 0;
   var welfLoaded = false;
+  var welfLoading = false;
+  var welfTargets = [];
+
+  /* 商店（GitHub） */
+  var shopItems = [];
+  var shopLoading = false;
+  var editingShopId = null;
+
+  /* 订单（Supabase） */
+  var orders = [];
+  var orderFilter = '__all__';
+  var orderLoading = false;
 
   /* ==========================================================
      DOM
@@ -662,8 +760,10 @@ header.head .back:hover{gap:8px}
     dot: $('dot'), statusText: $('statusText'),
     btnConnect: $('btnConnect'), btnReload: $('btnReload'), btnSave: $('btnSave'),
     tabs: document.querySelectorAll('.tab'),
-    paneWiki: $('paneWiki'), paneDownload: $('paneDownload'), paneTools: $('paneTools'), paneWelfare: $('paneWelfare'),
-    wikiBadge: $('wikiBadge'), dlBadge: $('dlBadge'), toolsBadge: $('toolsBadge'), welfBadge: $('welfBadge'),
+    paneWiki: $('paneWiki'), paneDownload: $('paneDownload'), paneTools: $('paneTools'),
+    paneWelfare: $('paneWelfare'), paneShop: $('paneShop'), paneOrders: $('paneOrders'),
+    wikiBadge: $('wikiBadge'), dlBadge: $('dlBadge'), toolsBadge: $('toolsBadge'),
+    welfBadge: $('welfBadge'), shopBadge: $('shopBadge'), orderBadge: $('orderBadge'),
     wikiDirty: $('wikiDirty'), dlDirty: $('dlDirty'), toolsDirty: $('toolsDirty'),
     wikiPathTip: $('wikiPathTip'), dlPathTip: $('dlPathTip'), toolsPathTip: $('toolsPathTip'),
     lede: $('lede'),
@@ -698,17 +798,23 @@ header.head .back:hover{gap:8px}
     tTag: $('tTag'), tUrl: $('tUrl'), tId: $('tId'),
     tDeprecated: $('tDeprecated'), tDisabled: $('tDisabled'), tHidden: $('tHidden'),
     toolEmojiQuick: $('toolEmojiQuick'),
-    /* 福利 */
+    /* 福利目标 */
     welfHint: $('welfHint'),
-    welfBoostCount: $('welfBoostCount'), welfTarget: $('welfTarget'),
-    welfPercent: $('welfPercent'), welfRemain: $('welfRemain'),
-    welfTargetInput: $('welfTargetInput'),
-    welfSaveTarget: $('welfSaveTarget'),
-    welfQuick1000: $('welfQuick1000'), welfQuick5000: $('welfQuick5000'), welfQuick10000: $('welfQuick10000'),
-    welfPvFill: $('welfPvFill'), welfPvCurrent: $('welfPvCurrent'),
-    welfPvTarget: $('welfPvTarget'), welfPvPercent: $('welfPvPercent'),
-    welfRecentList: $('welfRecentList'),
-    btnWelfRefresh: $('btnWelfRefresh')
+    welfBoostCount: $('welfBoostCount'), welfTargetCount: $('welfTargetCount'), welfDoneCount: $('welfDoneCount'),
+    welfTargetsList: $('welfTargetsList'), welfSaveTargets: $('welfSaveTargets'),
+    btnWelfRefresh: $('btnWelfRefresh'), btnWelfAddTarget: $('btnWelfAddTarget'),
+    /* 商店 */
+    shopHint: $('shopHint'), shopCards: $('shopCards'),
+    btnAddShop: $('btnAddShop'), btnRefreshShop: $('btnRefreshShop'),
+    shopEditOv: $('shopEditOv'), shopEditTitle: $('shopEditTitle'),
+    shopEditClose: $('shopEditClose'), shopCancel: $('shopCancel'),
+    shopSaveBtn: $('shopSaveBtn'), shopDel: $('shopDel'),
+    shopIcon: $('shopIcon'), shopName: $('shopName'), shopDesc: $('shopDesc'),
+    shopPrice: $('shopPrice'), shopSort: $('shopSort'), shopAvailable: $('shopAvailable'),
+    shopEmojiQuick: $('shopEmojiQuick'),
+    /* 订单 */
+    orderHint: $('orderHint'), orderCards: $('orderCards'),
+    btnRefreshOrders: $('btnRefreshOrders'), orderStatusFilter: $('orderStatusFilter')
   };
 
   /* ==========================================================
@@ -990,6 +1096,9 @@ header.head .back:hover{gap:8px}
     if (els.btnAddFile) els.btnAddFile.disabled = !hasGh || busy;
     if (els.btnSyncReleases) els.btnSyncReleases.disabled = !hasGh || busy;
     if (els.btnAddTool) els.btnAddTool.disabled = !hasGh || busy;
+    if (els.btnWelfAddTarget) els.btnWelfAddTarget.disabled = !hasGh || busy;
+    if (els.welfSaveTargets) els.welfSaveTargets.disabled = !hasGh || busy;
+    if (els.btnAddShop) els.btnAddShop.disabled = !hasGh || busy;
 
     if (els.wikiDirty) els.wikiDirty.hidden = !(hasGh && wikiSnapshot !== snapshotWiki());
     if (els.dlDirty) els.dlDirty.hidden = !(hasGh && fileSnapshot !== snapshotFiles());
@@ -999,10 +1108,12 @@ header.head .back:hover{gap:8px}
     if (els.dlBadge) els.dlBadge.textContent = hasGh ? String(files.filter(function(f){return !f.hidden;}).length) : '0';
     if (els.toolsBadge) els.toolsBadge.textContent = hasGh ? String(tools.filter(function(t){return !t.hidden;}).length) : '0';
 
-    if (!hasGh) {
-      if (curTab === 'welfare') setStatus('on', '福利 Tab · 独立连接 Supabase');
-      else setStatus('', '未连接');
-    }
+    /* wiki/download/tools 用顶栏的「保存并推送」「重新加载」 */
+    var isSaveTab = (curTab === 'wiki' || curTab === 'download' || curTab === 'tools');
+    if (els.btnSave) els.btnSave.style.display = isSaveTab ? '' : 'none';
+    if (els.btnReload) els.btnReload.style.display = isSaveTab ? '' : 'none';
+
+    if (!hasGh) setStatus('', '未连接');
     else if (busy) setStatus('busy', '处理中…');
     else if (dirty) setStatus('warn', '有未保存的修改');
     else {
@@ -1010,7 +1121,9 @@ header.head .back:hover{gap:8px}
       if (curTab === 'wiki') what = wikiArticles.length + ' 条 · ' + wikiTags.length + ' 个分类';
       else if (curTab === 'download') what = files.length + ' 个资源（含隐藏）';
       else if (curTab === 'tools') what = tools.length + ' 个工具（含隐藏）';
-      else what = '福利 Tab 独立';
+      else if (curTab === 'welfare') what = welfTargets.length + ' 个目标';
+      else if (curTab === 'shop') what = shopItems.length + ' 个商品';
+      else if (curTab === 'orders') what = orders.length + ' 个订单';
       setStatus('on', '已连接 · ' + what);
     }
   }
@@ -1019,7 +1132,8 @@ header.head .back:hover{gap:8px}
      Tab 切换
      ========================================================== */
   function switchTab(tab){
-    if (tab !== 'wiki' && tab !== 'download' && tab !== 'tools' && tab !== 'welfare') return;
+    var valid = ['wiki','download','tools','welfare','shop','orders'];
+    if (valid.indexOf(tab) === -1) return;
     curTab = tab;
     storage.set(K_TAB, tab);
 
@@ -1031,11 +1145,8 @@ header.head .back:hover{gap:8px}
     if (els.paneDownload) els.paneDownload.hidden = (tab !== 'download');
     if (els.paneTools) els.paneTools.hidden = (tab !== 'tools');
     if (els.paneWelfare) els.paneWelfare.hidden = (tab !== 'welfare');
-
-    /* 福利 Tab 隐藏时禁用「保存并推送」 */
-    var isWelfare = (tab === 'welfare');
-    if (els.btnSave) els.btnSave.style.display = isWelfare ? 'none' : '';
-    if (els.btnReload) els.btnReload.style.display = isWelfare ? 'none' : '';
+    if (els.paneShop) els.paneShop.hidden = (tab !== 'shop');
+    if (els.paneOrders) els.paneOrders.hidden = (tab !== 'orders');
 
     if (els.lede) {
       els.lede.textContent =
@@ -1045,10 +1156,16 @@ header.head .back:hover{gap:8px}
           ? '管理下载站资源：自动读取 GitHub Releases，手动编辑作为覆盖层。改动先存在页面内，点「💾 保存并推送」才写入仓库。'
           : tab === 'tools'
             ? '管理首页工具箱：图标、名称、描述、分类、链接、废弃状态、禁用点击、隐藏。改动先存在页面内，点「💾 保存并推送」才写入仓库。'
-            : '管理国庆福利：设置目标助力值、查看实时助力点、查看最近记录。数据存储于 Supabase，修改立即生效。';
+            : tab === 'welfare'
+              ? '管理国庆福利目标：名称 + 数值，写入 GitHub 的 welfare-targets.json。'
+              : tab === 'shop'
+                ? '管理商店：图标、名称、描述、价格、上下架，写入 GitHub 的 welfare-shop.json。'
+                : '管理用户订单：查看用户购买记录，标记发放状态。数据来自 Supabase。';
     }
 
-    if (isWelfare) refreshWelfare();
+    if (tab === 'welfare') refreshWelfare();
+    if (tab === 'shop') refreshShop();
+    if (tab === 'orders') refreshOrders();
     updateButtons();
   }
 
@@ -1719,138 +1836,459 @@ header.head .back:hover{gap:8px}
   }
 
   /* ==========================================================
-     国庆福利（Supabase）
+     福利目标（GitHub · welfare-targets.json）
      ========================================================== */
   function fmtLocalTime(ms){
     var d = new Date(ms);
     function p(n){ return n<10?'0'+n:''+n; }
-    return p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+    return p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
   }
 
   function renderWelfareStats(){
     if (els.welfBoostCount) els.welfBoostCount.textContent = welfLoaded ? String(welfTotal) : '--';
-    if (els.welfTarget) els.welfTarget.textContent = welfTarget > 0 ? String(welfTarget) : '--';
-    var pct = welfTarget > 0 ? Math.min(100, (welfTotal / welfTarget) * 100) : 0;
-    if (els.welfPercent) els.welfPercent.textContent = welfTarget > 0 ? pct.toFixed(1) + '%' : '--';
-    var remain = Math.max(0, welfTarget - welfTotal);
-    if (els.welfRemain) els.welfRemain.textContent = welfTarget > 0 ? (remain > 0 ? String(remain) : '已达成') : '--';
-
-    if (els.welfPvFill) els.welfPvFill.style.width = pct + '%';
-    if (els.welfPvCurrent) els.welfPvCurrent.textContent = String(welfTotal);
-    if (els.welfPvTarget) els.welfPvTarget.textContent = welfTarget > 0 ? String(welfTarget) : '--';
-    if (els.welfPvPercent) els.welfPvPercent.textContent = pct.toFixed(1) + '%';
-
+    if (els.welfTargetCount) els.welfTargetCount.textContent = String(welfTargets.length);
+    var done = welfTargets.filter(function(t){
+      var v = parseInt(t.value, 10) || 0;
+      return v > 0 && welfTotal >= v;
+    }).length;
+    if (els.welfDoneCount) els.welfDoneCount.textContent = String(done);
     if (els.welfBadge) els.welfBadge.textContent = welfLoaded ? String(welfTotal) : '--';
   }
 
-  function renderWelfareRecent(list){
-    var el = els.welfRecentList;
+  function renderWelfareTargets(){
+    var el = els.welfTargetsList;
     if (!el) return;
-    if (!list || list.length === 0) {
-      el.innerHTML = '<div class="welf-recent-empty">暂无记录</div>';
+    if (welfTargets.length === 0) {
+      el.innerHTML = '<div class="empty" style="padding:20px">还没有目标，点上方「＋ 添加目标」</div>';
       return;
     }
     var html = '';
-    list.forEach(function(row){
-      var timeStr = fmtLocalTime(Number(row.created_at) || 0);
-      html += '<div class="welf-recent-item">'
-        + '<span class="wr-dot"></span>'
-        + '<span class="wr-uid" title="' + esc(row.uid || '') + '">' + esc(row.uid || '匿名') + '</span>'
-        + '<span class="wr-time">' + timeStr + '</span>'
+    welfTargets.forEach(function(t, i){
+      html += '<div class="welf-target-row" data-idx="' + i + '">'
+        + '<span class="wt-grip" title="拖动排序">⠿</span>'
+        + '<input class="wt-name" type="text" value="' + esc(t.name || '') + '" maxlength="30" placeholder="目标名称">'
+        + '<input class="wt-value" type="number" min="1" step="1" value="' + (parseInt(t.value, 10) || 1) + '">'
+        + '<button class="wt-del" data-action="del-target" data-idx="' + i + '" title="删除">🗑</button>'
         + '</div>';
     });
     el.innerHTML = html;
   }
 
-  var welfLoading = false;
   function refreshWelfare(){
-    var client = getSb();
-    if (!client) {
-      if (els.welfHint) els.welfHint.textContent = '⚠ Supabase SDK 未加载，请检查网络';
+    if (!gh) {
+      if (els.welfHint) els.welfHint.textContent = '⚠ 请先连接 GitHub';
       return;
     }
     if (welfLoading) return;
     welfLoading = true;
     if (els.welfHint) els.welfHint.textContent = '正在加载…';
 
-    Promise.all([
-      client.from(SB_BOOST).select('*', { count: 'exact', head: true }),
-      client.from(SB_BOOST).select('uid,created_at').order('created_at', { ascending: false }).limit(20),
-      client.from(SB_CONFIG).select('target_value').eq('id', 1).maybeSingle()
-    ]).then(function(results){
-      welfLoading = false;
-      var countRes = results[0];
-      var recentRes = results[1];
-      var cfgRes = results[2];
+    var client = getSb();
+    var pCount = client
+      ? client.from(SB_BOOST).select('*', { count: 'exact', head: true })
+      : Promise.resolve({ count: 0, error: null });
 
-      var err = countRes.error || recentRes.error || cfgRes.error;
-      if (err) {
-        console.warn('[admin] 福利加载失败', err);
-        if (els.welfHint) els.welfHint.textContent = '⚠ 加载失败：' + (err.message || err.code || '未知错误');
-        return;
-      }
-      welfTotal = typeof countRes.count === 'number' ? countRes.count : 0;
-      welfLoaded = true;
-      renderWelfareRecent(recentRes.data || []);
-      if (cfgRes.data && typeof cfgRes.data.target_value === 'number') {
-        welfTarget = cfgRes.data.target_value;
-        if (els.welfTargetInput) els.welfTargetInput.value = String(welfTarget);
-      }
-      renderWelfareStats();
-      if (els.welfHint) els.welfHint.textContent = '数据来自 Supabase · welfare_boost / welfare_config';
-    }).catch(function(e){
-      welfLoading = false;
-      console.warn('[admin] 福利加载异常', e);
-      if (els.welfHint) els.welfHint.textContent = '⚠ 加载异常：' + (e.message || e);
-    });
+    Promise.all([pCount, loadJson(FILE_TARGETS)])
+      .then(function(results){
+        welfLoading = false;
+        var cRes = results[0] || {};
+        var tData = results[1];
+        if (cRes.error) console.warn('[admin] 助力数加载失败', cRes.error);
+        welfTotal = typeof cRes.count === 'number' ? cRes.count : 0;
+        welfLoaded = true;
+        welfTargets = (tData || []).map(function(t, i){
+          return {
+            id: t.id || ('t-' + (i+1)),
+            name: t.name || '',
+            value: parseInt(t.value, 10) || 0,
+            sort_order: parseInt(t.sort_order, 10) || (i+1)
+          };
+        });
+        renderWelfareStats();
+        renderWelfareTargets();
+        if (els.welfHint) els.welfHint.textContent = '数据来自 GitHub · ' + FILE_TARGETS;
+      })
+      .catch(function(err){
+        welfLoading = false;
+        console.warn('[admin] 目标加载失败', err);
+        if (els.welfHint) els.welfHint.textContent = '⚠ ' + err.message;
+      });
   }
 
-  function saveWelfareTarget(){
-    var client = getSb();
-    if (!client) { toast('Supabase 未加载'); return; }
-    var v = parseInt(els.welfTargetInput && els.welfTargetInput.value, 10);
-    if (isNaN(v) || v < 1) { toast('请输入大于 0 的整数'); return; }
+  function addWelfareTarget(){
+    if (!gh) { toast('请先连接 GitHub'); return; }
+    welfTargets.push({ id: null, name: '新目标', value: 100, sort_order: welfTargets.length + 1 });
+    renderWelfareTargets();
+    renderWelfareStats();
+  }
 
-    if (els.welfSaveTarget) els.welfSaveTarget.disabled = true;
-    client.from(SB_CONFIG).upsert({
-      id: 1,
-      target_value: v,
-      updated_at: Date.now()
-    }, { onConflict: 'id' }).then(function(res){
-      if (els.welfSaveTarget) els.welfSaveTarget.disabled = false;
-      if (res.error) {
-        console.warn('[admin] 保存目标失败', res.error);
-        toast('保存失败：' + (res.error.message || res.error.code));
-        return;
-      }
-      welfTarget = v;
-      renderWelfareStats();
-      toast('已保存目标值：' + v);
-    }).catch(function(e){
-      if (els.welfSaveTarget) els.welfSaveTarget.disabled = false;
-      toast('保存异常：' + (e.message || e));
+  function deleteWelfareTarget(idx){
+    var t = welfTargets[idx];
+    if (!t) return;
+    welfTargets.splice(idx, 1);
+    renderWelfareTargets();
+    renderWelfareStats();
+  }
+
+  function syncTargetsFromInputs(){
+    var el = els.welfTargetsList;
+    if (!el) return;
+    var rows = el.querySelectorAll('.welf-target-row');
+    for (var i = 0; i < rows.length; i++) {
+      if (i >= welfTargets.length) break;
+      var n = rows[i].querySelector('.wt-name');
+      var v = rows[i].querySelector('.wt-value');
+      if (n) welfTargets[i].name = n.value;
+      if (v) welfTargets[i].value = parseInt(v.value, 10) || 0;
+    }
+  }
+
+  function saveWelfareTargets(){
+    if (!gh) { toast('请先连接 GitHub'); return; }
+    syncTargetsFromInputs();
+
+    for (var i = 0; i < welfTargets.length; i++) {
+      if (!String(welfTargets[i].name || '').trim()) { toast('第 ' + (i+1) + ' 个目标名称不能为空'); return; }
+      if (!welfTargets[i].value || welfTargets[i].value < 1) { toast('第 ' + (i+1) + ' 个目标值必须大于 0'); return; }
+    }
+
+    var data = welfTargets.map(function(t, i){
+      return {
+        id: t.id || ('t-' + Date.now().toString(36) + '-' + i),
+        name: String(t.name).trim(),
+        value: parseInt(t.value, 10),
+        sort_order: i + 1
+      };
     });
+
+    var btn = els.welfSaveTargets;
+    if (btn) btn.disabled = true;
+    saveJson(FILE_TARGETS, data)
+      .then(function(){
+        if (btn) btn.disabled = false;
+        welfTargets = data;
+        toast('✓ 已保存 ' + data.length + ' 个目标到 GitHub');
+        renderWelfareTargets();
+      })
+      .catch(function(err){
+        if (btn) btn.disabled = false;
+        console.warn('[admin] 目标保存失败', err);
+        toast('保存失败：' + err.message);
+      });
   }
 
   function bindWelfareEvents(){
     if (els.btnWelfRefresh) els.btnWelfRefresh.addEventListener('click', refreshWelfare);
-    if (els.welfSaveTarget) els.welfSaveTarget.addEventListener('click', saveWelfareTarget);
-    if (els.welfQuick1000) els.welfQuick1000.addEventListener('click', function(){
-      if (els.welfTargetInput) els.welfTargetInput.value = '1000';
-      saveWelfareTarget();
-    });
-    if (els.welfQuick5000) els.welfQuick5000.addEventListener('click', function(){
-      if (els.welfTargetInput) els.welfTargetInput.value = '5000';
-      saveWelfareTarget();
-    });
-    if (els.welfQuick10000) els.welfQuick10000.addEventListener('click', function(){
-      if (els.welfTargetInput) els.welfTargetInput.value = '10000';
-      saveWelfareTarget();
-    });
+    if (els.btnWelfAddTarget) els.btnWelfAddTarget.addEventListener('click', addWelfareTarget);
+    if (els.welfSaveTargets) els.welfSaveTargets.addEventListener('click', saveWelfareTargets);
+
+    if (els.welfTargetsList) {
+      els.welfTargetsList.addEventListener('click', function(e){
+        var btn = e.target.closest('[data-action="del-target"]');
+        if (!btn) return;
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        if (isNaN(idx)) return;
+        deleteWelfareTarget(idx);
+      });
+      bindDragFor(els.welfTargetsList, '.welf-target-row', 'data-idx', function(fromIdx, toIdx){
+        syncTargetsFromInputs();
+        var item = welfTargets.splice(fromIdx, 1)[0];
+        if (!item) return;
+        welfTargets.splice(toIdx, 0, item);
+        renderWelfareTargets();
+        renderWelfareStats();
+      });
+    }
   }
 
   /* ==========================================================
-     拖拽排序
+     商店（GitHub · welfare-shop.json）
+     ========================================================== */
+  function renderShop(){
+    var el = els.shopCards;
+    if (!el) return;
+    if (!gh) { el.innerHTML = '<div class="empty">请先连接 GitHub</div>'; return; }
+    if (shopItems.length === 0) { el.innerHTML = '<div class="empty">还没有商品，点上方「＋ 添加商品」开始</div>'; return; }
+    var html = '';
+    shopItems.forEach(function(it){
+      var st = it.available
+        ? '<span class="fstatus s-standalone">上架</span>'
+        : '<span class="fstatus s-hidden">下架</span>';
+      html +=
+        '<div class="file">' +
+          '<div class="ficon">' + esc(it.icon || '🎁') + '</div>' +
+          '<div class="fbody">' +
+            '<div class="ftitle">' +
+              '<span class="fname">' + esc(it.name) + '</span>' +
+              '<span class="fver">⭐ ' + it.price + '</span>' +
+            '</div>' +
+            (it.description ? '<div class="fdesc">' + esc(it.description) + '</div>' : '') +
+            '<div class="fmeta">' + st + '<span class="ftag">排序 ' + it.sort_order + '</span></div>' +
+          '</div>' +
+          '<div class="acts">' +
+            '<button type="button" data-action="edit-shop" data-id="' + esc(String(it.id)) + '" title="编辑">✏️</button>' +
+          '</div>' +
+        '</div>';
+    });
+    el.innerHTML = html;
+    if (els.shopBadge) els.shopBadge.textContent = String(shopItems.length);
+  }
+
+  function refreshShop(){
+    if (!gh) {
+      if (els.shopHint) els.shopHint.textContent = '⚠ 请先连接 GitHub';
+      return;
+    }
+    if (shopLoading) return;
+    shopLoading = true;
+    if (els.shopHint) els.shopHint.textContent = '正在加载…';
+
+    loadJson(FILE_SHOP)
+      .then(function(data){
+        shopLoading = false;
+        shopItems = (data || []).map(function(it, i){
+          return {
+            id: it.id || ('s-' + (i+1)),
+            icon: it.icon || '🎁',
+            name: it.name || '',
+            description: it.description || '',
+            price: parseInt(it.price, 10) || 1,
+            available: it.available !== false,
+            sort_order: parseInt(it.sort_order, 10) || (i+1)
+          };
+        });
+        renderShop();
+        if (els.shopHint) els.shopHint.textContent = '数据来自 GitHub · ' + FILE_SHOP;
+      })
+      .catch(function(err){
+        shopLoading = false;
+        console.warn('[admin] 商店加载失败', err);
+        if (els.shopHint) els.shopHint.textContent = '⚠ ' + err.message;
+      });
+  }
+
+  function buildShopEmojiQuick(){
+    if (!els.shopEmojiQuick) return;
+    var html = '';
+    SHOP_EMOJI_PRESETS.forEach(function(e){
+      html += '<button type="button" data-emoji="' + e + '">' + e + '</button>';
+    });
+    els.shopEmojiQuick.innerHTML = html;
+  }
+
+  function openShopEdit(id){
+    if (!gh) { toast('请先连接 GitHub'); return; }
+    editingShopId = id || null;
+    var it = null;
+    if (id) {
+      for (var i = 0; i < shopItems.length; i++) {
+        if (String(shopItems[i].id) === String(id)) { it = shopItems[i]; break; }
+      }
+    }
+    els.shopEditTitle.textContent = it ? '编辑商品' : '添加商品';
+    els.shopIcon.value = it ? it.icon : '🎁';
+    els.shopName.value = it ? it.name : '';
+    els.shopDesc.value = it ? it.description : '';
+    els.shopPrice.value = it ? it.price : 1;
+    els.shopSort.value = it ? it.sort_order : 0;
+    els.shopAvailable.checked = it ? it.available : true;
+    els.shopDel.hidden = !it;
+    els.shopEditOv.classList.add('show');
+    setTimeout(function(){ try { els.shopName.focus(); } catch(e){} }, 80);
+  }
+
+  function closeShopEdit(){
+    els.shopEditOv.classList.remove('show');
+    editingShopId = null;
+  }
+
+  function saveShopItem(){
+    if (!gh) { toast('请先连接 GitHub'); return; }
+    var name = (els.shopName.value || '').trim();
+    if (!name) { toast('商品名称不能为空'); return; }
+    var price = parseInt(els.shopPrice.value, 10);
+    if (!price || price < 1) { toast('价格必须 ≥ 1'); return; }
+
+    var row = {
+      id: editingShopId || ('s-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6)),
+      icon: (els.shopIcon.value || '').trim() || '🎁',
+      name: name,
+      description: (els.shopDesc.value || '').trim(),
+      price: price,
+      available: !!els.shopAvailable.checked,
+      sort_order: parseInt(els.shopSort.value, 10) || 0
+    };
+
+    var newList = shopItems.slice();
+    if (editingShopId) {
+      var idx = -1;
+      for (var i = 0; i < newList.length; i++) {
+        if (String(newList[i].id) === String(editingShopId)) { idx = i; break; }
+      }
+      if (idx >= 0) newList[idx] = row;
+      else newList.push(row);
+    } else {
+      newList.push(row);
+    }
+
+    if (els.shopSaveBtn) els.shopSaveBtn.disabled = true;
+    saveJson(FILE_SHOP, newList)
+      .then(function(){
+        if (els.shopSaveBtn) els.shopSaveBtn.disabled = false;
+        shopItems = newList;
+        toast(editingShopId ? '✓ 已更新' : '✓ 已添加');
+        closeShopEdit();
+        renderShop();
+      })
+      .catch(function(err){
+        if (els.shopSaveBtn) els.shopSaveBtn.disabled = false;
+        toast('保存失败：' + err.message);
+      });
+  }
+
+  function deleteShopItem(){
+    if (!editingShopId) return;
+    if (!gh) { toast('请先连接 GitHub'); return; }
+    if (!confirm('确定删除该商品？')) return;
+
+    var newList = shopItems.filter(function(it){ return String(it.id) !== String(editingShopId); });
+    saveJson(FILE_SHOP, newList)
+      .then(function(){
+        shopItems = newList;
+        toast('✓ 已删除');
+        closeShopEdit();
+        renderShop();
+      })
+      .catch(function(err){ toast('删除失败：' + err.message); });
+  }
+
+  function bindShopEvents(){
+    if (els.btnAddShop) els.btnAddShop.addEventListener('click', function(){ openShopEdit(null); });
+    if (els.btnRefreshShop) els.btnRefreshShop.addEventListener('click', refreshShop);
+    if (els.shopEditClose) els.shopEditClose.addEventListener('click', closeShopEdit);
+    if (els.shopCancel) els.shopCancel.addEventListener('click', closeShopEdit);
+    if (els.shopSaveBtn) els.shopSaveBtn.addEventListener('click', saveShopItem);
+    if (els.shopDel) els.shopDel.addEventListener('click', deleteShopItem);
+    if (els.shopEditOv) els.shopEditOv.addEventListener('click', function(e){ if (e.target === this) closeShopEdit(); });
+    if (els.shopEmojiQuick) {
+      els.shopEmojiQuick.addEventListener('click', function(e){
+        var b = e.target.closest('button[data-emoji]');
+        if (!b) return;
+        if (els.shopIcon) els.shopIcon.value = b.getAttribute('data-emoji');
+      });
+    }
+    if (els.shopCards) {
+      els.shopCards.addEventListener('click', function(e){
+        var btn = e.target.closest('[data-action="edit-shop"]');
+        if (!btn) return;
+        openShopEdit(btn.getAttribute('data-id'));
+      });
+    }
+  }
+
+  /* ==========================================================
+     订单（Supabase · welfare_orders）
+     ========================================================== */
+  function renderOrders(){
+    var el = els.orderCards;
+    if (!el) return;
+    if (orders.length === 0) { el.innerHTML = '<div class="empty">暂无订单</div>'; return; }
+    var list = orders;
+    if (orderFilter !== '__all__') {
+      list = list.filter(function(o){ return o.status === orderFilter; });
+    }
+    if (list.length === 0) { el.innerHTML = '<div class="empty">当前筛选下没有订单</div>'; return; }
+    var html = '';
+    list.forEach(function(o){
+      var st = o.status === 'delivered'
+        ? '<span class="fstatus s-standalone">已发放</span>'
+        : '<span class="fstatus s-pending">待发放</span>';
+      html +=
+        '<div class="file">' +
+          '<div class="ficon">' + esc(o.shop_icon || '🎁') + '</div>' +
+          '<div class="fbody">' +
+            '<div class="ftitle">' +
+              '<span class="fname">' + esc(o.shop_name) + '</span>' +
+              '<span class="fver">⭐ ' + o.price + '</span>' +
+            '</div>' +
+            '<div class="fdesc">用户：<strong>' + esc(o.username) + '</strong> · 游戏名：<strong>' + esc(o.game_name) + '</strong></div>' +
+            '<div class="fmeta">' + st + '<span class="sep">·</span><span>' + esc(fmtLocalTime(o.created_at)) + '</span></div>' +
+          '</div>' +
+          '<div class="acts">' +
+            '<button type="button" data-action="toggle-order" data-id="' + o.id + '" data-status="' + o.status + '" title="' + (o.status === 'delivered' ? '标记为待发放' : '标记为已发放') + '">' + (o.status === 'delivered' ? '↩️' : '✓') + '</button>' +
+            '<button type="button" data-action="del-order" data-id="' + o.id + '" class="del" title="删除">🗑</button>' +
+          '</div>' +
+        '</div>';
+    });
+    el.innerHTML = html;
+    var pending = orders.filter(function(o){ return o.status === 'pending'; }).length;
+    if (els.orderBadge) els.orderBadge.textContent = String(pending);
+  }
+
+  function refreshOrders(){
+    var client = getSb();
+    if (!client) { if (els.orderHint) els.orderHint.textContent = '⚠ Supabase 未加载'; return; }
+    if (orderLoading) return;
+    orderLoading = true;
+    if (els.orderHint) els.orderHint.textContent = '正在加载…';
+
+    client.from(SB_ORDERS).select('*').order('created_at', { ascending: false }).limit(200).then(function(res){
+      orderLoading = false;
+      if (res.error) {
+        if (els.orderHint) els.orderHint.textContent = '⚠ ' + res.error.message;
+        return;
+      }
+      orders = res.data || [];
+      renderOrders();
+      if (els.orderHint) els.orderHint.textContent = '数据来自 Supabase · ' + SB_ORDERS;
+    }).catch(function(err){
+      orderLoading = false;
+      if (els.orderHint) els.orderHint.textContent = '⚠ ' + (err.message || err);
+    });
+  }
+
+  function toggleOrder(id, status){
+    var client = getSb();
+    if (!client) return;
+    var ns = status === 'delivered' ? 'pending' : 'delivered';
+    client.from(SB_ORDERS).update({ status: ns }).eq('id', id).then(function(res){
+      if (res.error) { toast('操作失败：' + (res.error.message || '')); return; }
+      toast(ns === 'delivered' ? '✓ 已标记发放' : '↩️ 已改回待发放');
+      refreshOrders();
+    });
+  }
+
+  function deleteOrder(id){
+    if (!confirm('确定删除该订单？')) return;
+    var client = getSb();
+    if (!client) return;
+    client.from(SB_ORDERS).delete().eq('id', id).then(function(res){
+      if (res.error) { toast('删除失败'); return; }
+      toast('已删除');
+      refreshOrders();
+    });
+  }
+
+  function bindOrderEvents(){
+    if (els.btnRefreshOrders) els.btnRefreshOrders.addEventListener('click', refreshOrders);
+    if (els.orderStatusFilter) {
+      els.orderStatusFilter.addEventListener('change', function(){
+        orderFilter = els.orderStatusFilter.value || '__all__';
+        renderOrders();
+      });
+    }
+    if (els.orderCards) {
+      els.orderCards.addEventListener('click', function(e){
+        var tg = e.target.closest('[data-action="toggle-order"]');
+        if (tg) { toggleOrder(tg.getAttribute('data-id'), tg.getAttribute('data-status')); return; }
+        var dl = e.target.closest('[data-action="del-order"]');
+        if (dl) { deleteOrder(dl.getAttribute('data-id')); return; }
+      });
+    }
+  }
+
+  /* ==========================================================
+     拖拽排序（通用）
      ========================================================== */
   function bindDragFor(container, itemSelector, getIdxAttr, onReorder){
     if (!container) return;
@@ -1928,6 +2366,9 @@ header.head .back:hover{gap:8px}
     closeConn();
     toast('正在加载数据…');
     reload(true);
+    refreshWelfare();
+    refreshShop();
+    refreshOrders();
   }
 
   function doDisconnect(){
@@ -1936,9 +2377,14 @@ header.head .back:hover{gap:8px}
     wikiArticles = []; wikiTags = [];
     files = [];
     tools = [];
+    welfTargets = [];
+    shopItems = [];
+    orders = [];
     wikiSnapshot = ''; fileSnapshot = ''; toolsSnapshot = '';
     closeConn();
     renderWiki(); renderFiles(); renderTools();
+    renderWelfareStats(); renderWelfareTargets();
+    renderShop(); renderOrders();
     buildDlTagOptions(); updateButtons();
     toast('已断开');
   }
@@ -2145,11 +2591,13 @@ header.head .back:hover{gap:8px}
       });
     }
 
-    /* 福利事件 */
+    /* 福利 / 商店 / 订单 */
     bindWelfareEvents();
+    bindShopEvents();
+    bindOrderEvents();
 
     /* 点击遮罩关闭 */
-    [els.connOv, els.mergeOv, els.delOv, els.fileOv, els.toolOv].forEach(function(ov){
+    [els.connOv, els.mergeOv, els.delOv, els.fileOv, els.toolOv, els.shopEditOv].forEach(function(ov){
       if (!ov) return;
       ov.addEventListener('click', function(e){
         if (e.target !== ov) return;
@@ -2158,6 +2606,7 @@ header.head .back:hover{gap:8px}
         else if (ov === els.delOv) closeDelete();
         else if (ov === els.fileOv) closeFileEditor();
         else if (ov === els.toolOv) closeToolEditor();
+        else if (ov === els.shopEditOv) closeShopEdit();
       });
     });
 
@@ -2170,11 +2619,13 @@ header.head .back:hover{gap:8px}
         else if (els.delOv && els.delOv.classList.contains('show')) closeDelete();
         else if (els.fileOv && els.fileOv.classList.contains('show')) closeFileEditor();
         else if (els.toolOv && els.toolOv.classList.contains('show')) closeToolEditor();
+        else if (els.shopEditOv && els.shopEditOv.classList.contains('show')) closeShopEdit();
       }
       if ((e.metaKey || e.ctrlKey) && key.toLowerCase() === 's') {
         e.preventDefault();
-        if (curTab === 'welfare') return;
-        if (gh && currentDirty() && !busy) save();
+        if (curTab === 'wiki' || curTab === 'download' || curTab === 'tools') {
+          if (gh && currentDirty() && !busy) save();
+        }
       }
     });
 
@@ -2219,16 +2670,23 @@ header.head .back:hover{gap:8px}
       bind();
       buildEmojiQuick();
       buildToolEmojiQuick();
+      buildShopEmojiQuick();
       updatePathTips();
       renderWiki();
       renderFiles();
       renderTools();
+      renderWelfareStats();
+      renderWelfareTargets();
+      renderShop();
+      renderOrders();
       updateButtons();
 
       var t = storage.get(K_TAB);
       if (t === 'download') switchTab('download');
       else if (t === 'tools') switchTab('tools');
       else if (t === 'welfare') switchTab('welfare');
+      else if (t === 'shop') switchTab('shop');
+      else if (t === 'orders') switchTab('orders');
       else switchTab('wiki');
 
       var raw = storage.get(K_GH);
@@ -2251,6 +2709,8 @@ header.head .back:hover{gap:8px}
             renderFiles();
             renderTools();
             reload(true);
+            if (curTab === 'welfare') refreshWelfare();
+            if (curTab === 'shop') refreshShop();
           }
         } catch(e){ console.warn('[admin] 恢复配置失败', e); }
       }
