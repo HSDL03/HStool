@@ -1,5 +1,20 @@
 [
-  {"id":"t-1","name":"初级目标","value":100,"sort_order":1},
-  {"id":"t-2","name":"中级目标","value":1000,"sort_order":2},
-  {"id":"t-3","name":"终极目标","value":5000,"sort_order":3}
+  {
+    "id": "t-1",
+    "name": "全服120抽",
+    "value": 10000,
+    "sort_order": 1
+  },
+  {
+    "id": "t-2",
+    "name": "全服240抽",
+    "value": 1000000,
+    "sort_order": 2
+  },
+  {
+    "id": "t-3",
+    "name": "全服333抽",
+    "value": 100000000,
+    "sort_order": 3
+  }
 ]
