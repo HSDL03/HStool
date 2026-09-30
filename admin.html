@@ -374,7 +374,7 @@ header.head .back:hover{gap:8px}
         <li><strong>删除</strong>：点右侧 🗑</li>
         <li><strong>排序</strong>：拖动 ⠿ 手柄调整顺序</li>
         <li><strong>保存</strong>：点「💾 保存目标到 GitHub」写入仓库</li>
-        <li>写入文件：<code>welfare-targets.json</code> · 助力数来自 Supabase <code>welfare_boost</code></li>
+        <li>写入文件：<code>welfare-targets.json</code> · 助力总数来自 Supabase <code>welfare_boost</code> 的 <code>sum(amount)</code></li>
       </ul>
     </div>
   </div>
@@ -626,7 +626,7 @@ header.head .back:hover{gap:8px}
   var K_TAB              = 'admin-tab';
   var RELEASES_TTL       = 5 * 60 * 1000;
 
-  /* Supabase（读助力数、订单） */
+  /* Supabase（读助力总数、订单） */
   var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
   var SB_BOOST  = 'welfare_boost';
@@ -1139,7 +1139,7 @@ header.head .back:hover{gap:8px}
           : tab === 'tools'
             ? '管理首页工具箱：图标、名称、描述、分类、链接、废弃状态、禁用点击、隐藏。改动先存在页面内，点「💾 保存并推送」才写入仓库。'
             : tab === 'welfare'
-              ? '管理国庆福利目标：名称 + 数值，写入 GitHub 的 welfare-targets.json。'
+              ? '管理国庆福利目标：名称 + 数值，写入 GitHub 的 welfare-targets.json。助力总数来自 Supabase 的 sum(amount)。'
               : tab === 'shop'
                 ? '管理商店：卡片内直接编辑，改完点顶栏「💾 保存并推送」写入 GitHub 的 welfare-shop.json。'
                 : '管理用户订单：查看用户购买记录，标记发放状态。数据来自 Supabase。';
@@ -1866,8 +1866,24 @@ header.head .back:hover{gap:8px}
     if (els.welfHint) els.welfHint.textContent = '正在加载…';
 
     var client = getSb();
+    /* 通过 rpc 求和 amount */
     var pCount = client
-      ? client.from(SB_BOOST).select('*', { count: 'exact', head: true })
+      ? client.rpc('welfare_boost_total').then(function(res){
+          if(res.error){
+            /* 回退：用 count */
+            console.warn('[admin] rpc 失败，回退到 count', res.error);
+            return client.from(SB_BOOST).select('*',{count:'exact',head:true}).then(function(r){
+              return { count: typeof r.count === 'number' ? r.count : 0, error: null };
+            });
+          }
+          var data = res.data;
+          var total = 0;
+          if(Array.isArray(data) && data.length > 0){
+            var row = data[0];
+            total = (typeof row === 'object' && row !== null) ? (Number(row.total) || 0) : (Number(row) || 0);
+          }
+          return { count: total, error: null };
+        })
       : Promise.resolve({ count: 0, error: null });
 
     Promise.all([pCount, loadJson(FILE_TARGETS)])
