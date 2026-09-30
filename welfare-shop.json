@@ -10,7 +10,7 @@
   },
   {
     "id": "s-2",
-    "icon": "⚔️",
+    "icon": "🎁",
     "name": "100w宝石",
     "description": "哇噢",
     "price": 2000,
@@ -25,5 +25,14 @@
     "price": 1000,
     "available": true,
     "sort_order": 3
+  },
+  {
+    "id": "s-munxr6r3-3",
+    "icon": "🎁",
+    "name": "答辩",
+    "description": "何意为",
+    "price": 1,
+    "available": true,
+    "sort_order": 4
   }
 ]
