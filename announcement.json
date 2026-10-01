@@ -1,0 +1,22 @@
+[
+  {
+    "id": "a-1",
+    "type": "info",
+    "icon": "📢",
+    "title": "欢迎来到红石的小站",
+    "content": "这里收集了各种实用小工具，点开即可使用。",
+    "link": "",
+    "linkText": "",
+    "enabled": true
+  },
+  {
+    "id": "a-2",
+    "type": "warn",
+    "icon": "⚠️",
+    "title": "站点维护提示",
+    "content": "部分工具可能在维护中，如遇问题请稍后再试。",
+    "link": "https://github.com/HSDL03/HSwiki",
+    "linkText": "查看 GitHub",
+    "enabled": true
+  }
+]
