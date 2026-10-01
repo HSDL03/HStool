@@ -2,8 +2,9 @@
   {
     "id": "a-1",
     "type": "info",
+    "category": "",
     "icon": "📢",
-    "title": "欢迎来到红石的小站",
+    "title": "请输入文本",
     "content": "挑战做100个答辩工具",
     "link": "",
     "linkText": "",
@@ -12,8 +13,9 @@
   {
     "id": "a-2",
     "type": "warn",
+    "category": "",
     "icon": "⚠️",
-    "title": "站点维护提示",
+    "title": "测试",
     "content": "这期神了",
     "link": "",
     "linkText": "红石a",
