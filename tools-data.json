@@ -11,17 +11,6 @@
     "hidden": false
   },
   {
-    "id": "tool-mulatkxv-tw4g",
-    "icon": "🎁",
-    "name": "国庆福利",
-    "desc": "神秘得吃",
-    "tag": "活动",
-    "url": "./ful.html",
-    "deprecated": false,
-    "disabled": false,
-    "hidden": false
-  },
-  {
     "id": "tool-mujq8js1-nyf7",
     "icon": "🧰",
     "name": "五子棋",
