@@ -6,6 +6,7 @@
     "desc": "和朋友们聊天",
     "tag": "社交",
     "url": "./chat.html",
+    "category": "needDB",
     "deprecated": false,
     "disabled": false,
     "hidden": false
@@ -17,6 +18,7 @@
     "desc": "博弈",
     "tag": "游戏",
     "url": "./wuzi_hotel.html",
+    "category": "needDB",
     "deprecated": false,
     "disabled": false,
     "hidden": false
@@ -28,6 +30,7 @@
     "desc": "资源文件 · 便捷下载",
     "tag": "资源",
     "url": "./download.html",
+    "category": "needDB",
     "deprecated": false,
     "disabled": false,
     "hidden": false
@@ -39,6 +42,7 @@
     "desc": "菜单嗯对",
     "tag": "管理",
     "url": "./admin.html",
+    "category": "needDB",
     "deprecated": false,
     "disabled": false,
     "hidden": false
@@ -50,6 +54,7 @@
     "desc": "零散工具 · 各种小玩意儿",
     "tag": "综合",
     "url": "./misc.html",
+    "category": "noDB",
     "deprecated": false,
     "disabled": true,
     "hidden": false
@@ -61,6 +66,7 @@
     "desc": "用来测试嗯对",
     "tag": "游戏",
     "url": "https://hsdl03.github.io/Click-the-game/",
+    "category": "",
     "deprecated": true,
     "disabled": true,
     "hidden": false
@@ -72,6 +78,7 @@
     "desc": "暂时没用",
     "tag": "已废弃",
     "url": "./wiki.html",
+    "category": "needDB",
     "deprecated": true,
     "disabled": false,
     "hidden": false
