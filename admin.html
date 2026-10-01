@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>数据管理 · 我的 Wiki</title>
+<title>数据管理 · HStool</title>
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{--bg:#fff;--bg2:#f6f8fa;--bgh:#eef1f4;--text:#1f2328;--muted:#59636e;--bd:#d1d9e0;--ac:#0969da;--acs:#ddf4ff;--dgr:#cf222e;--ok:#1a7f37;--warn:#d4a72c;--sh:0 8px 24px rgba(31,35,40,.12);--r:8px}
@@ -11,7 +11,7 @@
 
 html,body{margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
-.wrap{max-width:960px;margin:0 auto;padding:32px 24px 96px}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 24px 96px}
 
 header.head{display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap}
 header.head h1{margin:0;font-size:1.6rem;letter-spacing:-.02em}
@@ -50,8 +50,10 @@ header.head .back:hover{gap:8px}
 .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r)}
 .toolbar .sp{flex:1}
 .toolbar .hint{font-size:13px;color:var(--muted)}
-.select{height:34px;padding:0 10px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:6px;outline:none;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.select{height:34px;padding:0 10px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:6px;outline:none;cursor:pointer;transition:border-color .15s,box-shadow .15s;max-width:100%}
 .select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.search{height:34px;padding:0 10px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:6px;outline:none;transition:border-color .15s,box-shadow .15s;min-width:160px;flex:0 1 260px}
+.search:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
 
 .cards{display:flex;flex-direction:column;gap:10px}
 .empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;background:var(--bg2);border:1px dashed var(--bd);border-radius:var(--r)}
@@ -95,8 +97,13 @@ header.head .back:hover{gap:8px}
 [data-theme=dark] .fstatus.s-standalone{background:#0f2a17;color:var(--ok)}
 .fstatus.s-hidden{background:#fde2e2;border:1px solid var(--dgr);color:var(--dgr)}
 [data-theme=dark] .fstatus.s-hidden{background:#2a0f0f;color:var(--dgr)}
+.fstatus.s-db{background:#e7f6ff;border:1px solid var(--ac);color:var(--ac)}
+[data-theme=dark] .fstatus.s-db{background:#16233a;color:var(--ac)}
+.fstatus.s-nodb{background:#dcfce7;border:1px solid var(--ok);color:var(--ok)}
+[data-theme=dark] .fstatus.s-nodb{background:#0f2a17;color:var(--ok)}
+.fstatus.s-unset{background:var(--bg2);border:1px dashed var(--bd);color:var(--muted)}
 .file .fmeta .sep{opacity:.4}
-.file .fmeta .furl{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;opacity:.75}
+.file .fmeta .furl{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;opacity:.75}
 .file.offline{opacity:.6}
 .file.hidden-item{opacity:.5;border-style:dashed}
 .file .acts{display:flex;gap:4px;flex:none;align-items:flex-start}
@@ -156,16 +163,44 @@ header.head .back:hover{gap:8px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .bg-error{position:fixed;top:0;left:0;right:0;padding:12px 20px;background:var(--dgr);color:#fff;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;z-index:999;white-space:pre-wrap;word-break:break-all;display:none}
 
-/* ═══════════════ 公告内联编辑 ═══════════════ */
+/* ═══════════════ 公告（可折叠） ═══════════════ */
 .ann-rows{display:flex;flex-direction:column;gap:10px}
-.ann-row{display:flex;flex-direction:column;gap:8px;padding:14px 16px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);transition:border-color .2s,box-shadow .2s}
+.ann-row{display:flex;flex-direction:column;padding:0;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);transition:border-color .2s,box-shadow .2s;overflow:hidden}
 .ann-row:hover{border-color:var(--ac);box-shadow:0 4px 14px rgba(0,0,0,.05)}
 [data-theme=dark] .ann-row:hover{box-shadow:0 4px 14px rgba(0,0,0,.4)}
 .ann-row.dragging{opacity:.4}
 .ann-row.over{border-color:var(--ac);border-style:dashed;background:var(--acs)}
 .ann-row.ann-row-disabled{opacity:.55}
+
+.ann-collapse-head{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none;transition:background .15s;min-height:48px}
+.ann-collapse-head:hover{background:var(--bg2)}
+.ann-row.expanded .ann-collapse-head{border-bottom:1px solid var(--bd);background:var(--bg2)}
+.ann-collapse-head .ann-toggle{width:18px;height:18px;flex:none;display:grid;place-items:center;color:var(--muted);font-size:10px;transition:transform .2s;transform:rotate(-90deg)}
+.ann-row.expanded .ann-collapse-head .ann-toggle{transform:rotate(0deg)}
+.ann-collapse-head .ar-grip{width:18px;height:18px;flex:none;display:grid;place-items:center;color:var(--muted);cursor:grab;font-size:15px;user-select:none}
+.ann-collapse-head .ann-summary-icon{flex:none;font-size:18px;width:26px;text-align:center}
+.ann-collapse-head .ann-summary-title{flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ann-collapse-head .ann-summary-type{flex:none;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:4px;letter-spacing:.04em;text-transform:uppercase}
+.ann-summary-type.type-info{background:var(--acs);color:var(--ac);border:1px solid var(--ac)}
+.ann-summary-type.type-success{background:#dcfce7;color:var(--ok);border:1px solid var(--ok)}
+[data-theme=dark] .ann-summary-type.type-success{background:#0f2a17}
+.ann-summary-type.type-warn{background:#fef3c7;color:#b45309;border:1px solid #b45309}
+[data-theme=dark] .ann-summary-type.type-warn{background:#2a1f0a}
+.ann-summary-type.type-danger{background:#fde2e2;color:var(--dgr);border:1px solid var(--dgr)}
+[data-theme=dark] .ann-summary-type.type-danger{background:#2a0f0f}
+.ann-collapse-head .ann-summary-cat{flex:none;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:4px;background:var(--bgh);color:var(--muted);border:1px solid var(--bd)}
+.ann-collapse-head .ann-summary-enabled{flex:none;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px}
+.ann-summary-enabled.on{background:#dcfce7;color:var(--ok)}
+[data-theme=dark] .ann-summary-enabled.on{background:#0f2a17}
+.ann-summary-enabled.off{background:var(--bg2);color:var(--muted)}
+.ann-collapse-head .ann-summary-acts{flex:none;display:flex;gap:4px;align-items:center}
+.ann-collapse-head .ann-summary-acts button{width:28px;height:28px;display:grid;place-items:center;font-size:13px;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:5px;cursor:pointer;transition:all .18s}
+.ann-collapse-head .ann-summary-acts button:hover{color:var(--ac);border-color:var(--bd);background:var(--bg2)}
+.ann-collapse-head .ann-summary-acts button.ar-del:hover{color:var(--dgr);border-color:var(--dgr);background:rgba(207,34,46,.08)}
+
+.ann-body{display:none;padding:14px 16px;flex-direction:column;gap:8px}
+.ann-row.expanded .ann-body{display:flex}
 .ann-head-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.ann-row .ar-grip{width:18px;height:18px;flex:none;display:grid;place-items:center;color:var(--muted);cursor:grab;font-size:15px;user-select:none}
 .ann-row input[type=text],
 .ann-row select,
 .ann-row textarea{font-family:inherit;font-size:13.5px;color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:6px;outline:none;transition:border-color .15s,box-shadow .15s}
@@ -177,15 +212,20 @@ header.head .back:hover{gap:8px}
 .ann-row textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
 .ann-row .ar-icon{width:52px;flex:none;text-align:center;font-size:18px}
 .ann-row .ar-type{width:96px;flex:none;font-weight:700}
+.ann-row .ar-cat{width:140px;flex:none}
 .ann-row .ar-title{flex:1;min-width:120px;font-weight:600}
 .ann-row .ar-enabled{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);flex:none;user-select:none;cursor:pointer}
 .ann-row .ar-enabled input{width:14px;height:14px;accent-color:var(--ac);margin:0;cursor:pointer}
-.ann-row .ar-del{width:30px;height:30px;flex:none;display:grid;place-items:center;font-size:14px;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:5px;cursor:pointer;transition:all .18s}
-.ann-row .ar-del:hover{color:var(--dgr);border-color:var(--dgr);background:rgba(207,34,46,.08)}
 .ann-row .ar-content{width:100%}
 .ann-row .ar-link-row{display:flex;gap:8px}
 .ann-row .ar-link-row input{flex:2;min-width:0}
 .ann-row .ar-link-row input.ar-link-text{flex:1;min-width:0}
+
+/* ═══════════════ 分类筛选栏 ═══════════════ */
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:14px}
+.filter-bar .sp{flex:1}
+.filter-bar .count-info{font-size:12.5px;color:var(--muted)}
+.filter-bar .divider{width:1px;height:22px;background:var(--bd);margin:0 4px}
 
 @media(max-width:640px){
   .wrap{padding:20px 14px 80px}
@@ -204,6 +244,9 @@ header.head .back:hover{gap:8px}
   .ann-head-row{gap:6px}
   .ann-row .ar-title{flex-basis:calc(100% - 120px)}
   .ann-row .ar-link-row{flex-direction:column}
+  .ann-collapse-head{flex-wrap:wrap;gap:6px}
+  .ann-collapse-head .ann-summary-title{flex-basis:calc(100% - 140px)}
+  .filter-bar .divider{display:none}
 }
 </style>
 </head>
@@ -293,14 +336,35 @@ header.head .back:hover{gap:8px}
   <div class="pane" id="paneTools" hidden>
     <div class="toolbar">
       <button class="btn p" id="btnAddTool" type="button" disabled>＋ 添加工具</button>
-      <span class="hint">管理首页工具箱的卡片：图标、名称、描述、分类、链接、废弃状态</span>
+      <span class="hint">管理首页工具箱的卡片</span>
       <span class="sp"></span>
+      <input class="search" id="toolsSearch" type="text" placeholder="🔍 搜索名称 / 描述 / 标签 / ID…" autocomplete="off">
+    </div>
+
+    <div class="filter-bar">
+      <label style="font-size:12.5px;color:var(--muted)">状态</label>
       <select class="select" id="toolsStatusFilter">
         <option value="__all__">全部</option>
         <option value="__active__">仅可用</option>
         <option value="__deprecated__">仅已废弃</option>
         <option value="__hidden__">仅隐藏</option>
       </select>
+      <span class="divider"></span>
+      <label style="font-size:12.5px;color:var(--muted)">数据库</label>
+      <select class="select" id="toolsCategoryFilter">
+        <option value="__all__">全部</option>
+        <option value="needDB">🔗 需要访问数据库</option>
+        <option value="noDB">📦 不需要访问数据库</option>
+        <option value="__unset__">❓ 未设置</option>
+      </select>
+      <span class="divider"></span>
+      <label style="font-size:12.5px;color:var(--muted)">标签</label>
+      <select class="select" id="toolsTagFilter">
+        <option value="__all__">全部标签</option>
+      </select>
+      <span class="sp"></span>
+      <span class="count-info" id="toolsCountInfo"></span>
+      <button class="btn" id="btnResetToolsFilter" type="button">↺ 重置筛选</button>
     </div>
 
     <div class="cards" id="toolsCards"></div>
@@ -308,12 +372,13 @@ header.head .back:hover{gap:8px}
     <div class="help">
       <h3>操作说明 · 工具管理</h3>
       <ul>
+        <li><strong>搜索</strong>：输入关键字实时过滤（名称 / 描述 / 标签 / ID / 链接）</li>
+        <li><strong>数据库分类</strong>：每个工具可标记「需要访问数据库」或「不需要访问数据库」</li>
+        <li><strong>标签分类</strong>：编辑时填的「分类标签」会出现在上方标签下拉框中，选择后只显示该标签下的工具</li>
+        <li><strong>状态筛选</strong>：可用 / 已废弃 / 隐藏</li>
         <li><strong>修改</strong>：点卡片右侧 ✏️ 修改任意字段</li>
-        <li><strong>废弃/启用</strong>：编辑时勾选「已废弃」，卡片会从「可用工具」移到「已废弃」栏</li>
         <li><strong>禁用点击</strong>：卡片还在，但点击抖动提示，不跳转</li>
-        <li><strong>隐藏</strong>：勾选「隐藏」后，首页完全不显示（适合临时下线）</li>
         <li><strong>排序</strong>：拖动 ⠿ 手柄调整顺序</li>
-        <li><strong>删除</strong>：点 🗑（保存前刷新页面即可还原）</li>
         <li>写入文件：<code id="toolsPathTip">tools-data.json</code></li>
       </ul>
     </div>
@@ -323,8 +388,32 @@ header.head .back:hover{gap:8px}
   <div class="pane" id="paneAnnounce" hidden>
     <div class="toolbar">
       <button class="btn p" id="btnAddAnn" type="button" disabled>＋ 添加公告</button>
+      <button class="btn" id="btnExpandAllAnn" type="button" disabled>展开全部</button>
+      <button class="btn" id="btnCollapseAllAnn" type="button" disabled>折叠全部</button>
       <span class="hint" id="annHint">公告来自 GitHub · announcement.json</span>
+    </div>
+
+    <div class="filter-bar">
+      <label style="font-size:12.5px;color:var(--muted)">分类</label>
+      <select class="select" id="annCategoryFilter">
+        <option value="__all__">全部分类</option>
+        <option value="__none__">未分类</option>
+        <option value="update">📋 更新日志</option>
+        <option value="maintenance">🔧 维护通知</option>
+        <option value="event">🎉 活动公告</option>
+        <option value="warning">⚠️ 重要警告</option>
+      </select>
+      <span class="divider"></span>
+      <label style="font-size:12.5px;color:var(--muted)">类型</label>
+      <select class="select" id="annTypeFilter">
+        <option value="__all__">全部类型</option>
+        <option value="info">info</option>
+        <option value="success">success</option>
+        <option value="warn">warn</option>
+        <option value="danger">danger</option>
+      </select>
       <span class="sp"></span>
+      <span class="count-info" id="annCountInfo"></span>
     </div>
 
     <div class="ann-rows" id="annCards"></div>
@@ -332,13 +421,13 @@ header.head .back:hover{gap:8px}
     <div class="help">
       <h3>操作说明 · 公告管理</h3>
       <ul>
-        <li><strong>添加公告</strong>：点左上「＋ 添加公告」追加一条</li>
-        <li><strong>类型</strong>：info（默认绿边） / success（绿） / warn（黄） / danger（红）</li>
-        <li><strong>启用</strong>：取消勾选「启用」相当于暂时隐藏，不用删除</li>
-        <li><strong>关闭按钮</strong>：前台每条公告右上角有 ✕，用户点掉后本地记住不再显示（改 id 可以重置）</li>
-        <li><strong>链接</strong>：可空；填了会在公告底部显示一个跳转按钮</li>
+        <li><strong>折叠 / 展开</strong>：点公告标题栏可折叠或展开该条公告的编辑区域</li>
+        <li><strong>批量操作</strong>：上方「展开全部 / 折叠全部」一键切换</li>
+        <li><strong>分类</strong>：可归入更新日志 / 维护通知 / 活动公告 / 重要警告</li>
+        <li><strong>类型</strong>：info（蓝） / success（绿） / warn（黄） / danger（红）</li>
+        <li><strong>启用</strong>：取消勾选「启用」相当于暂时隐藏</li>
+        <li><strong>链接</strong>：可空；填了会在公告底部显示跳转按钮</li>
         <li><strong>排序</strong>：拖动 ⠿ 手柄调整顺序</li>
-        <li><strong>保存</strong>：改完点顶栏「💾 保存并推送」写入仓库</li>
         <li>写入文件：<code>announcement.json</code></li>
       </ul>
     </div>
@@ -362,7 +451,7 @@ header.head .back:hover{gap:8px}
       </div>
       <div class="grid2" style="margin-top:14px">
         <div class="fld"><span>Owner</span><input id="ghOwner" type="text" placeholder="HSDL03" autocomplete="off" spellcheck="false"></div>
-        <div class="fld"><span>仓库名 Repo</span><input id="ghRepo" type="text" placeholder="HSwiki" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><span>仓库名 Repo</span><input id="ghRepo" type="text" placeholder="HStool" autocomplete="off" spellcheck="false"></div>
         <div class="fld"><span>Wiki 数据文件</span><input id="ghWikiPath" type="text" placeholder="wiki-data.json" autocomplete="off" spellcheck="false"></div>
         <div class="fld"><span>下载源数据文件</span><input id="ghDlPath" type="text" placeholder="download-data.json" autocomplete="off" spellcheck="false"></div>
         <div class="fld"><span>工具数据文件</span><input id="ghToolsPath" type="text" placeholder="tools-data.json" autocomplete="off" spellcheck="false"></div>
@@ -491,6 +580,16 @@ header.head .back:hover{gap:8px}
       </div>
 
       <div class="fld" style="margin-top:12px">
+        <span>数据库分类</span>
+        <select id="tCategory">
+          <option value="">— 未设置 —</option>
+          <option value="needDB">🔗 需要访问数据库</option>
+          <option value="noDB">📦 不需要访问数据库</option>
+        </select>
+        <div class="sub">标记该工具是否需要连接数据库，用于分类筛选</div>
+      </div>
+
+      <div class="fld" style="margin-top:12px">
         <span>唯一 ID（改链接时不用动它）</span>
         <input id="tId" type="text" placeholder="自动生成" autocomplete="off" spellcheck="false">
         <div class="sub">留空则自动生成；改名不影响 id</div>
@@ -530,18 +629,25 @@ header.head .back:hover{gap:8px}
      默认配置
      ========================================================== */
   var DEFAULT_OWNER      = 'HSDL03';
-  var DEFAULT_REPO       = 'HSwiki';
+  var DEFAULT_REPO       = 'HStool';
   var DEFAULT_WIKI_PATH  = 'wiki-data.json';
   var DEFAULT_DL_PATH    = 'download-data.json';
   var DEFAULT_TOOLS_PATH = 'tools-data.json';
   var DEFAULT_ANN_PATH   = 'announcement.json';
   var DEFAULT_BRANCH     = 'main';
-  var K_GH               = 'wiki-gh';
-  var K_TAB              = 'admin-tab';
+  var K_GH               = 'hs-admin-gh';
+  var K_TAB              = 'hs-admin-tab';
   var RELEASES_TTL       = 5 * 60 * 1000;
 
   var EMOJI_PRESETS = ['📦','📥','🗜','🎨','🖼','🎵','🎬','📄','📝','📊','🧩','🎮','🕹','🔧','⚙','💎','🌟','🔥','⚡','🌊','🌲','❄','🏹','🛡','⚔','🧪','📜','🗺','🧭','🔮','🎯','🏆','🎁','🗂','📁','💾','🖥','📱','🎓'];
   var TOOL_EMOJI_PRESETS = ['🧰','📚','📥','🧩','🎨','🔧','⚙','🔮','🎯','📊','🗺','🧪','📝','🌐','💡','🔍','🎮','🕹','📷','🎵','📖','✏️','🎁','🏷️','🧮','🔨','🪓','⛏','🌿','🎬'];
+
+  var ANN_CAT_LABELS = {
+    'update':      '📋 更新日志',
+    'maintenance': '🔧 维护通知',
+    'event':       '🎉 活动公告',
+    'warning':     '⚠️ 重要警告'
+  };
 
   /* ==========================================================
      全局错误
@@ -615,11 +721,17 @@ header.head .back:hover{gap:8px}
   var tools = [];
   var toolsSnapshot = '';
   var toolsStatusFilter = '__all__';
+  var toolsCategoryFilter = '__all__';
+  var toolsTagFilter = '__all__';
+  var toolsSearchQuery = '';
   var editingToolIdx = -1;
 
   /* 公告 */
   var annItems = [];
   var annSnapshot = '';
+  var annCollapsedState = {};   /* id -> true 表示折叠 */
+  var annCategoryFilter = '__all__';
+  var annTypeFilter = '__all__';
 
   /* ==========================================================
      DOM
@@ -638,8 +750,17 @@ header.head .back:hover{gap:8px}
     btnAddFile: $('btnAddFile'), btnSyncReleases: $('btnSyncReleases'),
     dlTagFilter: $('dlTagFilter'), dlHint: $('dlHint'),
     toolsCards: $('toolsCards'),
-    btnAddTool: $('btnAddTool'), toolsStatusFilter: $('toolsStatusFilter'),
+    btnAddTool: $('btnAddTool'),
+    toolsStatusFilter: $('toolsStatusFilter'),
+    toolsCategoryFilter: $('toolsCategoryFilter'),
+    toolsTagFilter: $('toolsTagFilter'),
+    toolsSearch: $('toolsSearch'),
+    toolsCountInfo: $('toolsCountInfo'),
+    btnResetToolsFilter: $('btnResetToolsFilter'),
     annCards: $('annCards'), btnAddAnn: $('btnAddAnn'), annHint: $('annHint'),
+    btnExpandAllAnn: $('btnExpandAllAnn'), btnCollapseAllAnn: $('btnCollapseAllAnn'),
+    annCategoryFilter: $('annCategoryFilter'), annTypeFilter: $('annTypeFilter'),
+    annCountInfo: $('annCountInfo'),
     toast: $('toast'),
     connOv: $('connOv'), connClose: $('connClose'), connCancel: $('connCancel'),
     connSave: $('connSave'), connDisconn: $('connDisconn'),
@@ -664,6 +785,7 @@ header.head .back:hover{gap:8px}
     toolSave: $('toolSave'), toolDel: $('toolDel'),
     tIcon: $('tIcon'), tName: $('tName'), tDesc: $('tDesc'),
     tTag: $('tTag'), tUrl: $('tUrl'), tId: $('tId'),
+    tCategory: $('tCategory'),
     tDeprecated: $('tDeprecated'), tDisabled: $('tDisabled'), tHidden: $('tHidden'),
     toolEmojiQuick: $('toolEmojiQuick')
   };
@@ -950,6 +1072,8 @@ header.head .back:hover{gap:8px}
     if (els.btnSyncReleases) els.btnSyncReleases.disabled = !hasGh || busy;
     if (els.btnAddTool) els.btnAddTool.disabled = !hasGh || busy;
     if (els.btnAddAnn) els.btnAddAnn.disabled = !hasGh || busy;
+    if (els.btnExpandAllAnn) els.btnExpandAllAnn.disabled = !hasGh;
+    if (els.btnCollapseAllAnn) els.btnCollapseAllAnn.disabled = !hasGh;
 
     if (els.wikiDirty) els.wikiDirty.hidden = !(hasGh && wikiSnapshot !== snapshotWiki());
     if (els.dlDirty) els.dlDirty.hidden = !(hasGh && fileSnapshot !== snapshotFiles());
@@ -1003,16 +1127,17 @@ header.head .back:hover{gap:8px}
         : tab === 'download'
           ? '管理下载站资源：自动读取 GitHub Releases，手动编辑作为覆盖层。改动先存在页面内，点「💾 保存并推送」才写入仓库。'
           : tab === 'tools'
-            ? '管理首页工具箱：图标、名称、描述、分类、链接、废弃状态、禁用点击、隐藏。改动先存在页面内，点「💾 保存并推送」才写入仓库。'
-            : '管理首页公告：图标、类型、标题、内容、链接、启用。改完点顶栏「💾 保存并推送」写入 GitHub 的 announcement.json。';
+            ? '管理首页工具箱：支持数据库分类、标签分类、状态筛选、关键字搜索。改动先存在页面内，点「💾 保存并推送」才写入仓库。'
+            : '管理首页公告：可折叠编辑，支持分类与类型筛选。改完点顶栏「💾 保存并推送」写入 GitHub 的 announcement.json。';
     }
 
     if (tab === 'announce') refreshAnnounce();
+    if (tab === 'tools') { rebuildToolsTagFilter(); renderTools(); }
     updateButtons();
   }
 
   /* ==========================================================
-     分类管理
+     分类管理（Wiki）
      ========================================================== */
   function buildWikiTags(){
     var order = [];
@@ -1317,7 +1442,7 @@ header.head .back:hover{gap:8px}
       els.fUrl.disabled = !!(f && f.releaseTag);
     }
     if (els.fUrlHint) {
-      els.fUrlHint.textContent = (f && f.releaseTag) ? '自动条目链接来自 Releases，不可修改' : '支持完整 URL，或只填文件名（配合 DL_BASE 自动补全）';
+      els.fUrlHint.textContent = (f && f.releaseTag) ? '自动条目链接来自 Releases，不可修改' : '支持完整 URL，或只填文件名';
     }
     if (els.fOffline) els.fOffline.checked = f ? !!f.offline : false;
     if (els.fHidden) els.fHidden.checked = f ? !!f.hidden : false;
@@ -1493,6 +1618,9 @@ header.head .back:hover{gap:8px}
   function normTool(t, i){
     if(!t || typeof t !== 'object') return null;
     var name = (typeof t.name === 'string' && t.name.trim()) ? t.name.trim() : ('未命名 ' + (i+1));
+    var cat = (typeof t.category === 'string' && (t.category === 'needDB' || t.category === 'noDB'))
+      ? t.category
+      : '';
     return {
       id: (typeof t.id === 'string' && t.id.trim()) ? t.id.trim() : ('tool-' + (i+1) + '-' + Date.now()),
       icon: (typeof t.icon === 'string' && t.icon.trim()) ? t.icon.trim() : '🧰',
@@ -1500,6 +1628,7 @@ header.head .back:hover{gap:8px}
       desc: typeof t.desc === 'string' ? t.desc : '',
       tag: (typeof t.tag === 'string' && t.tag.trim()) ? t.tag.trim() : '工具',
       url: typeof t.url === 'string' ? t.url : '',
+      category: cat,
       deprecated: !!t.deprecated,
       disabled: !!t.disabled,
       hidden: !!t.hidden
@@ -1510,24 +1639,90 @@ header.head .back:hover{gap:8px}
     return JSON.stringify(tools);
   }
 
+  /* 从 tools 中重新生成标签筛选下拉框 */
+  function rebuildToolsTagFilter(){
+    if(!els.toolsTagFilter) return;
+    var tags = {};
+    tools.forEach(function(t){
+      var tag = t.tag || '工具';
+      tags[tag] = (tags[tag] || 0) + 1;
+    });
+    var names = Object.keys(tags).sort();
+    if(toolsTagFilter !== '__all__' && names.indexOf(toolsTagFilter) === -1){
+      toolsTagFilter = '__all__';
+    }
+    var html = '<option value="__all__">全部标签</option>';
+    names.forEach(function(n){
+      html += '<option value="' + esc(n) + '">' + esc(n) + '（' + tags[n] + '）</option>';
+    });
+    els.toolsTagFilter.innerHTML = html;
+    els.toolsTagFilter.value = toolsTagFilter;
+  }
+
+  function applyToolsFilters(list){
+    /* 1. 状态 */
+    if(toolsStatusFilter === '__active__'){
+      list = list.filter(function(x){ return !x.t.deprecated && !x.t.hidden; });
+    } else if(toolsStatusFilter === '__deprecated__'){
+      list = list.filter(function(x){ return x.t.deprecated && !x.t.hidden; });
+    } else if(toolsStatusFilter === '__hidden__'){
+      list = list.filter(function(x){ return x.t.hidden; });
+    }
+
+    /* 2. 数据库分类 */
+    if(toolsCategoryFilter === 'needDB'){
+      list = list.filter(function(x){ return x.t.category === 'needDB'; });
+    } else if(toolsCategoryFilter === 'noDB'){
+      list = list.filter(function(x){ return x.t.category === 'noDB'; });
+    } else if(toolsCategoryFilter === '__unset__'){
+      list = list.filter(function(x){ return !x.t.category; });
+    }
+
+    /* 3. 标签分类 */
+    if(toolsTagFilter !== '__all__'){
+      list = list.filter(function(x){
+        return (x.t.tag || '工具') === toolsTagFilter;
+      });
+    }
+
+    /* 4. 搜索 */
+    if(toolsSearchQuery){
+      var q = toolsSearchQuery.toLowerCase();
+      list = list.filter(function(x){
+        var t = x.t;
+        return (t.name || '').toLowerCase().indexOf(q) > -1
+            || (t.desc || '').toLowerCase().indexOf(q) > -1
+            || (t.tag  || '').toLowerCase().indexOf(q) > -1
+            || (t.id   || '').toLowerCase().indexOf(q) > -1
+            || (t.url  || '').toLowerCase().indexOf(q) > -1;
+      });
+    }
+
+    return list;
+  }
+
   function renderTools(){
     if(!els.toolsCards) return;
     if(!gh){
       els.toolsCards.innerHTML = '<div class="empty">点上方「🔑 连接 GitHub」加载数据</div>';
+      if(els.toolsCountInfo) els.toolsCountInfo.textContent = '';
       return;
     }
     if(tools.length === 0){
       els.toolsCards.innerHTML = '<div class="empty">还没有工具。点上方「＋ 添加工具」开始添加。</div>';
+      if(els.toolsCountInfo) els.toolsCountInfo.textContent = '';
       return;
     }
 
-    var list = tools.map(function(t, i){ return { t: t, i: i }; });
-    if(toolsStatusFilter === '__active__') list = list.filter(function(x){ return !x.t.deprecated && !x.t.hidden; });
-    else if(toolsStatusFilter === '__deprecated__') list = list.filter(function(x){ return x.t.deprecated && !x.t.hidden; });
-    else if(toolsStatusFilter === '__hidden__') list = list.filter(function(x){ return x.t.hidden; });
+    var all = tools.map(function(t, i){ return { t: t, i: i }; });
+    var list = applyToolsFilters(all);
+
+    if(els.toolsCountInfo){
+      els.toolsCountInfo.textContent = '显示 ' + list.length + ' / ' + tools.length + ' 个工具';
+    }
 
     if(list.length === 0){
-      els.toolsCards.innerHTML = '<div class="empty">当前筛选下没有工具。</div>';
+      els.toolsCards.innerHTML = '<div class="empty">当前筛选 / 搜索下没有工具。<br>试试「↺ 重置筛选」。</div>';
       return;
     }
 
@@ -1543,6 +1738,15 @@ header.head .back:hover{gap:8px}
         statusBadge = '<span class="fstatus s-auto">已废弃</span>';
       } else {
         statusBadge = '<span class="fstatus s-standalone">可用</span>';
+      }
+
+      var catBadge = '';
+      if(t.category === 'needDB'){
+        catBadge = '<span class="fstatus s-db">🔗 需数据库</span>';
+      } else if(t.category === 'noDB'){
+        catBadge = '<span class="fstatus s-nodb">📦 无数据库</span>';
+      } else {
+        catBadge = '<span class="fstatus s-unset">❓ 未分类</span>';
       }
 
       var meta = '';
@@ -1562,6 +1766,7 @@ header.head .back:hover{gap:8px}
             (t.desc ? '<div class="fdesc">' + esc(t.desc) + '</div>' : '') +
             '<div class="fmeta">' +
               statusBadge +
+              catBadge +
               '<span class="ftag">' + esc(t.tag) + '</span>' +
               (meta ? '<span class="sep">·</span>' : '') + meta +
             '</div>' +
@@ -1597,6 +1802,7 @@ header.head .back:hover{gap:8px}
     if(els.tTag) els.tTag.value = t ? t.tag : '';
     if(els.tUrl) els.tUrl.value = t ? t.url : '';
     if(els.tId) els.tId.value = t ? t.id : '';
+    if(els.tCategory) els.tCategory.value = t ? (t.category || '') : '';
     if(els.tDeprecated) els.tDeprecated.checked = t ? t.deprecated : false;
     if(els.tDisabled) els.tDisabled.checked = t ? t.disabled : false;
     if(els.tHidden) els.tHidden.checked = t ? t.hidden : false;
@@ -1629,6 +1835,9 @@ header.head .back:hover{gap:8px}
       }
     }
 
+    var catVal = els.tCategory ? els.tCategory.value : '';
+    if(catVal !== 'needDB' && catVal !== 'noDB') catVal = '';
+
     var newTool = {
       id: id,
       icon: (els.tIcon.value || '').trim() || '🧰',
@@ -1636,6 +1845,7 @@ header.head .back:hover{gap:8px}
       desc: (els.tDesc.value || '').trim(),
       tag: (els.tTag.value || '').trim() || '工具',
       url: url,
+      category: catVal,
       deprecated: !!els.tDeprecated.checked,
       disabled: !!els.tDisabled.checked,
       hidden: !!els.tHidden.checked
@@ -1648,6 +1858,7 @@ header.head .back:hover{gap:8px}
     }
 
     closeToolEditor();
+    rebuildToolsTagFilter();
     renderTools();
     updateButtons();
     toast(isNew ? '已添加，点「保存并推送」生效' : '已修改，点「保存并推送」生效');
@@ -1659,9 +1870,22 @@ header.head .back:hover{gap:8px}
     if(!confirm('确定删除「' + t.name + '」？\n保存前刷新页面即可还原。')) return;
     tools.splice(idx, 1);
     closeToolEditor();
+    rebuildToolsTagFilter();
     renderTools();
     updateButtons();
     toast('已删除，点「保存并推送」生效');
+  }
+
+  function resetToolsFilter(){
+    toolsStatusFilter = '__all__';
+    toolsCategoryFilter = '__all__';
+    toolsTagFilter = '__all__';
+    toolsSearchQuery = '';
+    if(els.toolsStatusFilter) els.toolsStatusFilter.value = '__all__';
+    if(els.toolsCategoryFilter) els.toolsCategoryFilter.value = '__all__';
+    if(els.toolsTagFilter) els.toolsTagFilter.value = '__all__';
+    if(els.toolsSearch) els.toolsSearch.value = '';
+    renderTools();
   }
 
   function bindToolCards(){
@@ -1678,10 +1902,14 @@ header.head .back:hover{gap:8px}
   }
 
   /* ==========================================================
-     公告（GitHub · announcement.json · 内联编辑）
+     公告管理（可折叠）
      ========================================================== */
   function snapshotAnn(){
     return JSON.stringify(annItems);
+  }
+
+  function annKey(it, i){
+    return (it && it.id) ? String(it.id) : ('idx-' + i);
   }
 
   function renderAnn(){
@@ -1690,32 +1918,87 @@ header.head .back:hover{gap:8px}
     if (!gh) { el.innerHTML = '<div class="empty">请先连接 GitHub</div>'; return; }
     if (annItems.length === 0) {
       el.innerHTML = '<div class="empty">还没有公告，点上方「＋ 添加公告」开始</div>';
+      if(els.annCountInfo) els.annCountInfo.textContent = '';
       return;
     }
+
+    /* 筛选 */
+    var list = annItems.map(function(it, i){ return { it: it, i: i }; });
+    if(annCategoryFilter !== '__all__'){
+      if(annCategoryFilter === '__none__'){
+        list = list.filter(function(x){ return !x.it.category; });
+      } else {
+        list = list.filter(function(x){ return x.it.category === annCategoryFilter; });
+      }
+    }
+    if(annTypeFilter !== '__all__'){
+      list = list.filter(function(x){ return (x.it.type || 'info') === annTypeFilter; });
+    }
+
+    if(els.annCountInfo){
+      els.annCountInfo.textContent = '显示 ' + list.length + ' / ' + annItems.length + ' 条公告';
+    }
+
+    if(list.length === 0){
+      el.innerHTML = '<div class="empty">当前筛选下没有公告。</div>';
+      return;
+    }
+
     var html = '';
-    annItems.forEach(function(it, i){
+    list.forEach(function(x){
+      var it = x.it;
+      var i  = x.i;
       var enabled = it.enabled !== false;
+      var key = annKey(it, i);
+      var collapsed = !!annCollapsedState[key];
+      var type = it.type || 'info';
+      var catLabel = ANN_CAT_LABELS[it.category] || '';
+
       html +=
-        '<div class="ann-row' + (enabled ? '' : ' ann-row-disabled') + '" draggable="true" data-idx="' + i + '">'
-        +   '<div class="ann-head-row">'
+        '<div class="ann-row' + (enabled ? '' : ' ann-row-disabled') + (collapsed ? '' : ' expanded') +
+        '" draggable="true" data-idx="' + i + '" data-ann-key="' + esc(key) + '">'
+
+        /* 折叠头 */
+        +   '<div class="ann-collapse-head">'
+        +     '<span class="ann-toggle" title="展开 / 折叠">▶</span>'
         +     '<span class="ar-grip" title="拖动排序">⠿</span>'
-        +     '<input class="ar-icon" type="text" maxlength="4" value="' + esc(it.icon || '📢') + '" placeholder="📢" title="图标">'
-        +     '<select class="ar-type" title="类型">'
-        +       '<option value="info"' + (it.type === 'info' || !it.type ? ' selected' : '') + '>info</option>'
-        +       '<option value="success"' + (it.type === 'success' ? ' selected' : '') + '>success</option>'
-        +       '<option value="warn"' + (it.type === 'warn' ? ' selected' : '') + '>warn</option>'
-        +       '<option value="danger"' + (it.type === 'danger' ? ' selected' : '') + '>danger</option>'
-        +     '</select>'
-        +     '<input class="ar-title" type="text" value="' + esc(it.title || '') + '" placeholder="公告标题" maxlength="60">'
-        +     '<label class="ar-enabled" title="启用">'
-        +       '<input type="checkbox"' + (enabled ? ' checked' : '') + '>启用'
-        +     '</label>'
-        +     '<button class="ar-del" data-action="del-ann" data-idx="' + i + '" title="删除">🗑</button>'
+        +     '<span class="ann-summary-icon">' + esc(it.icon || '📢') + '</span>'
+        +     '<span class="ann-summary-title">' + esc(it.title || '(无标题)') + '</span>'
+        +     (catLabel ? '<span class="ann-summary-cat">' + esc(catLabel) + '</span>' : '')
+        +     '<span class="ann-summary-type type-' + esc(type) + '">' + esc(type) + '</span>'
+        +     '<span class="ann-summary-enabled ' + (enabled ? 'on' : 'off') + '">' + (enabled ? '启用' : '停用') + '</span>'
+        +     '<span class="ann-summary-acts">'
+        +       '<button class="ar-del" data-action="del-ann" data-idx="' + i + '" title="删除">🗑</button>'
+        +     '</span>'
         +   '</div>'
-        +   '<textarea class="ar-content" maxlength="500" placeholder="公告内容（可空）">' + esc(it.content || '') + '</textarea>'
-        +   '<div class="ar-link-row">'
-        +     '<input type="text" class="ar-link" value="' + esc(it.link || '') + '" placeholder="链接（可空，https://...）" spellcheck="false">'
-        +     '<input type="text" class="ar-link-text" value="' + esc(it.linkText || '') + '" placeholder="链接文字（默认「查看详情」）" maxlength="20">'
+
+        /* 编辑体 */
+        +   '<div class="ann-body">'
+        +     '<div class="ann-head-row">'
+        +       '<input class="ar-icon" type="text" maxlength="4" value="' + esc(it.icon || '📢') + '" placeholder="📢" title="图标">'
+        +       '<select class="ar-type" title="类型">'
+        +         '<option value="info"' + (type === 'info' ? ' selected' : '') + '>info</option>'
+        +         '<option value="success"' + (type === 'success' ? ' selected' : '') + '>success</option>'
+        +         '<option value="warn"' + (type === 'warn' ? ' selected' : '') + '>warn</option>'
+        +         '<option value="danger"' + (type === 'danger' ? ' selected' : '') + '>danger</option>'
+        +       '</select>'
+        +       '<select class="ar-cat" title="分类">'
+        +         '<option value="">未分类</option>'
+        +         '<option value="update"' + (it.category === 'update' ? ' selected' : '') + '>📋 更新日志</option>'
+        +         '<option value="maintenance"' + (it.category === 'maintenance' ? ' selected' : '') + '>🔧 维护通知</option>'
+        +         '<option value="event"' + (it.category === 'event' ? ' selected' : '') + '>🎉 活动公告</option>'
+        +         '<option value="warning"' + (it.category === 'warning' ? ' selected' : '') + '>⚠️ 重要警告</option>'
+        +       '</select>'
+        +       '<input class="ar-title" type="text" value="' + esc(it.title || '') + '" placeholder="公告标题" maxlength="60">'
+        +       '<label class="ar-enabled" title="启用">'
+        +         '<input type="checkbox"' + (enabled ? ' checked' : '') + '>启用'
+        +       '</label>'
+        +     '</div>'
+        +     '<textarea class="ar-content" maxlength="500" placeholder="公告内容（可空）">' + esc(it.content || '') + '</textarea>'
+        +     '<div class="ar-link-row">'
+        +       '<input type="text" class="ar-link" value="' + esc(it.link || '') + '" placeholder="链接（可空，https://...）" spellcheck="false">'
+        +       '<input type="text" class="ar-link-text" value="' + esc(it.linkText || '') + '" placeholder="链接文字（默认「查看详情」）" maxlength="20">'
+        +     '</div>'
         +   '</div>'
         + '</div>';
     });
@@ -1723,24 +2006,28 @@ header.head .back:hover{gap:8px}
     if (els.annBadge) els.annBadge.textContent = String(annItems.length);
   }
 
+  /* 从 DOM 同步：使用 data-idx 定位，兼容筛选 / 折叠场景 */
   function syncAnnFromInputs(){
     var el = els.annCards;
     if (!el) return;
     var rows = el.querySelectorAll('.ann-row');
-    for (var i = 0; i < rows.length; i++) {
-      if (i >= annItems.length) break;
-      var row = rows[i];
+    for (var k = 0; k < rows.length; k++) {
+      var row = rows[k];
+      var i = parseInt(row.getAttribute('data-idx'), 10);
+      if (isNaN(i) || i < 0 || i >= annItems.length) continue;
       var ic = row.querySelector('.ar-icon');
       var tp = row.querySelector('.ar-type');
+      var ct = row.querySelector('.ar-cat');
       var ti = row.querySelector('.ar-title');
-      var ct = row.querySelector('.ar-content');
+      var co = row.querySelector('.ar-content');
       var lk = row.querySelector('.ar-link');
       var lt = row.querySelector('.ar-link-text');
       var en = row.querySelector('.ar-enabled input[type=checkbox]');
       if (ic) annItems[i].icon = ic.value;
       if (tp) annItems[i].type = tp.value || 'info';
+      if (ct) annItems[i].category = ct.value || '';
       if (ti) annItems[i].title = ti.value;
-      if (ct) annItems[i].content = ct.value;
+      if (co) annItems[i].content = co.value;
       if (lk) annItems[i].link = lk.value;
       if (lt) annItems[i].linkText = lt.value;
       if (en) annItems[i].enabled = en.checked;
@@ -1753,6 +2040,7 @@ header.head .back:hover{gap:8px}
       return {
         id: it.id || ('a-' + Date.now().toString(36) + '-' + i),
         type: it.type || 'info',
+        category: it.category || '',
         icon: String(it.icon || '📢').trim() || '📢',
         title: String(it.title || '').trim(),
         content: String(it.content || '').trim(),
@@ -1766,6 +2054,7 @@ header.head .back:hover{gap:8px}
   function refreshAnnounce(){
     if (!gh) {
       if (els.annHint) els.annHint.textContent = '⚠ 请先连接 GitHub';
+      renderAnn();
       return;
     }
     if (els.annHint) els.annHint.textContent = '正在加载…';
@@ -1774,6 +2063,7 @@ header.head .back:hover{gap:8px}
         return {
           id: it.id || ('a-' + (i+1)),
           type: it.type || 'info',
+          category: it.category || '',
           icon: it.icon || '📢',
           title: it.title || '',
           content: it.content || '',
@@ -1783,6 +2073,8 @@ header.head .back:hover{gap:8px}
         };
       });
       annSnapshot = snapshotAnn();
+      /* 新加载：清空折叠状态 */
+      annCollapsedState = {};
       renderAnn();
       if (els.annHint) els.annHint.textContent = '数据来自 GitHub · ' + (gh.annPath || DEFAULT_ANN_PATH);
       updateButtons();
@@ -1798,6 +2090,7 @@ header.head .back:hover{gap:8px}
     annItems.push({
       id: null,
       type: 'info',
+      category: '',
       icon: '📢',
       title: '新公告',
       content: '',
@@ -1815,21 +2108,71 @@ header.head .back:hover{gap:8px}
     if (!it) return;
     if (!confirm('确定删除「' + (it.title || '未命名公告') + '」？\n保存前刷新页面即可还原。')) return;
     syncAnnFromInputs();
+    var key = annKey(it, idx);
+    delete annCollapsedState[key];
     annItems.splice(idx, 1);
     renderAnn();
     updateButtons();
   }
 
+  function toggleAnnCollapse(row){
+    if(!row) return;
+    syncAnnFromInputs();
+    var key = row.getAttribute('data-ann-key');
+    if(!key) return;
+    if(annCollapsedState[key]) delete annCollapsedState[key];
+    else annCollapsedState[key] = true;
+    renderAnn();
+    updateButtons();
+  }
+
+  function expandAllAnn(){
+    annCollapsedState = {};
+    renderAnn();
+  }
+  function collapseAllAnn(){
+    annCollapsedState = {};
+    annItems.forEach(function(it, i){
+      var key = annKey(it, i);
+      annCollapsedState[key] = true;
+    });
+    renderAnn();
+  }
+
   function bindAnnEvents(){
     if (els.btnAddAnn) els.btnAddAnn.addEventListener('click', addAnnItem);
+    if (els.btnExpandAllAnn) els.btnExpandAllAnn.addEventListener('click', expandAllAnn);
+    if (els.btnCollapseAllAnn) els.btnCollapseAllAnn.addEventListener('click', collapseAllAnn);
+
+    if (els.annCategoryFilter) {
+      els.annCategoryFilter.addEventListener('change', function(){
+        annCategoryFilter = els.annCategoryFilter.value || '__all__';
+        renderAnn();
+      });
+    }
+    if (els.annTypeFilter) {
+      els.annTypeFilter.addEventListener('change', function(){
+        annTypeFilter = els.annTypeFilter.value || '__all__';
+        renderAnn();
+      });
+    }
 
     if (els.annCards) {
       els.annCards.addEventListener('click', function(e){
-        var btn = e.target.closest('[data-action="del-ann"]');
-        if (!btn) return;
-        var idx = parseInt(btn.getAttribute('data-idx'), 10);
-        if (isNaN(idx)) return;
-        deleteAnnItem(idx);
+        /* 删除按钮：优先处理，阻止折叠 */
+        var delBtn = e.target.closest('[data-action="del-ann"]');
+        if(delBtn){
+          e.stopPropagation();
+          var idx = parseInt(delBtn.getAttribute('data-idx'), 10);
+          if(!isNaN(idx)) deleteAnnItem(idx);
+          return;
+        }
+        /* 折叠头点击 */
+        var head = e.target.closest('.ann-collapse-head');
+        if(head){
+          var row = head.closest('.ann-row');
+          if(row) toggleAnnCollapse(row);
+        }
       });
       els.annCards.addEventListener('input', function(){
         syncAnnFromInputs();
@@ -1837,6 +2180,7 @@ header.head .back:hover{gap:8px}
       });
       els.annCards.addEventListener('change', function(){
         syncAnnFromInputs();
+        /* 类型 / 分类 / 启用变化 → 重渲染头部摘要 */
         renderAnn();
         updateButtons();
       });
@@ -1942,10 +2286,11 @@ header.head .back:hover{gap:8px}
     files = [];
     tools = [];
     annItems = [];
+    annCollapsedState = {};
     wikiSnapshot = ''; fileSnapshot = ''; toolsSnapshot = ''; annSnapshot = '';
     closeConn();
     renderWiki(); renderFiles(); renderTools(); renderAnn();
-    buildDlTagOptions(); updateButtons();
+    buildDlTagOptions(); rebuildToolsTagFilter(); updateButtons();
     toast('已断开');
   }
 
@@ -2001,6 +2346,7 @@ header.head .back:hover{gap:8px}
       buildDlTagOptions();
       buildTagDatalist();
       renderFiles();
+      rebuildToolsTagFilter();
       renderTools();
       updatePathTips();
 
@@ -2134,6 +2480,7 @@ header.head .back:hover{gap:8px}
       renderFiles();
     });
 
+    /* 工具 */
     if (els.btnAddTool) els.btnAddTool.addEventListener('click', function(){
       if (!gh) { toast('请先连接 GitHub'); return; }
       openToolEditor(-1);
@@ -2143,6 +2490,31 @@ header.head .back:hover{gap:8px}
         toolsStatusFilter = els.toolsStatusFilter.value || '__all__';
         renderTools();
       });
+    }
+    if (els.toolsCategoryFilter) {
+      els.toolsCategoryFilter.addEventListener('change', function(){
+        toolsCategoryFilter = els.toolsCategoryFilter.value || '__all__';
+        renderTools();
+      });
+    }
+    if (els.toolsTagFilter) {
+      els.toolsTagFilter.addEventListener('change', function(){
+        toolsTagFilter = els.toolsTagFilter.value || '__all__';
+        renderTools();
+      });
+    }
+    if (els.toolsSearch) {
+      var searchTimer = null;
+      els.toolsSearch.addEventListener('input', function(){
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function(){
+          toolsSearchQuery = (els.toolsSearch.value || '').trim();
+          renderTools();
+        }, 120);
+      });
+    }
+    if (els.btnResetToolsFilter) {
+      els.btnResetToolsFilter.addEventListener('click', resetToolsFilter);
     }
     if (els.toolClose) els.toolClose.addEventListener('click', closeToolEditor);
     if (els.toolCancel) els.toolCancel.addEventListener('click', closeToolEditor);
@@ -2158,6 +2530,7 @@ header.head .back:hover{gap:8px}
       });
     }
 
+    /* 公告 */
     bindAnnEvents();
 
     [els.connOv, els.mergeOv, els.delOv, els.fileOv, els.toolOv].forEach(function(ov){
@@ -2183,9 +2556,7 @@ header.head .back:hover{gap:8px}
       }
       if ((e.metaKey || e.ctrlKey) && key.toLowerCase() === 's') {
         e.preventDefault();
-        if (curTab === 'wiki' || curTab === 'download' || curTab === 'tools' || curTab === 'announce') {
-          if (gh && currentDirty() && !busy) save();
-        }
+        if (gh && currentDirty() && !busy) save();
       }
     });
 
@@ -2215,6 +2586,7 @@ header.head .back:hover{gap:8px}
       var item = tools.splice(fromIdx, 1)[0];
       if (!item) return;
       tools.splice(toIdx, 0, item);
+      rebuildToolsTagFilter();
       renderTools();
       updateButtons();
     });
@@ -2231,6 +2603,7 @@ header.head .back:hover{gap:8px}
       updatePathTips();
       renderWiki();
       renderFiles();
+      rebuildToolsTagFilter();
       renderTools();
       renderAnn();
       updateButtons();
@@ -2260,6 +2633,7 @@ header.head .back:hover{gap:8px}
             updateButtons();
             renderWiki();
             renderFiles();
+            rebuildToolsTagFilter();
             renderTools();
             reload(true);
             if (curTab === 'announce') refreshAnnounce();
