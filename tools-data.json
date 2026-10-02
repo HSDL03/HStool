@@ -12,18 +12,6 @@
     "hidden": false
   },
   {
-    "id": "tool-muqd83p5-btk7",
-    "icon": "🧰",
-    "name": "计算器",
-    "desc": "很深井的计算器嗯对",
-    "tag": "工具",
-    "url": "./tools/qrcode.html",
-    "category": "noDB",
-    "deprecated": false,
-    "disabled": false,
-    "hidden": false
-  },
-  {
     "id": "tool-mujq8js1-nyf7",
     "icon": "🧰",
     "name": "五子棋",
@@ -36,13 +24,37 @@
     "hidden": false
   },
   {
-    "id": "download",
-    "icon": "📥",
-    "name": "下载站",
-    "desc": "资源文件 · 便捷下载",
-    "tag": "资源",
-    "url": "./download.html",
-    "category": "needDB",
+    "id": "tool-muqd83p5-btk7",
+    "icon": "🧮",
+    "name": "计算器",
+    "desc": "很深井的计算器嗯对",
+    "tag": "工具",
+    "url": "./tools/bigcalc.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-muqd9y4o-b9sf",
+    "icon": "📖",
+    "name": "二维码生成器",
+    "desc": "？！二维码？！",
+    "tag": "工具",
+    "url": "./tools/qrcode.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-muqdbdxs-lqgs",
+    "icon": "💡",
+    "name": "MC名称随机器",
+    "desc": "？！狂笑的蛇写作文？！",
+    "tag": "工具",
+    "url": "./tools/mcname.html",
+    "category": "noDB",
     "deprecated": false,
     "disabled": false,
     "hidden": false
@@ -60,15 +72,15 @@
     "hidden": false
   },
   {
-    "id": "misc",
-    "icon": "🧩",
-    "name": "杂类",
-    "desc": "零散工具 · 各种小玩意儿",
-    "tag": "综合",
-    "url": "./misc.html",
-    "category": "noDB",
+    "id": "download",
+    "icon": "📥",
+    "name": "下载站",
+    "desc": "资源文件 · 便捷下载",
+    "tag": "资源",
+    "url": "./download.html",
+    "category": "needDB",
     "deprecated": false,
-    "disabled": true,
+    "disabled": false,
     "hidden": false
   },
   {
