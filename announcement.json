@@ -2,7 +2,7 @@
   {
     "id": "a-1",
     "type": "info",
-    "category": "",
+    "category": "update",
     "icon": "📢",
     "title": "请输入文本",
     "content": "挑战做100个答辩工具",
@@ -13,7 +13,7 @@
   {
     "id": "a-2",
     "type": "warn",
-    "category": "",
+    "category": "warning",
     "icon": "⚠️",
     "title": "测试",
     "content": "这期神了",
