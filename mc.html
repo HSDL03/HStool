@@ -1,0 +1,3251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的世界 · 3D 体素沙盒</title>
+<script>
+(function(){
+  try{
+    var t=localStorage.getItem('wiki-theme');
+    document.documentElement.setAttribute('data-theme', t==='mc-wiki' ? t : 'mc-wiki');
+  }catch(e){document.documentElement.setAttribute('data-theme','mc-wiki');}
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root,[data-theme="mc-wiki"]{
+  --bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;
+  --bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;
+  --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
+  --sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);
+  --font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --topbar-bg:linear-gradient(180deg,#56682c,#3d521f);
+  --topbar-fg:#fff;--topbar-bd:#2a3a1a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: var(--bg); font-family: var(--font); color: var(--text);
+  user-select: none; -webkit-tap-highlight-color: transparent;
+}
+canvas#game3d { display: block; }
+.bg-decor { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: var(--bg); }
+.bg-decor.hidden { display: none; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); }
+.blob.b1 { width: 420px; height: 420px; background: rgba(61,82,31,.13); top: -100px; left: -100px; }
+.blob.b2 { width: 380px; height: 380px; background: rgba(106,140,60,.09); bottom: -120px; right: -80px; }
+.blob.b3 { width: 340px; height: 340px; background: rgba(180,150,80,.07); top: 40%; left: 45%; }
+.grid-bg {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(61,82,31,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(61,82,31,.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+}
+#particles { position: absolute; inset: 0; width: 100%; height: 100%; }
+#crosshair {
+  position: fixed; left: 50%; top: 50%; width: 22px; height: 22px;
+  transform: translate(-50%, -50%); pointer-events: none; z-index: 20;
+  opacity: .9; mix-blend-mode: difference; display: none;
+}
+#crosshair::before, #crosshair::after { content: ''; position: absolute; background: #fff; }
+#crosshair::before { left: 50%; top: 0; width: 2px; height: 100%; margin-left: -1px; }
+#crosshair::after  { top: 50%; left: 0; height: 2px; width: 100%; margin-top: -1px; }
+#hudTop {
+  position: fixed; top: 14px; left: 18px; z-index: 15; pointer-events: none;
+  display: none; flex-direction: column; gap: 6px;
+}
+.hud-card {
+  font-family: monospace; font-size: 13px; letter-spacing: 1px;
+  color: var(--text); background: var(--bg2); padding: 5px 12px;
+  border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--sh), var(--bevel); white-space: nowrap;
+}
+.hud-card .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.hud-card.mode { color: var(--ac); font-weight: bold; }
+.hud-card.online { color: #0060a0; }
+#playerList {
+  position: fixed; top: 14px; right: 18px; z-index: 15; pointer-events: none;
+  display: none; flex-direction: column; gap: 3px;
+  max-height: 40vh; overflow: hidden;
+}
+.player-tag {
+  font-family: monospace; font-size: 12px; letter-spacing: 1px;
+  color: #fff; background: rgba(30,30,20,.65);
+  padding: 3px 10px; border-radius: 2px;
+  text-shadow: 1px 1px 0 rgba(0,0,0,.8);
+  white-space: nowrap;
+}
+.player-tag.me { color: #8fd94f; }
+#hotbar {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; padding: 3px;
+  background: rgba(40, 40, 30, 0.6);
+  border: 2px solid var(--bd2); border-radius: var(--r); box-shadow: var(--sh);
+  z-index: 15; image-rendering: pixelated; display: none;
+}
+.slot {
+  width: 52px; height: 52px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg3); border: 2px solid var(--bd2); border-radius: 0;
+  cursor: pointer; overflow: visible;
+}
+.slot + .slot { margin-left: -2px; }
+.slot canvas { width: 38px; height: 38px; image-rendering: pixelated; filter: drop-shadow(1px 1px 0 rgba(0,0,0,.35)); pointer-events: none; }
+.slot .count {
+  position: absolute; bottom: 1px; right: 3px;
+  font-family: monospace; font-size: 12px; font-weight: bold;
+  color: #fff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+.slot:hover { background: var(--bg2); }
+.slot.active { background: var(--acs); z-index: 2; box-shadow: var(--bevel), 0 0 0 2px var(--ac); }
+#healthBar { position: fixed; bottom: 78px; left: 50%; transform: translateX(-50%); height: 22px; z-index: 15; pointer-events: none; display: none; image-rendering: pixelated; }
+#tips {
+  position: fixed; left: 16px; bottom: 18px;
+  color: var(--text); font-size: 12.5px; line-height: 1.8;
+  background: var(--bg2); padding: 10px 14px;
+  border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--sh), var(--bevel); pointer-events: none; z-index: 15; display: none;
+}
+#tips b { color: var(--ac); }
+#chatBox {
+  position: fixed; left: 16px; bottom: 260px;
+  width: 460px; max-width: 60vw;
+  z-index: 22; pointer-events: none;
+  display: none; flex-direction: column; gap: 3px;
+  max-height: 220px; overflow: hidden; font-size: 13px;
+}
+#chatBox.visible { display: flex; }
+.chat-msg {
+  background: rgba(30, 30, 20, 0.65); color: #fff;
+  padding: 4px 10px; border-radius: 2px;
+  text-shadow: 1px 1px 0 rgba(0,0,0,.8);
+  font-size: 13px; line-height: 1.35; word-wrap: break-word;
+  animation: chatIn .15s ease-out; pointer-events: auto;
+}
+@keyframes chatIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+.chat-msg.system { color: #ffe9a0; }
+.chat-msg.error { color: #ff8080; }
+.chat-msg.success { color: #a0ffa0; }
+.chat-msg.player { color: #fff; }
+.chat-msg .sender { color: #8fd94f; font-weight: bold; }
+#chatInput {
+  position: fixed; left: 16px; bottom: 230px;
+  width: 460px; max-width: 60vw;
+  z-index: 23; display: none;
+  background: rgba(0,0,0,.7);
+  border: 2px solid var(--bd2); border-radius: 2px;
+  padding: 6px 10px;
+}
+#chatInput.visible { display: block; }
+#chatInput .prefix { color: #8fd94f; font-family: monospace; font-weight: bold; margin-right: 6px; font-size: 14px; }
+#chatInput input {
+  background: transparent; border: none; outline: none;
+  color: #fff; font-family: inherit; font-size: 13.5px;
+  width: calc(100% - 20px); letter-spacing: .5px;
+}
+#toast {
+  position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+  z-index: 50; padding: 10px 20px;
+  background: var(--bg2); border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--sh), var(--bevel); color: var(--text);
+  font-size: 13.5px; letter-spacing: 2px;
+  pointer-events: none; opacity: 0; transition: opacity .2s;
+}
+#toast.show { opacity: 1; }
+#chunkLoading {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  z-index: 18; pointer-events: none;
+  display: none; align-items: center; gap: 12px;
+  padding: 8px 18px;
+  background: rgba(30, 30, 20, 0.75);
+  border: 2px solid #8fd94f; border-radius: 2px;
+  color: #fff; font-size: 12px; letter-spacing: 2px;
+  font-family: monospace; text-shadow: 1px 1px 0 rgba(0,0,0,.9);
+}
+#chunkLoading.show { display: flex; }
+#chunkLoading .spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(143,217,79,.3);
+  border-top-color: #8fd94f; border-radius: 50%;
+  animation: chunkSpin .8s linear infinite;
+}
+@keyframes chunkSpin { to { transform: rotate(360deg); } }
+#chunkLoading .bar {
+  width: 120px; height: 6px;
+  background: rgba(0,0,0,.4);
+  border: 1px solid rgba(143,217,79,.4);
+  position: relative; overflow: hidden;
+}
+#chunkLoading .bar-inner {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: #8fd94f; transition: width .2s; width: 0%;
+}
+.screen {
+  position: fixed; inset: 0; z-index: 40;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px; overflow-y: auto;
+}
+.screen.hidden { display: none; }
+.screen-title { color: var(--ac); font-size: 40px; font-weight: bold; letter-spacing: 10px; text-shadow: 2px 2px 0 rgba(0,0,0,.15); margin-bottom: 6px; }
+.screen-sub { color: var(--muted); font-size: 13px; letter-spacing: 4px; margin-bottom: 30px; }
+.menu-buttons { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.mc-btn {
+  min-width: 280px; padding: 14px 34px;
+  color: var(--text); font-family: inherit; font-size: 15px;
+  letter-spacing: 3px; font-weight: bold;
+  background: var(--bg2); border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--sh), var(--bevel); cursor: pointer;
+  transition: transform .1s, box-shadow .15s, background .15s;
+}
+.mc-btn:hover { background: var(--acs); box-shadow: var(--sh), var(--bevel), 0 0 0 2px rgba(61,82,31,.35); }
+.mc-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(0,0,0,.2), var(--bevel-in); }
+.mc-btn.primary { background: var(--topbar-bg); color: #fff; text-shadow: 1px 1px 0 rgba(0,0,0,.4); border-color: var(--topbar-bd); }
+.mc-btn.danger { background: var(--dgr); color: #fff; text-shadow: 1px 1px 0 rgba(0,0,0,.4); border-color: #5a1010; }
+.mc-btn.danger:hover { background: #b83030; }
+.mc-btn.small { min-width: 110px; padding: 9px 18px; font-size: 13px; letter-spacing: 2px; }
+.mc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-row { display: flex; gap: 12px; margin-top: 24px; justify-content: center; flex-wrap: wrap; }
+.panel {
+  width: 660px; max-width: 96vw;
+  background: var(--bg); border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: 3px 3px 0 rgba(0,0,0,.3), var(--bevel); overflow: hidden;
+}
+.panel-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; background: var(--topbar-bg); color: var(--topbar-fg);
+  border-bottom: 2px solid var(--topbar-bd); text-shadow: 1px 1px 0 rgba(0,0,0,.5);
+}
+.panel-header strong { font-size: 14px; letter-spacing: 2px; }
+.panel-header .sp { flex: 1; }
+.panel-body { padding: 18px 24px; }
+.icon-btn {
+  background: transparent; border: 2px solid transparent;
+  color: var(--topbar-fg); font-family: inherit; font-size: 16px;
+  width: 30px; height: 30px; cursor: pointer; border-radius: var(--r);
+  transition: background .12s;
+}
+.icon-btn:hover { background: rgba(0,0,0,.25); }
+#multiplayerScreen .panel { width: 900px; height: 70vh; min-height: 380px; display: flex; flex-direction: column; }
+#roomList {
+  flex: 1; overflow-y: auto; padding: 10px;
+  display: flex; flex-direction: column; gap: 8px; background: var(--bg2);
+}
+#roomList::-webkit-scrollbar { width: 12px; }
+#roomList::-webkit-scrollbar-track { background: var(--bg3); }
+#roomList::-webkit-scrollbar-thumb { background: var(--bd2); border: 2px solid var(--bg3); }
+.room-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 14px; background: var(--bg);
+  border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--bevel); transition: box-shadow .15s, border-color .15s;
+}
+.room-card:hover { border-color: var(--ac); box-shadow: var(--bevel), 0 0 0 2px rgba(61,82,31,.3); }
+.room-card.full { opacity: 0.65; }
+.room-icon {
+  width: 52px; height: 52px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--topbar-bg); color: #fff;
+  border: 2px solid var(--topbar-bd); border-radius: var(--r);
+  font-size: 24px; font-weight: bold;
+  text-shadow: 1px 1px 0 rgba(0,0,0,.5);
+}
+.room-info { flex: 1; min-width: 0; }
+.room-info .name {
+  color: var(--text); font-size: 15px; font-weight: bold;
+  letter-spacing: 1px; margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.room-info .meta {
+  color: var(--muted); font-size: 11.5px; letter-spacing: 1px;
+  font-family: monospace; display: flex; gap: 12px; flex-wrap: wrap;
+}
+.room-info .meta .players { color: var(--ac); font-weight: bold; }
+.room-info .meta .players.full { color: var(--dgr); }
+.room-actions { flex-shrink: 0; display: flex; gap: 8px; }
+.room-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--muted); font-size: 14px; letter-spacing: 2px;
+  gap: 10px; padding: 40px;
+}
+.room-empty .hint { font-size: 11.5px; opacity: 0.7; }
+.room-empty .cloud-icon { font-size: 48px; opacity: 0.4; margin-bottom: 10px; }
+#createRoomScreen .panel { width: 720px; max-height: 92vh; display: flex; flex-direction: column; }
+#createRoomScreen .panel-body { overflow-y: auto; }
+.form-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0; border-bottom: 1px dashed var(--bd);
+}
+.form-row:last-child { border-bottom: none; }
+.form-row > label {
+  width: 130px; flex-shrink: 0;
+  color: var(--text); font-size: 13.5px; letter-spacing: 1px; font-weight: bold;
+}
+.form-row input[type="text"] {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg2); color: var(--text);
+  font-family: inherit; font-size: 14px; letter-spacing: 1px;
+  border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--bevel-in); outline: none;
+}
+.form-row input[type="text"]:focus { border-color: var(--ac); }
+.form-row input::placeholder { color: var(--muted); opacity: 0.7; }
+.save-list {
+  flex: 1; overflow-y: auto; max-height: 240px;
+  border: 2px solid var(--bd2); border-radius: var(--r);
+  background: var(--bg2);
+}
+.save-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px dashed var(--bd);
+  cursor: pointer; transition: background .12s;
+}
+.save-card:last-child { border-bottom: none; }
+.save-card:hover { background: var(--bg3); }
+.save-card.selected { background: var(--acs); box-shadow: inset 3px 0 0 var(--ac); }
+.save-thumb {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border: 2px solid var(--bd2); border-radius: var(--r);
+  background: linear-gradient(180deg, #87ceeb 0%, #87ceeb 42%, #6fbe44 42%, #6fbe44 58%, #8b6b43 58%, #8b6b43 100%);
+}
+.save-info { flex: 1; min-width: 0; }
+.save-info .name { font-size: 13.5px; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.save-info .meta { font-size: 11px; color: var(--muted); font-family: monospace; }
+.btn-group { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+.option-btn {
+  padding: 8px 16px; color: var(--text);
+  font-family: inherit; font-size: 13px; letter-spacing: 1px;
+  background: var(--bg2); border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--bevel); cursor: pointer;
+}
+.option-btn:hover { background: var(--bg3); }
+.option-btn.active {
+  background: var(--topbar-bg); color: #fff;
+  text-shadow: 1px 1px 0 rgba(0,0,0,.4);
+  border-color: var(--topbar-bd);
+  box-shadow: var(--bevel), 0 0 0 2px rgba(61,82,31,.4);
+}
+.toggle-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 5px 14px 5px 5px;
+  background: var(--bg2); border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--bevel); cursor: pointer;
+  font-family: inherit; font-size: 13px; letter-spacing: 1px;
+  color: var(--text);
+}
+.toggle-btn .knob {
+  width: 20px; height: 20px; background: var(--bd2); border-radius: 0;
+  box-shadow: inset -1px -1px 0 rgba(0,0,0,.3), inset 1px 1px 0 rgba(255,255,255,.4);
+}
+.toggle-btn[data-value="on"] { background: var(--acs); border-color: var(--ac); }
+.toggle-btn[data-value="on"] .knob { background: var(--ac); }
+#settingsScreen .panel { width: 860px; height: 72vh; min-height: 420px; display: flex; flex-direction: column; }
+.settings-layout { flex: 1; display: flex; overflow: hidden; }
+.settings-tabs { width: 150px; flex-shrink: 0; background: var(--bg2); border-right: 2px solid var(--bd2); display: flex; flex-direction: column; padding: 8px 0; }
+.tab-btn {
+  padding: 12px 18px; color: var(--text);
+  font-family: inherit; font-size: 13.5px; letter-spacing: 1.5px;
+  text-align: left; background: transparent; border: none;
+  border-left: 4px solid transparent; cursor: pointer;
+}
+.tab-btn:hover { background: var(--bg3); }
+.tab-btn.active { background: var(--acs); border-left-color: var(--ac); color: var(--ac); font-weight: bold; }
+.settings-panels { flex: 1; overflow-y: auto; padding: 8px 22px; }
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+.setting-row { display: flex; align-items: center; gap: 14px; padding: 11px 0; border-bottom: 1px dashed var(--bd); }
+.setting-row:last-child { border-bottom: none; }
+.setting-row > label { width: 140px; flex-shrink: 0; font-size: 13.5px; letter-spacing: 1px; font-weight: bold; }
+.setting-row input[type="range"] {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 10px; background: var(--bg3);
+  border: 2px solid var(--bd2); border-radius: 0;
+  box-shadow: var(--bevel-in); outline: none; cursor: pointer;
+}
+.setting-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 22px; background: var(--ac);
+  border: 2px solid var(--topbar-bd); border-radius: var(--r);
+  cursor: pointer; box-shadow: var(--bevel);
+}
+.setting-row input[type="range"]::-moz-range-thumb {
+  width: 16px; height: 22px; background: var(--ac);
+  border: 2px solid var(--topbar-bd); border-radius: var(--r); cursor: pointer;
+}
+.setting-row .valBox { width: 90px; text-align: right; font-family: monospace; font-size: 13px; color: var(--ac); font-weight: bold; flex-shrink: 0; }
+.cycle-btn {
+  flex: 1; text-align: center; padding: 8px 16px; color: var(--text);
+  font-family: inherit; font-size: 13.5px; letter-spacing: 1px;
+  background: var(--bg2); border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--bevel); cursor: pointer;
+}
+.cycle-btn:hover { background: var(--bg3); }
+.toggle-settings-btn {
+  padding: 8px 20px; color: var(--text);
+  font-family: inherit; font-size: 13.5px; letter-spacing: 1px;
+  background: var(--bg2); border: 2px solid var(--bd2); border-radius: var(--r);
+  box-shadow: var(--bevel); cursor: pointer;
+}
+.toggle-settings-btn:hover { background: var(--bg3); }
+.toggle-settings-btn.on { background: var(--topbar-bg); border-color: var(--topbar-bd); color: #fff; }
+#inventoryScreen {
+  position: fixed; inset: 0; z-index: 42;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(0,0,0,.5);
+}
+#inventoryScreen.hidden { display: none; }
+#inventoryScreen .panel { width: 780px; max-width: 96vw; max-height: 88vh; display: flex; flex-direction: column; }
+#inventoryScreen .panel-body { padding: 14px; background: var(--bg2); overflow-y: auto; }
+.inv-section-title { font-size: 12px; color: var(--muted); letter-spacing: 2px; margin: 6px 4px 4px; font-weight: bold; }
+.inv-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; margin-bottom: 10px; }
+.inv-cell {
+  aspect-ratio: 1; position: relative;
+  background: var(--bg3); border: 2px solid var(--bd2); border-radius: 0;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.inv-cell:hover { background: var(--acs); box-shadow: inset 0 0 0 2px var(--ac); }
+.inv-cell.selected { background: var(--acs); box-shadow: inset 0 0 0 2px var(--ac); }
+.inv-cell canvas { width: 80%; height: 80%; image-rendering: pixelated; pointer-events: none; }
+.inv-cell .lbl {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  font-size: 9px; color: var(--muted); text-align: center;
+  background: rgba(255,255,255,.75); padding: 1px 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  pointer-events: none;
+}
+.inv-hint { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 10px; letter-spacing: 1px; }
+#deathScreen {
+  position: fixed; inset: 0; z-index: 45;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(120, 20, 20, .55); pointer-events: none;
+}
+#deathScreen.hidden { display: none; }
+#deathScreen h2 { color: #fff; font-size: 38px; letter-spacing: 8px; text-shadow: 3px 3px 0 #4a0000, 0 0 24px rgba(255,80,80,.7); margin-bottom: 10px; }
+#deathScreen p { color: #ffe8e8; font-size: 14px; letter-spacing: 2px; }
+#loadingScreen {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #1a2a3a 0%, #0a1520 100%);
+  color: #fff;
+}
+#loadingScreen.hidden { display: none; }
+#loadingScreen .title {
+  font-size: 28px; letter-spacing: 8px;
+  text-shadow: 3px 3px 0 rgba(0,0,0,.5);
+  margin-bottom: 30px;
+}
+#loadingScreen .bar-outer {
+  width: 320px; height: 16px;
+  background: rgba(0,0,0,.4);
+  border: 2px solid #4a4a3a;
+  position: relative; overflow: hidden;
+}
+#loadingScreen .bar-fill {
+  height: 100%; background: linear-gradient(90deg, #8fd94f, #4a9e3a);
+  transition: width .15s; width: 0%;
+}
+#loadingScreen .status {
+  margin-top: 16px; font-size: 13px;
+  letter-spacing: 3px; color: #8fd94f;
+  font-family: monospace;
+}
+#loadingScreen .pixel-grid {
+  margin-top: 28px;
+  display: grid; grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+#loadingScreen .pixel-grid span {
+  width: 12px; height: 12px;
+  background: rgba(143,217,79,.2);
+  animation: pxPulse 1.4s ease-in-out infinite;
+}
+#loadingScreen .pixel-grid span:nth-child(1) { animation-delay: 0.0s; }
+#loadingScreen .pixel-grid span:nth-child(2) { animation-delay: 0.1s; }
+#loadingScreen .pixel-grid span:nth-child(3) { animation-delay: 0.2s; }
+#loadingScreen .pixel-grid span:nth-child(4) { animation-delay: 0.3s; }
+#loadingScreen .pixel-grid span:nth-child(5) { animation-delay: 0.4s; }
+#loadingScreen .pixel-grid span:nth-child(6) { animation-delay: 0.5s; }
+#loadingScreen .pixel-grid span:nth-child(7) { animation-delay: 0.6s; }
+#loadingScreen .pixel-grid span:nth-child(8) { animation-delay: 0.7s; }
+@keyframes pxPulse {
+  0%, 100% { background: rgba(143,217,79,.15); }
+  50% { background: rgba(143,217,79,.8); }
+}
+#supabaseStatus {
+  position: fixed; bottom: 8px; right: 12px; z-index: 100;
+  padding: 4px 10px;
+  font-size: 11px; letter-spacing: 1px;
+  font-family: monospace;
+  background: rgba(0,0,0,.6); color: #8fd94f;
+  border-radius: 2px;
+  pointer-events: none;
+  display: none;
+}
+#supabaseStatus.show { display: block; }
+@media (max-width: 640px) {
+  .screen-title { font-size: 30px; letter-spacing: 6px; }
+  .mc-btn { min-width: 220px; font-size: 14px; padding: 12px 24px; }
+  .form-row { flex-wrap: wrap; }
+  .form-row > label { width: 100%; }
+  .settings-layout { flex-direction: column; }
+  .settings-tabs { width: 100%; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 2px solid var(--bd2); }
+  .tab-btn { border-left: none; border-bottom: 4px solid transparent; }
+  .tab-btn.active { border-left-color: transparent; border-bottom-color: var(--ac); }
+  #chatBox, #chatInput { width: calc(100vw - 32px); max-width: none; }
+  #tips { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="supabaseStatus"></div>
+
+<div id="loadingScreen" class="hidden">
+  <div class="title">生成世界</div>
+  <div class="bar-outer">
+    <div class="bar-fill" id="loadingBar"></div>
+  </div>
+  <div class="status" id="loadingStatus">正在生成区块...</div>
+  <div class="pixel-grid">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+</div>
+
+<div class="bg-decor" id="bgDecor">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="grid-bg"></div>
+  <canvas id="particles"></canvas>
+</div>
+
+<div id="hudTop">
+  <div class="hud-card" id="hudCoord">X 0 · Y 0 · Z 0</div>
+  <div class="hud-card" id="hudBiome"><span class="dot" id="hudBiomeDot"></span><span id="hudBiomeName">平原</span></div>
+  <div class="hud-card mode" id="hudMode">模式：创造</div>
+  <div class="hud-card online" id="hudOnline" style="display:none;">联机 · 房间 --</div>
+  <div class="hud-card" id="hudFps">FPS 0</div>
+</div>
+
+<div id="playerList"></div>
+<div id="crosshair"></div>
+<div id="healthBar"></div>
+<div id="hotbar"></div>
+
+<div id="chunkLoading">
+  <div class="spinner"></div>
+  <div>区块加载中</div>
+  <div class="bar"><div class="bar-inner" id="chunkLoadingBar"></div></div>
+  <div id="chunkLoadingCount">0 / 0</div>
+</div>
+
+<div id="tips">
+  <b>WASD</b> 移动 &nbsp;·&nbsp; <b>空格</b> 跳跃 &nbsp;·&nbsp; <b>Shift</b> 疾跑<br>
+  <b>左键</b> 挖掘 &nbsp;·&nbsp; <b>右键</b> 放置 &nbsp;·&nbsp; <b>E</b> 物品栏<br>
+  <b>M</b> 切换模式 &nbsp;·&nbsp; <b>双击空格</b> 飞行 &nbsp;·&nbsp; <b>T</b> 聊天 &nbsp;·&nbsp; <b>/</b> 指令 &nbsp;·&nbsp; <b>ESC</b> 菜单
+</div>
+
+<div id="chatBox"></div>
+<div id="chatInput">
+  <span class="prefix" id="chatPrefix">></span><input type="text" id="chatInputField" maxlength="256" autocomplete="off">
+</div>
+
+<div id="toast"></div>
+
+<div id="deathScreen" class="hidden">
+  <h2>你死了！</h2>
+  <p>正在重生…</p>
+</div>
+
+<div id="mainMenuScreen" class="screen">
+  <div class="screen-title">我的世界</div>
+  <div class="screen-sub">3D 体素沙盒 · 无限地形</div>
+  <div class="menu-buttons">
+    <button class="mc-btn primary" id="singlePlayerBtn">单人游戏</button>
+    <button class="mc-btn" id="multiPlayerBtn">多人游戏</button>
+    <button class="mc-btn" id="optionsBtn">选项...</button>
+    <button class="mc-btn danger" id="quitGameBtn">退出游戏</button>
+  </div>
+</div>
+
+<div id="multiplayerScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header">
+      <strong>多人游戏 · 房间列表</strong>
+      <span class="sp"></span>
+      <span style="font-size:11px; letter-spacing:1px; opacity:.8;" id="roomServerStatus">连接中...</span>
+      <button class="icon-btn" id="refreshRoomsBtn" title="刷新">🔄</button>
+      <button class="icon-btn" id="multiBackBtn" title="返回">🧰</button>
+    </div>
+    <div id="roomList"></div>
+  </div>
+  <div class="btn-row">
+    <button class="mc-btn primary" id="createRoomBtn">创建房间</button>
+  </div>
+</div>
+
+<div id="createRoomScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header">
+      <strong>创建房间</strong><span class="sp"></span>
+      <button class="icon-btn" id="createRoomBackBtn" title="返回">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="form-row">
+        <label>房间名称</label>
+        <input type="text" id="roomNameInput" value="我的房间" maxlength="32">
+      </div>
+      <div class="form-row">
+        <label>房主昵称</label>
+        <input type="text" id="roomHostInput" value="房主" maxlength="16">
+      </div>
+      <div class="form-row">
+        <label>选择存档</label>
+        <div style="flex:1;font-size:12.5px;color:var(--muted);letter-spacing:1px;">
+          ↓ 从你的单人存档中选择一个作为房间世界
+        </div>
+      </div>
+      <div class="save-list" id="saveListForRoom"></div>
+      <div class="form-row" style="margin-top:14px;">
+        <label>最大玩家</label>
+        <div class="btn-group" id="maxPlayersGroup">
+          <button class="option-btn" data-value="2">2 人</button>
+          <button class="option-btn" data-value="4">4 人</button>
+          <button class="option-btn" data-value="6">6 人</button>
+          <button class="option-btn" data-value="8">8 人</button>
+          <button class="option-btn active" data-value="10">10 人</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>房间可见性</label>
+        <div class="btn-group" id="visibilityGroup">
+          <button class="option-btn active" data-value="public">公开</button>
+          <button class="option-btn" data-value="private">私有</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>允许作弊</label>
+        <button class="toggle-btn" id="roomCheatToggle" data-value="on">
+          <span class="knob"></span><span class="label">开启</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="mc-btn primary" id="createRoomConfirmBtn">创建并进入</button>
+    <button class="mc-btn" id="createRoomCancelBtn">取消</button>
+  </div>
+</div>
+
+<div id="worldSelectScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header">
+      <strong>选择世界</strong><span class="sp"></span>
+      <button class="icon-btn" id="worldBackBtn" title="返回">🧰</button>
+    </div>
+    <div id="worldList"></div>
+  </div>
+  <div class="btn-row"><button class="mc-btn primary" id="createWorldBtn">创建新世界</button></div>
+</div>
+
+<div id="createWorldScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header">
+      <strong>创建新世界</strong><span class="sp"></span>
+      <button class="icon-btn" id="createHeaderBack" title="返回">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="form-row"><label>世界名称</label><input type="text" id="newWorldName" value="新的世界" maxlength="32"></div>
+      <div class="form-row"><label>世界种子</label><input type="text" id="newWorldSeed" placeholder="留空则随机生成" maxlength="20"></div>
+      <div class="form-row">
+        <label>游戏模式</label>
+        <div class="btn-group" id="createModeGroup">
+          <button class="option-btn active" data-value="survival">生存</button>
+          <button class="option-btn" data-value="creative">创造</button>
+          <button class="option-btn" data-value="hardcore">极限</button>
+          <button class="option-btn" data-value="adventure">冒险</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>难度</label>
+        <div class="btn-group" id="createDifficultyGroup">
+          <button class="option-btn" data-value="peaceful">和平</button>
+          <button class="option-btn" data-value="easy">简单</button>
+          <button class="option-btn active" data-value="normal">普通</button>
+          <button class="option-btn" data-value="hard">困难</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>世界类型</label>
+        <div class="btn-group" id="createTypeGroup">
+          <button class="option-btn active" data-value="default">默认</button>
+          <button class="option-btn" data-value="flat">超平坦</button>
+          <button class="option-btn" data-value="largeBiomes">大型生物群系</button>
+          <button class="option-btn" data-value="amplified">放大化</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>允许作弊</label>
+        <button class="toggle-btn" id="cheatToggle" data-value="off"><span class="knob"></span><span class="label">关闭</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="mc-btn primary" id="createConfirmBtn">创建世界</button>
+    <button class="mc-btn" id="createCancelBtn">取消</button>
+  </div>
+</div>
+
+<div id="settingsScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header">
+      <strong>选项</strong><span class="sp"></span>
+      <button class="icon-btn" id="settingsCloseBtn" title="关闭">✕</button>
+    </div>
+    <div class="settings-layout">
+      <div class="settings-tabs" id="settingsTabs"></div>
+      <div class="settings-panels" id="settingsPanels"></div>
+    </div>
+  </div>
+  <div class="btn-row"><button class="mc-btn primary" id="settingsDoneBtn">完成</button></div>
+</div>
+
+<div id="pauseScreen" class="screen hidden">
+  <div class="screen-title">游戏已暂停</div>
+  <div class="menu-buttons">
+    <button class="mc-btn primary" id="resumeBtn">返回游戏</button>
+    <button class="mc-btn" id="pauseOptionsBtn">选项...</button>
+    <button class="mc-btn danger" id="saveAndQuitBtn">保存并退出</button>
+  </div>
+</div>
+
+<div id="inventoryScreen" class="hidden">
+  <div class="panel">
+    <div class="panel-header">
+      <strong>物品栏</strong><span class="sp"></span>
+      <button class="icon-btn" id="invCloseBtn" title="关闭">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="inv-section-title">创造模式物品栏</div>
+      <div class="inv-grid" id="invGridCreative"></div>
+      <div class="inv-section-title">快捷栏</div>
+      <div class="inv-grid" id="invGridHotbar"></div>
+      <div class="inv-hint">左键点击方块 → 放到当前快捷栏位置 · 数字键 1-9 切换位置</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ═══════════════════════════════════════════════════
+     工具函数
+     ═══════════════════════════════════════════════════ */
+  function $(id) { return document.getElementById(id); }
+  var storage = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    getJSON: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    setJSON: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var toastTimer = null;
+  function toast(msg) {
+    var el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 1600);
+  }
+
+  /* ═══════════════════════════════════════════════════
+     Supabase 客户端
+     ═══════════════════════════════════════════════════ */
+  // ★ 已内置您的 Supabase 项目凭据
+  var SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
+
+  var sbClient = null;
+  var supabaseReady = false;
+
+  function initSupabase() {
+    if (window.supabase && window.supabase.createClient) {
+      try {
+        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        supabaseReady = true;
+        var st = $('supabaseStatus');
+        st.textContent = '☁ Supabase 已连接';
+        st.classList.add('show');
+        setTimeout(function () { st.classList.remove('show'); }, 3000);
+        return true;
+      } catch (e) {
+        console.error('Supabase 初始化失败', e);
+        toast('Supabase 初始化失败');
+        return false;
+      }
+    }
+    return false;
+  }
+  initSupabase();
+
+  /* ═══════════════════════════════════════════════════
+     状态
+     ═══════════════════════════════════════════════════ */
+  var appState = 'mainMenu';
+  var prevScreen = 'mainMenu';
+  var gameMode = 'creative';
+  var difficulty = 'normal';
+  var worldType = 'default';
+  var pointerLocked = false;
+  var currentWorld = null;
+  var currentRoom = null;
+  var isMultiplayer = false;
+  var flying = false;
+  var lastSpaceTap = 0;
+  var inventoryOpen = false;
+  var chatOpen = false;
+  var myPlayerName = storage.get('mc3d_player_name', '玩家' + Math.floor(Math.random()*1000));
+
+  /* ═══════════════════════════════════════════════════
+     设置
+     ═══════════════════════════════════════════════════ */
+  var DEFAULT_SETTINGS = {
+    fov: 75, brightness: 50, renderDistance: 4, maxFramerate: 60,
+    viewBobbing: 1, guiScale: 0, fullscreen: 0, vsync: 1,
+    masterVolume: 100, musicVolume: 100, blocksVolume: 100,
+    sensitivity: 2.2, invertMouse: 0, autoJump: 0, language: 0
+  };
+  var settings = Object.assign({}, DEFAULT_SETTINGS);
+  (function loadSettings() {
+    var s = storage.getJSON('mc3d_settings', null);
+    if (s) Object.assign(settings, s);
+  })();
+  function saveSettings() { storage.setJSON('mc3d_settings', settings); }
+
+  var worlds = storage.getJSON('mc3d_worlds', []);
+  if (!Array.isArray(worlds)) worlds = [];
+  function saveWorlds() { storage.setJSON('mc3d_worlds', worlds); }
+
+  /* ═══════════════════════════════════════════════════
+     常量
+     ═══════════════════════════════════════════════════ */
+  var CHUNK_SIZE = 16;
+  var WORLD_HEIGHT = 56;
+  var LOAD_RADIUS = Math.max(1, Math.min(16, Math.round(settings.renderDistance / 2)));
+  var EYE_HEIGHT = 1.62;
+  var PLAYER_HALF = 0.3;
+  var PLAYER_HEIGHT = 1.8;
+  var GRAVITY = 30;
+  var JUMP_VELOCITY = 9.2;
+  var WALK_SPEED = 4.5;
+  var RUN_SPEED = 7.5;
+  var FLY_SPEED = 11;
+  var REACH = 6;
+  var SWING_DURATION = 0.30;
+  var MAX_CHUNK_REBUILDS_PER_FRAME = 3;
+
+  var BLOCKS = {
+    1:  { name: '草方块',  top: 0,  side: 1,  bottom: 2  },
+    2:  { name: '泥土',    top: 2,  side: 2,  bottom: 2  },
+    3:  { name: '石头',    top: 3,  side: 3,  bottom: 3  },
+    4:  { name: '橡木',    top: 5,  side: 4,  bottom: 5  },
+    5:  { name: '橡树叶',  top: 6,  side: 6,  bottom: 6  },
+    6:  { name: '沙子',    top: 7,  side: 7,  bottom: 7  },
+    7:  { name: '基岩',    top: 8,  side: 8,  bottom: 8  },
+    8:  { name: '木板',    top: 9,  side: 9,  bottom: 9  },
+    9:  { name: '砖块',    top: 10, side: 10, bottom: 10 },
+    10: { name: '雪块',    top: 11, side: 12, bottom: 2  },
+    11: { name: '砂岩',    top: 13, side: 14, bottom: 13 },
+    12: { name: '仙人掌',  top: 16, side: 15, bottom: 16 },
+    13: { name: '云杉木',  top: 18, side: 17, bottom: 18 },
+    14: { name: '云杉叶',  top: 19, side: 19, bottom: 19 },
+    15: { name: '冰',      top: 20, side: 20, bottom: 20 }
+  };
+  var ALL_BLOCK_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+
+  /* ═══════════════════════════════════════════════════
+     纹理图集
+     ═══════════════════════════════════════════════════ */
+  var ATLAS_COLS = 8, ATLAS_ROWS = 4, TILE_PX = 16;
+  var atlasCanvas = document.createElement('canvas');
+  atlasCanvas.width = ATLAS_COLS * TILE_PX;
+  atlasCanvas.height = ATLAS_ROWS * TILE_PX;
+  var atlasCtx = atlasCanvas.getContext('2d');
+  function clamp255(v) { return v < 0 ? 0 : (v > 255 ? 255 : v | 0); }
+  function noiseFill(g, r, gr, b, v) {
+    for (var y = 0; y < TILE_PX; y++) {
+      for (var x = 0; x < TILE_PX; x++) {
+        var d = (Math.random() - 0.5) * v;
+        g.fillStyle = 'rgb(' + clamp255(r + d) + ',' + clamp255(gr + d) + ',' + clamp255(b + d) + ')';
+        g.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+  function pxf(g, x, y, w, h, c) { g.fillStyle = c; g.fillRect(x, y, w, h); }
+  function drawTile(ti, fn) {
+    var col = ti % ATLAS_COLS, row = Math.floor(ti / ATLAS_COLS);
+    atlasCtx.save();
+    atlasCtx.translate(col * TILE_PX, row * TILE_PX);
+    atlasCtx.beginPath(); atlasCtx.rect(0, 0, TILE_PX, TILE_PX); atlasCtx.clip();
+    fn(atlasCtx);
+    atlasCtx.restore();
+  }
+  (function buildAtlas() {
+    drawTile(0, function (g) {
+      noiseFill(g, 106, 170, 64, 34);
+      for (var i = 0; i < 14; i++) pxf(g, (Math.random()*15)|0, (Math.random()*15)|0, 1, 1, 'rgba(60,120,35,0.55)');
+      for (var j = 0; j < 8; j++) pxf(g, (Math.random()*15)|0, (Math.random()*15)|0, 1, 1, 'rgba(170,220,110,0.4)');
+    });
+    drawTile(1, function (g) {
+      noiseFill(g, 134, 96, 67, 32);
+      for (var x = 0; x < TILE_PX; x++) {
+        var h = 3 + ((Math.random() * 3) | 0);
+        for (var y = 0; y < h; y++) {
+          var d = (Math.random() - 0.5) * 34;
+          g.fillStyle = 'rgb(' + clamp255(106+d) + ',' + clamp255(170+d) + ',' + clamp255(64+d) + ')';
+          g.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    drawTile(2, function (g) {
+      noiseFill(g, 134, 96, 67, 34);
+      for (var i = 0; i < 12; i++) pxf(g, (Math.random()*15)|0, (Math.random()*15)|0, 1, 1, 'rgba(95,66,44,0.5)');
+    });
+    drawTile(3, function (g) {
+      noiseFill(g, 128, 128, 128, 26);
+      for (var i = 0; i < 10; i++) pxf(g, (Math.random()*14)|0, (Math.random()*14)|0, 2, 1, 'rgba(90,90,90,0.55)');
+      for (var j = 0; j < 6; j++) pxf(g, (Math.random()*15)|0, (Math.random()*15)|0, 1, 1, 'rgba(175,175,175,0.5)');
+    });
+    drawTile(4, function (g) {
+      noiseFill(g, 160, 120, 75, 18);
+      for (var i = 0; i < 5; i++) {
+        var x = 1 + ((Math.random() * 14) | 0);
+        pxf(g, x, 0, 1 + ((Math.random()*2)|0), 16, 'rgba(112,82,48,0.65)');
+      }
+      pxf(g, 0, 0, 16, 1, 'rgba(120,88,52,0.5)');
+      pxf(g, 0, 15, 16, 1, 'rgba(120,88,52,0.5)');
+    });
+    drawTile(5, function (g) {
+      noiseFill(g, 190, 150, 100, 14);
+      g.strokeStyle = 'rgba(130,96,56,0.75)'; g.lineWidth = 1;
+      for (var r = 2; r <= 7; r += 2) { g.beginPath(); g.arc(8, 8, r, 0, Math.PI * 2); g.stroke(); }
+      pxf(g, 7, 7, 2, 2, 'rgba(130,96,56,0.85)');
+    });
+    drawTile(6, function (g) {
+      noiseFill(g, 70, 138, 55, 46);
+      for (var i = 0; i < 22; i++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(30,72,24,0.55)');
+      for (var j = 0; j < 12; j++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(130,200,90,0.45)');
+    });
+    drawTile(7, function (g) {
+      noiseFill(g, 220, 205, 140, 22);
+      for (var i = 0; i < 14; i++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(190,172,110,0.5)');
+    });
+    drawTile(8, function (g) {
+      noiseFill(g, 78, 78, 78, 40);
+      for (var i = 0; i < 14; i++) pxf(g, (Math.random()*13)|0, (Math.random()*13)|0, 3, 2, 'rgba(30,30,30,0.8)');
+      for (var j = 0; j < 10; j++) pxf(g, (Math.random()*14)|0, (Math.random()*14)|0, 2, 1, 'rgba(140,140,140,0.4)');
+    });
+    drawTile(9, function (g) {
+      noiseFill(g, 180, 140, 85, 16);
+      pxf(g, 0, 5, 16, 1, 'rgba(120,88,50,0.85)');
+      pxf(g, 0, 11, 16, 1, 'rgba(120,88,50,0.85)');
+      pxf(g, 0, 0, 16, 1, 'rgba(210,175,120,0.5)');
+      pxf(g, 4, 0, 1, 5, 'rgba(120,88,50,0.6)');
+      pxf(g, 11, 6, 1, 5, 'rgba(120,88,50,0.6)');
+      pxf(g, 7, 12, 1, 4, 'rgba(120,88,50,0.6)');
+    });
+    drawTile(10, function (g) {
+      noiseFill(g, 150, 62, 46, 22);
+      var m = 'rgba(196,186,176,0.9)';
+      pxf(g, 0, 0, 16, 1, m); pxf(g, 0, 7, 16, 1, m); pxf(g, 0, 15, 16, 1, m);
+      pxf(g, 0, 1, 1, 6, m); pxf(g, 8, 1, 1, 6, m);
+      pxf(g, 4, 8, 1, 7, m); pxf(g, 12, 8, 1, 7, m);
+    });
+    drawTile(11, function (g) {
+      noiseFill(g, 245, 248, 252, 12);
+      for (var i = 0; i < 10; i++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(200,215,235,0.55)');
+      for (var j = 0; j < 6; j++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(255,255,255,0.9)');
+    });
+    drawTile(12, function (g) {
+      noiseFill(g, 134, 96, 67, 30);
+      for (var x = 0; x < TILE_PX; x++) {
+        var h = 4 + ((Math.random() * 3) | 0);
+        for (var y = 0; y < h; y++) {
+          var d = (Math.random() - 0.5) * 12;
+          g.fillStyle = 'rgb(' + clamp255(245+d) + ',' + clamp255(248+d) + ',' + clamp255(252+d) + ')';
+          g.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    drawTile(13, function (g) {
+      noiseFill(g, 220, 205, 155, 16);
+      for (var i = 0; i < 8; i++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(190,175,125,0.55)');
+    });
+    drawTile(14, function (g) {
+      noiseFill(g, 214, 198, 148, 14);
+      for (var y = 2; y < 16; y += 4) pxf(g, 0, y, 16, 1, 'rgba(178,162,112,0.55)');
+      for (var i = 0; i < 10; i++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(190,175,125,0.4)');
+    });
+    drawTile(15, function (g) {
+      noiseFill(g, 60, 128, 55, 22);
+      pxf(g, 1, 0, 1, 16, 'rgba(38,92,36,0.8)');
+      pxf(g, 14, 0, 1, 16, 'rgba(38,92,36,0.8)');
+      for (var i = 0; i < 12; i++) {
+        var y = (Math.random() * 15) | 0;
+        var x = 3 + ((Math.random() * 10) | 0);
+        pxf(g, x, y, 1, 1, 'rgba(230,240,200,0.9)');
+      }
+    });
+    drawTile(16, function (g) {
+      noiseFill(g, 68, 140, 60, 20);
+      g.strokeStyle = 'rgba(38,92,36,0.85)'; g.lineWidth = 1;
+      g.strokeRect(2.5, 2.5, 11, 11);
+      pxf(g, 7, 7, 2, 2, 'rgba(38,92,36,0.8)');
+    });
+    drawTile(17, function (g) {
+      noiseFill(g, 96, 68, 40, 18);
+      for (var i = 0; i < 6; i++) {
+        var x = ((Math.random() * 15) | 0);
+        pxf(g, x, 0, 1 + ((Math.random()*2)|0), 16, 'rgba(60,42,24,0.6)');
+      }
+      for (var j = 0; j < 10; j++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(130,95,58,0.45)');
+    });
+    drawTile(18, function (g) {
+      noiseFill(g, 118, 84, 50, 16);
+      g.strokeStyle = 'rgba(72,50,28,0.8)'; g.lineWidth = 1;
+      for (var r = 2; r <= 7; r += 2) { g.beginPath(); g.arc(8, 8, r, 0, Math.PI * 2); g.stroke(); }
+      pxf(g, 7, 7, 2, 2, 'rgba(72,50,28,0.9)');
+    });
+    drawTile(19, function (g) {
+      noiseFill(g, 42, 96, 52, 40);
+      for (var i = 0; i < 24; i++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(22,52,30,0.65)');
+      for (var j = 0; j < 10; j++) pxf(g, (Math.random()*16)|0, (Math.random()*16)|0, 1, 1, 'rgba(80,150,90,0.5)');
+    });
+    drawTile(20, function (g) {
+      noiseFill(g, 168, 212, 240, 18);
+      for (var i = 0; i < 10; i++) pxf(g, (Math.random()*14)|0, (Math.random()*14)|0, 1, 3, 'rgba(220,242,255,0.7)');
+      for (var j = 0; j < 6; j++) pxf(g, (Math.random()*14)|0, (Math.random()*14)|0, 3, 1, 'rgba(120,175,215,0.6)');
+    });
+  })();
+
+  /* ═══════════════════════════════════════════════════
+     噪声
+     ═══════════════════════════════════════════════════ */
+  var WORLD_SEED = 12345678;
+  function seedHash(x, y, salt) {
+    var h = Math.imul(x | 0, 0x27d4eb2d);
+    h ^= Math.imul(y | 0, 0x165667b1);
+    h ^= Math.imul((WORLD_SEED + (salt | 0)) | 0, 0x9e3779b9);
+    h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+    h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  }
+  function smoothNoise(x, y, salt) {
+    var x0 = Math.floor(x), y0 = Math.floor(y);
+    var fx = x - x0, fy = y - y0;
+    var sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    var n00 = seedHash(x0,     y0,     salt);
+    var n10 = seedHash(x0 + 1, y0,     salt);
+    var n01 = seedHash(x0,     y0 + 1, salt);
+    var n11 = seedHash(x0 + 1, y0 + 1, salt);
+    var a = n00 * (1 - sx) + n10 * sx;
+    var b = n01 * (1 - sx) + n11 * sx;
+    return a * (1 - sy) + b * sy;
+  }
+  function fbm(x, y, salt) {
+    return smoothNoise(x,     y,     salt)     * 0.500 +
+           smoothNoise(x * 2, y * 2, salt + 1) * 0.250 +
+           smoothNoise(x * 4, y * 4, salt + 2) * 0.125 +
+           smoothNoise(x * 8, y * 8, salt + 3) * 0.0625;
+  }
+
+  var BIOME_PLAINS = 0, BIOME_FOREST = 1, BIOME_DESERT = 2, BIOME_SNOW = 3, BIOME_MOUNTAIN = 4;
+  var BIOME_INFO = [
+    { name: '平原', color: '#8fd94f' },
+    { name: '森林', color: '#3f9e3a' },
+    { name: '沙漠', color: '#e8d47a' },
+    { name: '雪原', color: '#bfe6ff' },
+    { name: '山地', color: '#b8b8b8' }
+  ];
+
+  function terrainParams(wx, wz) {
+    var biomeScale = (worldType === 'largeBiomes') ? 0.25 : 1;
+    var heightMul = (worldType === 'amplified') ? 2.0 : 1.0;
+    var baseNoise = fbm(wx * 0.055 * biomeScale, wz * 0.055 * biomeScale, 10);
+    var mFactor = fbm(wx * 0.035 * biomeScale + 200, wz * 0.035 * biomeScale + 200, 110);
+    var temp  = fbm(wx * 0.013 * biomeScale + 700, wz * 0.013 * biomeScale + 700, 210);
+    var humid = fbm(wx * 0.016 * biomeScale + 300, wz * 0.016 * biomeScale + 300, 310);
+    var baseHeight = 13 + baseNoise * 13 * heightMul;
+    var mountainBoost = 0;
+    if (mFactor > 0.54) mountainBoost = (mFactor - 0.54) * 95 * heightMul;
+    var h = Math.floor(baseHeight + mountainBoost);
+    if (h < 5) h = 5;
+    if (h > WORLD_HEIGHT - 6) h = WORLD_HEIGHT - 6;
+    var biome;
+    if (mFactor > 0.60 && h > 22) biome = BIOME_MOUNTAIN;
+    else if (temp > 0.53 && humid < 0.45) biome = BIOME_DESERT;
+    else if (temp < 0.40) biome = BIOME_SNOW;
+    else if (humid > 0.53) biome = BIOME_FOREST;
+    else biome = BIOME_PLAINS;
+    return { height: h, biome: biome };
+  }
+
+  /* ═══════════════════════════════════════════════════
+     区块数据
+     ═══════════════════════════════════════════════════ */
+  var chunkData = new Map();
+  var chunkMeshes = new Map();
+  var dirtyChunks = new Set();
+  var loadingIndicators = new Map();
+
+  function chunkKey(cx, cz) { return cx + ',' + cz; }
+  function getBlock(wx, wy, wz) {
+    if (wy < 0 || wy >= WORLD_HEIGHT) return 0;
+    var cx = Math.floor(wx / CHUNK_SIZE), cz = Math.floor(wz / CHUNK_SIZE);
+    var data = chunkData.get(chunkKey(cx, cz));
+    if (!data) return 0;
+    var lx = wx - cx * CHUNK_SIZE, lz = wz - cz * CHUNK_SIZE;
+    return data[(wy * CHUNK_SIZE + lz) * CHUNK_SIZE + lx];
+  }
+  function setBlock(wx, wy, wz, v) {
+    if (wy < 0 || wy >= WORLD_HEIGHT) return;
+    var cx = Math.floor(wx / CHUNK_SIZE), cz = Math.floor(wz / CHUNK_SIZE);
+    var data = chunkData.get(chunkKey(cx, cz));
+    if (!data) return;
+    var lx = wx - cx * CHUNK_SIZE, lz = wz - cz * CHUNK_SIZE;
+    data[(wy * CHUNK_SIZE + lz) * CHUNK_SIZE + lx] = v;
+  }
+  function isSolid(wx, wy, wz) {
+    if (wy < 0) return true;
+    if (wy >= WORLD_HEIGHT) return false;
+    return getBlock(wx, wy, wz) !== 0;
+  }
+  function isOccluder(wx, wy, wz) {
+    if (wy < 0 || wy >= WORLD_HEIGHT) return false;
+    return getBlock(wx, wy, wz) !== 0;
+  }
+
+  function generateChunkData(cx, cz) {
+    var data = new Uint8Array(CHUNK_SIZE * WORLD_HEIGHT * CHUNK_SIZE);
+    var baseX = cx * CHUNK_SIZE, baseZ = cz * CHUNK_SIZE;
+    if (worldType === 'flat') {
+      for (var lz = 0; lz < CHUNK_SIZE; lz++) {
+        for (var lx = 0; lx < CHUNK_SIZE; lx++) {
+          data[(0 * CHUNK_SIZE + lz) * CHUNK_SIZE + lx] = 7;
+          data[(1 * CHUNK_SIZE + lz) * CHUNK_SIZE + lx] = 2;
+          data[(2 * CHUNK_SIZE + lz) * CHUNK_SIZE + lx] = 2;
+          data[(3 * CHUNK_SIZE + lz) * CHUNK_SIZE + lx] = 1;
+        }
+      }
+      return data;
+    }
+    for (var z = 0; z < CHUNK_SIZE; z++) {
+      for (var x = 0; x < CHUNK_SIZE; x++) {
+        var wx = baseX + x, wz = baseZ + z;
+        var p = terrainParams(wx, wz);
+        var h = p.height, biome = p.biome;
+        var lowland = h <= 12;
+        for (var y = 0; y <= h; y++) {
+          var b;
+          if (y === 0) b = 7;
+          else if (y < h - 3) b = (biome === BIOME_DESERT) ? 11 : 3;
+          else if (y < h) {
+            switch (biome) {
+              case BIOME_DESERT: b = 6; break;
+              case BIOME_SNOW: b = 2; break;
+              case BIOME_MOUNTAIN: b = 3; break;
+              default: b = 2;
+            }
+          } else {
+            if (lowland) b = (biome === BIOME_SNOW) ? 10 : 6;
+            else {
+              switch (biome) {
+                case BIOME_DESERT: b = 6; break;
+                case BIOME_SNOW: b = 10; break;
+                case BIOME_MOUNTAIN:
+                  if (h > 28) b = 10;
+                  else if (h > 22) b = 3;
+                  else b = 1;
+                  break;
+                default: b = 1;
+              }
+            }
+          }
+          if (b !== 0) data[(y * CHUNK_SIZE + z) * CHUNK_SIZE + x] = b;
+        }
+      }
+    }
+    var PAD = 4;
+    for (var wz2 = baseZ - PAD; wz2 < baseZ + CHUNK_SIZE + PAD; wz2++) {
+      for (var wx2 = baseX - PAD; wx2 < baseX + CHUNK_SIZE + PAD; wx2++) {
+        tryDecorate(wx2, wz2, data, cx, cz);
+      }
+    }
+    return data;
+  }
+
+  function hasTreeRootAt(wx, wz) {
+    var p = terrainParams(wx, wz);
+    if (p.height <= 12) return false;
+    var r = seedHash(wx, wz, 500);
+    switch (p.biome) {
+      case BIOME_PLAINS: return r < 0.010;
+      case BIOME_FOREST: return r < 0.090;
+      case BIOME_DESERT: return r < 0.022;
+      case BIOME_SNOW: return r < 0.045;
+      case BIOME_MOUNTAIN: return (p.height < 30 && r < 0.018);
+    }
+    return false;
+  }
+  function hasEarlierNeighborRoot(wx, wz) {
+    for (var dz = -1; dz <= 1; dz++) {
+      for (var dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dz === 0) continue;
+        if (dx < 0 || (dx === 0 && dz < 0)) {
+          if (hasTreeRootAt(wx + dx, wz + dz)) return true;
+        }
+      }
+    }
+    return false;
+  }
+  function tryDecorate(wx, wz, data, cx, cz) {
+    if (!hasTreeRootAt(wx, wz)) return;
+    if (hasEarlierNeighborRoot(wx, wz)) return;
+    var p = terrainParams(wx, wz);
+    var groundY = p.height;
+    if (p.biome === BIOME_DESERT) placeCactus(wx, groundY, wz, data, cx, cz);
+    else if (p.biome === BIOME_SNOW || p.biome === BIOME_MOUNTAIN) placeSpruce(wx, groundY, wz, data, cx, cz);
+    else placeOak(wx, groundY, wz, data, cx, cz);
+  }
+  function setLocal(data, cx, cz, wx, wy, wz, v) {
+    if (wy < 0 || wy >= WORLD_HEIGHT) return;
+    var lx = wx - cx * CHUNK_SIZE, lz = wz - cz * CHUNK_SIZE;
+    if (lx < 0 || lx >= CHUNK_SIZE || lz < 0 || lz >= CHUNK_SIZE) return;
+    data[(wy * CHUNK_SIZE + lz) * CHUNK_SIZE + lx] = v;
+  }
+  function placeOak(wx, groundY, wz, data, cx, cz) {
+    var trunkH = 4 + Math.floor(seedHash(wx, wz, 1000) * 3);
+    var trunkTop = groundY + trunkH;
+    for (var y = groundY + 1; y <= trunkTop; y++) setLocal(data, cx, cz, wx, y, wz, 4);
+    var layers = [{ y: trunkTop - 1, r: 2 }, { y: trunkTop, r: 2 }, { y: trunkTop + 1, r: 1 }];
+    for (var L = 0; L < layers.length; L++) {
+      var layer = layers[L], r = layer.r;
+      for (var dx = -r; dx <= r; dx++) {
+        for (var dz = -r; dz <= r; dz++) {
+          if (Math.abs(dx) === r && Math.abs(dz) === r) continue;
+          setLocal(data, cx, cz, wx + dx, layer.y, wz + dz, 5);
+        }
+      }
+    }
+  }
+  function placeSpruce(wx, groundY, wz, data, cx, cz) {
+    var trunkH = 5 + Math.floor(seedHash(wx, wz, 1100) * 3);
+    var trunkTop = groundY + trunkH;
+    for (var y = groundY + 1; y <= trunkTop; y++) setLocal(data, cx, cz, wx, y, wz, 13);
+    setLocal(data, cx, cz, wx, trunkTop + 1, wz, 14);
+    var profile = [0, 1, 1, 2, 2, 3, 3];
+    for (var i = 0; i < profile.length; i++) {
+      var yy = trunkTop - i;
+      if (yy <= groundY) break;
+      var r = profile[i];
+      if (r === 0) continue;
+      for (var dx = -r; dx <= r; dx++) {
+        for (var dz = -r; dz <= r; dz++) {
+          if (dx === 0 && dz === 0) continue;
+          if (Math.abs(dx) === r && Math.abs(dz) === r) continue;
+          setLocal(data, cx, cz, wx + dx, yy, wz + dz, 14);
+        }
+      }
+    }
+  }
+  function placeCactus(wx, groundY, wz, data, cx, cz) {
+    var h = 1 + Math.floor(seedHash(wx, wz, 1200) * 3);
+    for (var i = 1; i <= h; i++) setLocal(data, cx, cz, wx, groundY + i, wz, 12);
+  }
+
+  var FACES = [
+    { dir: [1,0,0],  corners: [[1,0,0],[1,1,0],[1,1,1],[1,0,1]], uvs: [[0,0],[0,1],[1,1],[1,0]] },
+    { dir: [-1,0,0], corners: [[0,0,1],[0,1,1],[0,1,0],[0,0,0]], uvs: [[0,0],[0,1],[1,1],[1,0]] },
+    { dir: [0,1,0],  corners: [[0,1,1],[1,1,1],[1,1,0],[0,1,0]], uvs: [[0,0],[1,0],[1,1],[0,1]] },
+    { dir: [0,-1,0], corners: [[0,0,0],[1,0,0],[1,0,1],[0,0,1]], uvs: [[0,0],[1,0],[1,1],[0,1]] },
+    { dir: [0,0,1],  corners: [[1,0,1],[1,1,1],[0,1,1],[0,0,1]], uvs: [[0,0],[0,1],[1,1],[1,0]] },
+    { dir: [0,0,-1], corners: [[0,0,0],[0,1,0],[1,1,0],[1,0,0]], uvs: [[0,0],[0,1],[1,1],[1,0]] }
+  ];
+
+  function computeFaceAO(x, y, z, fi) {
+    var face = FACES[fi], n = face.dir;
+    var ax = 0, ay = 0, az = 0, bx = 0, by = 0, bz = 0;
+    if (n[0] !== 0) { ay = 1; bz = 1; }
+    else if (n[1] !== 0) { ax = 1; bz = 1; }
+    else { ax = 1; by = 1; }
+    var ox = x + n[0], oy = y + n[1], oz = z + n[2];
+    var out = [0, 0, 0, 0];
+    for (var i = 0; i < 4; i++) {
+      var c = face.corners[i];
+      var dirA, dirB;
+      if (n[0] !== 0) { dirA = c[1] === 0 ? -1 : 1; dirB = c[2] === 0 ? -1 : 1; }
+      else if (n[1] !== 0) { dirA = c[0] === 0 ? -1 : 1; dirB = c[2] === 0 ? -1 : 1; }
+      else { dirA = c[0] === 0 ? -1 : 1; dirB = c[1] === 0 ? -1 : 1; }
+      var s1x = ox + ax * dirA, s1y = oy + ay * dirA, s1z = oz + az * dirA;
+      var s2x = ox + bx * dirB, s2y = oy + by * dirB, s2z = oz + bz * dirB;
+      var ccx = s1x + bx * dirB, ccy = s1y + by * dirB, ccz = s1z + bz * dirB;
+      var side1  = isOccluder(s1x, s1y, s1z) ? 1 : 0;
+      var side2  = isOccluder(s2x, s2y, s2z) ? 1 : 0;
+      var corner = isOccluder(ccx, ccy, ccz) ? 1 : 0;
+      out[i] = (side1 && side2) ? 0 : (3 - (side1 + side2 + corner));
+    }
+    return out;
+  }
+  function aoToLight(ao) { return 0.48 + (ao / 3) * 0.52; }
+
+  /* ═══════════════════════════════════════════════════
+     Three.js 场景
+     ═══════════════════════════════════════════════════ */
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87ceeb);
+  scene.fog = new THREE.Fog(0x9fd4f0, 22, 58);
+
+  var camera = new THREE.PerspectiveCamera(settings.fov, window.innerWidth / window.innerHeight, 0.05, 500);
+  camera.rotation.order = 'YXZ';
+  scene.add(camera);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.domElement.id = 'game3d';
+  renderer.domElement.style.display = 'block';
+  document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+  window.addEventListener('resize', function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  var hemiLight = new THREE.HemisphereLight(0xe8f4ff, 0x6a5a48, 0.90);
+  scene.add(hemiLight);
+  var dirLight = new THREE.DirectionalLight(0xfff5e0, 0.34);
+  dirLight.position.set(0.7, 1.2, 0.45);
+  scene.add(dirLight);
+  var fillLight = new THREE.DirectionalLight(0xbfd4ff, 0.16);
+  fillLight.position.set(-0.6, 0.4, -0.7);
+  scene.add(fillLight);
+  var ambientLight = new THREE.AmbientLight(0xffffff, 0.12);
+  scene.add(ambientLight);
+
+  function applyBrightness() {
+    var b = settings.brightness / 100;
+    ambientLight.intensity = 0.05 + b * 0.45;
+    hemiLight.intensity = 0.65 + b * 0.5;
+    dirLight.intensity = 0.22 + b * 0.28;
+  }
+  applyBrightness();
+
+  var atlasTexture = new THREE.CanvasTexture(atlasCanvas);
+  atlasTexture.magFilter = THREE.NearestFilter;
+  atlasTexture.minFilter = THREE.NearestFilter;
+  atlasTexture.generateMipmaps = false;
+  atlasTexture.wrapS = THREE.ClampToEdgeWrapping;
+  atlasTexture.wrapT = THREE.ClampToEdgeWrapping;
+
+  var blockMaterial = new THREE.MeshLambertMaterial({
+    map: atlasTexture, side: THREE.FrontSide, vertexColors: true
+  });
+
+  function buildChunkGeometry(cx, cz) {
+    var data = chunkData.get(chunkKey(cx, cz));
+    if (!data) return null;
+    var positions = [], normals = [], uvs = [], colors = [], indices = [];
+    var vertCount = 0;
+    var baseX = cx * CHUNK_SIZE, baseZ = cz * CHUNK_SIZE;
+    for (var y = 0; y < WORLD_HEIGHT; y++) {
+      for (var lz = 0; lz < CHUNK_SIZE; lz++) {
+        for (var lx = 0; lx < CHUNK_SIZE; lx++) {
+          var b = data[(y * CHUNK_SIZE + lz) * CHUNK_SIZE + lx];
+          if (b === 0) continue;
+          var def = BLOCKS[b];
+          if (!def) continue;
+          var wx = baseX + lx, wz = baseZ + lz;
+          for (var f = 0; f < 6; f++) {
+            var face = FACES[f];
+            var nx = wx + face.dir[0], ny = y + face.dir[1], nz = wz + face.dir[2];
+            if (getBlock(nx, ny, nz) !== 0) continue;
+            var tile;
+            if (f === 2) tile = def.top;
+            else if (f === 3) tile = def.bottom;
+            else tile = def.side;
+            var col = tile % ATLAS_COLS;
+            var row = Math.floor(tile / ATLAS_COLS);
+            var aoVals = computeFaceAO(wx, y, wz, f);
+            for (var i = 0; i < 4; i++) {
+              var c = face.corners[i];
+              positions.push(wx + c[0], y + c[1], wz + c[2]);
+              normals.push(face.dir[0], face.dir[1], face.dir[2]);
+              var uu = face.uvs[i][0], vv = face.uvs[i][1];
+              uvs.push((col + uu) / ATLAS_COLS, (ATLAS_ROWS - 1 - row + vv) / ATLAS_ROWS);
+              var light = aoToLight(aoVals[i]);
+              colors.push(light, light, light);
+            }
+            indices.push(vertCount, vertCount + 1, vertCount + 2);
+            indices.push(vertCount, vertCount + 2, vertCount + 3);
+            vertCount += 4;
+          }
+        }
+      }
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute('normal',   new THREE.Float32BufferAttribute(normals, 3));
+    geo.setAttribute('uv',       new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors, 3));
+    var IndexArray = vertCount > 65535 ? Uint32Array : Uint16Array;
+    geo.setIndex(new THREE.BufferAttribute(new IndexArray(indices), 1));
+    geo.computeBoundingSphere();
+    return geo;
+  }
+
+  function rebuildChunk(cx, cz) {
+    var key = chunkKey(cx, cz);
+    var data = chunkData.get(key);
+    if (!data) return;
+    var old = chunkMeshes.get(key);
+    if (old) { scene.remove(old); old.geometry.dispose(); }
+    var geo = buildChunkGeometry(cx, cz);
+    if (!geo) return;
+    var mesh = new THREE.Mesh(geo, blockMaterial);
+    mesh.frustumCulled = true;
+    scene.add(mesh);
+    chunkMeshes.set(key, mesh);
+  }
+
+  function createLoadingIndicator(cx, cz) {
+    var key = chunkKey(cx, cz);
+    if (loadingIndicators.has(key)) return;
+    var geo = new THREE.BoxGeometry(CHUNK_SIZE, WORLD_HEIGHT, CHUNK_SIZE);
+    var mat = new THREE.MeshBasicMaterial({
+      color: 0x8fd94f, wireframe: true,
+      transparent: true, opacity: 0.25, depthWrite: false
+    });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(cx * CHUNK_SIZE + CHUNK_SIZE / 2, WORLD_HEIGHT / 2, cz * CHUNK_SIZE + CHUNK_SIZE / 2);
+    mesh.renderOrder = 999;
+    scene.add(mesh);
+    loadingIndicators.set(key, mesh);
+  }
+  function removeLoadingIndicator(cx, cz) {
+    var key = chunkKey(cx, cz);
+    var mesh = loadingIndicators.get(key);
+    if (mesh) {
+      scene.remove(mesh);
+      mesh.geometry.dispose();
+      mesh.material.dispose();
+      loadingIndicators.delete(key);
+    }
+  }
+  function updateLoadingAnimations(now) {
+    if (loadingIndicators.size === 0) return;
+    var pulse = 0.15 + Math.abs(Math.sin(now * 0.003)) * 0.35;
+    loadingIndicators.forEach(function (mesh) {
+      mesh.material.opacity = pulse;
+      var s = 0.98 + Math.sin(now * 0.004) * 0.02;
+      mesh.scale.set(s, s, s);
+    });
+  }
+
+  var lastPlayerChunkX = null, lastPlayerChunkZ = null;
+
+  function updateChunks(force, showLoading) {
+    var pcx = Math.floor(player.pos.x / CHUNK_SIZE);
+    var pcz = Math.floor(player.pos.z / CHUNK_SIZE);
+    if (!force && pcx === lastPlayerChunkX && pcz === lastPlayerChunkZ) return;
+    lastPlayerChunkX = pcx; lastPlayerChunkZ = pcz;
+    var needed = new Set();
+    var newlyLoaded = [];
+    for (var dx = -LOAD_RADIUS; dx < LOAD_RADIUS; dx++) {
+      for (var dz = -LOAD_RADIUS; dz < LOAD_RADIUS; dz++) {
+        var cx = pcx + dx, cz = pcz + dz;
+        var key = chunkKey(cx, cz);
+        needed.add(key);
+        if (!chunkData.has(key)) {
+          if (showLoading) createLoadingIndicator(cx, cz);
+          chunkData.set(key, generateChunkData(cx, cz));
+          newlyLoaded.push([cx, cz]);
+        }
+      }
+    }
+    var toUnload = [];
+    chunkData.forEach(function (_, key) { if (!needed.has(key)) toUnload.push(key); });
+    for (var i = 0; i < toUnload.length; i++) {
+      var k = toUnload[i];
+      var parts = k.split(',');
+      var cx2 = parseInt(parts[0], 10), cz2 = parseInt(parts[1], 10);
+      dirtyChunks.add(chunkKey(cx2 + 1, cz2));
+      dirtyChunks.add(chunkKey(cx2 - 1, cz2));
+      dirtyChunks.add(chunkKey(cx2, cz2 + 1));
+      dirtyChunks.add(chunkKey(cx2, cz2 - 1));
+      chunkData.delete(k);
+      var mesh = chunkMeshes.get(k);
+      if (mesh) { scene.remove(mesh); mesh.geometry.dispose(); chunkMeshes.delete(k); }
+      removeLoadingIndicator(cx2, cz2);
+    }
+    for (var j = 0; j < newlyLoaded.length; j++) {
+      var cx3 = newlyLoaded[j][0], cz3 = newlyLoaded[j][1];
+      dirtyChunks.add(chunkKey(cx3, cz3));
+      dirtyChunks.add(chunkKey(cx3 + 1, cz3));
+      dirtyChunks.add(chunkKey(cx3 - 1, cz3));
+      dirtyChunks.add(chunkKey(cx3, cz3 + 1));
+      dirtyChunks.add(chunkKey(cx3, cz3 - 1));
+    }
+  }
+
+  function markDirty(wx, wz) {
+    var cx = Math.floor(wx / CHUNK_SIZE), cz = Math.floor(wz / CHUNK_SIZE);
+    var lx = wx - cx * CHUNK_SIZE, lz = wz - cz * CHUNK_SIZE;
+    dirtyChunks.add(chunkKey(cx, cz));
+    if (lx === 0) dirtyChunks.add(chunkKey(cx - 1, cz));
+    if (lx === CHUNK_SIZE - 1) dirtyChunks.add(chunkKey(cx + 1, cz));
+    if (lz === 0) dirtyChunks.add(chunkKey(cx, cz - 1));
+    if (lz === CHUNK_SIZE - 1) dirtyChunks.add(chunkKey(cx, cz + 1));
+    if (lx === 0 && lz === 0) dirtyChunks.add(chunkKey(cx - 1, cz - 1));
+    if (lx === 0 && lz === CHUNK_SIZE - 1) dirtyChunks.add(chunkKey(cx - 1, cz + 1));
+    if (lx === CHUNK_SIZE - 1 && lz === 0) dirtyChunks.add(chunkKey(cx + 1, cz - 1));
+    if (lx === CHUNK_SIZE - 1 && lz === CHUNK_SIZE - 1) dirtyChunks.add(chunkKey(cx + 1, cz + 1));
+  }
+
+  function processDirtyChunks() {
+    if (dirtyChunks.size === 0) return;
+    var count = 0;
+    var keysToRemove = [];
+    dirtyChunks.forEach(function (key) {
+      if (count >= MAX_CHUNK_REBUILDS_PER_FRAME) return;
+      if (!chunkData.has(key)) { keysToRemove.push(key); return; }
+      var parts = key.split(',');
+      var cx = parseInt(parts[0], 10), cz = parseInt(parts[1], 10);
+      rebuildChunk(cx, cz);
+      removeLoadingIndicator(cx, cz);
+      keysToRemove.push(key);
+      count++;
+    });
+    for (var i = 0; i < keysToRemove.length; i++) dirtyChunks.delete(keysToRemove[i]);
+  }
+
+  function clearAllChunks() {
+    chunkData.clear();
+    chunkMeshes.forEach(function (mesh) { scene.remove(mesh); mesh.geometry.dispose(); });
+    chunkMeshes.clear();
+    dirtyChunks.clear();
+    loadingIndicators.forEach(function (mesh) { scene.remove(mesh); mesh.geometry.dispose(); });
+    loadingIndicators.clear();
+    lastPlayerChunkX = null;
+    lastPlayerChunkZ = null;
+  }
+
+  var highlightMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(1.004, 1.004, 1.004),
+    new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true, transparent: true, opacity: 0.45 })
+  );
+  highlightMesh.visible = false;
+  scene.add(highlightMesh);
+
+  var skinMat  = new THREE.MeshLambertMaterial({ color: 0xe8b48c });
+  var shirtMat = new THREE.MeshLambertMaterial({ color: 0x2e9cc9 });
+  var handPivot = new THREE.Group();
+  handPivot.position.set(0.34, -0.30, -0.30);
+  camera.add(handPivot);
+  var handArm = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.13, 0.52), shirtMat);
+  handArm.position.set(0, 0, -0.26);
+  handPivot.add(handArm);
+  var handPalm = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.18), skinMat);
+  handPalm.position.set(0, 0, -0.60);
+  handPivot.add(handPalm);
+  var thumb = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.10), skinMat);
+  thumb.position.set(0.07, 0.04, -0.58);
+  handPivot.add(thumb);
+  var handBasePos = { x: 0.34, y: -0.30, z: -0.30 };
+  var handBaseRot = { x: 0.14, y: -0.06, z: 0 };
+
+  var player = {
+    pos: { x: 0.5, y: 40, z: 0.5 },
+    vel: { x: 0, y: 0, z: 0 },
+    onGround: false, health: 20, maxHealth: 20,
+    fallStartY: null, regenTimer: 0
+  };
+  var yaw = 0, pitch = 0;
+  var walkPhase = 0, swingTime = 0, bobPhase = 0;
+
+  function spawnPlayer() {
+    var sx = 0, sz = 0;
+    var cx = Math.floor(sx / CHUNK_SIZE), cz = Math.floor(sz / CHUNK_SIZE);
+    if (!chunkData.has(chunkKey(cx, cz))) chunkData.set(chunkKey(cx, cz), generateChunkData(cx, cz));
+    var sy = WORLD_HEIGHT - 1;
+    for (var y = WORLD_HEIGHT - 1; y >= 0; y--) {
+      if (isSolid(sx, y, sz)) { sy = y; break; }
+    }
+    player.pos.x = sx + 0.5;
+    player.pos.y = sy + 1.05;
+    player.pos.z = sz + 0.5;
+    player.vel.x = player.vel.y = player.vel.z = 0;
+    player.health = player.maxHealth;
+    player.fallStartY = null;
+    yaw = 0; pitch = -0.10;
+    flying = false;
+  }
+
+  function collideAxis(axis, delta) {
+    if (delta === 0) return;
+    var p = player.pos;
+    p[axis] += delta;
+    var minX = Math.floor(p.x - PLAYER_HALF), maxX = Math.floor(p.x + PLAYER_HALF);
+    var minY = Math.floor(p.y + 0.001), maxY = Math.floor(p.y + PLAYER_HEIGHT - 0.001);
+    var minZ = Math.floor(p.z - PLAYER_HALF), maxZ = Math.floor(p.z + PLAYER_HALF);
+    for (var x = minX; x <= maxX; x++) {
+      for (var y = minY; y <= maxY; y++) {
+        for (var z = minZ; z <= maxZ; z++) {
+          if (!isSolid(x, y, z)) continue;
+          if (axis === 'x') {
+            if (delta > 0) p.x = x - PLAYER_HALF - 0.0001;
+            else p.x = x + 1 + PLAYER_HALF + 0.0001;
+            player.vel.x = 0;
+          } else if (axis === 'z') {
+            if (delta > 0) p.z = z - PLAYER_HALF - 0.0001;
+            else p.z = z + 1 + PLAYER_HALF + 0.0001;
+            player.vel.z = 0;
+          } else {
+            if (delta > 0) { p.y = y - PLAYER_HEIGHT - 0.0001; player.vel.y = 0; }
+            else { p.y = y + 1 + 0.0001; player.vel.y = 0; player.onGround = true; }
+          }
+          return;
+        }
+      }
+    }
+  }
+
+  var keys = {};
+  var mouseHeld = [false, false, false];
+  var breakTimer = 0, placeTimer = 0;
+
+  window.addEventListener('keydown', function (e) {
+    if (chatOpen) {
+      if (e.key === 'Escape') { closeChat(); e.preventDefault(); }
+      else if (e.key === 'Enter') { sendChatMessage(); e.preventDefault(); }
+      return;
+    }
+    var k = e.key.toLowerCase();
+    keys[k] = true;
+    if (e.code === 'Space') keys[' '] = true;
+    if (['arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(k) >= 0) e.preventDefault();
+    if (appState !== 'playing') return;
+    if (k === 't' && !inventoryOpen) { openChat(false); e.preventDefault(); return; }
+    if (k === '/' && !inventoryOpen) { openChat(true); e.preventDefault(); return; }
+    if (k === 'e' && gameMode !== 'spectator') { toggleInventory(); return; }
+    if (k === 'm' && !inventoryOpen) {
+      var modes = ['creative', 'survival', 'adventure', 'spectator'];
+      var idx = modes.indexOf(gameMode);
+      setGameMode(modes[(idx + 1) % modes.length]);
+      return;
+    }
+    if (e.code === 'Space' && !inventoryOpen && gameMode === 'creative') {
+      var now = performance.now();
+      if (now - lastSpaceTap < 280) {
+        flying = !flying; player.vel.y = 0;
+        toast(flying ? '✦ 飞行模式：开启' : '✦ 飞行模式：关闭');
+        lastSpaceTap = 0;
+      } else lastSpaceTap = now;
+    }
+    var n = parseInt(k, 10);
+    if (!isNaN(n) && n >= 1 && n <= 9 && !inventoryOpen) selectSlot(n - 1);
+  });
+
+  window.addEventListener('keyup', function (e) {
+    var k = e.key.toLowerCase();
+    keys[k] = false;
+    if (e.code === 'Space') keys[' '] = false;
+  });
+
+  window.addEventListener('blur', function () {
+    for (var k in keys) keys[k] = false;
+    mouseHeld[0] = mouseHeld[2] = false;
+  });
+
+  renderer.domElement.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+  renderer.domElement.addEventListener('mousedown', function (e) {
+    if (appState !== 'playing') return;
+    if (inventoryOpen || chatOpen) return;
+    e.preventDefault();
+    if (e.button === 0) { mouseHeld[0] = true; breakTimer = 0; doBreak(); }
+    if (e.button === 2) { mouseHeld[2] = true; placeTimer = 0; doPlace(); }
+  });
+
+  window.addEventListener('mouseup', function (e) {
+    if (e.button === 0) mouseHeld[0] = false;
+    if (e.button === 2) mouseHeld[2] = false;
+  });
+
+  window.addEventListener('mousemove', function (e) {
+    if (!pointerLocked || appState !== 'playing' || inventoryOpen || chatOpen) return;
+    var sens = settings.sensitivity * 0.001;
+    yaw -= e.movementX * sens;
+    var inv = settings.invertMouse ? -1 : 1;
+    pitch -= e.movementY * sens * inv;
+    var lim = Math.PI / 2 - 0.01;
+    if (pitch > lim) pitch = lim;
+    if (pitch < -lim) pitch = -lim;
+  });
+
+  window.addEventListener('wheel', function (e) {
+    if (!pointerLocked || appState !== 'playing' || inventoryOpen || chatOpen) return;
+    if (gameMode === 'spectator') return;
+    var dir = e.deltaY > 0 ? 1 : -1;
+    selectSlot(((selectedSlot + dir) % 9 + 9) % 9);
+  }, { passive: true });
+
+  document.addEventListener('pointerlockchange', function () {
+    pointerLocked = (document.pointerLockElement === renderer.domElement);
+    if (!pointerLocked && appState === 'playing' && !inventoryOpen && !chatOpen) setAppState('paused');
+  });
+
+  var screens = {
+    mainMenu: $('mainMenuScreen'),
+    multiplayer: $('multiplayerScreen'),
+    createRoom: $('createRoomScreen'),
+    worldSelect: $('worldSelectScreen'),
+    createWorld: $('createWorldScreen'),
+    settings: $('settingsScreen'),
+    pause: $('pauseScreen')
+  };
+  var deathScreen = $('deathScreen');
+  var inventoryScreen = $('inventoryScreen');
+  var bgDecorEl = $('bgDecor');
+  var chatBoxEl = $('chatBox');
+  var chatInputEl = $('chatInput');
+  var chunkLoadingEl = $('chunkLoading');
+  var loadingScreenEl = $('loadingScreen');
+
+  function setAppState(s) {
+    appState = s;
+    for (var k in screens) screens[k].classList.add('hidden');
+    if (s === 'mainMenu') screens.mainMenu.classList.remove('hidden');
+    if (s === 'multiplayer') screens.multiplayer.classList.remove('hidden');
+    if (s === 'createRoom') screens.createRoom.classList.remove('hidden');
+    if (s === 'worldSelect') screens.worldSelect.classList.remove('hidden');
+    if (s === 'createWorld') screens.createWorld.classList.remove('hidden');
+    if (s === 'settings') screens.settings.classList.remove('hidden');
+    if (s === 'paused') screens.pause.classList.remove('hidden');
+    var inGame = (s === 'playing' || s === 'paused' || s === 'dead');
+    bgDecorEl.classList.toggle('hidden', inGame);
+    $('hudTop').style.display = inGame ? 'flex' : 'none';
+    $('tips').style.display = inGame ? 'block' : 'none';
+    $('crosshair').style.display = (s === 'playing' && gameMode !== 'spectator' && !inventoryOpen && !chatOpen) ? 'block' : 'none';
+    $('hotbar').style.display = (inGame && gameMode !== 'spectator') ? 'flex' : 'none';
+    $('healthBar').style.display = (inGame && (gameMode === 'survival' || gameMode === 'hardcore')) ? 'block' : 'none';
+    chatBoxEl.classList.toggle('visible', inGame);
+    $('playerList').style.display = (inGame && isMultiplayer) ? 'flex' : 'none';
+    if (s === 'playing') {
+      if (!document.pointerLockElement && !inventoryOpen && !chatOpen) {
+        renderer.domElement.requestPointerLock();
+      }
+    } else {
+      if (document.pointerLockElement) document.exitPointerLock();
+    }
+  }
+
+  function setGameMode(mode) {
+    var prev = gameMode;
+    gameMode = mode;
+    var names = { creative: '创造', survival: '生存', spectator: '旁观', adventure: '冒险' };
+    $('hudMode').textContent = '模式：' + names[mode];
+    if (mode !== 'creative' && mode !== 'spectator') flying = false;
+    if (mode === 'spectator') flying = true;
+    player.vel.y = 0;
+    player.fallStartY = null;
+    if (prev !== mode && appState === 'playing') toast('✦ 已切换至' + names[mode] + '模式');
+    if (appState === 'playing' || appState === 'paused' || appState === 'dead') {
+      $('crosshair').style.display = (mode !== 'spectator' && !inventoryOpen && !chatOpen) ? 'block' : 'none';
+      $('hotbar').style.display = (mode !== 'spectator') ? 'flex' : 'none';
+      $('healthBar').style.display = (mode === 'survival' || mode === 'hardcore') ? 'block' : 'none';
+    }
+  }
+
+  function showLoadingScreen() {
+    loadingScreenEl.classList.remove('hidden');
+    $('loadingBar').style.width = '0%';
+    $('loadingStatus').textContent = '正在准备...';
+  }
+  function updateLoadingProgress(current, total, status) {
+    var pct = total > 0 ? (current / total) * 100 : 0;
+    $('loadingBar').style.width = pct + '%';
+    $('loadingStatus').textContent = status || ('正在生成区块... ' + current + ' / ' + total);
+  }
+  function hideLoadingScreen() { loadingScreenEl.classList.add('hidden'); }
+
+  function addChatMessage(text, type) {
+    var el = document.createElement('div');
+    el.className = 'chat-msg ' + (type || '');
+    el.innerHTML = text;
+    chatBoxEl.appendChild(el);
+    while (chatBoxEl.children.length > 10) chatBoxEl.removeChild(chatBoxEl.firstChild);
+    setTimeout(function () {
+      if (el.parentNode) {
+        el.style.transition = 'opacity .5s';
+        el.style.opacity = '0';
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 500);
+      }
+    }, 20000);
+  }
+
+  function openChat(isCommand) {
+    if (appState !== 'playing') return;
+    chatOpen = true;
+    chatInputEl.classList.add('visible');
+    var field = $('chatInputField');
+    field.value = isCommand ? '/' : '';
+    $('chatPrefix').textContent = isCommand ? '/' : '>';
+    if (document.pointerLockElement) document.exitPointerLock();
+    setTimeout(function () { field.focus(); }, 10);
+  }
+  function closeChat() {
+    chatOpen = false;
+    chatInputEl.classList.remove('visible');
+    $('chatInputField').value = '';
+    if (appState === 'playing' && !inventoryOpen) renderer.domElement.requestPointerLock();
+  }
+  function sendChatMessage() {
+    var field = $('chatInputField');
+    var text = field.value.trim();
+    if (text === '') { closeChat(); return; }
+    if (text.charAt(0) === '/') executeCommand(text.slice(1));
+    else {
+      addChatMessage('<span class="sender">' + escapeHtml(myPlayerName) + '</span> ' + escapeHtml(text), 'player');
+      if (isMultiplayer && net.connected) net.sendChat(text);
+    }
+    field.value = '';
+    closeChat();
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+
+  function executeCommand(cmdStr) {
+    var parts = cmdStr.trim().split(/\s+/);
+    var cmd = parts[0].toLowerCase();
+    var args = parts.slice(1);
+    switch (cmd) {
+      case 'help':
+        addChatMessage('━━━━ 指令帮助 ━━━━', 'system');
+        addChatMessage('/help · /seed · /gamemode <模式>', 'system');
+        addChatMessage('/tp <x> <y> <z> · /kill · /spawn', 'system');
+        addChatMessage('/me <动作> · /clear · /list', 'system');
+        break;
+      case 'seed': addChatMessage('世界种子：' + WORLD_SEED, 'success'); break;
+      case 'gamemode':
+      case 'gm':
+        var mode = (args[0] || '').toLowerCase();
+        var modeMap = { '0':'survival','1':'creative','2':'adventure','3':'spectator','s':'survival','c':'creative','a':'adventure','sp':'spectator' };
+        mode = modeMap[mode] || mode;
+        if (['creative','survival','adventure','spectator'].indexOf(mode) >= 0) {
+          setGameMode(mode);
+          addChatMessage('已将游戏模式设置为 ' + mode, 'success');
+        } else addChatMessage('用法：/gamemode <creative|survival|adventure|spectator>', 'error');
+        break;
+      case 'tp':
+        if (args.length === 3) {
+          var tx = parseFloat(args[0]), ty = parseFloat(args[1]), tz = parseFloat(args[2]);
+          if (!isNaN(tx) && !isNaN(ty) && !isNaN(tz)) {
+            player.pos.x = tx + 0.5; player.pos.y = ty; player.pos.z = tz + 0.5;
+            player.vel.y = 0;
+            addChatMessage('已传送到 ' + tx + ' ' + ty + ' ' + tz, 'success');
+          } else addChatMessage('坐标必须是数字', 'error');
+        } else addChatMessage('用法：/tp <x> <y> <z>', 'error');
+        break;
+      case 'clear': chatBoxEl.innerHTML = ''; break;
+      case 'kill': applyDamage(20); addChatMessage('已自杀', 'system'); break;
+      case 'spawn': spawnPlayer(); updateChunks(true); addChatMessage('已回到出生点', 'success'); break;
+      case 'me':
+        if (args.length > 0) {
+          addChatMessage('* ' + escapeHtml(myPlayerName) + ' ' + escapeHtml(args.join(' ')), 'system');
+          if (isMultiplayer && net.connected) net.sendChat('* ' + myPlayerName + ' ' + args.join(' '), true);
+        }
+        break;
+      case 'list':
+        if (isMultiplayer) {
+          var names = [myPlayerName + ' (你)'];
+          net.remotePlayers.forEach(function (p) { names.push(p.name); });
+          addChatMessage('在线玩家 (' + names.length + '/' + (currentRoom ? currentRoom.max_players : 1) + ')：' + names.join(', '), 'system');
+        } else addChatMessage('在线玩家 (1/1)：' + myPlayerName, 'system');
+        break;
+      default: addChatMessage('未知指令：/' + cmd, 'error');
+    }
+  }
+
+  $('singlePlayerBtn').addEventListener('click', function () { refreshWorldList(); setAppState('worldSelect'); });
+  $('multiPlayerBtn').addEventListener('click', function () { refreshRooms(); setAppState('multiplayer'); });
+  $('optionsBtn').addEventListener('click', function () { prevScreen = 'mainMenu'; setAppState('settings'); });
+  $('quitGameBtn').addEventListener('click', function () {
+    if (confirm('确定要退出游戏吗？')) { window.close(); setTimeout(function () { setAppState('mainMenu'); }, 100); }
+  });
+
+  function fmtDate(ts) {
+    if (!ts) return '从未';
+    var diff = Date.now() - ts;
+    if (diff < 60000) return '刚刚';
+    if (diff < 3600000) return Math.floor(diff / 60000) + ' 分钟前';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + ' 小时前';
+    var d = new Date(ts);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function modeLabel(m) { return { survival:'生存', creative:'创造', hardcore:'极限', adventure:'冒险' }[m] || '生存'; }
+  function typeLabel(t) { return { default:'默认', flat:'超平坦', largeBiomes:'大型群系', amplified:'放大化' }[t] || '默认'; }
+
+  function refreshWorldList() {
+    var list = $('worldList');
+    list.innerHTML = '';
+    if (worlds.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'world-empty';
+      empty.innerHTML = '<div>还没有世界</div><div class="hint">点击下方按钮创建一个新的世界</div>';
+      list.appendChild(empty);
+      return;
+    }
+    var sorted = worlds.slice().sort(function (a, b) { return (b.lastPlayedAt || 0) - (a.lastPlayedAt || 0); });
+    sorted.forEach(function (w) {
+      var card = document.createElement('div');
+      card.className = 'world-card';
+      var thumb = document.createElement('div');
+      thumb.className = 'world-thumb';
+      card.appendChild(thumb);
+      var info = document.createElement('div');
+      info.className = 'world-info';
+      var name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = w.name || '未命名世界';
+      info.appendChild(name);
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+      var modeTag = document.createElement('span');
+      modeTag.className = 'tag ' + (w.gameMode || 'survival');
+      modeTag.textContent = modeLabel(w.gameMode);
+      meta.appendChild(modeTag);
+      var typeSpan = document.createElement('span');
+      typeSpan.textContent = typeLabel(w.worldType);
+      meta.appendChild(typeSpan);
+      var seedSpan = document.createElement('span');
+      seedSpan.textContent = '种子: ' + w.seed;
+      meta.appendChild(seedSpan);
+      var timeSpan = document.createElement('span');
+      timeSpan.textContent = '游玩: ' + fmtDate(w.lastPlayedAt);
+      meta.appendChild(timeSpan);
+      info.appendChild(meta);
+      card.appendChild(info);
+      var actions = document.createElement('div');
+      actions.className = 'world-actions-card';
+      var enterBtn = document.createElement('button');
+      enterBtn.className = 'mc-btn primary small';
+      enterBtn.textContent = '进入';
+      enterBtn.addEventListener('click', function () { enterWorld(w); });
+      actions.appendChild(enterBtn);
+      var delBtn = document.createElement('button');
+      delBtn.className = 'mc-btn danger small';
+      delBtn.textContent = '删除';
+      delBtn.addEventListener('click', function () {
+        if (confirm('确定删除世界「' + (w.name || '未命名') + '」吗？')) {
+          var i = worlds.indexOf(w);
+          if (i >= 0) worlds.splice(i, 1);
+          saveWorlds();
+          refreshWorldList();
+        }
+      });
+      actions.appendChild(delBtn);
+      card.appendChild(actions);
+      list.appendChild(card);
+    });
+  }
+
+  $('worldBackBtn').addEventListener('click', function () { setAppState('mainMenu'); });
+  $('createWorldBtn').addEventListener('click', function () {
+    $('newWorldName').value = '新的世界';
+    $('newWorldSeed').value = '';
+    setActiveGroup('createModeGroup', 'survival');
+    setActiveGroup('createDifficultyGroup', 'normal');
+    setActiveGroup('createTypeGroup', 'default');
+    setToggle('cheatToggle', 'off');
+    setAppState('createWorld');
+  });
+
+  function setActiveGroup(groupId, value) {
+    var btns = $(groupId).querySelectorAll('.option-btn');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i].getAttribute('data-value') === value);
+  }
+  function getActiveGroup(groupId) {
+    var btns = $(groupId).querySelectorAll('.option-btn');
+    for (var i = 0; i < btns.length; i++) if (btns[i].classList.contains('active')) return btns[i].getAttribute('data-value');
+    return null;
+  }
+  function setToggle(id, val) {
+    var el = $(id);
+    el.setAttribute('data-value', val);
+    el.querySelector('.label').textContent = (val === 'on') ? '开启' : '关闭';
+  }
+  function getToggle(id) { return $(id).getAttribute('data-value') === 'on'; }
+
+  ['createModeGroup', 'createDifficultyGroup', 'createTypeGroup'].forEach(function (gid) {
+    var btns = $(gid).querySelectorAll('.option-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener('click', function () { setActiveGroup(gid, this.getAttribute('data-value')); });
+    }
+  });
+  ['cheatToggle'].forEach(function (id) {
+    $(id).addEventListener('click', function () {
+      setToggle(id, this.getAttribute('data-value') === 'on' ? 'off' : 'on');
+    });
+  });
+
+  $('createHeaderBack').addEventListener('click', function () { setAppState('worldSelect'); });
+  $('createCancelBtn').addEventListener('click', function () { setAppState('worldSelect'); });
+
+  $('createConfirmBtn').addEventListener('click', function () {
+    var name = $('newWorldName').value.trim() || '新的世界';
+    var seedStr = $('newWorldSeed').value.trim();
+    var seed;
+    if (seedStr === '') seed = Math.floor(Math.random() * 99999999) + 1;
+    else {
+      var n = parseInt(seedStr, 10);
+      if (!isNaN(n) && String(n) === seedStr) seed = n;
+      else {
+        seed = 0;
+        for (var i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) | 0;
+        seed = Math.abs(seed) % 99999999 + 1;
+      }
+    }
+    var w = {
+      id: 'w_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8),
+      name: name, seed: seed,
+      gameMode: getActiveGroup('createModeGroup'),
+      difficulty: getActiveGroup('createDifficultyGroup'),
+      worldType: getActiveGroup('createTypeGroup'),
+      cheats: getToggle('cheatToggle'),
+      createdAt: Date.now(), lastPlayedAt: 0,
+      playerPos: null, playerYaw: 0, playerPitch: 0
+    };
+    worlds.push(w);
+    saveWorlds();
+    enterWorld(w);
+  });
+
+  /* ═══════════════════════════════════════════════════
+     Supabase 多人房间
+     ═══════════════════════════════════════════════════ */
+  var roomsChannel = null;
+
+  function refreshRooms() {
+    var list = $('roomList');
+    list.innerHTML = '<div class="room-empty"><div class="cloud-icon">☁</div><div>正在加载房间…</div></div>';
+
+    if (!supabaseReady) {
+      $('roomServerStatus').textContent = '离线';
+      list.innerHTML = '<div class="room-empty"><div class="cloud-icon">⚠</div><div>Supabase 未连接</div><div class="hint">请检查网络连接</div></div>';
+      return;
+    }
+
+    $('roomServerStatus').textContent = '☁ 已连接 Supabase';
+
+    // 清理超过 6 小时的空房间（可选）
+    var sixHoursAgo = Date.now() - 6 * 3600 * 1000;
+    sbClient.from('rooms').delete().lt('created_at', sixHoursAgo).then(function () {});
+
+    sbClient.from('rooms')
+      .select('*')
+      .eq('status', 'waiting')
+      .order('created_at', { ascending: false })
+      .limit(50)
+      .then(function (res) {
+        if (res.error) {
+          console.error('加载房间失败', res.error);
+          list.innerHTML = '<div class="room-empty"><div class="cloud-icon">⚠</div><div>加载失败</div><div class="hint">' + escapeHtml(res.error.message) + '</div></div>';
+          return;
+        }
+        renderRoomList(res.data || []);
+        subscribeRoomsRealtime();
+      });
+  }
+
+  function renderRoomList(rooms) {
+    var list = $('roomList');
+    list.innerHTML = '';
+    if (!rooms || rooms.length === 0) {
+      list.innerHTML = '<div class="room-empty"><div class="cloud-icon">☁</div><div>暂无可用房间</div><div class="hint">点击下方按钮创建一个新房间</div></div>';
+      return;
+    }
+    rooms.forEach(function (room) {
+      var card = document.createElement('div');
+      card.className = 'room-card';
+      var isFull = room.current_players >= room.max_players;
+      if (isFull) card.classList.add('full');
+
+      var icon = document.createElement('div');
+      icon.className = 'room-icon';
+      icon.textContent = '🌍';
+      card.appendChild(icon);
+
+      var info = document.createElement('div');
+      info.className = 'room-info';
+      var name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = room.name;
+      info.appendChild(name);
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+      var playersSpan = document.createElement('span');
+      playersSpan.className = 'players' + (isFull ? ' full' : '');
+      playersSpan.textContent = '👤 ' + room.current_players + ' / ' + room.max_players;
+      meta.appendChild(playersSpan);
+      var hostSpan = document.createElement('span');
+      hostSpan.textContent = '房主: ' + (room.host_name || '未知');
+      meta.appendChild(hostSpan);
+      var seedSpan = document.createElement('span');
+      seedSpan.textContent = '种子: ' + room.seed;
+      meta.appendChild(seedSpan);
+      var modeSpan = document.createElement('span');
+      modeSpan.textContent = modeLabel(room.game_mode);
+      meta.appendChild(modeSpan);
+      info.appendChild(meta);
+      card.appendChild(info);
+
+      var actions = document.createElement('div');
+      actions.className = 'room-actions';
+      var joinBtn = document.createElement('button');
+      joinBtn.className = 'mc-btn primary small';
+      joinBtn.textContent = isFull ? '已满' : '加入';
+      joinBtn.disabled = isFull;
+      joinBtn.addEventListener('click', function () { joinRoom(room); });
+      actions.appendChild(joinBtn);
+      card.appendChild(actions);
+
+      list.appendChild(card);
+    });
+  }
+
+  function subscribeRoomsRealtime() {
+    if (!supabaseReady || roomsChannel) return;
+    roomsChannel = sbClient.channel('rooms-list')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms' }, function () {
+        if (appState === 'multiplayer') refreshRooms();
+      })
+      .subscribe();
+  }
+
+  $('refreshRoomsBtn').addEventListener('click', function () { refreshRooms(); });
+  $('multiBackBtn').addEventListener('click', function () { setAppState('mainMenu'); });
+
+  var selectedSaveIndex = 0;
+
+  $('createRoomBtn').addEventListener('click', function () {
+    if (worlds.length === 0) { toast('请先创建一个单人存档再开房'); return; }
+    $('roomNameInput').value = '我的房间';
+    $('roomHostInput').value = myPlayerName;
+    setActiveGroup('maxPlayersGroup', '10');
+    setActiveGroup('visibilityGroup', 'public');
+    setToggle('roomCheatToggle', 'on');
+    selectedSaveIndex = 0;
+    refreshSaveListForRoom();
+    setAppState('createRoom');
+  });
+
+  function refreshSaveListForRoom() {
+    var list = $('saveListForRoom');
+    list.innerHTML = '';
+    worlds.forEach(function (w, i) {
+      var card = document.createElement('div');
+      card.className = 'save-card' + (i === selectedSaveIndex ? ' selected' : '');
+      var thumb = document.createElement('div');
+      thumb.className = 'save-thumb';
+      card.appendChild(thumb);
+      var info = document.createElement('div');
+      info.className = 'save-info';
+      var name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = w.name || '未命名';
+      info.appendChild(name);
+      var meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = modeLabel(w.gameMode) + ' · 种子 ' + w.seed + ' · ' + fmtDate(w.lastPlayedAt);
+      info.appendChild(meta);
+      card.appendChild(info);
+      card.addEventListener('click', function () {
+        selectedSaveIndex = i;
+        refreshSaveListForRoom();
+      });
+      list.appendChild(card);
+    });
+  }
+
+  ['maxPlayersGroup', 'visibilityGroup'].forEach(function (gid) {
+    var btns = $(gid).querySelectorAll('.option-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener('click', function () { setActiveGroup(gid, this.getAttribute('data-value')); });
+    }
+  });
+  $('roomCheatToggle').addEventListener('click', function () {
+    setToggle('roomCheatToggle', this.getAttribute('data-value') === 'on' ? 'off' : 'on');
+  });
+
+  $('createRoomBackBtn').addEventListener('click', function () { setAppState('multiplayer'); });
+  $('createRoomCancelBtn').addEventListener('click', function () { setAppState('multiplayer'); });
+
+  $('createRoomConfirmBtn').addEventListener('click', function () {
+    if (worlds.length === 0) { toast('没有可用存档'); return; }
+    var save = worlds[selectedSaveIndex];
+    if (!save) { toast('请选择一个存档'); return; }
+
+    if (!supabaseReady) { toast('Supabase 未连接，无法创建房间'); return; }
+
+    var roomName = $('roomNameInput').value.trim() || '我的房间';
+    var hostName = $('roomHostInput').value.trim() || myPlayerName;
+    var maxPlayers = parseInt(getActiveGroup('maxPlayersGroup'), 10) || 10;
+    var visibility = getActiveGroup('visibilityGroup') || 'public';
+    var cheats = getToggle('roomCheatToggle');
+
+    myPlayerName = hostName;
+    storage.set('mc3d_player_name', hostName);
+
+    var roomData = {
+      name: roomName,
+      host_name: hostName,
+      seed: save.seed,
+      world_type: save.worldType || 'default',
+      game_mode: save.gameMode || 'survival',
+      difficulty: save.difficulty || 'normal',
+      max_players: maxPlayers,
+      current_players: 1,
+      status: 'waiting',
+      visibility: visibility,
+      cheats: cheats,
+      created_at: Date.now(),
+      last_active: Date.now()
+    };
+
+    $('createRoomConfirmBtn').disabled = true;
+    $('createRoomConfirmBtn').textContent = '创建中...';
+
+    sbClient.from('rooms').insert([roomData]).select().then(function (res) {
+      $('createRoomConfirmBtn').disabled = false;
+      $('createRoomConfirmBtn').textContent = '创建并进入';
+      if (res.error) {
+        console.error('创建房间失败', res.error);
+        toast('创建失败：' + res.error.message);
+        return;
+      }
+      var room = res.data[0];
+      sbClient.from('room_players').insert([{
+        room_id: room.id, player_name: hostName,
+        x: 0.5, y: 40, z: 0.5
+      }]).then(function () {
+        enterMultiplayerWorld(room, save);
+      });
+    });
+  });
+
+  function joinRoom(room) {
+    if (room.current_players >= room.max_players) { toast('房间已满'); return; }
+    if (!supabaseReady) { toast('Supabase 未连接'); return; }
+
+    var name = prompt('输入你的昵称：', myPlayerName);
+    if (!name) return;
+    myPlayerName = name.trim() || myPlayerName;
+    storage.set('mc3d_player_name', myPlayerName);
+
+    // 原子递增玩家数
+    sbClient.rpc('increment_room_players', { room_id: room.id }).then(function (res) {
+      if (res.error) {
+        // 回退方案：直接更新
+        sbClient.from('rooms')
+          .update({ current_players: room.current_players + 1 })
+          .eq('id', room.id)
+          .then(function () {
+            doJoin(room);
+          });
+      } else {
+        doJoin(room);
+      }
+    });
+  }
+
+  function doJoin(room) {
+    sbClient.from('room_players').insert([{
+      room_id: room.id, player_name: myPlayerName,
+      x: 0.5, y: 40, z: 0.5
+    }]).then(function () {
+      var save = {
+        seed: room.seed, worldType: room.world_type,
+        gameMode: room.game_mode, difficulty: room.difficulty
+      };
+      enterMultiplayerWorld(room, save);
+    });
+  }
+
+  function enterMultiplayerWorld(room, save) {
+    currentRoom = room;
+    isMultiplayer = true;
+    WORLD_SEED = save.seed;
+    worldType = save.worldType || 'default';
+    difficulty = save.difficulty || 'normal';
+
+    clearAllChunks();
+    setGameMode(save.gameMode || 'survival');
+    showLoadingScreen();
+    updateLoadingProgress(0, 1, '正在准备世界...');
+
+    setTimeout(function () {
+      spawnPlayer();
+      var total = LOAD_RADIUS * 2 * LOAD_RADIUS * 2;
+      updateLoadingProgress(0, total, '正在生成区块...');
+      updateChunks(true, true);
+
+      var steps = 0;
+      function step() {
+        processDirtyChunks();
+        var remaining = dirtyChunks.size;
+        updateLoadingProgress(total - remaining, total,
+          remaining > 0 ? '正在构建网格... (' + remaining + ' 剩余)' : '完成');
+        if (remaining > 0 && steps < 200) {
+          steps++;
+          requestAnimationFrame(step);
+        } else {
+          hideLoadingScreen();
+          net.connect(room);
+          setAppState('playing');
+          addChatMessage('已加入房间「' + escapeHtml(room.name) + '」', 'success');
+          updatePlayerListUI();
+        }
+      }
+      step();
+    }, 50);
+  }
+
+  function enterWorld(w) {
+    currentWorld = w;
+    isMultiplayer = false;
+    currentRoom = null;
+    WORLD_SEED = w.seed;
+    worldType = w.worldType || 'default';
+    difficulty = w.difficulty || 'normal';
+
+    clearAllChunks();
+    setGameMode(w.gameMode || 'survival');
+    showLoadingScreen();
+    updateLoadingProgress(0, 1, '正在准备世界...');
+
+    setTimeout(function () {
+      if (w.playerPos) {
+        player.pos.x = w.playerPos.x;
+        player.pos.y = w.playerPos.y;
+        player.pos.z = w.playerPos.z;
+        yaw = w.playerYaw || 0;
+        pitch = w.playerPitch || 0;
+        player.vel.x = player.vel.y = player.vel.z = 0;
+        player.health = player.maxHealth;
+      } else spawnPlayer();
+
+      var total = LOAD_RADIUS * 2 * LOAD_RADIUS * 2;
+      updateChunks(true, true);
+
+      var steps = 0;
+      function step() {
+        processDirtyChunks();
+        var remaining = dirtyChunks.size;
+        updateLoadingProgress(total - remaining, total,
+          remaining > 0 ? '正在构建网格... (' + remaining + ' 剩余)' : '完成');
+        if (remaining > 0 && steps < 200) {
+          steps++;
+          requestAnimationFrame(step);
+        } else {
+          hideLoadingScreen();
+          setAppState('playing');
+          addChatMessage('欢迎来到 ' + escapeHtml(w.name) + '！输入 /help 查看指令。', 'system');
+        }
+      }
+      step();
+    }, 50);
+  }
+
+  function captureAndSaveWorld() {
+    if (!currentWorld || isMultiplayer) return;
+    currentWorld.playerPos = { x: player.pos.x, y: player.pos.y, z: player.pos.z };
+    currentWorld.playerYaw = yaw;
+    currentWorld.playerPitch = pitch;
+    currentWorld.gameMode = gameMode;
+    currentWorld.lastPlayedAt = Date.now();
+    saveWorlds();
+  }
+
+  $('resumeBtn').addEventListener('click', function () { setAppState('playing'); });
+  $('pauseOptionsBtn').addEventListener('click', function () { prevScreen = 'paused'; setAppState('settings'); });
+  $('saveAndQuitBtn').addEventListener('click', function () {
+    if (isMultiplayer) {
+      net.disconnect();
+      isMultiplayer = false;
+      currentRoom = null;
+      clearAllChunks();
+      setAppState('multiplayer');
+      refreshRooms();
+    } else {
+      captureAndSaveWorld();
+      clearAllChunks();
+      currentWorld = null;
+      refreshWorldList();
+      setAppState('worldSelect');
+    }
+  });
+
+  /* ═══════════════════════════════════════════════════
+     设置界面
+     ═══════════════════════════════════════════════════ */
+  var SETTINGS_DEFS = [
+    { id: 'graphics', name: '图形', items: [
+      { key: 'fov', label: '视角广度', type: 'slider', min: 30, max: 110, step: 1, fmt: function (v) { return v + '°'; } },
+      { key: 'brightness', label: '亮度', type: 'slider', min: 0, max: 100, step: 1, fmt: function (v) { return v + '%'; } },
+      { key: 'renderDistance', label: '渲染距离', type: 'slider', min: 2, max: 32, step: 2, fmt: function (v) { return v + ' 区块'; } },
+      { key: 'viewBobbing', label: '视角摇晃', type: 'toggle' }
+    ]},
+    { id: 'sound', name: '声音', items: [
+      { key: 'masterVolume', label: '主音量', type: 'slider', min: 0, max: 100, step: 1, fmt: function (v) { return v + '%'; } },
+      { key: 'musicVolume', label: '音乐', type: 'slider', min: 0, max: 100, step: 1, fmt: function (v) { return v + '%'; } },
+      { key: 'blocksVolume', label: '方块', type: 'slider', min: 0, max: 100, step: 1, fmt: function (v) { return v + '%'; } }
+    ]},
+    { id: 'controls', name: '控制', items: [
+      { key: 'sensitivity', label: '鼠标灵敏度', type: 'slider', min: 0.5, max: 10, step: 0.1, fmt: function (v) { return v.toFixed(1); } },
+      { key: 'invertMouse', label: '鼠标反转', type: 'toggle' },
+      { key: 'autoJump', label: '自动跳跃', type: 'toggle' }
+    ]}
+  ];
+
+  function buildSettingsUI() {
+    var tabsEl = $('settingsTabs');
+    var panelsEl = $('settingsPanels');
+    tabsEl.innerHTML = ''; panelsEl.innerHTML = '';
+    SETTINGS_DEFS.forEach(function (def, i) {
+      var btn = document.createElement('button');
+      btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+      btn.textContent = def.name;
+      btn.addEventListener('click', function () {
+        var tabs = tabsEl.querySelectorAll('.tab-btn');
+        for (var t = 0; t < tabs.length; t++) tabs[t].classList.toggle('active', tabs[t] === btn);
+        var panels = panelsEl.querySelectorAll('.settings-panel');
+        for (var p = 0; p < panels.length; p++) panels[p].classList.toggle('active', panels[p].getAttribute('data-panel') === def.id);
+      });
+      tabsEl.appendChild(btn);
+      var panel = document.createElement('div');
+      panel.className = 'settings-panel' + (i === 0 ? ' active' : '');
+      panel.setAttribute('data-panel', def.id);
+      def.items.forEach(function (item) {
+        var row = document.createElement('div');
+        row.className = 'setting-row';
+        var label = document.createElement('label');
+        label.textContent = item.label;
+        row.appendChild(label);
+        if (item.type === 'slider') {
+          var input = document.createElement('input');
+          input.type = 'range';
+          input.min = item.min; input.max = item.max; input.step = item.step;
+          input.value = settings[item.key];
+          row.appendChild(input);
+          var val = document.createElement('span');
+          val.className = 'valBox';
+          val.textContent = item.fmt ? item.fmt(settings[item.key]) : settings[item.key];
+          row.appendChild(val);
+          input.addEventListener('input', function () {
+            var v = parseFloat(input.value);
+            settings[item.key] = v;
+            val.textContent = item.fmt ? item.fmt(v) : v;
+            onSettingChange(item.key, v);
+            saveSettings();
+          });
+        } else if (item.type === 'toggle') {
+          var btn3 = document.createElement('button');
+          btn3.className = 'toggle-settings-btn' + (settings[item.key] ? ' on' : '');
+          btn3.textContent = settings[item.key] ? '开启' : '关闭';
+          row.appendChild(btn3);
+          btn3.addEventListener('click', function () {
+            var v = settings[item.key] ? 0 : 1;
+            settings[item.key] = v;
+            btn3.textContent = v ? '开启' : '关闭';
+            btn3.classList.toggle('on', !!v);
+            onSettingChange(item.key, v);
+            saveSettings();
+          });
+        }
+        panel.appendChild(row);
+      });
+      panelsEl.appendChild(panel);
+    });
+  }
+
+  function onSettingChange(key, value) {
+    switch (key) {
+      case 'fov': camera.fov = value; camera.updateProjectionMatrix(); break;
+      case 'brightness': applyBrightness(); break;
+      case 'renderDistance':
+        LOAD_RADIUS = Math.max(1, Math.min(16, Math.round(value / 2)));
+        if (appState === 'playing' || appState === 'paused') updateChunks(true);
+        break;
+    }
+  }
+  buildSettingsUI();
+
+  function closeSettings() {
+    LOAD_RADIUS = Math.max(1, Math.min(16, Math.round(settings.renderDistance / 2)));
+    camera.fov = settings.fov;
+    camera.updateProjectionMatrix();
+    applyBrightness();
+    saveSettings();
+    if (prevScreen === 'paused' && currentWorld) setAppState('paused');
+    else if (prevScreen === 'paused' && isMultiplayer) setAppState('paused');
+    else setAppState('mainMenu');
+  }
+  $('settingsDoneBtn').addEventListener('click', closeSettings);
+  $('settingsCloseBtn').addEventListener('click', closeSettings);
+
+  /* ═══════════════════════════════════════════════════
+     物品栏
+     ═══════════════════════════════════════════════════ */
+  var hotbarEl = $('hotbar');
+  var selectedSlot = 0;
+  var selectedBlock = 1;
+  var hotbarSlots = [1, 2, 3, 4, 5, 6, 8, 9, 10];
+
+  function makeIcon(blockId) {
+    var def = BLOCKS[blockId];
+    if (!def) return null;
+    var tile = def.side;
+    var col = tile % ATLAS_COLS, row = Math.floor(tile / ATLAS_COLS);
+    var c = document.createElement('canvas');
+    c.width = 32; c.height = 32;
+    var g = c.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.drawImage(atlasCanvas, col * TILE_PX, row * TILE_PX, TILE_PX, TILE_PX, 0, 0, 32, 32);
+    return c;
+  }
+
+  function buildHotbar() {
+    hotbarEl.innerHTML = '';
+    for (var i = 0; i < 9; i++) {
+      (function (index) {
+        var slot = document.createElement('div');
+        slot.className = 'slot';
+        updateHotbarSlot(slot, hotbarSlots[index]);
+        slot.addEventListener('click', function () { selectSlot(index); });
+        hotbarEl.appendChild(slot);
+      })(i);
+    }
+    selectSlot(0);
+  }
+  function updateHotbarSlot(slotEl, blockId) {
+    while (slotEl.firstChild) slotEl.removeChild(slotEl.firstChild);
+    if (blockId) {
+      var icon = makeIcon(blockId);
+      if (icon) {
+        slotEl.appendChild(icon);
+        var badge = document.createElement('span');
+        badge.className = 'count';
+        badge.textContent = '64';
+        slotEl.appendChild(badge);
+        slotEl.title = BLOCKS[blockId].name;
+      }
+    } else slotEl.title = '空';
+  }
+  function selectSlot(i) {
+    if (i < 0 || i >= 9) return;
+    selectedSlot = i;
+    selectedBlock = hotbarSlots[i] || 1;
+    var kids = hotbarEl.children;
+    for (var j = 0; j < kids.length; j++) kids[j].classList.toggle('active', j === i);
+  }
+  buildHotbar();
+
+  function buildFullInventory() {
+    var creativeGrid = $('invGridCreative');
+    var hotbarGrid = $('invGridHotbar');
+    creativeGrid.innerHTML = ''; hotbarGrid.innerHTML = '';
+    ALL_BLOCK_IDS.forEach(function (id) {
+      var cell = document.createElement('div');
+      cell.className = 'inv-cell';
+      var icon = makeIcon(id);
+      if (icon) cell.appendChild(icon);
+      var lbl = document.createElement('div');
+      lbl.className = 'lbl';
+      lbl.textContent = BLOCKS[id].name;
+      cell.appendChild(lbl);
+      cell.addEventListener('click', function () {
+        hotbarSlots[selectedSlot] = id;
+        updateHotbarSlot(hotbarEl.children[selectedSlot], id);
+        selectedBlock = id;
+        addChatMessage('已放入快捷栏：' + BLOCKS[id].name, 'success');
+        buildFullInventory();
+      });
+      creativeGrid.appendChild(cell);
+    });
+    for (var i = 0; i < 9; i++) {
+      (function (index) {
+        var cell = document.createElement('div');
+        cell.className = 'inv-cell' + (index === selectedSlot ? ' selected' : '');
+        var id = hotbarSlots[index];
+        if (id) {
+          var icon = makeIcon(id);
+          if (icon) cell.appendChild(icon);
+        }
+        var lbl2 = document.createElement('div');
+        lbl2.className = 'lbl';
+        lbl2.textContent = (index + 1) + (id ? ' ' + BLOCKS[id].name : '');
+        cell.appendChild(lbl2);
+        cell.addEventListener('click', function () {
+          selectSlot(index);
+          buildFullInventory();
+        });
+        hotbarGrid.appendChild(cell);
+      })(i);
+    }
+  }
+
+  function toggleInventory() { if (inventoryOpen) closeInventory(); else openInventory(); }
+  function openInventory() {
+    if (appState !== 'playing') return;
+    inventoryOpen = true;
+    inventoryScreen.classList.remove('hidden');
+    $('crosshair').style.display = 'none';
+    buildFullInventory();
+    if (document.pointerLockElement) document.exitPointerLock();
+  }
+  function closeInventory() {
+    inventoryOpen = false;
+    inventoryScreen.classList.add('hidden');
+    if (gameMode !== 'spectator') $('crosshair').style.display = 'block';
+    if (appState === 'playing' && !document.pointerLockElement) {
+      renderer.domElement.requestPointerLock();
+    }
+  }
+  $('invCloseBtn').addEventListener('click', closeInventory);
+  inventoryScreen.addEventListener('click', function (e) {
+    if (e.target === inventoryScreen) closeInventory();
+  });
+
+  /* ═══════════════════════════════════════════════════
+     生命值
+     ═══════════════════════════════════════════════════ */
+  var healthCanvas = document.createElement('canvas');
+  healthCanvas.width = 10 * 20 + 4;
+  healthCanvas.height = 22;
+  healthCanvas.style.height = '20px';
+  healthCanvas.style.width = (10 * 20 + 4) * (20 / 22) + 'px';
+  healthCanvas.style.imageRendering = 'pixelated';
+  $('healthBar').appendChild(healthCanvas);
+  var healthCtx = healthCanvas.getContext('2d');
+
+  function drawHeartShape(g, x, y, size, color, fillRatio) {
+    var s = size / 24;
+    g.save(); g.translate(x, y); g.scale(s, s);
+    g.beginPath();
+    g.moveTo(12, 21.35); g.lineTo(10.55, 20.03);
+    g.bezierCurveTo(5.4, 15.36, 2, 12.28, 2, 8.5);
+    g.bezierCurveTo(2, 5.42, 4.42, 3, 7.5, 3);
+    g.bezierCurveTo(9.24, 3, 10.91, 3.81, 12, 5.09);
+    g.bezierCurveTo(13.09, 3.81, 14.76, 3, 16.5, 3);
+    g.bezierCurveTo(19.58, 3, 22, 5.42, 22, 8.5);
+    g.bezierCurveTo(22, 12.28, 18.6, 15.36, 13.45, 20.03);
+    g.closePath();
+    if (fillRatio >= 1) { g.fillStyle = color; g.fill(); }
+    else {
+      g.clip();
+      g.fillStyle = '#3a3a3a'; g.fillRect(0, 0, 24, 24);
+      g.fillStyle = color; g.fillRect(0, 0, 24 * fillRatio, 24);
+    }
+    g.strokeStyle = 'rgba(0,0,0,0.55)'; g.lineWidth = 1; g.stroke();
+    g.restore();
+  }
+  function updateHealthDisplay() {
+    healthCtx.clearRect(0, 0, healthCanvas.width, healthCanvas.height);
+    if (gameMode !== 'survival' && gameMode !== 'hardcore') return;
+    for (var i = 0; i < 10; i++) {
+      var x = 2 + i * 20;
+      var hp = player.health - i * 2;
+      if (hp >= 2) drawHeartShape(healthCtx, x, 1, 20, '#ff3030', 1);
+      else if (hp === 1) drawHeartShape(healthCtx, x, 1, 20, '#ff3030', 0.5);
+      else drawHeartShape(healthCtx, x, 1, 20, '#3a3a3a', 1);
+    }
+  }
+
+  function getLookDir() {
+    var cp = Math.cos(pitch);
+    return { x: -Math.sin(yaw) * cp, y: Math.sin(pitch), z: -Math.cos(yaw) * cp };
+  }
+  function raycastVoxel(ox, oy, oz, dx, dy, dz, maxDist) {
+    var x = Math.floor(ox), y = Math.floor(oy), z = Math.floor(oz);
+    var stepX = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
+    var stepY = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
+    var stepZ = dz > 0 ? 1 : (dz < 0 ? -1 : 0);
+    var tDeltaX = stepX !== 0 ? Math.abs(1 / dx) : Infinity;
+    var tDeltaY = stepY !== 0 ? Math.abs(1 / dy) : Infinity;
+    var tDeltaZ = stepZ !== 0 ? Math.abs(1 / dz) : Infinity;
+    var tMaxX = stepX !== 0 ? (stepX > 0 ? (x + 1 - ox) : (ox - x)) / Math.abs(dx) : Infinity;
+    var tMaxY = stepY !== 0 ? (stepY > 0 ? (y + 1 - oy) : (oy - y)) / Math.abs(dy) : Infinity;
+    var tMaxZ = stepZ !== 0 ? (stepZ > 0 ? (z + 1 - oz) : (oz - z)) / Math.abs(dz) : Infinity;
+    var normal = { x: 0, y: 0, z: 0 };
+    if (isSolid(x, y, z)) return { x: x, y: y, z: z, normal: { x: 0, y: 1, z: 0 } };
+    var t = 0, guard = 0;
+    while (t <= maxDist && guard++ < 512) {
+      if (tMaxX < tMaxY) {
+        if (tMaxX < tMaxZ) { x += stepX; t = tMaxX; tMaxX += tDeltaX; normal = { x: -stepX, y: 0, z: 0 }; }
+        else { z += stepZ; t = tMaxZ; tMaxZ += tDeltaZ; normal = { x: 0, y: 0, z: -stepZ }; }
+      } else {
+        if (tMaxY < tMaxZ) { y += stepY; t = tMaxY; tMaxY += tDeltaY; normal = { x: 0, y: -stepY, z: 0 }; }
+        else { z += stepZ; t = tMaxZ; tMaxZ += tDeltaZ; normal = { x: 0, y: 0, z: -stepZ }; }
+      }
+      if (t > maxDist) break;
+      if (isSolid(x, y, z)) return { x: x, y: y, z: z, normal: normal };
+    }
+    return null;
+  }
+  function camRayHit() {
+    var d = getLookDir();
+    return raycastVoxel(camera.position.x, camera.position.y, camera.position.z, d.x, d.y, d.z, REACH);
+  }
+
+  function triggerSwing() { swingTime = SWING_DURATION; }
+
+  function doBreak() {
+    if (gameMode === 'spectator' || gameMode === 'adventure') return;
+    var hit = camRayHit();
+    if (!hit) return;
+    var b = getBlock(hit.x, hit.y, hit.z);
+    if (b === 0 || b === 7) return;
+    setBlock(hit.x, hit.y, hit.z, 0);
+    markDirty(hit.x, hit.z);
+    triggerSwing();
+    if (isMultiplayer && net.connected) net.sendBlockChange(hit.x, hit.y, hit.z, 0);
+  }
+
+  function doPlace() {
+    if (gameMode === 'spectator') return;
+    var hit = camRayHit();
+    if (!hit) return;
+    var x = hit.x + hit.normal.x, y = hit.y + hit.normal.y, z = hit.z + hit.normal.z;
+    if (getBlock(x, y, z) !== 0) return;
+    if (gameMode === 'survival' || gameMode === 'hardcore' || gameMode === 'adventure') {
+      var p = player.pos;
+      var overlapX = (x + 1 > p.x - PLAYER_HALF) && (x < p.x + PLAYER_HALF);
+      var overlapY = (y + 1 > p.y) && (y < p.y + PLAYER_HEIGHT);
+      var overlapZ = (z + 1 > p.z - PLAYER_HALF) && (z < p.z + PLAYER_HALF);
+      if (overlapX && overlapY && overlapZ) return;
+    }
+    setBlock(x, y, z, selectedBlock);
+    markDirty(x, z);
+    triggerSwing();
+    if (isMultiplayer && net.connected) net.sendBlockChange(x, y, z, selectedBlock);
+  }
+
+  function applyDamage(amount) {
+    if (gameMode !== 'survival' && gameMode !== 'hardcore') return;
+    if (difficulty === 'peaceful') return;
+    player.health -= amount;
+    if (player.health <= 0) {
+      player.health = 0;
+      updateHealthDisplay();
+      onDeath();
+    } else updateHealthDisplay();
+  }
+
+  function onDeath() {
+    setAppState('dead');
+    deathScreen.classList.remove('hidden');
+    addChatMessage('你死了！', 'error');
+    setTimeout(function () {
+      deathScreen.classList.add('hidden');
+      spawnPlayer();
+      updateChunks(true);
+      updateHealthDisplay();
+      setAppState('playing');
+    }, 2000);
+  }
+
+  function physics(dt) {
+    var ix = 0, iz = 0;
+    if (keys['w'] || keys['arrowup']) iz -= 1;
+    if (keys['s'] || keys['arrowdown']) iz += 1;
+    if (keys['a'] || keys['arrowleft']) ix -= 1;
+    if (keys['d'] || keys['arrowright']) ix += 1;
+    var len = Math.hypot(ix, iz);
+    if (len > 0) { ix /= len; iz /= len; }
+    var sinY = Math.sin(yaw), cosY = Math.cos(yaw);
+    var worldDX = sinY * iz + cosY * ix;
+    var worldDZ = cosY * iz - sinY * ix;
+    var isFlying = (gameMode === 'creative' || gameMode === 'spectator') && flying;
+    var sprintKey = keys['shift'] && !isFlying;
+    var speed = isFlying ? (keys['shift'] ? FLY_SPEED * 1.7 : FLY_SPEED) : (sprintKey ? RUN_SPEED : WALK_SPEED);
+    var targetVX = worldDX * speed, targetVZ = worldDZ * speed;
+    var accel = (player.onGround || isFlying) ? 16 : 4;
+    var k = Math.min(1, accel * dt);
+    player.vel.x += (targetVX - player.vel.x) * k;
+    player.vel.z += (targetVZ - player.vel.z) * k;
+
+    if (isFlying) {
+      var flyY = 0;
+      if (keys[' ']) flyY += 1;
+      if (keys['shift']) flyY -= 1;
+      player.vel.y += (flyY * FLY_SPEED - player.vel.y) * Math.min(1, 14 * dt);
+    } else {
+      if (keys[' '] && player.onGround) { player.vel.y = JUMP_VELOCITY; player.onGround = false; }
+      if (settings.autoJump && player.onGround) {
+        var moving = Math.abs(player.vel.x) > 0.5 || Math.abs(player.vel.z) > 0.5;
+        if (moving) {
+          var dirX = player.vel.x, dirZ = player.vel.z;
+          var lenH = Math.hypot(dirX, dirZ);
+          if (lenH > 0.5) {
+            var nx = dirX / lenH, nz = dirZ / lenH;
+            var fx = Math.floor(player.pos.x + nx * 0.45);
+            var fz = Math.floor(player.pos.z + nz * 0.45);
+            var fy = Math.floor(player.pos.y);
+            if (isSolid(fx, fy, fz) && !isSolid(fx, fy + 1, fz) && !isSolid(fx, fy + 2, fz)) {
+              player.vel.y = JUMP_VELOCITY; player.onGround = false;
+            }
+          }
+        }
+      }
+      player.vel.y -= GRAVITY * dt;
+      if (player.vel.y < -35) player.vel.y = -35;
+    }
+
+    if (gameMode === 'spectator') {
+      player.pos.x += player.vel.x * dt;
+      player.pos.y += player.vel.y * dt;
+      player.pos.z += player.vel.z * dt;
+      player.onGround = false;
+    } else {
+      player.onGround = false;
+      collideAxis('x', player.vel.x * dt);
+      collideAxis('z', player.vel.z * dt);
+      collideAxis('y', player.vel.y * dt);
+    }
+    if ((gameMode === 'survival' || gameMode === 'hardcore') && difficulty !== 'peaceful') {
+      if (!player.onGround && player.vel.y < 0) {
+        if (player.fallStartY === null) player.fallStartY = player.pos.y;
+        else if (player.pos.y > player.fallStartY) player.fallStartY = player.pos.y;
+      } else if (player.onGround && player.fallStartY !== null) {
+        var dist = player.fallStartY - player.pos.y;
+        if (dist > 3) applyDamage(Math.floor(dist - 3));
+        player.fallStartY = null;
+      } else if (player.onGround) player.fallStartY = null;
+      if (player.health > 0 && player.health < player.maxHealth) {
+        player.regenTimer += dt;
+        if (player.regenTimer >= 4) {
+          player.regenTimer = 0;
+          player.health = Math.min(player.maxHealth, player.health + 1);
+          updateHealthDisplay();
+        }
+      }
+    }
+    if (player.pos.y < -25) {
+      if (gameMode === 'survival' || gameMode === 'hardcore') applyDamage(20);
+      if (player.health > 0 || gameMode === 'creative' || gameMode === 'spectator' || gameMode === 'adventure') {
+        spawnPlayer(); updateChunks(true);
+      }
+    }
+    var speed2 = Math.hypot(player.vel.x, player.vel.z);
+    if (speed2 > 0.8 && (player.onGround || isFlying)) {
+      walkPhase += dt * (speed2 * 2.2);
+      bobPhase += dt * (speed2 * 2.0);
+    } else {
+      walkPhase *= 0.86;
+      bobPhase *= 0.86;
+    }
+  }
+
+  function updateHand(dt) {
+    var swingX = 0, swingZ = 0;
+    if (swingTime > 0) {
+      swingTime -= dt;
+      if (swingTime < 0) swingTime = 0;
+      var t = 1 - swingTime / SWING_DURATION;
+      var s = Math.sin(t * Math.PI);
+      swingX = -s * 1.05; swingZ = s * 0.28;
+    }
+    var idleT = performance.now() / 1000;
+    var idleX = Math.sin(idleT * 1.6) * 0.020;
+    var idleY = Math.sin(idleT * 1.1) * 0.010;
+    var idleZ = Math.sin(idleT * 0.9) * 0.014;
+    var moveAmp = Math.min(0.05, Math.hypot(player.vel.x, player.vel.z) * 0.010);
+    var walkX = Math.sin(walkPhase * 2) * moveAmp;
+    var walkY = Math.cos(walkPhase) * moveAmp * 0.7;
+    var lerp = Math.min(1, dt * 16);
+    handPivot.rotation.x += (handBaseRot.x + swingX + idleX + walkX - handPivot.rotation.x) * lerp;
+    handPivot.rotation.y += (handBaseRot.y + idleZ - handPivot.rotation.y) * lerp;
+    handPivot.rotation.z += (handBaseRot.z + swingZ - handPivot.rotation.z) * lerp;
+    handPivot.position.x += (handBasePos.x + idleY - handPivot.position.x) * lerp;
+    handPivot.position.y += (handBasePos.y + idleY * 0.6 - handPivot.position.y) * lerp;
+    handPivot.position.z += (handBasePos.z - handPivot.position.z) * lerp;
+    handPivot.visible = (gameMode !== 'spectator');
+  }
+
+  var lastCX = null, lastCY = null, lastCZ = null, lastBiome = null;
+  function updateHUD() {
+    var cx = Math.floor(player.pos.x);
+    var cy = Math.floor(player.pos.y);
+    var cz = Math.floor(player.pos.z);
+    if (cx !== lastCX || cy !== lastCY || cz !== lastCZ) {
+      $('hudCoord').textContent = 'X ' + cx + ' · Y ' + cy + ' · Z ' + cz;
+      lastCX = cx; lastCY = cy; lastCZ = cz;
+    }
+    var p = terrainParams(cx, cz);
+    if (p.biome !== lastBiome) {
+      lastBiome = p.biome;
+      var info = BIOME_INFO[p.biome];
+      $('hudBiomeName').textContent = info.name;
+      $('hudBiomeDot').style.background = info.color;
+    }
+    if (isMultiplayer && currentRoom) {
+      $('hudOnline').style.display = 'block';
+      $('hudOnline').textContent = '联机 · ' + currentRoom.name + ' (' + (net.remotePlayers.size + 1) + '/' + currentRoom.max_players + ')';
+    } else $('hudOnline').style.display = 'none';
+  }
+
+  function updatePlayerListUI() {
+    if (!isMultiplayer) { $('playerList').innerHTML = ''; return; }
+    var html = '';
+    html += '<div class="player-tag me">★ ' + escapeHtml(myPlayerName) + ' (你)</div>';
+    net.remotePlayers.forEach(function (p) {
+      html += '<div class="player-tag">' + escapeHtml(p.name) + '</div>';
+    });
+    $('playerList').innerHTML = html;
+  }
+
+  var FIXED_STEP = 1 / 120;
+  var accumulator = 0;
+  var lastTime = performance.now();
+  var fpsCounter = 0, fpsTimer = 0, fpsValue = 0;
+
+  function updateCamera() {
+    var bobY = 0, bobX = 0;
+    if (settings.viewBobbing) {
+      bobY = Math.sin(bobPhase * 2) * 0.022;
+      bobX = Math.cos(bobPhase) * 0.014;
+    }
+    camera.position.set(player.pos.x + bobX, player.pos.y + EYE_HEIGHT + bobY, player.pos.z);
+    camera.rotation.x = pitch;
+    camera.rotation.y = yaw;
+    camera.rotation.z = 0;
+  }
+
+  function updateActions(dt) {
+    breakTimer -= dt;
+    placeTimer -= dt;
+    if (mouseHeld[0] && breakTimer <= 0) { breakTimer = 0.18; doBreak(); }
+    if (mouseHeld[2] && placeTimer <= 0) { placeTimer = 0.22; doPlace(); }
+  }
+
+  function updateHighlight() {
+    if (gameMode === 'spectator' || inventoryOpen || chatOpen) { highlightMesh.visible = false; return; }
+    var hit = camRayHit();
+    if (hit) {
+      highlightMesh.position.set(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5);
+      highlightMesh.visible = true;
+    } else highlightMesh.visible = false;
+  }
+
+  function loop(now) {
+    requestAnimationFrame(loop);
+    var dt = (now - lastTime) / 1000;
+    lastTime = now;
+    if (dt > 0.25) dt = 0.25;
+    if (dt < 0) dt = 0;
+
+    fpsCounter++;
+    fpsTimer += dt;
+    if (fpsTimer >= 0.5) {
+      fpsValue = Math.round(fpsCounter / fpsTimer);
+      $('hudFps').textContent = 'FPS ' + fpsValue;
+      fpsCounter = 0; fpsTimer = 0;
+    }
+
+    if (appState === 'playing' && !inventoryOpen && !chatOpen) {
+      accumulator += dt;
+      var iter = 0;
+      while (accumulator >= FIXED_STEP && iter < 20) {
+        physics(FIXED_STEP);
+        accumulator -= FIXED_STEP;
+        iter++;
+      }
+      if (iter >= 20) accumulator = 0;
+      updateActions(dt);
+      var pcx = Math.floor(player.pos.x / CHUNK_SIZE);
+      var pcz = Math.floor(player.pos.z / CHUNK_SIZE);
+      if (pcx !== lastPlayerChunkX || pcz !== lastPlayerChunkZ) updateChunks();
+      processDirtyChunks();
+    }
+
+    updateLoadingAnimations(now);
+    if (dirtyChunks.size > 0) {
+      chunkLoadingEl.classList.add('show');
+      var total = LOAD_RADIUS * LOAD_RADIUS * 4;
+      var loaded = total - Math.min(dirtyChunks.size, total);
+      $('chunkLoadingBar').style.width = ((loaded / total) * 100) + '%';
+      $('chunkLoadingCount').textContent = Math.max(0, dirtyChunks.size) + ' 待处理';
+    } else chunkLoadingEl.classList.remove('show');
+
+    if (appState === 'playing' || appState === 'paused' || appState === 'dead') {
+      updateCamera();
+      updateHand(dt);
+      updateHighlight();
+      updateHUD();
+    }
+
+    if (isMultiplayer && net.connected) net.tick(now);
+    renderer.render(scene, camera);
+  }
+
+  (function initParticles() {
+    var canvas = $('particles');
+    if (!canvas) return;
+    var pctx = canvas.getContext('2d');
+    var parts = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    for (var i = 0; i < 36; i++) {
+      parts.push({
+        x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+        size: 4 + Math.random() * 10,
+        vx: (Math.random() - 0.5) * 0.25, vy: -0.15 - Math.random() * 0.35,
+        rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.015,
+        alpha: 0.10 + Math.random() * 0.22
+      });
+    }
+    function loop() {
+      requestAnimationFrame(loop);
+      if (appState === 'playing' || appState === 'paused' || appState === 'dead') {
+        pctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+      pctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if (p.y < -30) { p.y = canvas.height + 30; p.x = Math.random() * canvas.width; }
+        if (p.x < -30) p.x = canvas.width + 30;
+        if (p.x > canvas.width + 30) p.x = -30;
+        pctx.save(); pctx.translate(p.x, p.y); pctx.rotate(p.rot);
+        pctx.fillStyle = 'rgba(61,82,31,' + p.alpha + ')';
+        pctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        pctx.restore();
+      }
+    }
+    loop();
+  })();
+
+  /* ═══════════════════════════════════════════════════
+     网络模块
+     ═══════════════════════════════════════════════════ */
+  var net = {
+    connected: false,
+    roomChannel: null,
+    myPlayerId: null,
+    remotePlayers: new Map(),
+    lastMoveSent: 0,
+    moveSendInterval: 80,
+
+    connect: function (room) {
+      if (!supabaseReady) {
+        this.connected = false;
+        addChatMessage('⚠️ Supabase 未连接，联机不可用', 'error');
+        return;
+      }
+      this.connected = true;
+      var self = this;
+
+      this.roomChannel = sbClient.channel('room-' + room.id, {
+        config: { broadcast: { self: false } }
+      });
+
+      this.roomChannel.on('broadcast', { event: 'move' }, function (payload) {
+        self.handlePlayerMove(payload.payload);
+      });
+      this.roomChannel.on('broadcast', { event: 'block' }, function (payload) {
+        var d = payload.payload;
+        setBlock(d.x, d.y, d.z, d.block);
+        markDirty(d.x, d.z);
+      });
+      this.roomChannel.on('broadcast', { event: 'chat' }, function (payload) {
+        var d = payload.payload;
+        addChatMessage('<span class="sender">' + escapeHtml(d.from) + '</span> ' + escapeHtml(d.text), 'player');
+      });
+      this.roomChannel.on('broadcast', { event: 'join' }, function (payload) {
+        var d = payload.payload;
+        if (d.id === self.myPlayerId) return;
+        addChatMessage('<span class="sender">' + escapeHtml(d.name) + '</span> 加入了游戏', 'system');
+        self.addRemotePlayer(d.id, d.name);
+        updatePlayerListUI();
+        self.broadcast('join', { id: self.myPlayerId, name: myPlayerName });
+      });
+      this.roomChannel.on('broadcast', { event: 'leave' }, function (payload) {
+        var d = payload.payload;
+        var p = self.remotePlayers.get(d.id);
+        if (p) {
+          addChatMessage(p.name + ' 离开了游戏', 'system');
+          if (p.mesh) scene.remove(p.mesh);
+          self.remotePlayers.delete(d.id);
+          updatePlayerListUI();
+        }
+      });
+
+      this.myPlayerId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+
+      this.roomChannel.subscribe(function (status) {
+        if (status === 'SUBSCRIBED') {
+          self.broadcast('join', { id: self.myPlayerId, name: myPlayerName });
+          addChatMessage('已连接到实时服务器 ✓', 'success');
+        }
+      });
+
+      setInterval(function () {
+        var now = Date.now();
+        self.remotePlayers.forEach(function (p, id) {
+          if (p.lastSeen && now - p.lastSeen > 15000) {
+            addChatMessage(p.name + ' 超时离开', 'system');
+            if (p.mesh) scene.remove(p.mesh);
+            self.remotePlayers.delete(id);
+            updatePlayerListUI();
+          }
+        });
+      }, 5000);
+    },
+
+    disconnect: function () {
+      if (this.roomChannel) {
+        this.broadcast('leave', { id: this.myPlayerId });
+        try { sbClient.removeChannel(this.roomChannel); } catch (e) {}
+      }
+      this.remotePlayers.forEach(function (p) { if (p.mesh) scene.remove(p.mesh); });
+      this.remotePlayers.clear();
+      this.connected = false;
+      $('playerList').innerHTML = '';
+
+      // 减少房间玩家计数
+      if (currentRoom && supabaseReady) {
+        var newCount = Math.max(1, currentRoom.current_players - 1);
+        sbClient.from('rooms').update({ current_players: newCount }).eq('id', currentRoom.id).then(function () {});
+      }
+    },
+
+    broadcast: function (event, payload) {
+      if (this.roomChannel) this.roomChannel.send({ type: 'broadcast', event: event, payload: payload });
+    },
+    sendChat: function (text) { this.broadcast('chat', { from: myPlayerName, text: text }); },
+    sendBlockChange: function (x, y, z, block) { this.broadcast('block', { x: x, y: y, z: z, block: block }); },
+
+    tick: function (now) {
+      if (!this.connected) return;
+      if (now - this.lastMoveSent >= this.moveSendInterval) {
+        this.lastMoveSent = now;
+        this.broadcast('move', {
+          id: this.myPlayerId, name: myPlayerName,
+          x: player.pos.x, y: player.pos.y, z: player.pos.z,
+          yaw: yaw, pitch: pitch
+        });
+      }
+      this.remotePlayers.forEach(function (p) {
+        if (p.mesh && p.tx !== undefined) {
+          p.mesh.position.x += (p.tx - p.mesh.position.x) * 0.2;
+          p.mesh.position.y += ((p.ty + 0.9) - p.mesh.position.y) * 0.2;
+          p.mesh.position.z += (p.tz - p.mesh.position.z) * 0.2;
+          if (p.tyaw !== undefined) {
+            var dy = p.tyaw - p.mesh.rotation.y;
+            while (dy > Math.PI) dy -= Math.PI * 2;
+            while (dy < -Math.PI) dy += Math.PI * 2;
+            p.mesh.rotation.y += dy * 0.2;
+          }
+        }
+      });
+    },
+
+    handlePlayerMove: function (d) {
+      if (d.id === this.myPlayerId) return;
+      var p = this.remotePlayers.get(d.id);
+      if (!p) { this.addRemotePlayer(d.id, d.name || '玩家'); p = this.remotePlayers.get(d.id); }
+      if (p) {
+        p.lastSeen = Date.now();
+        p.tx = d.x; p.ty = d.y; p.tz = d.z; p.tyaw = d.yaw;
+      }
+    },
+
+    addRemotePlayer: function (id, name) {
+      if (this.remotePlayers.has(id)) return;
+      var group = new THREE.Group();
+      var body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 1.1, 0.28),
+        new THREE.MeshLambertMaterial({ color: 0x2e9cc9 })
+      );
+      body.position.y = 0.55; group.add(body);
+      var head = new THREE.Mesh(
+        new THREE.BoxGeometry(0.44, 0.44, 0.44),
+        new THREE.MeshLambertMaterial({ color: 0xe8b48c })
+      );
+      head.position.y = 1.35; group.add(head);
+      var hairTop = new THREE.Mesh(
+        new THREE.BoxGeometry(0.46, 0.08, 0.46),
+        new THREE.MeshLambertMaterial({ color: 0x4a3020 })
+      );
+      hairTop.position.y = 1.58; group.add(hairTop);
+
+      var canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 64;
+      var g = canvas.getContext('2d');
+      g.fillStyle = 'rgba(0,0,0,0.55)';
+      g.fillRect(0, 0, 256, 64);
+      g.fillStyle = '#fff';
+      g.font = 'bold 32px "Microsoft YaHei", sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(name, 128, 32);
+      var texture = new THREE.CanvasTexture(canvas);
+      var spriteMat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+      var sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(1.8, 0.45, 1);
+      sprite.position.y = 2.0;
+      group.add(sprite);
+
+      scene.add(group);
+      this.remotePlayers.set(id, { name: name, mesh: group, lastSeen: Date.now() });
+    }
+  };
+
+  /* ═══════════════════════════════════════════════════
+     启动
+     ═══════════════════════════════════════════════════ */
+  setGameMode('creative');
+  spawnPlayer();
+  updateCamera();
+  updateHUD();
+  updateHealthDisplay();
+
+  refreshWorldList();
+  setAppState('mainMenu');
+
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
