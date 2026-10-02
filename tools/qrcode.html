@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>二维码生成器 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+<script>
+(function(){try{var t=localStorage.getItem('wiki-theme');var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+<style>
+:root,[data-theme="mc-wiki"]{--bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;--bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;--ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;--sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#56682c,#3d521f);--topbar-fg:#fff;--topbar-bd:#2a3a1a}
+[data-theme="mc-night"]{--bg:#1a1a1a;--bg2:#242424;--bg3:#303030;--text:#e0e0e0;--muted:#909090;--bd:#505050;--bd2:#6a6a6a;--ac:#8ec44a;--acs:#2a3a1a;--ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;--sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#2a3a1a,#1a2a0a);--topbar-fg:#e8ffd0;--topbar-bd:#0a1a00}
+[data-theme="mc-nether"]{--bg:#1a0a0a;--bg2:#2a1212;--bg3:#3a1a1a;--text:#f0d0d0;--muted:#a08080;--bd:#6a3030;--bd2:#8a4040;--ac:#ff6030;--acs:#3a1a10;--ok:#5ab05a;--warn:#d4a72c;--dgr:#f85050;--sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#3a1212,#1a0a0a);--topbar-fg:#ffe0d0;--topbar-bd:#0a0500}
+[data-theme="mc-end"]{--bg:#0f0a1a;--bg2:#1a1230;--bg3:#251a40;--text:#e0d0f0;--muted:#9080a0;--bd:#4a3a6a;--bd2:#6a5a8a;--ac:#a060ff;--acs:#2a1a3a;--ok:#5ab05a;--warn:#d4a72c;--dgr:#e05050;--sh:2px 2px 0 rgba(0,0,0,.5);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#2a1a3a,#0f0a1a);--topbar-fg:#e0d0ff;--topbar-bd:#0a0510}
+[data-theme="sakura"]{--bg:#fffafc;--bg2:#fff0f5;--bg3:#ffe0ea;--text:#2a1a20;--muted:#806070;--bd:#e0b0c0;--bd2:#a06080;--ac:#d04080;--acs:#ffe0ea;--ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;--sh:2px 2px 0 rgba(160,80,120,.2);--r:4px;--bevel:inset -1px -1px 0 rgba(160,80,120,.1),inset 1px 1px 0 rgba(255,255,255,.8);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#d06090,#a04070);--topbar-fg:#fff;--topbar-bd:#802050}
+[data-theme="ocean"]{--bg:#f0f8ff;--bg2:#e0f0fa;--bg3:#c8e0f0;--text:#0a1a2a;--muted:#406080;--bd:#a0c0d8;--bd2:#406080;--ac:#0066cc;--acs:#c8e4ff;--ok:#1a7f37;--warn:#b08800;--dgr:#cf222e;--sh:2px 2px 0 rgba(32,80,140,.2);--r:4px;--bevel:inset -1px -1px 0 rgba(32,80,140,.1),inset 1px 1px 0 rgba(255,255,255,.8);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#2080c0,#004890);--topbar-fg:#fff;--topbar-bd:#002040}
+[data-theme="github-light"]{--bg:#ffffff;--bg2:#f6f8fa;--bg3:#eef1f4;--text:#1f2328;--muted:#59636e;--bd:#d1d9e0;--bd2:#a0a8b0;--ac:#0969da;--acs:#ddf4ff;--ok:#1a7f37;--warn:#d4a72c;--dgr:#cf222e;--sh:0 1px 4px rgba(31,35,40,.08);--r:6px;--bevel:none;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:#ffffff;--topbar-fg:#1f2328;--topbar-bd:#d1d9e0}
+[data-theme="github-dark"]{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--text:#e6edf3;--muted:#9198a1;--bd:#30363d;--bd2:#484f58;--ac:#4493f8;--acs:#16233a;--ok:#3fb950;--warn:#d4a72c;--dgr:#f85149;--sh:0 1px 4px rgba(0,0,0,.4);--r:6px;--bevel:none;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:#161b22;--topbar-fg:#e6edf3;--topbar-bd:#30363d}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--bg);transition:background-color .3s}
+body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;transition:color .3s}
+.topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:2px solid var(--topbar-bd);z-index:50}
+[data-theme^="mc-"] .topbar .logo{text-shadow:1px 1px 0 rgba(0,0,0,.4)}
+.logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none}
+.logo-icon{font-size:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.logo:hover .logo-icon{transform:rotate(-8deg) scale(1.08)}
+.sp{flex:1}
+.icon{display:grid;place-items:center;width:30px;height:30px;font-size:14px;font-family:inherit;color:inherit;background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s}
+.icon:hover{background:rgba(0,0,0,.2)}
+[data-theme^="github-"] .icon{color:var(--muted)}
+[data-theme^="github-"] .icon:hover{background:var(--bg3);color:var(--text)}
+.wrap{max-width:920px;margin:0 auto;padding:32px 24px 80px}
+.hero{text-align:center;margin-bottom:28px}
+.hero h1{margin:0 0 8px;font-size:1.8rem;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;color:var(--muted);font-size:14px}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);padding:22px;margin-bottom:18px}
+[data-theme^="mc-"] .card{border:2px solid var(--bd2);border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.18),var(--bevel)}
+.card-title{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:14px;font-weight:800;letter-spacing:.03em}
+.card-title::before{content:"";width:10px;height:10px;background:var(--ac);border:2px solid var(--bd2);flex:none}
+[data-theme^="github-"] .card-title::before{border:none;border-radius:3px}
+.fld{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.fld label{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fld textarea,.fld input,.fld select{font-family:inherit;font-size:14px;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);outline:none;padding:9px 12px;transition:border-color .15s,box-shadow .15s}
+[data-theme^="mc-"] .fld textarea,[data-theme^="mc-"] .fld input,[data-theme^="mc-"] .fld select{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
+.fld textarea{resize:vertical;min-height:90px;line-height:1.6}
+.fld textarea:focus,.fld input:focus,.fld select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--text);background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);cursor:pointer;transition:all .15s cubic-bezier(.34,1.56,.64,1)}
+.btn:hover:not(:disabled){background:var(--acs);border-color:var(--ac);transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+[data-theme^="mc-"] .btn{border:2px solid var(--bd2);border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.2),var(--bevel)}
+[data-theme^="mc-"] .btn.pri{background:var(--ac);color:var(--bg);border-color:var(--bd2)}
+[data-theme^="mc-"] .btn.pri:hover{filter:brightness(1.12)}
+.qr-box{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;background:#fff;border:1px solid var(--bd);border-radius:var(--r);min-height:280px;justify-content:center}
+[data-theme^="mc-"] .qr-box{border:2px solid var(--bd2);border-radius:2px}
+#qrCanvas{max-width:100%;height:auto;image-rendering:pixelated}
+.qr-empty{color:#888;font-size:13px;text-align:center}
+.tip{font-size:12px;color:var(--muted);line-height:1.7;padding:10px 12px;background:var(--bg3);border-left:3px solid var(--ac);border-radius:var(--r)}
+.toast{position:fixed;left:50%;bottom:20px;padding:8px 18px;font-size:13px;color:var(--bg);background:var(--text);border-radius:var(--r);box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(16px);transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:200}
+[data-theme^="mc-"] .toast{background:#2a3a1a;color:#e8ffd0;border:2px solid #4a4a3a;border-radius:2px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:640px){.wrap{padding:20px 14px 60px}.hero h1{font-size:1.4rem}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="logo" href="../index.html"><span class="logo-icon">←</span><span>返回主页</span></a>
+  <span class="sp"></span>
+  <span style="font-size:13px;opacity:.85">📱 二维码生成器</span>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>📱 二维码生成器</h1>
+    <p>纯前端生成 · 支持中文 · 可下载 PNG</p>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">输入内容</h2>
+    <div class="fld">
+      <label>文本 / 链接 / 任意内容</label>
+      <textarea id="qrText" placeholder="https://example.com&#10;或任意文字，支持中文…">https://github.com/HSDL03</textarea>
+    </div>
+    <div class="grid2">
+      <div class="fld">
+        <label>尺寸（像素）</label>
+        <input id="qrSize" type="number" value="320" min="120" max="1024" step="20">
+      </div>
+      <div class="fld">
+        <label>容错级别</label>
+        <select id="qrLevel">
+          <option value="L">L · 低（7%）</option>
+          <option value="M" selected>M · 中（15%）</option>
+          <option value="Q">Q · 较高（25%）</option>
+          <option value="H">H · 高（30%）</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn pri" id="btnGen" type="button">✨ 生成二维码</button>
+      <button class="btn" id="btnDownload" type="button" disabled>💾 下载 PNG</button>
+      <button class="btn" id="btnClear" type="button">🗑 清空</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">预览</h2>
+    <div class="qr-box" id="qrBox">
+      <div class="qr-empty">点击「生成二维码」后在此显示</div>
+      <canvas id="qrCanvas" style="display:none"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tip">
+      💡 <strong>提示</strong>：二维码使用 CDN 库 <code>qrcode.js</code> 生成，完全在你的浏览器本地计算，内容不会上传到任何服务器。首次打开需要联网加载一次库文件。
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toastEl=$('toast'),toastT=null;
+function toast(m){if(!toastEl)return;toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('show');},2000);}
+
+var canvas=$('qrCanvas'),box=$('qrBox'),genBtn=$('btnGen'),dlBtn=$('btnDownload'),clrBtn=$('btnClear');
+var textEl=$('qrText'),sizeEl=$('qrSize'),levelEl=$('qrLevel');
+var hasQR=false;
+
+function showEmpty(msg){
+  box.innerHTML='<div class="qr-empty">'+msg+'</div>';
+  hasQR=false;dlBtn.disabled=true;
+}
+
+function generate(){
+  var text=(textEl.value||'').trim();
+  if(!text){toast('请输入内容');textEl.focus();return;}
+  if(typeof QRCode==='undefined'){
+    toast('二维码库未加载，请检查网络');
+    showEmpty('二维码库加载失败，请刷新重试');
+    return;
+  }
+  var size=parseInt(sizeEl.value,10)||320;
+  if(size<120)size=120;if(size>1024)size=1024;
+  var level=(levelEl.value||'M').toUpperCase();
+
+  /* 重建 canvas（因为可能被 empty 覆盖掉了） */
+  box.innerHTML='';
+  canvas=document.createElement('canvas');
+  canvas.id='qrCanvas';
+  box.appendChild(canvas);
+
+  QRCode.toCanvas(canvas,text,{
+    width:size,
+    margin:2,
+    errorCorrectionLevel:level,
+    color:{dark:'#000000',light:'#ffffff'}
+  },function(err){
+    if(err){
+      console.error(err);
+      toast('生成失败：'+err.message);
+      showEmpty('生成失败，请检查输入');
+      return;
+    }
+    hasQR=true;
+    dlBtn.disabled=false;
+    toast('生成成功');
+  });
+}
+
+function download(){
+  if(!hasQR)return;
+  var c=box.querySelector('canvas');
+  if(!c)return;
+  try{
+    var url=c.toDataURL('image/png');
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='qrcode-'+Date.now()+'.png';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    toast('已下载');
+  }catch(e){
+    toast('下载失败：'+e.message);
+  }
+}
+
+function clearAll(){
+  textEl.value='';
+  showEmpty('点击「生成二维码」后在此显示');
+  textEl.focus();
+}
+
+genBtn.addEventListener('click',generate);
+dlBtn.addEventListener('click',download);
+clrBtn.addEventListener('click',clearAll);
+
+textEl.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();generate();}
+});
+
+sizeEl.addEventListener('change',function(){if(hasQR)generate();});
+levelEl.addEventListener('change',function(){if(hasQR)generate();});
+})();
+</script>
+</body>
+</html>

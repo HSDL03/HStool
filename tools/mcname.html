@@ -1,0 +1,402 @@
+!DOCTYPE html
+html lang=zh-CN data-theme=mc-wiki
+head
+meta charset=UTF-8
+meta name=viewport content=width=device-width, initial-scale=1
+titleMC 名称随机器 · 红石的小站title
+link rel=icon href=dataimagesvg+xml,svg xmlns='httpwww.w3.org2000svg' viewBox='0 0 100 100'text y='.9em' font-size='90'🎲textsvg
+script
+(function(){try{var t=localStorage.getItem('wiki-theme');var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];if(ok.indexOf(t)-1)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+script
+style
+root,[data-theme=mc-wiki]{--bg#fffdf5;--bg2#f4f0e0;--bg3#e8e2cc;--text#1f1f1f;--muted#5c5c5c;--bd#a8a89a;--bd2#4a4a3a;--ac#3d521f;--acs#e0e8d0;--ok#2d7a2d;--warn#b08800;--dgr#a02020;--sh2px 2px 0 rgba(0,0,0,.2);--r2px;--bevelinset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);--fontSegoe UI,PingFang SC,Microsoft YaHei,sans-serif;--topbar-bglinear-gradient(180deg,#56682c,#3d521f);--topbar-fg#fff;--topbar-bd#2a3a1a}
+[data-theme=mc-night]{--bg#1a1a1a;--bg2#242424;--bg3#303030;--text#e0e0e0;--muted#909090;--bd#505050;--bd2#6a6a6a;--ac#8ec44a;--acs#2a3a1a;--ok#5ab05a;--warn#d4a72c;--dgr#e05050;--sh2px 2px 0 rgba(0,0,0,.5);--r2px;--bevelinset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--fontSegoe UI,PingFang SC,Microsoft YaHei,sans-serif;--topbar-bglinear-gradient(180deg,#2a3a1a,#1a2a0a);--topbar-fg#e8ffd0;--topbar-bd#0a1a00}
+[data-theme=mc-nether]{--bg#1a0a0a;--bg2#2a1212;--bg3#3a1a1a;--text#f0d0d0;--muted#a08080;--bd#6a3030;--bd2#8a4040;--ac#ff6030;--acs#3a1a10;--ok#5ab05a;--warn#d4a72c;--dgr#f85050;--sh2px 2px 0 rgba(0,0,0,.5);--r2px;--bevelinset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--fontSegoe UI,PingFang SC,Microsoft YaHei,sans-serif;--topbar-bglinear-gradient(180deg,#3a1212,#1a0a0a);--topbar-fg#ffe0d0;--topbar-bd#0a0500}
+[data-theme=mc-end]{--bg#0f0a1a;--bg2#1a1230;--bg3#251a40;--text#e0d0f0;--muted#9080a0;--bd#4a3a6a;--bd2#6a5a8a;--ac#a060ff;--acs#2a1a3a;--ok#5ab05a;--warn#d4a72c;--dgr#e05050;--sh2px 2px 0 rgba(0,0,0,.5);--r2px;--bevelinset -1px -1px 0 rgba(0,0,0,.5),inset 1px 1px 0 rgba(255,255,255,.06);--fontSegoe UI,PingFang SC,Microsoft YaHei,sans-serif;--topbar-bglinear-gradient(180deg,#2a1a3a,#0f0a1a);--topbar-fg#e0d0ff;--topbar-bd#0a0510}
+[data-theme=sakura]{--bg#fffafc;--bg2#fff0f5;--bg3#ffe0ea;--text#2a1a20;--muted#806070;--bd#e0b0c0;--bd2#a06080;--ac#d04080;--acs#ffe0ea;--ok#2d7a2d;--warn#b08800;--dgr#a02020;--sh2px 2px 0 rgba(160,80,120,.2);--r4px;--bevelinset -1px -1px 0 rgba(160,80,120,.1),inset 1px 1px 0 rgba(255,255,255,.8);--fontSegoe UI,PingFang SC,Microsoft YaHei,sans-serif;--topbar-bglinear-gradient(180deg,#d06090,#a04070);--topbar-fg#fff;--topbar-bd#802050}
+[data-theme=ocean]{--bg#f0f8ff;--bg2#e0f0fa;--bg3#c8e0f0;--text#0a1a2a;--muted#406080;--bd#a0c0d8;--bd2#406080;--ac#0066cc;--acs#c8e4ff;--ok#1a7f37;--warn#b08800;--dgr#cf222e;--sh2px 2px 0 rgba(32,80,140,.2);--r4px;--bevelinset -1px -1px 0 rgba(32,80,140,.1),inset 1px 1px 0 rgba(255,255,255,.8);--fontSegoe UI,PingFang SC,Microsoft YaHei,sans-serif;--topbar-bglinear-gradient(180deg,#2080c0,#004890);--topbar-fg#fff;--topbar-bd#002040}
+[data-theme=github-light]{--bg#ffffff;--bg2#f6f8fa;--bg3#eef1f4;--text#1f2328;--muted#59636e;--bd#d1d9e0;--bd2#a0a8b0;--ac#0969da;--acs#ddf4ff;--ok#1a7f37;--warn#d4a72c;--dgr#cf222e;--sh0 1px 4px rgba(31,35,40,.08);--r6px;--bevelnone;--font-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif;--topbar-bg#ffffff;--topbar-fg#1f2328;--topbar-bd#d1d9e0}
+[data-theme=github-dark]{--bg#0d1117;--bg2#161b22;--bg3#21262d;--text#e6edf3;--muted#9198a1;--bd#30363d;--bd2#484f58;--ac#4493f8;--acs#16233a;--ok#3fb950;--warn#d4a72c;--dgr#f85149;--sh0 1px 4px rgba(0,0,0,.4);--r6px;--bevelnone;--font-apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif;--topbar-bg#161b22;--topbar-fg#e6edf3;--topbar-bd#30363d}
+,before,after{box-sizingborder-box}
+html{backgroundvar(--bg);transitionbackground-color .3s}
+body{margin0;padding-top46px;backgroundtransparent;colorvar(--text);font-familyvar(--font);font-size14.5px;line-height1.6;-webkit-font-smoothingantialiased}
+.topbar{positionfixed;top0;left0;right0;height46px;displayflex;align-itemscenter;gap8px;padding0 12px;backgroundvar(--topbar-bg);colorvar(--topbar-fg);border-bottom2px solid var(--topbar-bd);z-index50}
+[data-theme^=mc-] .topbar .logo{text-shadow1px 1px 0 rgba(0,0,0,.4)}
+.logo{displayflex;align-itemscenter;gap8px;font-size14px;font-weight700;colorvar(--topbar-fg);text-decorationnone}
+.logo-icon{font-size16px;transitiontransform .3s cubic-bezier(.34,1.56,.64,1)}
+.logohover .logo-icon{transformrotate(-8deg) scale(1.08)}
+.sp{flex1}
+.wrap{max-width820px;margin0 auto;padding32px 24px 80px}
+.hero{text-aligncenter;margin-bottom24px}
+.hero h1{margin0 0 8px;font-size1.8rem;font-weight800;letter-spacing-.02em}
+.hero p{margin0;colorvar(--muted);font-size14px}
+.card{backgroundvar(--bg2);border1px solid var(--bd);border-radiusvar(--r);box-shadowvar(--sh);padding20px;margin-bottom16px}
+[data-theme^=mc-] .card{border2px solid var(--bd2);border-radius2px;box-shadow2px 2px 0 rgba(0,0,0,.18),var(--bevel)}
+.card-title{displayflex;align-itemscenter;gap8px;margin0 0 12px;font-size13px;font-weight800;letter-spacing.05em;text-transformuppercase;colorvar(--muted)}
+.card-titlebefore{content;width10px;height10px;backgroundvar(--ac);border2px solid var(--bd2);flexnone}
+[data-theme^=github-] .card-titlebefore{bordernone;border-radius3px}
+.opt-row{displayflex;gap8px;flex-wrapwrap;margin-bottom12px}
+.opt{displayinline-flex;align-itemscenter;gap5px;padding6px 14px;font-familyinherit;font-size13px;font-weight700;colorvar(--muted);backgroundvar(--bg);border1px solid var(--bd);border-radiusvar(--r);cursorpointer;transitionall .15s cubic-bezier(.34,1.56,.64,1);user-selectnone}
+.opthover{border-colorvar(--ac);colorvar(--text)}
+.opt.active{backgroundvar(--ac);colorvar(--bg);border-colorvar(--ac)}
+[data-theme^=mc-] .opt{border2px solid var(--bd2);border-radius2px;box-shadow2px 2px 0 rgba(0,0,0,.18),var(--bevel)}
+[data-theme^=mc-] .opt.active{box-shadowvar(--bevel);transformtranslate(1px,1px)}
+[data-theme^=github-] .opt{border-radius6px}
+.opt.static{cursordefault}
+.opt.statichover{border-colorvar(--ac);colorvar(--bg)}
+.count-row{displayflex;gap10px;flex-wrapwrap;align-itemscenter;margin-bottom12px}
+.count-row label{font-size12.5px;font-weight700;letter-spacing.03em;colorvar(--muted)}
+.count-input{width120px;height36px;padding0 10px;font-familyinherit;font-size14px;font-weight700;font-variant-numerictabular-nums;colorvar(--text);backgroundvar(--bg);border2px solid var(--bd2);border-radiusvar(--r);outlinenone;text-aligncenter;transitionborder-color .15s,box-shadow .15s;-moz-appearancetextfield}
+[data-theme^=github-] .count-input{border-width1px;border-radius6px}
+.count-input-webkit-outer-spin-button,.count-input-webkit-inner-spin-button{-webkit-appearancenone;margin0}
+.count-inputfocus{border-colorvar(--ac);box-shadow0 0 0 3px var(--acs)}
+.quick-btns{displayflex;gap4px}
+.quick-btns button{padding5px 9px;font-familyinherit;font-size11.5px;font-weight700;colorvar(--muted);backgroundvar(--bg);border1px solid var(--bd);border-radiusvar(--r);cursorpointer;transitionall .15s}
+.quick-btns buttonhover{colorvar(--text);border-colorvar(--ac);backgroundvar(--acs)}
+.list{displayflex;flex-directioncolumn;gap8px;margin-top6px;max-height640px;overflow-yauto;padding-right2px}
+.list-webkit-scrollbar{width8px}
+.list-webkit-scrollbar-track{backgroundvar(--bg3);border-radius4px}
+.list-webkit-scrollbar-thumb{backgroundvar(--bd);border-radius4px}
+.list-webkit-scrollbar-thumbhover{backgroundvar(--ac)}
+.name-row{displayflex;align-itemscenter;gap10px;padding10px 14px;backgroundvar(--bg);border1px solid var(--bd);border-radiusvar(--r);transitionall .15s cubic-bezier(.34,1.56,.64,1);cursorpointer;flexnone}
+.name-rowhover{border-colorvar(--ac);transformtranslateX(3px)}
+[data-theme^=mc-] .name-row{border2px solid var(--bd2);border-radius2px;box-shadow2px 2px 0 rgba(0,0,0,.16)}
+[data-theme^=mc-] .name-rowactive{box-shadowvar(--bevel);transformtranslate(2px,2px)}
+.name-idx{flexnone;min-width34px;height24px;padding0 6px;displaygrid;place-itemscenter;font-size11.5px;font-weight700;colorvar(--muted);backgroundvar(--bg2);border-radius4px;font-variant-numerictabular-nums}
+.name-text{flex1;min-width0;font-size16px;font-weight800;letter-spacing.02em;overflowhidden;text-overflowellipsis;white-spacenowrap}
+[data-theme^=mc-] .name-text{text-shadow1px 1px 0 rgba(255,255,255,.4)}
+.name-len{flexnone;font-size11px;colorvar(--muted);font-variant-numerictabular-nums}
+.name-copy{flexnone;font-size12px;colorvar(--ac);font-weight700;opacity0;transitionopacity .15s}
+.name-rowhover .name-copy{opacity1}
+.row{displayflex;gap10px;flex-wrapwrap;align-itemscenter}
+.btn{displayinline-flex;align-itemscenter;gap6px;padding8px 16px;font-familyinherit;font-size13.5px;font-weight700;colorvar(--text);backgroundvar(--bg3);border1px solid var(--bd);border-radiusvar(--r);box-shadowvar(--sh);cursorpointer;transitionall .15s cubic-bezier(.34,1.56,.64,1)}
+.btnhover{backgroundvar(--acs);border-colorvar(--ac);transformtranslateY(-1px)}
+.btnactive{transformtranslateY(1px)}
+.btndisabled{opacity.55;cursornot-allowed;transformnone}
+[data-theme^=mc-] .btn{border2px solid var(--bd2);border-radius2px;box-shadow2px 2px 0 rgba(0,0,0,.2),var(--bevel)}
+[data-theme^=mc-] .btnactive{box-shadowvar(--bevel);transformtranslate(2px,2px)}
+[data-theme^=mc-] .btn.pri{backgroundvar(--ac);colorvar(--bg);border-colorvar(--bd2)}
+.tip{font-size12px;colorvar(--muted);line-height1.8;padding10px 12px;backgroundvar(--bg3);border-left3px solid var(--ac);border-radiusvar(--r)}
+.empty{text-aligncenter;padding40px 20px;colorvar(--muted);font-size13.5px;border2px dashed var(--bd);border-radiusvar(--r)}
+.summary{font-size12.5px;colorvar(--muted);margin-top8px;font-variant-numerictabular-nums}
+.toast{positionfixed;left50%;bottom20px;padding8px 18px;font-size13px;colorvar(--bg);backgroundvar(--text);border-radiusvar(--r);box-shadowvar(--sh);opacity0;transformtranslateX(-50%) translateY(16px);transitionopacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-eventsnone;z-index200}
+[data-theme^=mc-] .toast{background#2a3a1a;color#e8ffd0;border2px solid #4a4a3a;border-radius2px}
+.toast.show{opacity1;transformtranslateX(-50%) translateY(0)}
+@media(max-width640px){.wrap{padding20px 14px 60px}.hero h1{font-size1.4rem}.name-text{font-size14px}.count-input{width90px}.list{max-height520px}}
+style
+head
+body
+
+header class=topbar
+  a class=logo href=..index.htmlspan class=logo-icon←spanspan返回主页spana
+  span class=spspan
+  span style=font-size13px;opacity.85🎲 MC 名称随机器span
+header
+
+div class=wrap
+  div class=hero
+    h1🎲 MC 名称随机器h1
+    p模拟网易随机昵称 · 不相关词汇拼接p
+  div
+
+  div class=card
+    h2 class=card-title生成设置h2
+    div class=opt-row
+      span class=opt active static🟩 网易风（随机拼接）span
+    div
+
+    div class=count-row
+      label for=countInput生成数量label
+      input class=count-input id=countInput type=number value=10 min=1 max=10000 step=1
+      div class=quick-btns
+        button type=button data-quick=11button
+        button type=button data-quick=1010button
+        button type=button data-quick=5050button
+        button type=button data-quick=100100button
+        button type=button data-quick=10001000button
+        button type=button data-quick=1000010000button
+      div
+    div
+
+    div class=opt-row id=suffixRow
+      button class=opt active data-suffix=0不加后缀button
+      button class=opt data-suffix=1加数字button
+      button class=opt data-suffix=2加语气词button
+    div
+
+    div class=row style=margin-top14px
+      button class=btn pri id=btnGen type=button🎲 生成button
+      button class=btn id=btnCopyAll type=button📋 全部复制button
+      button class=btn id=btnClear type=button🗑 清空button
+    div
+    div class=summary id=summarydiv
+  div
+
+  div class=card
+    h2 class=card-title结果 span style=font-size11px;font-weight400;text-transformnone;letter-spacing0（点任意名字复制）spanh2
+    div class=list id=list
+      div class=empty点上方「🎲 生成」开始div
+    div
+  div
+
+  div class=card
+    div class=tip
+      💡 strong关于网易随机昵称strong：网易版随机昵称来自本地预置词库（coderandom_nickname_dbcode），把不相关的词随机拼接，生成类似「椰子味亡灵声优」「狂笑的蛇写作文」这种无厘头名字。br
+      📏 strong网易昵称规则strong：长度 3–12 字符，1 个汉字算 1.5 字符，每月只能改 1 次。br
+      ⚠️ strong数量提示strong：单次最多 10000 个，数量较大时浏览器生成需要 1–2 秒，请耐心等待。
+    div
+  div
+div
+
+div class=toast id=toastdiv
+
+script
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toastEl=$('toast'),toastT=null;
+function toast(m){if(!toastEl)return;toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('show');},1800);}
+function pick(a){return a[Math.floor(Math.random()a.length)];}
+function ri(n){return Math.floor(Math.random()n);}
+
+ ═══════════════════════════════════════
+   词库：按“不相关类别”划分，模拟网易风格
+   ═══════════════════════════════════════ 
+
+ 感官  味道  质感 
+var SENSE=['椰子味','薄荷味','焦糖味','柠檬味','咖啡味','草莓味','巧克力味','奶油味','麻辣味','酸甜味','冰镇','热乎','酥脆','软糯','Q弹','拉丝','爆汁','流心','脆皮','焦香','清甜','微苦','咸香','香草','抹茶','芝士','海盐','黑糖','蜜桃','葡萄','西瓜','芒果','菠萝','荔枝','龙眼','榴莲','山竹','火龙果','百香果','杨枝甘露'];
+
+ 生物  MC 角色 
+var MOB=['亡灵','苦力怕','末影人','僵尸','骷髅','蜘蛛','女巫','凋灵','恶魂','史莱姆','岩浆怪','幻翼','监守者','猪灵','疣猪兽','烈焰人','雪傀儡','铁傀儡','村民','流浪商人','掠夺者','卫道士','唤魔者','蝙蝠','鹦鹉','山羊','青蛙','美西螈','发光鱿鱼','悦灵','骆驼','嗅探兽','犰狳','旋风人','沼骸','铜傀儡','蛇','小蛇','蛇蛇','蛇精','蟒蛇','眼镜蛇','响尾蛇','白蛇'];
+
+ 职业  身份 
+var JOB=['声优','骑士','法师','矿工','铁匠','农民','渔夫','猎人','厨师','调酒师','面包师','侦探','海盗','船长','忍者','武士','弓箭手','炼金术士','图书管理员','牧羊人','制图师','皮匠','石匠','牧人','吟游诗人','占卜师','驯兽师','园艺师','钟表匠','酿酒师','写作文','写散文','写小说','写诗','写日记','写代码','打篮球','踢足球','打游戏'];
+
+ 状态  情绪  语气 
+var MOOD=['暴躁的','沉默的','快乐的','忧郁的','疯狂的','佛系的','暴躁','沉默','快乐','忧郁','疯狂','佛系','傲娇','腹黑','天然呆','中二','社恐','社牛','摸鱼','肝帝','欧皇','非酋','摆烂','内卷','躺平','暴富','emo','元气','慵懒','清醒','迷糊','兴奋','淡定','狂笑的','狂笑','大笑的','微笑的','偷笑的','冷笑的','傻笑的','张哥的','凯哥的','温柔的'];
+
+ 物件  食物 
+var THING=['芒果','椰子','菠萝','西瓜','柠檬','草莓','咖啡','奶茶','布丁','蛋糕','饼干','薯片','拉面','火锅','烧烤','煎饼','包子','饺子','汤圆','粽子','月饼','冰淇淋','棒棒糖','棉花糖','巧克力','奶酪','黄油','蜂蜜','果酱','番茄酱','篮球','足球','作文本','日记本','篮球梦想','足球梦想','世界霸主'];
+
+ 后缀语气词 
+var TAIL=['酱','君','桑','大人','殿下','阁下','本尊','在此','来啦','闪亮登场','降临','驾到','已上线','摸鱼中','肝爆了','躺平了','已黑化','无敌了','绝赞','小可爱','大可爱','永远的神','爷青回','人上人','求带飞','带飞全场','想睡觉','不想上班','在摸鱼'];
+
+ 纯汉字池（用于补长度） 
+var HANZI='的一是不了在人有我他这个们中来上大为和国地到以说时要就出会可也你对生能而子那得于着下自之年过发后作里用道行所然家种事成方多经么去法学如都同现当没动面起看定天分还进好小部其些主样理心她本前开但因只从想实日军者意无力它与长把机十民第公此已工使情明性知全三又关点正业外将两高间由问很最重并物手应战向头文体政美相见被利什二等产或新己制身果加西斯月话合回特代内信表化老给世位次度门任常先海通教儿原东声提立及比员解水名真论处走义各入几口认条平系气题活尔更别打女变四神总何电数安少报才结反受目太量再感建务做接必场件计管期市直德资命山金指克许统区保至队形社便程展爱越张标术持完风效除质级府色款准精划器统争权规院按怎演青合识存近即且';
+
+ ═══════ 生成逻辑 ═══════ 
+
+var state={suffix0};
+
+ 网易风：从 2~3 个不同类别各抽一个词直接拼 
+function genNetease(){
+  var pools=[SENSE,MOB,JOB,MOOD,THING];
+  var n=Math.random()0.523;
+  var shuffled=pools.slice().sort(function(){return Math.random()-0.5;});
+  var parts=[];
+  for(var i=0;in;i++){
+    parts.push(pick(shuffled[i]));
+  }
+  return parts.join('');
+}
+
+function applySuffix(name){
+  if(state.suffix===0)return name;
+  if(state.suffix===1)return name+ri(9999);
+  return name+pick(TAIL);
+}
+
+ 网易规则：1 汉字 = 1.5 字符，总长 3~12 字符 
+function trimToNeteaseLimit(name){
+  function neteaseLen(s){
+    var len=0;
+    for(var i=0;is.length;i++){
+      len += [u4e00-u9fa5].test(s[i])  1.5  1;
+    }
+    return len;
+  }
+  while(neteaseLen(name)12 && name.length1){
+    name=name.slice(0,-1);
+  }
+  while(neteaseLen(name)3){
+    name+=HANZI[ri(HANZI.length)];
+  }
+  return name;
+}
+
+function genOne(){
+  var name=genNetease();
+  name=applySuffix(name);
+  return trimToNeteaseLimit(name);
+}
+
+ ═══════ UI ═══════ 
+var listEl=$('list');
+var summaryEl=$('summary');
+var countInput=$('countInput');
+var currentNames=[];
+var genBtn=$('btnGen');
+
+function escHtml(s){
+  return String(s).replace([&]g,function(c){
+    return {'''&lt;','''&gt;','&''&amp;','''&quot;'}[c];
+  });
+}
+
+function renderNames(names){
+  currentNames=names;
+  if(!names.length){
+    listEl.innerHTML='div class=empty点上方「🎲 生成」开始div';
+    summaryEl.textContent='';
+    return;
+  }
+   一次性字符串拼接，避免上万个 DOM 操作 
+  var buf=[];
+  for(var i=0;inames.length;i++){
+    var n=names[i];
+    buf.push(
+      'div class=name-row data-name='+escHtml(n)+' title=点击复制'
+      + 'span class=name-idx'+(i+1)+'span'
+      + 'span class=name-text'+escHtml(n)+'span'
+      + 'span class=name-len'+n.length+' 字span'
+      + 'span class=name-copy点击复制span'
+      + 'div'
+    );
+  }
+  listEl.innerHTML=buf.join('');
+  summaryEl.textContent='共 '+names.length+' 个';
+}
+
+ 生成 N 个（用异步分块避免卡顿） 
+function genMany(n,onDone){
+  var out=[],seen={},guard=0,maxGuard=n40;
+  var chunk=2000;
+  var produced=0;
+
+  function step(){
+    var end=Math.min(out.length+chunk,n);
+    while(out.lengthend && guardmaxGuard){
+      guard++;
+      var v=genOne();
+      if(!seen[v]){seen[v]=1;out.push(v);}
+    }
+    produced=out.length;
+    if(out.length=n  guard=maxGuard){
+      onDone(out);
+      return;
+    }
+     每块之间让浏览器渲染一帧，避免长任务卡死 
+    if(window.requestAnimationFrame){
+      requestAnimationFrame(step);
+    }else{
+      setTimeout(step,0);
+    }
+  }
+  step();
+}
+
+ 复制 
+function copy(text,cb){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){cb&&cb(true);},function(){cb&&cb(fallback(text));});
+  }else cb&&cb(fallback(text));
+}
+function fallback(text){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  var ok=false;
+  try{ok=document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta);
+  return ok;
+}
+
+ 事件 
+listEl.addEventListener('click',function(e){
+  var row=e.target.closest('.name-row');if(!row)return;
+  var name=row.getAttribute('data-name');
+  copy(name,function(ok){toast(ok'已复制：'+name'复制失败');});
+});
+
+var suffixRow=$('suffixRow');
+suffixRow.addEventListener('click',function(e){
+  var btn=e.target.closest('.opt');if(!btn)return;
+  var all=suffixRow.querySelectorAll('.opt');
+  for(var i=0;iall.length;i++)all[i].classList.remove('active');
+  btn.classList.add('active');
+  state.suffix=parseInt(btn.getAttribute('data-suffix'),10)0;
+});
+
+ 快捷数量按钮 
+var quickBtns=document.querySelectorAll('.quick-btns [data-quick]');
+for(var qi=0;qiquickBtns.length;qi++){
+  (function(btn){
+    btn.addEventListener('click',function(){
+      countInput.value=btn.getAttribute('data-quick');
+      countInput.focus();
+    });
+  })(quickBtns[qi]);
+}
+
+ 输入校验 
+function readCount(){
+  var raw=parseInt(countInput.value,10);
+  if(isNaN(raw))raw=10;
+  if(raw1)raw=1;
+  if(raw10000)raw=10000;
+  countInput.value=String(raw);
+  return raw;
+}
+countInput.addEventListener('blur',function(){readCount();});
+countInput.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();genBtn.click();}
+});
+
+ 生成按钮 
+genBtn.addEventListener('click',function(){
+  var n=readCount();
+  genBtn.disabled=true;
+  var oldText=genBtn.textContent;
+  genBtn.textContent='⏳ 生成中…';
+  summaryEl.textContent='正在生成 '+n+' 个…';
+
+   用 setTimeout 让按钮状态先渲染出来 
+  setTimeout(function(){
+    genMany(n,function(names){
+      renderNames(names);
+      genBtn.disabled=false;
+      genBtn.textContent=oldText;
+      toast('已生成 '+names.length+' 个');
+    });
+  },20);
+});
+
+$('btnCopyAll').addEventListener('click',function(){
+  if(!currentNames.length){toast('还没有生成');return;}
+  copy(currentNames.join('n'),function(ok){
+    toast(ok('已复制全部 '+currentNames.length+' 个')'复制失败');
+  });
+});
+
+$('btnClear').addEventListener('click',function(){
+  currentNames=[];
+  listEl.innerHTML='div class=empty点上方「🎲 生成」开始div';
+  summaryEl.textContent='';
+  countInput.focus();
+});
+
+ 首屏：默认生成 10 个 
+renderNames((function(){
+  var out=[],seen={},guard=0;
+  while(out.length10 && guard400){
+    guard++;
+    var v=genOne();
+    if(!seen[v]){seen[v]=1;out.push(v);}
+  }
+  return out;
+})());
+
+})();
+script
+body
+html
