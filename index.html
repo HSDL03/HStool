@@ -114,6 +114,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme^="mc-"] .chip-db .db-dot{border-radius:0}
 .chip[data-db="1"] .db-dot{background:var(--ac)}
 .chip[data-db="0"] .db-dot{background:var(--ok)}
+.chip[data-db="u"] .db-dot{background:var(--muted);opacity:.5}
 .filter-empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;background:var(--bg2);border:2px dashed var(--bd);border-radius:var(--r)}
 .filter-empty .ic{font-size:48px;opacity:.35;margin-bottom:12px;display:block;line-height:1}
 .filter-empty .title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
@@ -166,6 +167,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 [data-theme="mc-night"] .tc-db.db-yes,[data-theme="mc-nether"] .tc-db.db-yes,[data-theme="mc-end"] .tc-db.db-yes{background:#16233a;color:var(--ac)}
 .tc-db.db-no{background:#dcfce7;border-color:var(--ok);color:var(--ok)}
 [data-theme="mc-night"] .tc-db.db-no,[data-theme="mc-nether"] .tc-db.db-no,[data-theme="mc-end"] .tc-db.db-no{background:#0f2a17;color:var(--ok)}
+.tc-db.db-unset{background:transparent;border-style:dashed;border-color:var(--bd);color:var(--muted)}
 [data-theme^="github-"] .tc-db{border-radius:999px}
 .tc-arrow{flex:none;font-size:20px;font-weight:800;color:var(--ac);opacity:0;transform:translateX(-8px);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
 .tool-card:hover .tc-arrow{opacity:1;transform:translateX(4px)}
@@ -329,14 +331,14 @@ var DATA_FILE='tools-data.json';
 var ANNOUNCE_FILE='announcement.json';
 var RAW_BASE='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/'+GH_BRANCH+'/';
 var CDN_BASE='https://cdn.jsdelivr.net/gh/'+GH_OWNER+'/'+GH_REPO+'@'+GH_BRANCH+'/';
-var K_TOOLS_CACHE='tools-cache-v1',K_THEME='wiki-theme';
+var K_TOOLS_CACHE='tools-cache-v2',K_THEME='wiki-theme';
 var K_ANN_DISMISS='announce-dismissed',K_ANN_COLLAPSE='announce-collapsed';
 var CLOCK_MS=1000,LAT_PING_MS=3000,REFRESH_MS=120000;
 
 var DEFAULT_TOOLS=[
-  {id:'wiki',icon:'📚',name:'红石答辩wiki',desc:'轻量知识库 · 已停止维护',tag:'已废弃',url:'./wiki.html',requiresDb:false,deprecated:true,hidden:false},
-  {id:'download',icon:'📥',name:'下载站',desc:'资源文件 · 便捷下载',tag:'资源',url:'./download.html',requiresDb:false,deprecated:false,hidden:false},
-  {id:'misc',icon:'🧩',name:'杂类',desc:'零散工具 · 各种小玩意儿',tag:'综合',url:'./misc.html',requiresDb:false,deprecated:false,hidden:false}
+  {id:'wiki',icon:'📚',name:'红石答辩wiki',desc:'轻量知识库 · 已停止维护',tag:'已废弃',url:'./wiki.html',category:'needDB',deprecated:true,hidden:false},
+  {id:'download',icon:'📥',name:'下载站',desc:'资源文件 · 便捷下载',tag:'资源',url:'./download.html',category:'needDB',deprecated:false,hidden:false},
+  {id:'misc',icon:'🧩',name:'杂类',desc:'零散工具 · 各种小玩意儿',tag:'综合',url:'./misc.html',category:'noDB',deprecated:false,hidden:false}
 ];
 var TOOLS=DEFAULT_TOOLS.slice();
 
@@ -407,7 +409,6 @@ function saveDismissed(map){
 }
 var dismissedMap=loadDismissed();
 
-/* 用户手动折叠状态：id -> true/false，覆盖默认 collapsed 字段 */
 function loadCollapseOverride(){
   try{
     var raw=storage.get(K_ANN_COLLAPSE);if(!raw)return {};
@@ -437,9 +438,7 @@ function loadAnnouncement(){
 }
 
 function isCollapsed(it){
-  /* 用户手动覆盖优先 */
   if(collapseOverride.hasOwnProperty(it.id))return !!collapseOverride[it.id];
-  /* 否则用配置默认值 */
   return it.collapsed === true;
 }
 
@@ -476,7 +475,6 @@ function renderAnnouncement(){
 function bindAnnounceEvents(){
   var sec=$('announceSection');if(!sec)return;
   sec.addEventListener('click',function(e){
-    /* 关闭按钮 */
     var closeBtn=e.target.closest('[data-close-ann]');
     if(closeBtn){
       e.stopPropagation();
@@ -492,14 +490,13 @@ function bindAnnounceEvents(){
       }
       return;
     }
-    /* 折叠/展开 */
     var head=e.target.closest('[data-toggle-ann]');
     if(head){
-      var card=head.closest('.announce-item');
-      if(!card)return;
+      var card2=head.closest('.announce-item');
+      if(!card2)return;
       var id2=head.getAttribute('data-toggle-ann');
-      var was=card.classList.contains('collapsed');
-      card.classList.toggle('collapsed');
+      var was=card2.classList.contains('collapsed');
+      card2.classList.toggle('collapsed');
       if(id2){
         collapseOverride[id2]=!was;
         saveCollapseOverride(collapseOverride);
@@ -508,10 +505,26 @@ function bindAnnounceEvents(){
   });
 }
 
-/* ═══════════════ 工具数据 ═══════════════ */
+/* ═══════════════ 工具数据 ═══════════════
+   字段兼容说明：
+   - 新版 admin 写入 category: 'needDB' | 'noDB' | ''
+   - 旧版可能写 requiresDb: true/false
+   统一归一化为 category：'needDB' | 'noDB' | ''
+*/
 function normTool(t,i){
   if(!t||typeof t!=='object')return null;
   var name=(typeof t.name==='string'&&t.name.trim())?t.name.trim():('未命名 '+(i+1));
+
+  var cat='';
+  if(typeof t.category==='string'){
+    var c=t.category.trim();
+    if(c==='needDB'||c==='noDB')cat=c;
+  }
+  /* 兼容旧的 requiresDb 布尔字段 */
+  if(!cat && typeof t.requiresDb==='boolean'){
+    cat = t.requiresDb ? 'needDB' : 'noDB';
+  }
+
   return {
     id:(typeof t.id==='string'&&t.id.trim())?t.id.trim():('tool-'+(i+1)),
     icon:(typeof t.icon==='string'&&t.icon.trim())?t.icon.trim():'🧰',
@@ -519,7 +532,7 @@ function normTool(t,i){
     desc:typeof t.desc==='string'?t.desc:'',
     tag:(typeof t.tag==='string'&&t.tag.trim())?t.tag.trim():'工具',
     url:typeof t.url==='string'?t.url:'',
-    requiresDb:!!t.requiresDb,
+    category:cat,
     deprecated:!!t.deprecated,
     disabled:!!t.disabled,
     hidden:!!t.hidden
@@ -541,8 +554,8 @@ function diffTools(oldList,newList){
   var edited=[];
   common.forEach(function(n){
     var o=oldList.find(function(x){return x.id===n.id;});if(!o)return;
-    var os=[o.icon,o.name,o.desc,o.tag,o.url,o.requiresDb,o.deprecated,o.disabled,o.hidden].join('|');
-    var ns=[n.icon,n.name,n.desc,n.tag,n.url,n.requiresDb,n.deprecated,n.disabled,n.hidden].join('|');
+    var os=[o.icon,o.name,o.desc,o.tag,o.url,o.category,o.deprecated,o.disabled,o.hidden].join('|');
+    var ns=[n.icon,n.name,n.desc,n.tag,n.url,n.category,n.deprecated,n.disabled,n.hidden].join('|');
     if(os!==ns)edited.push(n);
   });
   return {added:added,removed:removed,edited:edited};
@@ -595,7 +608,7 @@ function pingLatency(){
 
 /* ═══════════════ 筛选/搜索状态 ═══════════════ */
 var filterTag='__all__';
-var filterDb='__all__';
+var filterDb='__all__';   /* __all__ | __db__ | __nodb__ | __unset__ */
 var searchQuery='';
 
 function getVisibleTools(){
@@ -606,8 +619,9 @@ function applyFilter(list){
   var q=searchQuery.trim().toLowerCase();
   return list.filter(function(t){
     if(filterTag!=='__all__'&&(t.tag||'工具')!==filterTag)return false;
-    if(filterDb==='__db__'&&!t.requiresDb)return false;
-    if(filterDb==='__nodb__'&&t.requiresDb)return false;
+    if(filterDb==='__db__'   && t.category!=='needDB')return false;
+    if(filterDb==='__nodb__' && t.category!=='noDB')  return false;
+    if(filterDb==='__unset__'&& t.category)            return false;
     if(q){
       var hay=(t.name+' '+(t.desc||'')+' '+(t.tag||'')).toLowerCase();
       if(hay.indexOf(q)===-1)return false;
@@ -619,11 +633,13 @@ function applyFilter(list){
 function buildFilterChips(){
   var visible=getVisibleTools();
   var tagCounts={};
-  var dbYesCount=0,dbNoCount=0;
+  var dbYesCount=0,dbNoCount=0,dbUnsetCount=0;
   visible.forEach(function(t){
     var tag=t.tag||'工具';
     tagCounts[tag]=(tagCounts[tag]||0)+1;
-    if(t.requiresDb)dbYesCount++;else dbNoCount++;
+    if(t.category==='needDB')dbYesCount++;
+    else if(t.category==='noDB')dbNoCount++;
+    else dbUnsetCount++;
   });
   var tagNames=Object.keys(tagCounts).sort();
   var tagsHtml='<span class="filter-label">分类</span>';
@@ -634,9 +650,12 @@ function buildFilterChips(){
   var tagEl=$('tagChips');if(tagEl)tagEl.innerHTML=tagsHtml;
 
   var dbHtml='<span class="filter-label">数据库</span>';
-  dbHtml+='<button type="button" class="chip'+(filterDb==='__all__'?' active':'')+'" data-filter-db="__all__">全部</button>';
+  dbHtml+='<button type="button" class="chip'+(filterDb==='__all__'?' active':'')+'" data-filter-db="__all__">全部 <span class="chip-count">'+visible.length+'</span></button>';
   dbHtml+='<button type="button" class="chip chip-db'+(filterDb==='__db__'?' active':'')+'" data-filter-db="__db__" data-db="1"><span class="db-dot"></span>需要数据库 <span class="chip-count">'+dbYesCount+'</span></button>';
   dbHtml+='<button type="button" class="chip chip-db'+(filterDb==='__nodb__'?' active':'')+'" data-filter-db="__nodb__" data-db="0"><span class="db-dot"></span>纯前端 <span class="chip-count">'+dbNoCount+'</span></button>';
+  if(dbUnsetCount>0){
+    dbHtml+='<button type="button" class="chip chip-db'+(filterDb==='__unset__'?' active':'')+'" data-filter-db="__unset__" data-db="u"><span class="db-dot"></span>未分类 <span class="chip-count">'+dbUnsetCount+'</span></button>';
+  }
   var dbEl=$('dbChips');if(dbEl)dbEl.innerHTML=dbHtml;
 
   var sec=$('filterSection');
@@ -646,9 +665,16 @@ function buildFilterChips(){
 function renderCard(t,delay){
   var cls='tool-card'+(t.deprecated?' deprecated':'');
   var href=t.disabled?'javascript:void(0)':t.url;
-  var dbBadge = t.requiresDb
-    ? '<span class="tc-db db-yes" title="这个工具需要访问数据库">💾 需要数据库</span>'
-    : '<span class="tc-db db-no" title="这个工具是纯前端，不访问数据库">⚡ 纯前端</span>';
+
+  var dbBadge;
+  if(t.category==='needDB'){
+    dbBadge='<span class="tc-db db-yes" title="这个工具需要访问数据库">💾 需要数据库</span>';
+  }else if(t.category==='noDB'){
+    dbBadge='<span class="tc-db db-no" title="这个工具是纯前端，不访问数据库">⚡ 纯前端</span>';
+  }else{
+    dbBadge='<span class="tc-db db-unset" title="该工具尚未标记是否需要数据库">❔ 未分类</span>';
+  }
+
   return '<a class="'+cls+'" href="'+escapeHtml(href)+'" style="animation-delay:'+delay+'ms"'+(t.disabled?' data-disabled="1"':'')+'>'+
     '<span class="card-glow"></span>'+
     '<div class="card-inner">'+
@@ -837,7 +863,6 @@ document.addEventListener('mousedown',function(e){
 });
 
 document.addEventListener('click',function(e){
-  /* 点卡片上的 tag → 筛选 */
   var tagEl=e.target.closest('[data-tag-click]');
   if(tagEl){
     e.preventDefault();e.stopPropagation();
@@ -858,7 +883,7 @@ document.addEventListener('click',function(e){
   setTimeout(function(){window.location.href=href;},200);
 });
 
-function toolsSignature(list){return list.map(function(t){return [t.id,t.icon,t.name,t.desc,t.tag,t.url,t.requiresDb,t.deprecated,t.disabled,t.hidden].join('|');}).join('||');}
+function toolsSignature(list){return list.map(function(t){return [t.id,t.icon,t.name,t.desc,t.tag,t.url,t.category,t.deprecated,t.disabled,t.hidden].join('|');}).join('||');}
 var lastSignature='';
 function renderIfChanged(){
   var sig=toolsSignature(TOOLS);
@@ -1070,7 +1095,6 @@ function bind(){
     toast('已切换到 '+name);
   });
 
-  /* 搜索 */
   var searchEl=$('searchInput');
   if(searchEl){
     searchEl.addEventListener('input',function(){
@@ -1084,7 +1108,6 @@ function bind(){
     });
   }
 
-  /* 筛选 chips */
   var tagChips=$('tagChips'),dbChips=$('dbChips');
   if(tagChips){
     tagChips.addEventListener('click',function(e){
@@ -1107,7 +1130,7 @@ function bind(){
       if(reloadBtn.classList.contains('spin-anim'))return;
       reloadBtn.classList.add('spin-anim');
       toast('正在刷新…');
-      loadTools().then(function(){lastSignature='';renderTools();});
+      loadTools().then(function(){lastSignature='';renderIfChanged();});
       loadAnnouncement().then(function(list){
         announceItems=list;renderAnnouncement();
         setTimeout(function(){reloadBtn.classList.remove('spin-anim');},400);
@@ -1123,7 +1146,6 @@ function bind(){
     });
   }
 
-  /* 按 / 聚焦搜索框 */
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'&&themeOv.classList.contains('show')){e.preventDefault();closeTheme();}
     var tag=document.activeElement&&document.activeElement.tagName;
