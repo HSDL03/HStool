@@ -221,7 +221,18 @@
   </div>
 </div>
 
+<!-- ★ 三级 CDN 备用：jsDelivr → unpkg → cdnjs -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+  }
+</script>
 <script src="data.js"></script>
 <script src="game.js"></script>
 </body>
