@@ -1,5 +1,17 @@
 [
   {
+    "id": "tool-muqpu75z-33d0",
+    "icon": "🎮",
+    "name": "mc",
+    "desc": "测试ing",
+    "tag": "饿啊",
+    "url": "./mc/mc",
+    "category": "needDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
     "id": "tool-mujch83r-f5qc",
     "icon": "💬",
     "name": "聊天室",
