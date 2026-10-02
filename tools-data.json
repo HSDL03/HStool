@@ -12,6 +12,18 @@
     "hidden": false
   },
   {
+    "id": "tool-muqd83p5-btk7",
+    "icon": "🧰",
+    "name": "计算器",
+    "desc": "很深井的计算器嗯对",
+    "tag": "工具",
+    "url": "./tools/qrcode.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
     "id": "tool-mujq8js1-nyf7",
     "icon": "🧰",
     "name": "五子棋",
@@ -66,7 +78,7 @@
     "desc": "用来测试嗯对",
     "tag": "游戏",
     "url": "https://hsdl03.github.io/Click-the-game/",
-    "category": "",
+    "category": "needDB",
     "deprecated": true,
     "disabled": true,
     "hidden": false
