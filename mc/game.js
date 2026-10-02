@@ -4,9 +4,10 @@
   function escHtml(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
   var toastTimer = null;
   function toast(msg) {
-    var el = $('toast'); el.textContent = msg; el.classList.add('show');
+    var el = $('toast'); if (!el) return;
+    el.textContent = msg; el.style.opacity = '1';
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 1600);
+    toastTimer = setTimeout(function () { el.style.opacity = '0'; }, 1600);
   }
   var storage = {
     get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } },
@@ -24,8 +25,12 @@
       try {
         sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         supabaseReady = true;
-        var st = $('supabaseStatus'); st.textContent = '☁ Supabase 已连接'; st.classList.add('show');
-        setTimeout(function () { st.classList.remove('show'); }, 3000);
+        var st = $('supabaseStatus');
+        if (st) {
+          st.textContent = '☁ Supabase 已连接';
+          st.style.display = 'block';
+          setTimeout(function () { st.style.display = 'none'; }, 3000);
+        }
       } catch (e) { console.error(e); }
     }
   })();
@@ -101,7 +106,7 @@
   var LOAD_RADIUS = Math.max(1, Math.min(16, Math.round(settings.renderDistance / 2)));
 
   /* ═══════════════════════════════════════════════════
-     启动（直接读 data.js 全局变量，不用 fetch）
+     启动
      ═══════════════════════════════════════════════════ */
   GAME_DATA = window.GAME_DATA || {};
   console.log('[data.js] 已加载，方块数：', Object.keys(GAME_DATA.blocks || {}).length);
@@ -146,11 +151,32 @@
     supportsTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     isTouchUI = supportsTouch && !hasFine;
 
-    buildAtlas(); initThree(); initUI(); initInput(); initTouch(); initParticles();
-    spawnPlayer(); updateChunks(true, false); processDirty();
-    updateHUD(); updateHP(); updateHunger(); buildHotbar();
+    // ★ 优先绑定 UI（不依赖 THREE）
+    try { initUI(); } catch (e) { console.error('[initUI] 失败：', e); }
+    try { initInput(); } catch (e) { console.error('[initInput] 失败：', e); }
+
+    // ★ 依赖 THREE 的部分用 try/catch
+    try {
+      if (typeof THREE === 'undefined') throw new Error('THREE 未定义（three.min.js 加载失败）');
+      buildAtlas();
+      initThree();
+      try { initTouch(); } catch (e) { console.error('[initTouch] 失败：', e); }
+      try { initParticles(); } catch (e) { console.error('[initParticles] 失败：', e); }
+      spawnPlayer();
+      updateChunks(true, false);
+      processDirty();
+      updateHUD();
+      updateHP();
+      updateHunger();
+      buildHotbar();
+      requestAnimationFrame(loop);
+    } catch (e) {
+      console.error('[3D 初始化] 失败：', e);
+      toast('⚠ 3D 引擎加载失败，请刷新页面');
+    }
+
+    // ★ 无论如何都显示主菜单
     setAppState('mainMenu');
-    requestAnimationFrame(loop);
   }
 
   /* ═══════════════════════════════════════════════════
@@ -302,7 +328,6 @@
       }
       return d;
     }
-    // 地形
     for (var z = 0; z < CHUNK_SIZE; z++) for (var x = 0; x < CHUNK_SIZE; x++) {
       var wx = bx + x, wz = bz + z;
       var p = terrainParams(wx, wz);
@@ -334,7 +359,6 @@
         if (b !== 0) d[(yIdx(y) * CHUNK_SIZE + z) * CHUNK_SIZE + x] = b;
       }
     }
-    // 矿脉
     for (var oreId in ORE_CONFIG) {
       var cfg = ORE_CONFIG[oreId], oid = parseInt(oreId, 10);
       for (var v = 0; v < cfg.veinsPerChunk; v++) {
@@ -354,7 +378,6 @@
         }
       }
     }
-    // 矿洞
     for (var cy = WORLD_MIN_Y + 6; cy < 60; cy++) {
       for (var cz2 = 0; cz2 < CHUNK_SIZE; cz2++) for (var cx2 = 0; cx2 < CHUNK_SIZE; cx2++) {
         var gwx = bx + cx2, gwz = bz + cz2;
@@ -363,7 +386,6 @@
         if (n1 > 0.72 && n2 > 0.5) d[(yIdx(cy) * CHUNK_SIZE + cz2) * CHUNK_SIZE + cx2] = 0;
       }
     }
-    // 装饰
     var PAD = 4;
     for (var wz2 = bz - PAD; wz2 < bz + CHUNK_SIZE + PAD; wz2++)
       for (var wx2 = bx - PAD; wx2 < bx + CHUNK_SIZE + PAD; wx2++)
@@ -854,6 +876,7 @@
   function initTouch() {
     if (!supportsTouch) return;
     var joyEl = $('moveJoystick'), stickEl = $('moveStick');
+    if (!joyEl) return;
     var joyCX = 0, joyCY = 0, joyR = 50;
     function updateJoy(cx, cy) {
       var dx = cx - joyCX, dy = cy - joyCY, d = Math.hypot(dx, dy);
@@ -881,31 +904,33 @@
         }
     });
     var lookArea = $('mobileLookArea');
-    lookArea.addEventListener('touchstart', function (e) {
-      if (appState !== 'playing' || inventoryOpen || lookTouchId !== null) return;
-      var t = e.changedTouches[0];
-      lookTouchId = t.identifier; lookTouchPos = { x: t.clientX, y: t.clientY };
-    }, { passive: false });
-    lookArea.addEventListener('touchmove', function (e) {
-      if (lookTouchId === null) return;
-      for (var i = 0; i < e.changedTouches.length; i++) {
-        var t = e.changedTouches[i];
-        if (t.identifier === lookTouchId) {
-          var dx = t.clientX - lookTouchPos.x, dy = t.clientY - lookTouchPos.y;
-          lookTouchPos.x = t.clientX; lookTouchPos.y = t.clientY;
-          var sens = settings.sensitivity * 0.0025;
-          yaw -= dx * sens; pitch -= dy * sens;
-          var lim = Math.PI / 2 - 0.01;
-          if (pitch > lim) pitch = lim; if (pitch < -lim) pitch = -lim;
+    if (lookArea) {
+      lookArea.addEventListener('touchstart', function (e) {
+        if (appState !== 'playing' || inventoryOpen || lookTouchId !== null) return;
+        var t = e.changedTouches[0];
+        lookTouchId = t.identifier; lookTouchPos = { x: t.clientX, y: t.clientY };
+      }, { passive: false });
+      lookArea.addEventListener('touchmove', function (e) {
+        if (lookTouchId === null) return;
+        for (var i = 0; i < e.changedTouches.length; i++) {
+          var t = e.changedTouches[i];
+          if (t.identifier === lookTouchId) {
+            var dx = t.clientX - lookTouchPos.x, dy = t.clientY - lookTouchPos.y;
+            lookTouchPos.x = t.clientX; lookTouchPos.y = t.clientY;
+            var sens = settings.sensitivity * 0.0025;
+            yaw -= dx * sens; pitch -= dy * sens;
+            var lim = Math.PI / 2 - 0.01;
+            if (pitch > lim) pitch = lim; if (pitch < -lim) pitch = -lim;
+          }
         }
-      }
-      e.preventDefault();
-    }, { passive: false });
-    lookArea.addEventListener('touchend', function (e) {
-      if (lookTouchId === null) return;
-      for (var i = 0; i < e.changedTouches.length; i++)
-        if (e.changedTouches[i].identifier === lookTouchId) lookTouchId = null;
-    });
+        e.preventDefault();
+      }, { passive: false });
+      lookArea.addEventListener('touchend', function (e) {
+        if (lookTouchId === null) return;
+        for (var i = 0; i < e.changedTouches.length; i++)
+          if (e.changedTouches[i].identifier === lookTouchId) lookTouchId = null;
+      });
+    }
     function bindHold(id, cb, stop) {
       var el = $(id); if (!el) return;
       el.addEventListener('touchstart', function (e) {
@@ -928,15 +953,19 @@
         } else lastSpaceTap = now;
       }
     }, function () { keys[' '] = false; });
-    $('mFlyBtn').addEventListener('click', function (e) {
+    var fb = $('mFlyBtn');
+    if (fb) fb.addEventListener('click', function (e) {
       e.preventDefault();
       if (gameMode !== 'creative') { toast('仅创造模式可飞行'); return; }
       flying = !flying; player.vel.y = 0;
       toast(flying ? '✦ 飞行模式：开启' : '✦ 飞行模式：关闭');
     });
-    $('mInvBtn').addEventListener('click', function (e) { e.preventDefault(); toggleInv(); });
-    $('mChatBtn').addEventListener('click', function (e) { e.preventDefault(); if (appState === 'playing') openChat(false); });
-    $('mMenuBtn').addEventListener('click', function (e) {
+    var ib = $('mInvBtn');
+    if (ib) ib.addEventListener('click', function (e) { e.preventDefault(); toggleInv(); });
+    var cb2 = $('mChatBtn');
+    if (cb2) cb2.addEventListener('click', function (e) { e.preventDefault(); if (appState === 'playing') openChat(false); });
+    var mb = $('mMenuBtn');
+    if (mb) mb.addEventListener('click', function (e) {
       e.preventDefault();
       if (appState === 'playing') setAppState('paused');
       else if (appState === 'paused') setAppState('playing');
@@ -944,62 +973,83 @@
   }
 
   /* ═══ 界面管理 ═══ */
-  var screens = {
+  var screenIds = {
     mainMenu: 'mainMenuScreen', multiplayer: 'multiplayerScreen',
     createRoom: 'createRoomScreen', worldSelect: 'worldSelectScreen',
     createWorld: 'createWorldScreen', settings: 'settingsScreen', pause: 'pauseScreen'
   };
+
   function setAppState(s) {
     appState = s;
-    for (var k in screens) $(screens[k]).classList.add('hidden');
-    if (screens[s]) $(screens[s]).classList.remove('hidden');
+
+    // ★ 用 .style.display 直接控制，不依赖 CSS 类
+    for (var key in screenIds) {
+      var el = $(screenIds[key]);
+      if (el) el.style.display = 'none';
+    }
+    if (screenIds[s]) {
+      var target = $(screenIds[s]);
+      if (target) target.style.display = 'flex';
+    }
+
     var inGame = (s === 'playing' || s === 'paused' || s === 'dead');
-    $('bgDecor').classList.toggle('hidden', inGame);
-    $('hudTop').style.display = inGame ? 'flex' : 'none';
-    $('tips').style.display = (inGame && !isTouchUI) ? 'block' : 'none';
-    $('crosshair').style.display = (s === 'playing' && gameMode !== 'spectator' && !inventoryOpen && !chatOpen) ? 'block' : 'none';
-    $('hotbar').style.display = (inGame && gameMode !== 'spectator') ? 'flex' : 'none';
-    $('healthBar').style.display = (inGame && (gameMode === 'survival' || gameMode === 'hardcore')) ? 'block' : 'none';
-    $('hungerBar').style.display = (inGame && (gameMode === 'survival' || gameMode === 'hardcore')) ? 'block' : 'none';
-    $('chatBox').classList.toggle('visible', inGame);
-    $('playerList').style.display = (inGame && isMultiplayer) ? 'flex' : 'none';
-    $('mobileControls').classList.toggle('show', s === 'playing' && isTouchUI);
+
+    var bg = $('bgDecor'); if (bg) bg.style.display = inGame ? 'none' : 'block';
+    var hud = $('hudTop'); if (hud) hud.style.display = inGame ? 'flex' : 'none';
+    var tips = $('tips'); if (tips) tips.style.display = (inGame && !isTouchUI) ? 'block' : 'none';
+    var ch = $('crosshair'); if (ch) ch.style.display = (s === 'playing' && gameMode !== 'spectator' && !inventoryOpen && !chatOpen) ? 'block' : 'none';
+    var hb = $('hotbar'); if (hb) hb.style.display = (inGame && gameMode !== 'spectator') ? 'flex' : 'none';
+    var hp = $('healthBar'); if (hp) hp.style.display = (inGame && (gameMode === 'survival' || gameMode === 'hardcore')) ? 'block' : 'none';
+    var hg = $('hungerBar'); if (hg) hg.style.display = (inGame && (gameMode === 'survival' || gameMode === 'hardcore')) ? 'block' : 'none';
+    var cb = $('chatBox'); if (cb) cb.style.display = inGame ? 'flex' : 'none';
+    var pl = $('playerList'); if (pl) pl.style.display = (inGame && isMultiplayer) ? 'flex' : 'none';
+    var mc = $('mobileControls'); if (mc) mc.style.display = (s === 'playing' && isTouchUI) ? 'block' : 'none';
+
     if (s === 'playing') {
       manualUnlock = false;
-      if (hasFine && !document.pointerLockElement && !inventoryOpen && !chatOpen) renderer.domElement.requestPointerLock();
+      if (hasFine && renderer && !document.pointerLockElement && !inventoryOpen && !chatOpen) {
+        renderer.domElement.requestPointerLock();
+      }
     } else {
       if (document.pointerLockElement) document.exitPointerLock();
     }
   }
+
   function setGameMode(mode) {
     var prev = gameMode;
     gameMode = mode;
     var names = { creative: '创造', survival: '生存', spectator: '旁观', adventure: '冒险' };
-    $('hudMode').textContent = '模式：' + names[mode];
+    if ($('hudMode')) $('hudMode').textContent = '模式：' + names[mode];
     if (mode !== 'creative' && mode !== 'spectator') flying = false;
     if (mode === 'spectator') flying = true;
     player.vel.y = 0; player.fallStartY = null;
     if (prev !== mode && appState === 'playing') toast('✦ 已切换至' + names[mode] + '模式');
     if (appState === 'playing' || appState === 'paused' || appState === 'dead') {
-      $('crosshair').style.display = (mode !== 'spectator' && !inventoryOpen && !chatOpen) ? 'block' : 'none';
-      $('hotbar').style.display = (mode !== 'spectator') ? 'flex' : 'none';
-      $('healthBar').style.display = (mode === 'survival' || mode === 'hardcore') ? 'block' : 'none';
-      $('hungerBar').style.display = (mode === 'survival' || mode === 'hardcore') ? 'block' : 'none';
+      if ($('crosshair')) $('crosshair').style.display = (mode !== 'spectator' && !inventoryOpen && !chatOpen) ? 'block' : 'none';
+      if ($('hotbar')) $('hotbar').style.display = (mode !== 'spectator') ? 'flex' : 'none';
+      if ($('healthBar')) $('healthBar').style.display = (mode === 'survival' || mode === 'hardcore') ? 'block' : 'none';
+      if ($('hungerBar')) $('hungerBar').style.display = (mode === 'survival' || mode === 'hardcore') ? 'block' : 'none';
     }
   }
+
   function showLoad() {
-    $('loadingScreen').classList.remove('hidden');
-    $('loadingBar').style.width = '0%';
-    $('loadingStatus').textContent = '正在准备...';
+    var el = $('loadingScreen');
+    if (el) el.style.display = 'flex';
+    if ($('loadingBar')) $('loadingBar').style.width = '0%';
+    if ($('loadingStatus')) $('loadingStatus').textContent = '正在准备...';
   }
   function setLoadProgress(c, t, s) {
-    $('loadingBar').style.width = (t > 0 ? (c / t) * 100 : 0) + '%';
-    $('loadingStatus').textContent = s || ('正在生成区块... ' + c + ' / ' + t);
+    if ($('loadingBar')) $('loadingBar').style.width = (t > 0 ? (c / t) * 100 : 0) + '%';
+    if ($('loadingStatus')) $('loadingStatus').textContent = s || ('正在生成区块... ' + c + ' / ' + t);
   }
-  function hideLoad() { $('loadingScreen').classList.add('hidden'); }
+  function hideLoad() {
+    var el = $('loadingScreen');
+    if (el) el.style.display = 'none';
+  }
 
   /* ═══ 聊天 ═══ */
   function addChat(text, type) {
+    if (!$('chatBox')) return;
     var el = document.createElement('div');
     el.className = 'chat-msg ' + (type || '');
     el.innerHTML = text;
@@ -1014,7 +1064,9 @@
   }
   function openChat(isCmd) {
     if (appState !== 'playing') return;
-    chatOpen = true; $('chatInput').classList.add('visible');
+    chatOpen = true;
+    var ci = $('chatInput');
+    if (ci) ci.style.display = 'block';
     var f = $('chatInputField');
     f.value = isCmd ? '/' : '';
     $('chatPrefix').textContent = isCmd ? '/' : '>';
@@ -1022,9 +1074,11 @@
     setTimeout(function () { f.focus(); }, 10);
   }
   function closeChat() {
-    chatOpen = false; $('chatInput').classList.remove('visible');
-    $('chatInputField').value = '';
-    if (appState === 'playing' && !inventoryOpen && hasFine && !document.pointerLockElement) {
+    chatOpen = false;
+    var ci = $('chatInput');
+    if (ci) ci.style.display = 'none';
+    if ($('chatInputField')) $('chatInputField').value = '';
+    if (appState === 'playing' && !inventoryOpen && hasFine && !document.pointerLockElement && renderer) {
       manualUnlock = false; renderer.domElement.requestPointerLock();
     }
   }
@@ -1076,23 +1130,24 @@
 
   /* ═══ UI 初始化 ═══ */
   function initUI() {
-    $('singlePlayerBtn').addEventListener('click', function () { refreshWorlds(); setAppState('worldSelect'); });
-    $('multiPlayerBtn').addEventListener('click', function () { refreshRooms(); setAppState('multiplayer'); });
-    $('optionsBtn').addEventListener('click', function () { prevScreen = 'mainMenu'; setAppState('settings'); });
-    $('quitGameBtn').addEventListener('click', function () {
+    var btn;
+    btn = $('singlePlayerBtn'); if (btn) btn.addEventListener('click', function () { refreshWorlds(); setAppState('worldSelect'); });
+    btn = $('multiPlayerBtn'); if (btn) btn.addEventListener('click', function () { refreshRooms(); setAppState('multiplayer'); });
+    btn = $('optionsBtn'); if (btn) btn.addEventListener('click', function () { prevScreen = 'mainMenu'; setAppState('settings'); });
+    btn = $('quitGameBtn'); if (btn) btn.addEventListener('click', function () {
       if (confirm('确定要退出游戏吗？')) { window.close(); setTimeout(function () { setAppState('mainMenu'); }, 100); }
     });
-    $('worldBackBtn').addEventListener('click', function () { setAppState('mainMenu'); });
-    $('createWorldBtn').addEventListener('click', function () {
+    btn = $('worldBackBtn'); if (btn) btn.addEventListener('click', function () { setAppState('mainMenu'); });
+    btn = $('createWorldBtn'); if (btn) btn.addEventListener('click', function () {
       $('newWorldName').value = '新的世界'; $('newWorldSeed').value = '';
       setAG('createModeGroup', 'survival');
       setAG('createDifficultyGroup', 'normal');
       setAG('createTypeGroup', 'default');
       setAppState('createWorld');
     });
-    $('createHeaderBack').addEventListener('click', function () { setAppState('worldSelect'); });
-    $('createCancelBtn').addEventListener('click', function () { setAppState('worldSelect'); });
-    $('createConfirmBtn').addEventListener('click', function () {
+    btn = $('createHeaderBack'); if (btn) btn.addEventListener('click', function () { setAppState('worldSelect'); });
+    btn = $('createCancelBtn'); if (btn) btn.addEventListener('click', function () { setAppState('worldSelect'); });
+    btn = $('createConfirmBtn'); if (btn) btn.addEventListener('click', function () {
       var name = $('newWorldName').value.trim() || '新的世界';
       var ss = $('newWorldSeed').value.trim(), seed;
       if (ss === '') seed = Math.floor(Math.random() * 99999999) + 1;
@@ -1112,12 +1167,13 @@
       worlds.push(w); saveWorlds(); enterWorld(w);
     });
     ['createModeGroup', 'createDifficultyGroup', 'createTypeGroup'].forEach(function (gid) {
-      var btns = $(gid).querySelectorAll('.option-btn');
+      var group = $(gid); if (!group) return;
+      var btns = group.querySelectorAll('.option-btn');
       for (var i = 0; i < btns.length; i++) btns[i].addEventListener('click', function () { setAG(gid, this.getAttribute('data-value')); });
     });
-    $('multiBackBtn').addEventListener('click', function () { setAppState('mainMenu'); });
-    $('refreshRoomsBtn').addEventListener('click', refreshRooms);
-    $('createRoomBtn').addEventListener('click', function () {
+    btn = $('multiBackBtn'); if (btn) btn.addEventListener('click', function () { setAppState('mainMenu'); });
+    btn = $('refreshRoomsBtn'); if (btn) btn.addEventListener('click', refreshRooms);
+    btn = $('createRoomBtn'); if (btn) btn.addEventListener('click', function () {
       if (worlds.length === 0) { toast('请先创建单人存档'); return; }
       $('roomNameInput').value = '我的房间';
       $('roomHostInput').value = myPlayerName;
@@ -1125,19 +1181,20 @@
       setAG('visibilityGroup', 'public');
       selSaveIdx = 0; refreshSaveList(); setAppState('createRoom');
     });
-    $('createRoomBackBtn').addEventListener('click', function () { setAppState('multiplayer'); });
-    $('createRoomCancelBtn').addEventListener('click', function () { setAppState('multiplayer'); });
-    $('createRoomConfirmBtn').addEventListener('click', confirmCreateRoom);
+    btn = $('createRoomBackBtn'); if (btn) btn.addEventListener('click', function () { setAppState('multiplayer'); });
+    btn = $('createRoomCancelBtn'); if (btn) btn.addEventListener('click', function () { setAppState('multiplayer'); });
+    btn = $('createRoomConfirmBtn'); if (btn) btn.addEventListener('click', confirmCreateRoom);
     ['maxPlayersGroup', 'visibilityGroup'].forEach(function (gid) {
-      var btns = $(gid).querySelectorAll('.option-btn');
+      var group = $(gid); if (!group) return;
+      var btns = group.querySelectorAll('.option-btn');
       for (var i = 0; i < btns.length; i++) btns[i].addEventListener('click', function () { setAG(gid, this.getAttribute('data-value')); });
     });
     buildSettings();
-    $('settingsDoneBtn').addEventListener('click', closeSettings);
-    $('settingsCloseBtn').addEventListener('click', closeSettings);
-    $('resumeBtn').addEventListener('click', function () { setAppState('playing'); });
-    $('pauseOptionsBtn').addEventListener('click', function () { prevScreen = 'paused'; setAppState('settings'); });
-    $('saveAndQuitBtn').addEventListener('click', function () {
+    btn = $('settingsDoneBtn'); if (btn) btn.addEventListener('click', closeSettings);
+    btn = $('settingsCloseBtn'); if (btn) btn.addEventListener('click', closeSettings);
+    btn = $('resumeBtn'); if (btn) btn.addEventListener('click', function () { setAppState('playing'); });
+    btn = $('pauseOptionsBtn'); if (btn) btn.addEventListener('click', function () { prevScreen = 'paused'; setAppState('settings'); });
+    btn = $('saveAndQuitBtn'); if (btn) btn.addEventListener('click', function () {
       if (isMultiplayer) {
         net.disconnect(); isMultiplayer = false; currentRoom = null;
         clearAllChunks(); setAppState('multiplayer'); refreshRooms();
@@ -1146,9 +1203,10 @@
         refreshWorlds(); setAppState('worldSelect');
       }
     });
-    $('invCloseBtn').addEventListener('click', closeInv);
-    $('inventoryScreen').addEventListener('click', function (e) {
-      if (e.target === $('inventoryScreen')) closeInv();
+    btn = $('invCloseBtn'); if (btn) btn.addEventListener('click', closeInv);
+    var invScreen = $('inventoryScreen');
+    if (invScreen) invScreen.addEventListener('click', function (e) {
+      if (e.target === invScreen) closeInv();
     });
     document.addEventListener('mousemove', function (e) {
       if (cursorItem) {
@@ -1159,11 +1217,13 @@
     });
   }
   function setAG(gid, val) {
-    var btns = $(gid).querySelectorAll('.option-btn');
+    var group = $(gid); if (!group) return;
+    var btns = group.querySelectorAll('.option-btn');
     for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i].getAttribute('data-value') === val);
   }
   function getAG(gid) {
-    var btns = $(gid).querySelectorAll('.option-btn');
+    var group = $(gid); if (!group) return null;
+    var btns = group.querySelectorAll('.option-btn');
     for (var i = 0; i < btns.length; i++) if (btns[i].classList.contains('active')) return btns[i].getAttribute('data-value');
     return null;
   }
@@ -1182,6 +1242,7 @@
   function typeLabel(t) { return { default:'默认', flat:'超平坦', largeBiomes:'大型群系', amplified:'放大化' }[t] || '默认'; }
   function refreshWorlds() {
     var list = $('worldList');
+    if (!list) return;
     list.innerHTML = '';
     if (worlds.length === 0) {
       var empty = document.createElement('div');
@@ -1255,6 +1316,7 @@
   var roomsChannel = null, selSaveIdx = 0;
   function refreshRooms() {
     var list = $('roomList');
+    if (!list) return;
     list.innerHTML = '<div class="room-empty"><div class="cloud-icon">☁</div><div>正在加载…</div></div>';
     if (!supabaseReady) {
       $('roomServerStatus').textContent = '离线';
@@ -1273,6 +1335,7 @@
   }
   function renderRooms(rooms) {
     var list = $('roomList');
+    if (!list) return;
     list.innerHTML = '';
     if (!rooms || rooms.length === 0) {
       list.innerHTML = '<div class="room-empty"><div class="cloud-icon">☁</div><div>暂无房间</div><div class="hint">点击下方按钮创建</div></div>';
@@ -1304,6 +1367,7 @@
   }
   function refreshSaveList() {
     var list = $('saveListForRoom');
+    if (!list) return;
     list.innerHTML = '';
     worlds.forEach(function (w, i) {
       var card = document.createElement('div');
@@ -1408,6 +1472,7 @@
       ]}
     ];
     var tabsEl = $('settingsTabs'), panelsEl = $('settingsPanels');
+    if (!tabsEl || !panelsEl) return;
     tabsEl.innerHTML = ''; panelsEl.innerHTML = '';
     SDEFS.forEach(function (def, i) {
       var btn = document.createElement('button');
@@ -1454,7 +1519,7 @@
   }
   function onSettingChange(key, value) {
     switch (key) {
-      case 'fov': camera.fov = value; camera.updateProjectionMatrix(); break;
+      case 'fov': if (camera) { camera.fov = value; camera.updateProjectionMatrix(); } break;
       case 'brightness': applyBrightness(); break;
       case 'renderDistance':
         LOAD_RADIUS = Math.max(1, Math.min(16, Math.round(value / 2)));
@@ -1471,7 +1536,7 @@
   }
   function closeSettings() {
     LOAD_RADIUS = Math.max(1, Math.min(16, Math.round(settings.renderDistance / 2)));
-    camera.fov = settings.fov; camera.updateProjectionMatrix();
+    if (camera) { camera.fov = settings.fov; camera.updateProjectionMatrix(); }
     applyBrightness(); saveSettings();
     if (prevScreen === 'paused') setAppState('paused'); else setAppState('mainMenu');
   }
@@ -1489,6 +1554,7 @@
   }
   function buildHotbar() {
     var hotbarEl = $('hotbar');
+    if (!hotbarEl) return;
     hotbarEl.innerHTML = '';
     for (var i = 0; i < 9; i++) (function (index) {
       var slot = document.createElement('div');
@@ -1515,7 +1581,9 @@
   function selectSlot(i) {
     if (i < 0 || i >= 9) return;
     selectedSlot = i;
-    var kids = $('hotbar').children;
+    var hotbarEl = $('hotbar');
+    if (!hotbarEl) return;
+    var kids = hotbarEl.children;
     for (var j = 0; j < kids.length; j++) kids[j].classList.toggle('active', j === i);
   }
   function getSelectedBlockId() {
@@ -1560,11 +1628,12 @@
   function openInv() {
     if (appState !== 'playing') return;
     inventoryOpen = true;
-    $('inventoryScreen').classList.remove('hidden');
-    $('crosshair').style.display = 'none';
+    var el = $('inventoryScreen');
+    if (el) el.style.display = 'flex';
+    if ($('crosshair')) $('crosshair').style.display = 'none';
     buildInventoryUI();
     if (document.pointerLockElement) document.exitPointerLock();
-    $('mobileControls').classList.remove('show');
+    if ($('mobileControls')) $('mobileControls').style.display = 'none';
   }
   function closeInv() {
     if (cursorItem) {
@@ -1585,16 +1654,21 @@
       for (var n = 0; n < kids.length; n++) updateHotbarSlot(kids[n], hotbarSlots[n]);
     }
     inventoryOpen = false;
-    $('inventoryScreen').classList.add('hidden');
-    if (gameMode !== 'spectator') $('crosshair').style.display = 'block';
+    var el = $('inventoryScreen');
+    if (el) el.style.display = 'none';
+    if (gameMode !== 'spectator' && $('crosshair')) $('crosshair').style.display = 'block';
     if (appState === 'playing') {
-      if (isTouchUI) $('mobileControls').classList.add('show');
-      else if (hasFine && !document.pointerLockElement) { manualUnlock = false; renderer.domElement.requestPointerLock(); }
+      if (isTouchUI) { if ($('mobileControls')) $('mobileControls').style.display = 'block'; }
+      else if (hasFine && !document.pointerLockElement && renderer) { manualUnlock = false; renderer.domElement.requestPointerLock(); }
     }
   }
-  function hideCursorItem() { $('cursorItem').style.display = 'none'; }
+  function hideCursorItem() {
+    var el = $('cursorItem');
+    if (el) el.style.display = 'none';
+  }
   function showCursorItem(item) {
     var el = $('cursorItem');
+    if (!el) return;
     while (el.firstChild) el.removeChild(el.firstChild);
     var icon = makeIcon(item.id);
     if (icon) el.appendChild(icon);
@@ -1609,6 +1683,7 @@
     var cg = $('craftGrid'), cgResult = $('craftResult');
     var bg = $('invGridBackpack'), hg = $('invGridHotbar'), ag = $('armorCol');
     var rl = $('recipeList');
+    if (!cg) return;
     cg.innerHTML = ''; cgResult.innerHTML = ''; bg.innerHTML = ''; hg.innerHTML = ''; ag.innerHTML = ''; rl.innerHTML = '';
     for (var i = 0; i < 9; i++) (function (idx) {
       var cell = document.createElement('div'); cell.className = 'inv-cell';
@@ -1770,7 +1845,7 @@
       hpC.style.height = '20px';
       hpC.style.width = (10 * 20 + 4) * (20 / 22) + 'px';
       hpC.style.imageRendering = 'pixelated';
-      $('healthBar').appendChild(hpC);
+      var hb = $('healthBar'); if (hb) hb.appendChild(hpC);
       hpCtx = hpC.getContext('2d');
     }
     hpCtx.clearRect(0, 0, hpC.width, hpC.height);
@@ -1789,7 +1864,7 @@
       hgC.style.height = '20px';
       hgC.style.width = (10 * 20 + 4) * (20 / 22) + 'px';
       hgC.style.imageRendering = 'pixelated';
-      $('hungerBar').appendChild(hgC);
+      var hb = $('hungerBar'); if (hb) hb.appendChild(hgC);
       hgCtx = hgC.getContext('2d');
     }
     hgCtx.clearRect(0, 0, hgC.width, hgC.height);
@@ -1832,10 +1907,11 @@
   }
   function onDeath() {
     setAppState('dead');
-    $('deathScreen').classList.remove('hidden');
+    var ds = $('deathScreen');
+    if (ds) ds.style.display = 'flex';
     addChat('你死了！', 'error');
     setTimeout(function () {
-      $('deathScreen').classList.add('hidden');
+      if (ds) ds.style.display = 'none';
       spawnPlayer(); updateChunks(true); updateHP(); updateHunger();
       setAppState('playing');
     }, 2000);
@@ -2026,6 +2102,7 @@
 
   /* ═══ 手臂 & 相机 ═══ */
   function updateHand(dt) {
+    if (!handPivot) return;
     var sx = 0, sz = 0;
     if (swingTime > 0) {
       swingTime -= dt;
@@ -2047,6 +2124,7 @@
     handPivot.visible = (gameMode !== 'spectator');
   }
   function updateCamera() {
+    if (!camera) return;
     var by = 0, bx = 0;
     if (settings.viewBobbing) { by = Math.sin(bobPhase * 2) * 0.022; bx = Math.cos(bobPhase) * 0.014; }
     camera.position.set(player.pos.x + bx, player.pos.y + EYE_HEIGHT + by, player.pos.z);
@@ -2060,34 +2138,34 @@
   function updateHUD() {
     var cx = Math.floor(player.pos.x), cy = Math.floor(player.pos.y), cz = Math.floor(player.pos.z);
     if (cx !== lastCX || cy !== lastCY || cz !== lastCZ) {
-      $('hudCoord').textContent = 'X ' + cx + ' · Y ' + cy + ' · Z ' + cz;
+      if ($('hudCoord')) $('hudCoord').textContent = 'X ' + cx + ' · Y ' + cy + ' · Z ' + cz;
       lastCX = cx; lastCY = cy; lastCZ = cz;
     }
     var p = terrainParams(cx, cz);
     if (p.biome !== lastBiome) {
       lastBiome = p.biome;
       var info = BIOMES[p.biome] || BIOMES[0];
-      $('hudBiomeName').textContent = info.name;
-      $('hudBiomeDot').style.background = info.color;
+      if ($('hudBiomeName')) $('hudBiomeName').textContent = info.name;
+      if ($('hudBiomeDot')) $('hudBiomeDot').style.background = info.color;
     }
-    if (isMultiplayer && currentRoom) {
+    if (isMultiplayer && currentRoom && $('hudOnline')) {
       $('hudOnline').style.display = 'block';
       $('hudOnline').textContent = '联机 · ' + currentRoom.name + ' (' + (net.remotePlayers.size + 1) + '/' + currentRoom.max_players + ')' + (currentRoom.isHost ? ' [房主]' : '');
-    } else $('hudOnline').style.display = 'none';
+    } else if ($('hudOnline')) $('hudOnline').style.display = 'none';
   }
   function updatePlayerList() {
-    if (!isMultiplayer) { $('playerList').innerHTML = ''; return; }
+    if (!isMultiplayer) { if ($('playerList')) $('playerList').innerHTML = ''; return; }
     var html = '<div class="player-tag me">★ ' + escHtml(myPlayerName) + ' (你)' + (currentRoom && currentRoom.isHost ? ' [房主]' : '') + '</div>';
     net.remotePlayers.forEach(function (p) { html += '<div class="player-tag">' + escHtml(p.name) + '</div>'; });
-    $('playerList').innerHTML = html;
+    if ($('playerList')) $('playerList').innerHTML = html;
   }
 
   /* ═══ 太阳 ═══ */
   function updateSun(dt) {
     sunAngle += dt * 0.05;
     var sx = Math.cos(sunAngle) * 120, sy = 140 + Math.sin(sunAngle * 0.5) * 40, sz = Math.sin(sunAngle) * 120;
-    sunLight.position.set(sx, sy, sz);
-    if (sunMesh.visible) { sunMesh.position.set(sx * 1.5, sy * 1.5, sz * 1.5); sunGlow.position.copy(sunMesh.position); }
+    if (sunLight) sunLight.position.set(sx, sy, sz);
+    if (sunMesh && sunMesh.visible) { sunMesh.position.set(sx * 1.5, sy * 1.5, sz * 1.5); sunGlow.position.copy(sunMesh.position); }
     if (cloudPlane && cloudPlane.visible) { cloudPlane.position.x = (sunAngle * 8) % 160 - 80; cloudPlane.position.z = (sunAngle * 4) % 160 - 80; }
   }
 
@@ -2100,6 +2178,7 @@
     if (mouseHeld[2] && placeTimer <= 0) { placeTimer = PLACE_COOLDOWN; doPlace(); }
   }
   function updateHighlight() {
+    if (!highlightMesh) return;
     if (gameMode === 'spectator' || inventoryOpen || chatOpen) { highlightMesh.visible = false; return; }
     var hit = camHit();
     if (hit) { highlightMesh.position.set(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5); highlightMesh.visible = true; }
@@ -2116,7 +2195,7 @@
     if (dt > 0.25) dt = 0.25; if (dt < 0) dt = 0;
     fpsCounter++; fpsTimer += dt;
     if (fpsTimer >= 0.5) {
-      $('hudFps').textContent = 'FPS ' + Math.round(fpsCounter / fpsTimer);
+      if ($('hudFps')) $('hudFps').textContent = 'FPS ' + Math.round(fpsCounter / fpsTimer);
       fpsCounter = 0; fpsTimer = 0;
     }
     if (appState === 'playing') updateSun(dt);
@@ -2134,17 +2213,17 @@
     }
     updateLoadAnim(now);
     if (dirtyChunks.size > 0) {
-      $('chunkLoading').classList.add('show');
+      if ($('chunkLoading')) $('chunkLoading').style.display = 'flex';
       var total = LOAD_RADIUS * LOAD_RADIUS * 4;
       var loaded = total - Math.min(dirtyChunks.size, total);
-      $('chunkLoadingBar').style.width = ((loaded / total) * 100) + '%';
-      $('chunkLoadingCount').textContent = Math.max(0, dirtyChunks.size);
-    } else $('chunkLoading').classList.remove('show');
+      if ($('chunkLoadingBar')) $('chunkLoadingBar').style.width = ((loaded / total) * 100) + '%';
+      if ($('chunkLoadingCount')) $('chunkLoadingCount').textContent = Math.max(0, dirtyChunks.size);
+    } else if ($('chunkLoading')) $('chunkLoading').style.display = 'none';
     if (appState === 'playing' || appState === 'paused' || appState === 'dead') {
       updateCamera(); updateHand(dt); updateHighlight(); updateHUD();
     }
     if (isMultiplayer && net.connected) net.tick(now);
-    renderer.render(scene, camera);
+    if (renderer && scene && camera) renderer.render(scene, camera);
   }
 
   /* ═══ 粒子背景 ═══ */
@@ -2161,8 +2240,8 @@
       vy: -0.15 - Math.random() * 0.35, rot: Math.random() * Math.PI,
       vr: (Math.random() - 0.5) * 0.015, alpha: 0.10 + Math.random() * 0.22
     });
-    function loop() {
-      requestAnimationFrame(loop);
+    function loop2() {
+      requestAnimationFrame(loop2);
       if (appState === 'playing' || appState === 'paused' || appState === 'dead') { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (var i = 0; i < parts.length; i++) {
@@ -2177,7 +2256,7 @@
         ctx.restore();
       }
     }
-    loop();
+    loop2();
   }
 
   /* ═══ 网络 ═══ */
@@ -2266,7 +2345,7 @@
       this.remotePlayers.clear();
       this.announcedPlayers.clear();
       this.connected = false;
-      $('playerList').innerHTML = '';
+      if ($('playerList')) $('playerList').innerHTML = '';
     },
     broadcast: function (evt, pl) { if (this.roomChannel) this.roomChannel.send({ type: 'broadcast', event: evt, payload: pl }); },
     sendChat: function (t) { this.broadcast('chat', { from: myPlayerName, text: t }); },
@@ -2342,6 +2421,7 @@
     },
     addRemote: function (id, name) {
       if (this.remotePlayers.has(id)) return;
+      if (typeof THREE === 'undefined') return;
       var g = new THREE.Group();
       var skinM = new THREE.MeshLambertMaterial({ color: 0xe8b48c });
       var shirtM = new THREE.MeshLambertMaterial({ color: 0x2e9cc9 });
