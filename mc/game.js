@@ -68,7 +68,6 @@
   if (!Array.isArray(worlds)) worlds = [];
   function saveWorlds() { storage.setJSON('mc3d_worlds', worlds); }
 
-  /* ═══ 背包（默认为空） ═══ */
   var hotbarSlots = [null, null, null, null, null, null, null, null, null];
   var backpackSlots = [];
   for (var _i = 0; _i < 36; _i++) backpackSlots.push(null);
@@ -76,7 +75,6 @@
   var craftSlots = [null, null, null, null, null, null, null, null, null];
   var selectedSlot = 0, cursorItem = null, craftResultItem = null;
 
-  /* ═══ 玩家 ═══ */
   var player = {
     pos: { x: 0.5, y: SEA_LEVEL + 2, z: 0.5 },
     vel: { x: 0, y: 0, z: 0 },
@@ -112,7 +110,9 @@
   console.log('[data.js] 已加载，方块数：', Object.keys(GAME_DATA.blocks || {}).length);
   initGame();
 
+  /* ★★★ 修复版 initGame：UI → 3D → initInput → 菜单 ★★★ */
   function initGame() {
+    // 1. 加载方块数据
     if (GAME_DATA && GAME_DATA.blocks) {
       BLOCKS = {};
       for (var k in GAME_DATA.blocks) BLOCKS[parseInt(k, 10)] = GAME_DATA.blocks[k];
@@ -151,15 +151,15 @@
     supportsTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     isTouchUI = supportsTouch && !hasFine;
 
-    // ★ 优先绑定 UI（不依赖 THREE）
+    // 2. 优先绑定 UI（不依赖 THREE）
     try { initUI(); } catch (e) { console.error('[initUI] 失败：', e); }
-    try { initInput(); } catch (e) { console.error('[initInput] 失败：', e); }
 
-    // ★ 依赖 THREE 的部分用 try/catch
+    // 3. 3D 初始化（initInput 移到 initThree 之后！）
     try {
-      if (typeof THREE === 'undefined') throw new Error('THREE 未定义（three.min.js 加载失败）');
+      if (typeof THREE === 'undefined') throw new Error('THREE 未定义');
       buildAtlas();
       initThree();
+      initInput();  // ★ 关键：移到这，此时 renderer 已经存在
       try { initTouch(); } catch (e) { console.error('[initTouch] 失败：', e); }
       try { initParticles(); } catch (e) { console.error('[initParticles] 失败：', e); }
       spawnPlayer();
@@ -175,7 +175,7 @@
       toast('⚠ 3D 引擎加载失败，请刷新页面');
     }
 
-    // ★ 无论如何都显示主菜单
+    // 4. 无论如何都显示主菜单
     setAppState('mainMenu');
   }
 
@@ -238,23 +238,16 @@
 
   /* ═══ 噪声 ═══ */
   function sh(x, y, s) {
-    var h = Math.imul(x | 0, 0x27d4eb2d);
-    h ^= Math.imul(y | 0, 0x165667b1);
+    var h = Math.imul(x | 0, 0x27d4eb2d); h ^= Math.imul(y | 0, 0x165667b1);
     h ^= Math.imul((WORLD_SEED + (s | 0)) | 0, 0x9e3779b9);
-    h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
-    h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
-    h ^= h >>> 16;
-    return (h >>> 0) / 4294967296;
+    h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+    h ^= h >>> 16; return (h >>> 0) / 4294967296;
   }
   function sh3(x, y, z, s) {
-    var h = Math.imul(x | 0, 0x27d4eb2d);
-    h ^= Math.imul(y | 0, 0x165667b1);
-    h ^= Math.imul(z | 0, 0x9e3779b9);
-    h ^= Math.imul((WORLD_SEED + (s | 0)) | 0, 0x85ebca6b);
-    h = Math.imul(h ^ (h >>> 15), 0xc2b2ae35);
-    h = Math.imul(h ^ (h >>> 13), 0x85ebca6b);
-    h ^= h >>> 16;
-    return (h >>> 0) / 4294967296;
+    var h = Math.imul(x | 0, 0x27d4eb2d); h ^= Math.imul(y | 0, 0x165667b1);
+    h ^= Math.imul(z | 0, 0x9e3779b9); h ^= Math.imul((WORLD_SEED + (s | 0)) | 0, 0x85ebca6b);
+    h = Math.imul(h ^ (h >>> 15), 0xc2b2ae35); h = Math.imul(h ^ (h >>> 13), 0x85ebca6b);
+    h ^= h >>> 16; return (h >>> 0) / 4294967296;
   }
   function sn(x, y, s) {
     var x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0;
@@ -787,6 +780,7 @@
 
   /* ═══ 输入 ═══ */
   function initInput() {
+    if (!renderer || !renderer.domElement) { console.error('[initInput] renderer 未就绪'); return; }
     window.addEventListener('keydown', function (e) {
       if (chatOpen) {
         if (e.key === 'Escape') { closeChat(); e.preventDefault(); }
@@ -972,7 +966,7 @@
     });
   }
 
-  /* ═══ 界面管理 ═══ */
+  /* ═══ 界面管理 ★ 修复版 ═══ */
   var screenIds = {
     mainMenu: 'mainMenuScreen', multiplayer: 'multiplayerScreen',
     createRoom: 'createRoomScreen', worldSelect: 'worldSelectScreen',
@@ -980,9 +974,9 @@
   };
 
   function setAppState(s) {
+    if (!s) s = 'mainMenu';
     appState = s;
 
-    // ★ 用 .style.display 直接控制，不依赖 CSS 类
     for (var key in screenIds) {
       var el = $(screenIds[key]);
       if (el) el.style.display = 'none';
@@ -1033,8 +1027,7 @@
   }
 
   function showLoad() {
-    var el = $('loadingScreen');
-    if (el) el.style.display = 'flex';
+    var el = $('loadingScreen'); if (el) el.style.display = 'flex';
     if ($('loadingBar')) $('loadingBar').style.width = '0%';
     if ($('loadingStatus')) $('loadingStatus').textContent = '正在准备...';
   }
@@ -1042,10 +1035,7 @@
     if ($('loadingBar')) $('loadingBar').style.width = (t > 0 ? (c / t) * 100 : 0) + '%';
     if ($('loadingStatus')) $('loadingStatus').textContent = s || ('正在生成区块... ' + c + ' / ' + t);
   }
-  function hideLoad() {
-    var el = $('loadingScreen');
-    if (el) el.style.display = 'none';
-  }
+  function hideLoad() { var el = $('loadingScreen'); if (el) el.style.display = 'none'; }
 
   /* ═══ 聊天 ═══ */
   function addChat(text, type) {
@@ -1065,8 +1055,7 @@
   function openChat(isCmd) {
     if (appState !== 'playing') return;
     chatOpen = true;
-    var ci = $('chatInput');
-    if (ci) ci.style.display = 'block';
+    var ci = $('chatInput'); if (ci) ci.style.display = 'block';
     var f = $('chatInputField');
     f.value = isCmd ? '/' : '';
     $('chatPrefix').textContent = isCmd ? '/' : '>';
@@ -1075,8 +1064,7 @@
   }
   function closeChat() {
     chatOpen = false;
-    var ci = $('chatInput');
-    if (ci) ci.style.display = 'none';
+    var ci = $('chatInput'); if (ci) ci.style.display = 'none';
     if ($('chatInputField')) $('chatInputField').value = '';
     if (appState === 'playing' && !inventoryOpen && hasFine && !document.pointerLockElement && renderer) {
       manualUnlock = false; renderer.domElement.requestPointerLock();
@@ -1140,9 +1128,7 @@
     btn = $('worldBackBtn'); if (btn) btn.addEventListener('click', function () { setAppState('mainMenu'); });
     btn = $('createWorldBtn'); if (btn) btn.addEventListener('click', function () {
       $('newWorldName').value = '新的世界'; $('newWorldSeed').value = '';
-      setAG('createModeGroup', 'survival');
-      setAG('createDifficultyGroup', 'normal');
-      setAG('createTypeGroup', 'default');
+      setAG('createModeGroup', 'survival'); setAG('createDifficultyGroup', 'normal'); setAG('createTypeGroup', 'default');
       setAppState('createWorld');
     });
     btn = $('createHeaderBack'); if (btn) btn.addEventListener('click', function () { setAppState('worldSelect'); });
@@ -1175,10 +1161,8 @@
     btn = $('refreshRoomsBtn'); if (btn) btn.addEventListener('click', refreshRooms);
     btn = $('createRoomBtn'); if (btn) btn.addEventListener('click', function () {
       if (worlds.length === 0) { toast('请先创建单人存档'); return; }
-      $('roomNameInput').value = '我的房间';
-      $('roomHostInput').value = myPlayerName;
-      setAG('maxPlayersGroup', '10');
-      setAG('visibilityGroup', 'public');
+      $('roomNameInput').value = '我的房间'; $('roomHostInput').value = myPlayerName;
+      setAG('maxPlayersGroup', '10'); setAG('visibilityGroup', 'public');
       selSaveIdx = 0; refreshSaveList(); setAppState('createRoom');
     });
     btn = $('createRoomBackBtn'); if (btn) btn.addEventListener('click', function () { setAppState('multiplayer'); });
@@ -1205,9 +1189,7 @@
     });
     btn = $('invCloseBtn'); if (btn) btn.addEventListener('click', closeInv);
     var invScreen = $('inventoryScreen');
-    if (invScreen) invScreen.addEventListener('click', function (e) {
-      if (e.target === invScreen) closeInv();
-    });
+    if (invScreen) invScreen.addEventListener('click', function (e) { if (e.target === invScreen) closeInv(); });
     document.addEventListener('mousemove', function (e) {
       if (cursorItem) {
         var el = $('cursorItem');
@@ -1241,8 +1223,7 @@
   function modeLabel(m) { return { survival:'生存', creative:'创造', hardcore:'极限', adventure:'冒险' }[m] || '生存'; }
   function typeLabel(t) { return { default:'默认', flat:'超平坦', largeBiomes:'大型群系', amplified:'放大化' }[t] || '默认'; }
   function refreshWorlds() {
-    var list = $('worldList');
-    if (!list) return;
+    var list = $('worldList'); if (!list) return;
     list.innerHTML = '';
     if (worlds.length === 0) {
       var empty = document.createElement('div');
@@ -1295,11 +1276,7 @@
         var rem = dirtyChunks.size;
         setLoadProgress(total - rem, total, rem > 0 ? '构建中... (' + rem + ')' : '完成');
         if (rem > 0 && steps < 200) { steps++; requestAnimationFrame(step); }
-        else {
-          hideLoad();
-          setAppState('playing');
-          addChat('欢迎来到 ' + escHtml(w.name), 'system');
-        }
+        else { hideLoad(); setAppState('playing'); addChat('欢迎来到 ' + escHtml(w.name), 'system'); }
       }
       step();
     }, 50);
@@ -1315,8 +1292,7 @@
   /* ═══ 多人游戏 ═══ */
   var roomsChannel = null, selSaveIdx = 0;
   function refreshRooms() {
-    var list = $('roomList');
-    if (!list) return;
+    var list = $('roomList'); if (!list) return;
     list.innerHTML = '<div class="room-empty"><div class="cloud-icon">☁</div><div>正在加载…</div></div>';
     if (!supabaseReady) {
       $('roomServerStatus').textContent = '离线';
@@ -1334,8 +1310,7 @@
       });
   }
   function renderRooms(rooms) {
-    var list = $('roomList');
-    if (!list) return;
+    var list = $('roomList'); if (!list) return;
     list.innerHTML = '';
     if (!rooms || rooms.length === 0) {
       list.innerHTML = '<div class="room-empty"><div class="cloud-icon">☁</div><div>暂无房间</div><div class="hint">点击下方按钮创建</div></div>';
@@ -1366,8 +1341,7 @@
     }).subscribe();
   }
   function refreshSaveList() {
-    var list = $('saveListForRoom');
-    if (!list) return;
+    var list = $('saveListForRoom'); if (!list) return;
     list.innerHTML = '';
     worlds.forEach(function (w, i) {
       var card = document.createElement('div');
@@ -1544,7 +1518,7 @@
   /* ═══ 物品栏 ═══ */
   function makeIcon(blockId) {
     var def = BLOCKS[blockId];
-    if (!def) return null;
+    if (!def || !atlasCanvas) return null;
     var tile = def.side;
     var col = tile % ATLAS_COLS, row = Math.floor(tile / ATLAS_COLS);
     var c = document.createElement('canvas'); c.width = 32; c.height = 32;
@@ -1553,8 +1527,7 @@
     return c;
   }
   function buildHotbar() {
-    var hotbarEl = $('hotbar');
-    if (!hotbarEl) return;
+    var hotbarEl = $('hotbar'); if (!hotbarEl) return;
     hotbarEl.innerHTML = '';
     for (var i = 0; i < 9; i++) (function (index) {
       var slot = document.createElement('div');
@@ -1581,8 +1554,7 @@
   function selectSlot(i) {
     if (i < 0 || i >= 9) return;
     selectedSlot = i;
-    var hotbarEl = $('hotbar');
-    if (!hotbarEl) return;
+    var hotbarEl = $('hotbar'); if (!hotbarEl) return;
     var kids = hotbarEl.children;
     for (var j = 0; j < kids.length; j++) kids[j].classList.toggle('active', j === i);
   }
@@ -1628,8 +1600,7 @@
   function openInv() {
     if (appState !== 'playing') return;
     inventoryOpen = true;
-    var el = $('inventoryScreen');
-    if (el) el.style.display = 'flex';
+    var el = $('inventoryScreen'); if (el) el.style.display = 'flex';
     if ($('crosshair')) $('crosshair').style.display = 'none';
     buildInventoryUI();
     if (document.pointerLockElement) document.exitPointerLock();
@@ -1654,21 +1625,16 @@
       for (var n = 0; n < kids.length; n++) updateHotbarSlot(kids[n], hotbarSlots[n]);
     }
     inventoryOpen = false;
-    var el = $('inventoryScreen');
-    if (el) el.style.display = 'none';
+    var el = $('inventoryScreen'); if (el) el.style.display = 'none';
     if (gameMode !== 'spectator' && $('crosshair')) $('crosshair').style.display = 'block';
     if (appState === 'playing') {
       if (isTouchUI) { if ($('mobileControls')) $('mobileControls').style.display = 'block'; }
       else if (hasFine && !document.pointerLockElement && renderer) { manualUnlock = false; renderer.domElement.requestPointerLock(); }
     }
   }
-  function hideCursorItem() {
-    var el = $('cursorItem');
-    if (el) el.style.display = 'none';
-  }
+  function hideCursorItem() { var el = $('cursorItem'); if (el) el.style.display = 'none'; }
   function showCursorItem(item) {
-    var el = $('cursorItem');
-    if (!el) return;
+    var el = $('cursorItem'); if (!el) return;
     while (el.firstChild) el.removeChild(el.firstChild);
     var icon = makeIcon(item.id);
     if (icon) el.appendChild(icon);
@@ -1907,8 +1873,7 @@
   }
   function onDeath() {
     setAppState('dead');
-    var ds = $('deathScreen');
-    if (ds) ds.style.display = 'flex';
+    var ds = $('deathScreen'); if (ds) ds.style.display = 'flex';
     addChat('你死了！', 'error');
     setTimeout(function () {
       if (ds) ds.style.display = 'none';
@@ -1952,8 +1917,7 @@
   function triggerSwing() { swingTime = SWING_DURATION; }
   function doBreak() {
     if (gameMode === 'spectator' || gameMode === 'adventure') return;
-    var hit = camHit();
-    if (!hit) return;
+    var hit = camHit(); if (!hit) return;
     var b = getBlock(hit.x, hit.y, hit.z);
     if (b === 0 || b === 7) return;
     setBlock(hit.x, hit.y, hit.z, 0);
@@ -1964,8 +1928,7 @@
   }
   function doPlace() {
     if (gameMode === 'spectator') return;
-    var hit = camHit();
-    if (!hit) return;
+    var hit = camHit(); if (!hit) return;
     var x = hit.x + hit.normal.x, y = hit.y + hit.normal.y, z = hit.z + hit.normal.z;
     if (getBlock(x, y, z) !== 0) return;
     var bid = getSelectedBlockId();
@@ -2228,8 +2191,7 @@
 
   /* ═══ 粒子背景 ═══ */
   function initParticles() {
-    var canvas = $('particles');
-    if (!canvas) return;
+    var canvas = $('particles'); if (!canvas) return;
     var ctx = canvas.getContext('2d'), parts = [];
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     resize();
