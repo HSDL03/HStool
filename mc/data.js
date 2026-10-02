@@ -1,4 +1,4 @@
-// mc/data.js
+// mc/data.js — 游戏静态数据
 window.GAME_DATA = {
   blocks: {
     "1":  { name: "草方块",  top: 0,  side: 1,  bottom: 2  },
