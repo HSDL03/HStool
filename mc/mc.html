@@ -17,9 +17,7 @@
   <div class="status" id="loadingStatus">正在生成区块...</div>
 </div>
 
-<div class="bg-decor" id="bgDecor">
-  <canvas id="particles"></canvas>
-</div>
+<div class="bg-decor" id="bgDecor"><canvas id="particles"></canvas></div>
 
 <div id="hudTop">
   <div class="hud-card" id="hudCoord">X 0 · Y 0 · Z 0</div>
@@ -120,9 +118,6 @@
           <button class="option-btn active" data-value="public">公开</button>
           <button class="option-btn" data-value="private">私有</button>
         </div>
-      </div>
-      <div class="form-row"><label>允许作弊</label>
-        <button class="toggle-btn" id="roomCheatToggle" data-value="on"><span class="knob"></span><span class="label">开启</span></button>
       </div>
     </div>
   </div>
@@ -227,6 +222,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="data.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
