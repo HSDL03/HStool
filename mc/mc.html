@@ -17,7 +17,41 @@
 html,body{width:100%;height:100%;overflow:hidden;background:#87ceeb;font-family:var(--font);color:var(--text);user-select:none;-webkit-user-select:none}
 canvas#game3d{display:block}
 
-/* HUD 元素默认内联隐藏，JS 直接控制 */
+/* ★ 兜底：默认隐藏所有界面（除主菜单），只认 JS 设置的内联 style.display */
+.screen { display: none !important; }
+.screen[style*="display:flex"],
+.screen[style*="display: flex"] { display: flex !important; }
+.screen[style*="display:block"],
+.screen[style*="display: block"] { display: block !important; }
+
+#loadingScreen, #deathScreen, #inventoryScreen, #mobileControls,
+#hudTop, #hotbar, #healthBar, #hungerBar, #crosshair,
+#chatBox, #chatInput, #chunkLoading, #playerList, #tips, #supabaseStatus,
+#cursorItem {
+  display: none !important;
+}
+#loadingScreen[style*="display:flex"], #loadingScreen[style*="display: flex"],
+#deathScreen[style*="display:flex"], #deathScreen[style*="display: flex"],
+#inventoryScreen[style*="display:flex"], #inventoryScreen[style*="display: flex"],
+#hudTop[style*="display:flex"], #hudTop[style*="display: flex"],
+#hotbar[style*="display:flex"], #hotbar[style*="display: flex"],
+#chatBox[style*="display:flex"], #chatBox[style*="display: flex"],
+#chunkLoading[style*="display:flex"], #chunkLoading[style*="display: flex"],
+#playerList[style*="display:flex"], #playerList[style*="display: flex"] {
+  display: flex !important;
+}
+#mobileControls[style*="display:block"], #mobileControls[style*="display: block"],
+#healthBar[style*="display:block"], #healthBar[style*="display: block"],
+#hungerBar[style*="display:block"], #hungerBar[style*="display: block"],
+#crosshair[style*="display:block"], #crosshair[style*="display: block"],
+#chatInput[style*="display:block"], #chatInput[style*="display: block"],
+#tips[style*="display:block"], #tips[style*="display: block"],
+#supabaseStatus[style*="display:block"], #supabaseStatus[style*="display: block"],
+#cursorItem[style*="display:block"], #cursorItem[style*="display: block"] {
+  display: block !important;
+}
+
+/* ═══════ HUD 样式 ═══════ */
 #hudTop{position:fixed;top:14px;left:18px;z-index:15;pointer-events:none;flex-direction:column;gap:6px}
 .hud-card{font-family:monospace;font-size:13px;color:#1f1f1f;background:#f4f0e0;padding:5px 12px;border:2px solid #4a4a3a;box-shadow:2px 2px 0 rgba(0,0,0,.2);white-space:nowrap}
 .hud-card .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
@@ -33,8 +67,7 @@ canvas#game3d{display:block}
 .player-tag{font-family:monospace;font-size:12px;color:#fff;background:rgba(30,30,20,.65);padding:3px 10px;white-space:nowrap}
 .player-tag.me{color:#8fd94f}
 
-#hotbar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);padding:3px;background:rgba(40,40,30,.6);border:2px solid #4a4a3a;z-index:15}
-#hotbar.flex{display:flex}
+#hotbar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);padding:3px;background:rgba(40,40,30,.6);border:2px solid #4a4a3a;z-index:15;gap:0}
 .slot{width:52px;height:52px;position:relative;display:flex;align-items:center;justify-content:center;background:#e8e2cc;border:2px solid #4a4a3a;cursor:pointer;flex-shrink:0}
 .slot+.slot{margin-left:-2px}
 .slot canvas{width:38px;height:38px;image-rendering:pixelated;pointer-events:none}
@@ -49,7 +82,6 @@ canvas#game3d{display:block}
 #tips b{color:#3d521f}
 
 #chatBox{position:fixed;left:16px;bottom:260px;width:460px;max-width:60vw;z-index:22;pointer-events:none;flex-direction:column;gap:3px;max-height:220px;overflow:hidden;font-size:13px}
-#chatBox.flex{display:flex}
 .chat-msg{background:rgba(30,30,20,.65);color:#fff;padding:4px 10px;font-size:13px;line-height:1.35;word-wrap:break-word}
 .chat-msg.system{color:#ffe9a0}.chat-msg.error{color:#ff8080}.chat-msg.success{color:#a0ffa0}
 .chat-msg .sender{color:#8fd94f;font-weight:bold}
@@ -61,14 +93,13 @@ canvas#game3d{display:block}
 #toast.show{opacity:1}
 
 #chunkLoading{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:18;pointer-events:none;align-items:center;gap:12px;padding:8px 18px;background:rgba(30,30,20,.75);border:2px solid #8fd94f;color:#fff;font-size:12px;font-family:monospace}
-#chunkLoading.flex{display:flex}
 #chunkLoading .spinner{width:16px;height:16px;border:2px solid rgba(143,217,79,.3);border-top-color:#8fd94f;border-radius:50%;animation:cs .8s linear infinite}
 @keyframes cs{to{transform:rotate(360deg)}}
 #chunkLoading .bar{width:120px;height:6px;background:rgba(0,0,0,.4);border:1px solid rgba(143,217,79,.4);position:relative}
 #chunkLoading .bar-inner{position:absolute;left:0;top:0;bottom:0;background:#8fd94f;width:0;transition:width .2s}
 
+/* ═══════ 界面样式 ═══════ */
 .screen{position:fixed;inset:0;z-index:40;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;background:rgba(0,0,0,.55)}
-.screen.flex{display:flex}
 .screen-title{color:#fff;font-size:40px;font-weight:bold;letter-spacing:10px;margin-bottom:6px;text-shadow:3px 3px 0 #2a2a2a}
 .screen-sub{color:#d8f0c0;font-size:13px;letter-spacing:4px;margin-bottom:30px;text-shadow:1px 1px 0 #000}
 .menu-buttons{display:flex;flex-direction:column;gap:12px;align-items:center}
@@ -130,8 +161,9 @@ canvas#game3d{display:block}
 .setting-row .valBox{width:90px;text-align:right;font-family:monospace;font-size:13px;color:#3d521f;font-weight:bold;flex-shrink:0}
 .toggle-settings-btn{padding:8px 20px;color:#1f1f1f;font-family:inherit;font-size:13.5px;background:#f4f0e0;border:2px solid #4a4a3a;cursor:pointer}
 .toggle-settings-btn.on{background:var(--topbar-bg);border-color:#2a3a1a;color:#fff}
+
+/* ═══════ 物品栏 ═══════ */
 #inventoryScreen{position:fixed;inset:0;z-index:42;align-items:center;justify-content:center;padding:10px;background:rgba(0,0,0,.5)}
-#inventoryScreen.flex{display:flex}
 #inventoryScreen .panel{width:880px;max-width:98vw;max-height:94vh;display:flex;flex-direction:column}
 #inventoryScreen .panel-body{padding:10px;background:#f4f0e0;overflow-y:auto}
 .inv-top{display:flex;gap:16px;margin-bottom:10px}
@@ -160,18 +192,22 @@ canvas#game3d{display:block}
 #cursorItem{position:fixed;z-index:100;pointer-events:none;transform:translate(-50%,-50%)}
 #cursorItem canvas{width:38px;height:38px;image-rendering:pixelated;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
 #cursorItem .cnt{position:absolute;bottom:-2px;right:-2px;font-family:monospace;font-size:12px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
+
+/* ═══════ 死亡 / 加载 ═══════ */
 #deathScreen{position:fixed;inset:0;z-index:45;flex-direction:column;align-items:center;justify-content:center;background:rgba(120,20,20,.55);pointer-events:none}
-#deathScreen.flex{display:flex}
 #deathScreen h2{color:#fff;font-size:38px;letter-spacing:8px;text-shadow:3px 3px 0 #4a0000;margin-bottom:10px}
+#deathScreen p{color:#ffe8e8;font-size:14px;letter-spacing:2px}
 #loadingScreen{position:fixed;inset:0;z-index:60;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#1a2a3a,#0a1520);color:#fff}
-#loadingScreen.flex{display:flex}
 #loadingScreen .title{font-size:28px;letter-spacing:8px;margin-bottom:30px}
 #loadingScreen .bar-outer{width:320px;height:16px;background:rgba(0,0,0,.4);border:2px solid #4a4a3a;position:relative;overflow:hidden}
 #loadingScreen .bar-fill{height:100%;background:linear-gradient(90deg,#8fd94f,#4a9e3a);transition:width .15s;width:0}
 #loadingScreen .status{margin-top:16px;font-size:13px;color:#8fd94f;font-family:monospace}
+
+/* ═══════ Supabase 状态 ═══════ */
 #supabaseStatus{position:fixed;bottom:8px;right:12px;z-index:100;padding:4px 10px;font-size:11px;font-family:monospace;background:rgba(0,0,0,.6);color:#8fd94f}
+
+/* ═══════ 触屏 ═══════ */
 #mobileControls{position:fixed;inset:0;z-index:17;pointer-events:none}
-#mobileControls.flex{display:block}
 #mobileControls *{pointer-events:auto}
 #moveJoystick{position:absolute;bottom:80px;left:24px;width:130px;height:130px;border-radius:50%;background:rgba(30,30,20,.35);border:3px solid rgba(255,255,255,.35);touch-action:none}
 #moveJoystick .stick{position:absolute;left:50%;top:50%;width:54px;height:54px;border-radius:50%;background:rgba(143,217,79,.65);border:2px solid rgba(255,255,255,.85);transform:translate(-50%,-50%)}
@@ -183,13 +219,32 @@ canvas#game3d{display:block}
 #mobileTopRight{position:absolute;top:14px;right:18px;display:flex;gap:8px}
 #mobileTopRight .m-btn{width:44px;height:44px;font-size:18px}
 #mobileLookArea{position:absolute;right:0;top:0;bottom:180px;left:180px;background:transparent}
+
+/* ═══════ 背景 ═══════ */
 .bg-decor{position:fixed;inset:0;z-index:0;pointer-events:none;background:#fffdf5}
 #particles{position:absolute;inset:0;width:100%;height:100%}
+
+/* ═══════ 响应式 ═══════ */
+@media (max-width:640px){
+  .screen-title{font-size:28px;letter-spacing:6px}
+  .mc-btn{min-width:220px;font-size:14px;padding:12px 24px}
+  .form-row{flex-wrap:wrap}.form-row>label{width:100%}
+  .settings-layout{flex-direction:column}
+  .settings-tabs{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:2px solid #4a4a3a}
+  .tab-btn{border-left:none;border-bottom:4px solid transparent}
+  .tab-btn.active{border-left-color:transparent;border-bottom-color:#3d521f}
+  #chatBox,#chatInput{width:calc(100vw - 32px);max-width:none;bottom:200px}
+  #chatInput{bottom:170px}
+  #tips{display:none !important}
+  .slot{width:46px;height:46px}.slot canvas{width:32px;height:32px}
+  .inv-grid{grid-template-columns:repeat(6,1fr) !important}
+  .inv-top{flex-direction:column}.inv-right{width:100%}
+}
 </style>
 </head>
 <body>
 
-<div id="supabaseStatus"></div>
+<div id="supabaseStatus" style="display:none"></div>
 
 <div id="loadingScreen" style="display:none">
   <div class="title">生成世界</div>
@@ -401,6 +456,7 @@ canvas#game3d{display:block}
   </div>
 </div>
 
+<!-- ★ 三级 CDN 备用 -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script>
   if (typeof THREE === 'undefined') {
