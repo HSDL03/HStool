@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>我的世界 · 3D 体素沙盒</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="mc.css">
+</head>
+<body>
+
+<div id="supabaseStatus"></div>
+
+<div id="loadingScreen" class="hidden">
+  <div class="title">生成世界</div>
+  <div class="bar-outer"><div class="bar-fill" id="loadingBar"></div></div>
+  <div class="status" id="loadingStatus">正在生成区块...</div>
+</div>
+
+<div class="bg-decor" id="bgDecor">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="grid-bg"></div>
+  <canvas id="particles"></canvas>
+</div>
+
+<div id="hudTop">
+  <div class="hud-card" id="hudCoord">X 0 · Y 0 · Z 0</div>
+  <div class="hud-card" id="hudBiome"><span class="dot" id="hudBiomeDot"></span><span id="hudBiomeName">平原</span></div>
+  <div class="hud-card mode" id="hudMode">模式：创造</div>
+  <div class="hud-card online" id="hudOnline" style="display:none;">联机 · 房间 --</div>
+  <div class="hud-card" id="hudFps">FPS 0</div>
+</div>
+
+<div id="playerList"></div>
+<div id="crosshair"></div>
+<div id="healthBar"></div>
+<div id="hungerBar"></div>
+<div id="hotbar"></div>
+
+<div id="chunkLoading">
+  <div class="spinner"></div><div>区块加载中</div>
+  <div class="bar"><div class="bar-inner" id="chunkLoadingBar"></div></div>
+  <div id="chunkLoadingCount">0</div>
+</div>
+
+<div id="tips">
+  <b>WASD</b> 移动 · <b>空格</b> 跳跃 · <b>Shift</b> 疾跑<br>
+  <b>左键</b> 挖掘 · <b>右键</b> 放置 · <b>E</b> 物品栏<br>
+  <b>M</b> 切换模式 · <b>双击空格</b> 飞行 · <b>T</b> 聊天 · <b>Q</b> 丢弃 · <b>ESC</b> 菜单
+</div>
+
+<div id="chatBox"></div>
+<div id="chatInput"><span class="prefix" id="chatPrefix">></span><input type="text" id="chatInputField" maxlength="256" autocomplete="off"></div>
+<div id="toast"></div>
+<div id="cursorItem"></div>
+
+<div id="deathScreen" class="hidden"><h2>你死了！</h2><p>正在重生…</p></div>
+
+<div id="mobileControls">
+  <div id="mobileLookArea"></div>
+  <div id="moveJoystick"><div class="stick" id="moveStick"></div></div>
+  <div id="mobileRight">
+    <div class="m-row">
+      <button class="m-btn small" id="mInvBtn">🎒</button>
+      <button class="m-btn small" id="mFlyBtn">🕊️</button>
+    </div>
+    <div class="m-row">
+      <button class="m-btn" id="mBreakBtn">⛏️</button>
+      <button class="m-btn" id="mPlaceBtn">🧱</button>
+    </div>
+    <button class="m-btn" id="mJumpBtn" style="width:80px;height:80px">↑</button>
+  </div>
+  <div id="mobileTopRight">
+    <button class="m-btn" id="mChatBtn">💬</button>
+    <button class="m-btn" id="mMenuBtn">☰</button>
+  </div>
+</div>
+
+<div id="mainMenuScreen" class="screen">
+  <div class="screen-title">我的世界</div>
+  <div class="screen-sub">3D 体素沙盒 · Y -64~320</div>
+  <div class="menu-buttons">
+    <button class="mc-btn primary" id="singlePlayerBtn">单人游戏</button>
+    <button class="mc-btn" id="multiPlayerBtn">多人游戏</button>
+    <button class="mc-btn" id="optionsBtn">选项...</button>
+    <button class="mc-btn danger" id="quitGameBtn">退出游戏</button>
+  </div>
+</div>
+
+<div id="multiplayerScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header">
+      <strong>多人游戏 · 房间列表</strong><span class="sp"></span>
+      <span style="font-size:11px;opacity:.8" id="roomServerStatus">连接中...</span>
+      <button class="icon-btn" id="refreshRoomsBtn">🔄</button>
+      <button class="icon-btn" id="multiBackBtn">🧰</button>
+    </div>
+    <div id="roomList"></div>
+  </div>
+  <div class="btn-row"><button class="mc-btn primary" id="createRoomBtn">创建房间</button></div>
+</div>
+
+<div id="createRoomScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header"><strong>创建房间</strong><span class="sp"></span><button class="icon-btn" id="createRoomBackBtn">✕</button></div>
+    <div class="panel-body">
+      <div class="form-row"><label>房间名称</label><input type="text" id="roomNameInput" value="我的房间" maxlength="32"></div>
+      <div class="form-row"><label>房主昵称</label><input type="text" id="roomHostInput" value="房主" maxlength="16"></div>
+      <div class="form-row"><label>选择存档</label><div style="flex:1;font-size:12.5px;color:var(--muted)">↓ 从你的单人存档中选择</div></div>
+      <div class="save-list" id="saveListForRoom"></div>
+      <div class="form-row" style="margin-top:14px"><label>最大玩家</label>
+        <div class="btn-group" id="maxPlayersGroup">
+          <button class="option-btn" data-value="2">2 人</button>
+          <button class="option-btn" data-value="4">4 人</button>
+          <button class="option-btn" data-value="6">6 人</button>
+          <button class="option-btn" data-value="8">8 人</button>
+          <button class="option-btn active" data-value="10">10 人</button>
+        </div>
+      </div>
+      <div class="form-row"><label>可见性</label>
+        <div class="btn-group" id="visibilityGroup">
+          <button class="option-btn active" data-value="public">公开</button>
+          <button class="option-btn" data-value="private">私有</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="mc-btn primary" id="createRoomConfirmBtn">创建并进入</button>
+    <button class="mc-btn" id="createRoomCancelBtn">取消</button>
+  </div>
+</div>
+
+<div id="worldSelectScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header"><strong>选择世界</strong><span class="sp"></span><button class="icon-btn" id="worldBackBtn">🧰</button></div>
+    <div id="worldList"></div>
+  </div>
+  <div class="btn-row"><button class="mc-btn primary" id="createWorldBtn">创建新世界</button></div>
+</div>
+
+<div id="createWorldScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header"><strong>创建新世界</strong><span class="sp"></span><button class="icon-btn" id="createHeaderBack">✕</button></div>
+    <div class="panel-body">
+      <div class="form-row"><label>世界名称</label><input type="text" id="newWorldName" value="新的世界" maxlength="32"></div>
+      <div class="form-row"><label>世界种子</label><input type="text" id="newWorldSeed" placeholder="留空随机" maxlength="20"></div>
+      <div class="form-row"><label>游戏模式</label>
+        <div class="btn-group" id="createModeGroup">
+          <button class="option-btn active" data-value="survival">生存</button>
+          <button class="option-btn" data-value="creative">创造</button>
+          <button class="option-btn" data-value="hardcore">极限</button>
+          <button class="option-btn" data-value="adventure">冒险</button>
+        </div>
+      </div>
+      <div class="form-row"><label>难度</label>
+        <div class="btn-group" id="createDifficultyGroup">
+          <button class="option-btn" data-value="peaceful">和平</button>
+          <button class="option-btn" data-value="easy">简单</button>
+          <button class="option-btn active" data-value="normal">普通</button>
+          <button class="option-btn" data-value="hard">困难</button>
+        </div>
+      </div>
+      <div class="form-row"><label>世界类型</label>
+        <div class="btn-group" id="createTypeGroup">
+          <button class="option-btn active" data-value="default">默认</button>
+          <button class="option-btn" data-value="flat">超平坦</button>
+          <button class="option-btn" data-value="largeBiomes">大型群系</button>
+          <button class="option-btn" data-value="amplified">放大化</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="mc-btn primary" id="createConfirmBtn">创建世界</button>
+    <button class="mc-btn" id="createCancelBtn">取消</button>
+  </div>
+</div>
+
+<div id="settingsScreen" class="screen hidden">
+  <div class="panel">
+    <div class="panel-header"><strong>选项</strong><span class="sp"></span><button class="icon-btn" id="settingsCloseBtn">✕</button></div>
+    <div class="settings-layout">
+      <div class="settings-tabs" id="settingsTabs"></div>
+      <div class="settings-panels" id="settingsPanels"></div>
+    </div>
+  </div>
+  <div class="btn-row"><button class="mc-btn primary" id="settingsDoneBtn">完成</button></div>
+</div>
+
+<div id="pauseScreen" class="screen hidden">
+  <div class="screen-title">游戏已暂停</div>
+  <div class="menu-buttons">
+    <button class="mc-btn primary" id="resumeBtn">返回游戏</button>
+    <button class="mc-btn" id="pauseOptionsBtn">选项...</button>
+    <button class="mc-btn danger" id="saveAndQuitBtn">保存并退出</button>
+  </div>
+</div>
+
+<!-- ═══ 物品栏（重做版：合成 + 物品 + 快捷栏 + 护甲 + 配方） ═══ -->
+<div id="inventoryScreen" class="hidden">
+  <div class="panel inv-panel">
+    <div class="panel-header">
+      <strong>物品栏</strong><span class="sp"></span>
+      <button class="icon-btn" id="invCloseBtn">✕</button>
+    </div>
+    <div class="panel-body inv-body">
+
+      <div class="inv-layout">
+
+        <!-- 左：合成 + 物品 + 快捷栏 -->
+        <div class="inv-left">
+          <div class="inv-title">合成</div>
+          <div class="craft-row">
+            <div class="craft-grid" id="craftGrid"></div>
+            <div class="craft-arrow">→</div>
+            <div class="inv-cell craft-result" id="craftResult"></div>
+          </div>
+
+          <div class="inv-title">物品区（36）</div>
+          <div class="inv-grid" id="invGridBackpack"></div>
+
+          <div class="inv-title">快捷栏（9）</div>
+          <div class="inv-grid inv-grid-hotbar" id="invGridHotbar"></div>
+        </div>
+
+        <!-- 右：护甲 + 配方 -->
+        <div class="inv-right">
+          <div class="inv-title">护甲</div>
+          <div class="armor-col" id="armorCol"></div>
+
+          <div class="inv-title" style="margin-top:14px">配方</div>
+          <div class="recipe-list" id="recipeList"></div>
+        </div>
+
+      </div>
+
+      <div class="inv-hint">
+        左键拾取/放下 · 右键单个/取一半 · Shift+点击快速移动 · <b>Q</b> 丢弃光标物品
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+(function(){
+  function loadGame(){
+    var s=document.createElement('script');
+    s.src='mc.js';
+    document.body.appendChild(s);
+  }
+  if(window.fetch){
+    fetch('mc-data.json')
+      .then(function(r){ return r.json(); })
+      .then(function(data){ window.GAME_DATA=data; loadGame(); })
+      .catch(function(err){
+        console.warn('[mc] 无法加载 mc-data.json，使用内置默认值：',err);
+        window.GAME_DATA=null; loadGame();
+      });
+  } else {
+    window.GAME_DATA=null; loadGame();
+  }
+})();
+</script>
+</body>
+</html>
