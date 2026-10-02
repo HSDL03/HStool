@@ -60,24 +60,24 @@
     "hidden": false
   },
   {
-    "id": "tool-mujaf3w7-bq61",
-    "icon": "🏷️",
-    "name": "admin",
-    "desc": "菜单嗯对",
-    "tag": "管理",
-    "url": "./admin.html",
-    "category": "needDB",
-    "deprecated": false,
-    "disabled": false,
-    "hidden": false
-  },
-  {
     "id": "download",
     "icon": "📥",
     "name": "下载站",
     "desc": "资源文件 · 便捷下载",
     "tag": "资源",
     "url": "./download.html",
+    "category": "needDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-mujaf3w7-bq61",
+    "icon": "🏷️",
+    "name": "admin",
+    "desc": "菜单嗯对",
+    "tag": "管理",
+    "url": "./admin.html",
     "category": "needDB",
     "deprecated": false,
     "disabled": false,
