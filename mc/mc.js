@@ -2082,5 +2082,5 @@
     setAppState('mainMenu');
     requestAnimationFrame(loop);
   }
-  window.addEventListener('load',function(){initGame();});
-})();
+  if(document.readyState==='complete'){initGame();}
+else{window.addEventListener('load',function(){initGame();});}
