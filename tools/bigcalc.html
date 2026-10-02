@@ -6,7 +6,7 @@
 <title>二维码生成器 · 红石的小站</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
 <script>
-(function(){try{var t=localStorage.getItem('wiki-theme');var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+(function(){try{var t=localStorage.getItem('wiki-theme');var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];if(ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 </script>
 <style>
 :root,[data-theme="mc-wiki"]{--bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;--bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;--ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;--sh:2px 2px 0 rgba(0,0,0,.2);--r:2px;--bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#56682c,#3d521f);--topbar-fg:#fff;--topbar-bd:#2a3a1a}
@@ -19,33 +19,42 @@
 [data-theme="github-dark"]{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--text:#e6edf3;--muted:#9198a1;--bd:#30363d;--bd2:#484f58;--ac:#4493f8;--acs:#16233a;--ok:#3fb950;--warn:#d4a72c;--dgr:#f85149;--sh:0 1px 4px rgba(0,0,0,.4);--r:6px;--bevel:none;--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:#161b22;--topbar-fg:#e6edf3;--topbar-bd:#30363d}
 *,*::before,*::after{box-sizing:border-box}
 html{background:var(--bg);transition:background-color .3s}
-body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;transition:color .3s}
+body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
 .topbar{position:fixed;top:0;left:0;right:0;height:46px;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:2px solid var(--topbar-bd);z-index:50}
 [data-theme^="mc-"] .topbar .logo{text-shadow:1px 1px 0 rgba(0,0,0,.4)}
 .logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--topbar-fg);text-decoration:none}
 .logo-icon{font-size:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
 .logo:hover .logo-icon{transform:rotate(-8deg) scale(1.08)}
 .sp{flex:1}
-.icon{display:grid;place-items:center;width:30px;height:30px;font-size:14px;font-family:inherit;color:inherit;background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s}
-.icon:hover{background:rgba(0,0,0,.2)}
-[data-theme^="github-"] .icon{color:var(--muted)}
-[data-theme^="github-"] .icon:hover{background:var(--bg3);color:var(--text)}
-.wrap{max-width:920px;margin:0 auto;padding:32px 24px 80px}
-.hero{text-align:center;margin-bottom:28px}
-.hero h1{margin:0 0 8px;font-size:1.8rem;font-weight:800;letter-spacing:-.02em}
-.hero p{margin:0;color:var(--muted);font-size:14px}
-.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);padding:22px;margin-bottom:18px}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 20px 80px}
+.hero{text-align:center;margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:1.7rem;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;color:var(--muted);font-size:13.5px}
+.layout{display:grid;grid-template-columns:1fr 400px;gap:20px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);padding:18px;margin-bottom:14px}
 [data-theme^="mc-"] .card{border:2px solid var(--bd2);border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.18),var(--bevel)}
-.card-title{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:14px;font-weight:800;letter-spacing:.03em}
-.card-title::before{content:"";width:10px;height:10px;background:var(--ac);border:2px solid var(--bd2);flex:none}
+.card-title{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.card-title::before{content:"";width:9px;height:9px;background:var(--ac);border:2px solid var(--bd2);flex:none}
 [data-theme^="github-"] .card-title::before{border:none;border-radius:3px}
-.fld{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.fld label{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.fld textarea,.fld input,.fld select{font-family:inherit;font-size:14px;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);outline:none;padding:9px 12px;transition:border-color .15s,box-shadow .15s}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab{padding:6px 14px;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:all .15s cubic-bezier(.34,1.56,.64,1);user-select:none}
+.tab:hover{border-color:var(--ac);color:var(--text)}
+.tab.active{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+[data-theme^="mc-"] .tab{border:2px solid var(--bd2);border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.16),var(--bevel)}
+[data-theme^="mc-"] .tab.active{box-shadow:var(--bevel);transform:translate(1px,1px)}
+[data-theme^="github-"] .tab{border-radius:6px}
+.panel{display:none}
+.panel.active{display:block}
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.fld label{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fld textarea,.fld input,.fld select{font-family:inherit;font-size:13.5px;color:var(--text);background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);outline:none;padding:8px 10px;transition:border-color .15s,box-shadow .15s;width:100%}
 [data-theme^="mc-"] .fld textarea,[data-theme^="mc-"] .fld input,[data-theme^="mc-"] .fld select{border:2px solid var(--bd2);border-radius:2px;box-shadow:var(--bevel)}
-.fld textarea{resize:vertical;min-height:90px;line-height:1.6}
+.fld textarea{resize:vertical;min-height:80px;line-height:1.55}
 .fld textarea:focus,.fld input:focus,.fld select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2 .fld{margin-bottom:0}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--text);background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);cursor:pointer;transition:all .15s cubic-bezier(.34,1.56,.64,1)}
 .btn:hover:not(:disabled){background:var(--acs);border-color:var(--ac);transform:translateY(-1px)}
@@ -53,16 +62,28 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .btn:disabled{opacity:.5;cursor:not-allowed}
 [data-theme^="mc-"] .btn{border:2px solid var(--bd2);border-radius:2px;box-shadow:2px 2px 0 rgba(0,0,0,.2),var(--bevel)}
 [data-theme^="mc-"] .btn.pri{background:var(--ac);color:var(--bg);border-color:var(--bd2)}
-[data-theme^="mc-"] .btn.pri:hover{filter:brightness(1.12)}
-.qr-box{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;background:#fff;border:1px solid var(--bd);border-radius:var(--r);min-height:280px;justify-content:center}
+[data-theme^="mc-"] .btn.pri:hover:not(:disabled){filter:brightness(1.12)}
+.color-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.color-row label{font-size:12px;font-weight:700;color:var(--muted);min-width:56px}
+.color-row input[type=color]{width:44px;height:32px;padding:2px;border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg);cursor:pointer}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.preset{width:34px;height:34px;border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;transition:transform .15s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;flex:none}
+.preset:hover{transform:scale(1.08)}
+.preset.active{outline:2px solid var(--ac);outline-offset:2px}
+.qr-box{display:flex;flex-direction:column;align-items:center;gap:12px;padding:22px;background:#fff;border:1px solid var(--bd);border-radius:var(--r);min-height:340px;justify-content:center}
 [data-theme^="mc-"] .qr-box{border:2px solid var(--bd2);border-radius:2px}
-#qrCanvas{max-width:100%;height:auto;image-rendering:pixelated}
+#qrCanvas{max-width:100%;height:auto;image-rendering:pixelated;display:block}
 .qr-empty{color:#888;font-size:13px;text-align:center}
-.tip{font-size:12px;color:var(--muted);line-height:1.7;padding:10px 12px;background:var(--bg3);border-left:3px solid var(--ac);border-radius:var(--r)}
+.tip{font-size:12px;color:var(--muted);line-height:1.75;padding:10px 12px;background:var(--bg3);border-left:3px solid var(--ac);border-radius:var(--r);margin-bottom:10px}
+.tip code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;padding:1px 6px;background:var(--bg);border:1px solid var(--bd);border-radius:2px}
+.logo-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.logo-preview{width:40px;height:40px;border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg);display:grid;place-items:center;font-size:18px;color:var(--muted);overflow:hidden;flex:none}
+.logo-preview img{width:100%;height:100%;object-fit:cover}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.err{color:var(--dgr);font-size:13px;margin-top:8px;display:none}
 .toast{position:fixed;left:50%;bottom:20px;padding:8px 18px;font-size:13px;color:var(--bg);background:var(--text);border-radius:var(--r);box-shadow:var(--sh);opacity:0;transform:translateX(-50%) translateY(16px);transition:opacity .22s,transform .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:200}
 [data-theme^="mc-"] .toast{background:#2a3a1a;color:#e8ffd0;border:2px solid #4a4a3a;border-radius:2px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:640px){.wrap{padding:20px 14px 60px}.hero h1{font-size:1.4rem}.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -76,110 +97,685 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <div class="wrap">
   <div class="hero">
     <h1>📱 二维码生成器</h1>
-    <p>纯前端生成 · 支持中文 · 可下载 PNG</p>
+    <p>三种类型 · 彩色渐变 · 可放 Logo · 纯前端离线可用</p>
   </div>
 
-  <div class="card">
-    <h2 class="card-title">输入内容</h2>
-    <div class="fld">
-      <label>文本 / 链接 / 任意内容</label>
-      <textarea id="qrText" placeholder="https://example.com&#10;或任意文字，支持中文…">https://github.com/HSDL03</textarea>
-    </div>
-    <div class="grid2">
-      <div class="fld">
-        <label>尺寸（像素）</label>
-        <input id="qrSize" type="number" value="320" min="120" max="1024" step="20">
+  <div class="layout">
+    <div>
+      <div class="card">
+        <h2 class="card-title">内容类型</h2>
+        <div class="tabs" id="typeTabs">
+          <button class="tab active" data-type="text">📝 文本/链接</button>
+          <button class="tab" data-type="wifi">📶 WiFi</button>
+          <button class="tab" data-type="vcard">👤 名片</button>
+        </div>
+
+        <div class="panel active" data-panel="text">
+          <div class="fld">
+            <label>文本 / 链接 / 任意内容</label>
+            <textarea id="tText" placeholder="https://example.com&#10;或任意文字，支持中文…">https://github.com/HSDL03</textarea>
+          </div>
+        </div>
+
+        <div class="panel" data-panel="wifi">
+          <div class="fld">
+            <label>WiFi 名称 SSID</label>
+            <input id="wSsid" type="text" placeholder="MyWiFi" autocomplete="off">
+          </div>
+          <div class="grid2">
+            <div class="fld">
+              <label>加密方式</label>
+              <select id="wEnc">
+                <option value="WPA">WPA / WPA2 / WPA3</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">无密码</option>
+              </select>
+            </div>
+            <div class="fld">
+              <label>是否隐藏网络</label>
+              <select id="wHidden">
+                <option value="false">否</option>
+                <option value="true">是</option>
+              </select>
+            </div>
+          </div>
+          <div class="fld" style="margin-top:12px">
+            <label>密码</label>
+            <input id="wPass" type="text" placeholder="密码" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="panel" data-panel="vcard">
+          <div class="grid2">
+            <div class="fld"><label>姓名</label><input id="vName" type="text" placeholder="张三" autocomplete="off"></div>
+            <div class="fld"><label>电话</label><input id="vTel" type="text" placeholder="13800138000" autocomplete="off"></div>
+            <div class="fld"><label>邮箱</label><input id="vEmail" type="text" placeholder="a@b.com" autocomplete="off"></div>
+            <div class="fld"><label>公司</label><input id="vOrg" type="text" placeholder="某某公司" autocomplete="off"></div>
+            <div class="fld"><label>职位</label><input id="vTitle" type="text" placeholder="工程师" autocomplete="off"></div>
+            <div class="fld"><label>网站</label><input id="vUrl" type="text" placeholder="https://..." autocomplete="off"></div>
+          </div>
+          <div class="fld" style="margin-top:12px">
+            <label>备注</label>
+            <textarea id="vNote" placeholder="备注（可空）"></textarea>
+          </div>
+        </div>
       </div>
-      <div class="fld">
-        <label>容错级别</label>
-        <select id="qrLevel">
-          <option value="L">L · 低（7%）</option>
-          <option value="M" selected>M · 中（15%）</option>
-          <option value="Q">Q · 较高（25%）</option>
-          <option value="H">H · 高（30%）</option>
-        </select>
+
+      <div class="card">
+        <h2 class="card-title">颜色与样式</h2>
+
+        <div class="tip">
+          🎨 <strong>彩色二维码提示</strong>：前景色要比背景色深、对比度要足，否则扫描器可能识别不出。推荐深色前景 + 浅色背景。
+        </div>
+
+        <div class="preset-row" id="presetRow">
+          <button class="preset active" data-preset="0" style="background:linear-gradient(135deg,#000 0%,#000 100%)" title="经典黑白"></button>
+          <button class="preset" data-preset="1" style="background:linear-gradient(135deg,#1a3d7c 0%,#7c1a3d 100%)" title="蓝红渐变"></button>
+          <button class="preset" data-preset="2" style="background:linear-gradient(135deg,#0a6b4a 0%,#3d8c1f 100%)" title="森林绿"></button>
+          <button class="preset" data-preset="3" style="background:linear-gradient(135deg,#4a2080 0%,#a060ff 100%)" title="末地紫"></button>
+          <button class="preset" data-preset="4" style="background:linear-gradient(135deg,#c04040 0%,#d48830 100%)" title="暖阳橙"></button>
+          <button class="preset" data-preset="5" style="background:linear-gradient(135deg,#0080a0 0%,#30c0b0 100%)" title="海洋青"></button>
+          <button class="preset" data-preset="6" style="background:linear-gradient(135deg,#d04080 0%,#ff80a0 100%)" title="樱花粉"></button>
+          <button class="preset" data-preset="7" style="background:linear-gradient(135deg,#2a1a3a 0%,#6a4080 100%)" title="暗夜紫"></button>
+        </div>
+
+        <div class="color-row">
+          <label>前景色</label>
+          <input id="fgColor" type="color" value="#000000">
+          <span style="font-size:11px;color:var(--muted)">← 二维码的深色模块</span>
+        </div>
+        <div class="color-row">
+          <label>背景色</label>
+          <input id="bgColor" type="color" value="#ffffff">
+        </div>
+        <div class="color-row">
+          <label>渐变</label>
+          <select id="gradMode" style="max-width:200px">
+            <option value="none">不渐变（纯色）</option>
+            <option value="diag">对角渐变</option>
+            <option value="horiz">水平渐变</option>
+            <option value="vert">垂直渐变</option>
+            <option value="radial">径向渐变</option>
+          </select>
+        </div>
+        <div class="color-row" id="fg2Row" style="display:none">
+          <label>渐变末端</label>
+          <input id="fg2Color" type="color" value="#1a3d7c">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">中间 Logo</h2>
+        <div class="tip">
+          🖼️ 放 Logo 会遮挡部分码点，靠纠错能力补回。<strong>容错级别建议选 H</strong>，Logo 不能超过二维码的 20%。
+        </div>
+        <div class="logo-row">
+          <div class="logo-preview" id="logoPreview">无</div>
+          <input id="logoFile" type="file" accept="image/*" style="display:none">
+          <button class="btn" id="logoBtn" type="button">📁 选择 Logo</button>
+          <button class="btn" id="logoClear" type="button">✕ 移除</button>
+        </div>
+        <div class="fld" style="margin-top:12px">
+          <label>Logo 大小 <span id="logoSizeVal" style="color:var(--ac)">20%</span></label>
+          <input id="logoSize" type="range" min="10" max="30" value="20" step="1">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">输出设置</h2>
+        <div class="grid2">
+          <div class="fld">
+            <label>尺寸（像素）</label>
+            <input id="qrSize" type="number" value="360" min="120" max="1024" step="20">
+          </div>
+          <div class="fld">
+            <label>容错级别</label>
+            <select id="qrLevel">
+              <option value="L">L · 低（7%）</option>
+              <option value="M">M · 中（15%）</option>
+              <option value="Q">Q · 较高（25%）</option>
+              <option value="H" selected>H · 高（30%）— 推荐</option>
+            </select>
+          </div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn pri" id="btnGen" type="button">✨ 生成二维码</button>
+          <button class="btn" id="btnDownload" type="button" disabled>💾 下载 PNG</button>
+          <button class="btn" id="btnClear" type="button">🗑 清空</button>
+        </div>
+        <div class="err" id="errBox"></div>
       </div>
     </div>
-    <div class="row">
-      <button class="btn pri" id="btnGen" type="button">✨ 生成二维码</button>
-      <button class="btn" id="btnDownload" type="button" disabled>💾 下载 PNG</button>
-      <button class="btn" id="btnClear" type="button">🗑 清空</button>
-    </div>
-  </div>
 
-  <div class="card">
-    <h2 class="card-title">预览</h2>
-    <div class="qr-box" id="qrBox">
-      <div class="qr-empty">点击「生成二维码」后在此显示</div>
-      <canvas id="qrCanvas" style="display:none"></canvas>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="tip">
-      💡 <strong>提示</strong>：二维码使用 CDN 库 <code>qrcode.js</code> 生成，完全在你的浏览器本地计算，内容不会上传到任何服务器。首次打开需要联网加载一次库文件。
+    <div>
+      <div class="card" style="position:sticky;top:60px">
+        <h2 class="card-title">预览</h2>
+        <div class="qr-box" id="qrBox">
+          <div class="qr-empty">点击「生成二维码」后在此显示</div>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px" id="qrMeta">—</div>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 (function(){
 'use strict';
+
+/* ═══════════════ GF(256) 与 Reed-Solomon ═══════════════ */
+var EXP=new Uint8Array(512),LOG=new Uint8Array(256);
+(function(){
+  var x=1;
+  for(var i=0;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&0x100)x^=0x11D;}
+  for(var j=255;j<512;j++)EXP[j]=EXP[j-255];
+})();
+function gfMul(a,b){if(a===0||b===0)return 0;return EXP[LOG[a]+LOG[b]];}
+function rsGenPoly(deg){
+  var poly=[1];
+  for(var i=0;i<deg;i++){
+    var next=new Array(poly.length+1);
+    for(var k=0;k<next.length;k++)next[k]=0;
+    for(var j=0;j<poly.length;j++){
+      next[j]^=poly[j];
+      next[j+1]^=gfMul(poly[j],EXP[i]);
+    }
+    poly=next;
+  }
+  return poly;
+}
+function rsEncode(data,ecLen){
+  var gen=rsGenPoly(ecLen);
+  var res=new Array(ecLen);
+  for(var i=0;i<ecLen;i++)res[i]=0;
+  for(var k=0;k<data.length;k++){
+    var f=data[k]^res[0];
+    res.shift();res.push(0);
+    for(var j=0;j<ecLen;j++)res[j]^=gfMul(gen[j+1],f);
+  }
+  return res;
+}
+
+/* ═══════════════ 版本数据 ═══════════════ */
+var VERSIONS=[
+  {total:26,  L:[19,[[1,19]],7],             M:[16,[[1,16]],10],            Q:[13,[[1,13]],13],            H:[9,[[1,9]],17]},
+  {total:44,  L:[34,[[1,34]],10],            M:[28,[[1,28]],16],            Q:[22,[[1,22]],22],            H:[16,[[1,16]],28]},
+  {total:70,  L:[55,[[1,55]],15],            M:[44,[[1,44]],26],            Q:[34,[[2,17]],18],            H:[26,[[2,13]],22]},
+  {total:100, L:[80,[[1,80]],20],            M:[64,[[2,32]],18],            Q:[48,[[2,24]],26],            H:[36,[[4,9]],16]},
+  {total:134, L:[108,[[1,108]],26],          M:[86,[[2,43]],24],            Q:[62,[[2,15],[2,16]],18],     H:[46,[[2,11],[2,12]],22]},
+  {total:172, L:[136,[[2,68]],18],           M:[108,[[4,27]],16],           Q:[76,[[4,19]],24],            H:[60,[[4,15]],28]},
+  {total:196, L:[156,[[2,78]],20],           M:[124,[[4,31]],18],           Q:[88,[[2,14],[4,15]],18],     H:[66,[[4,13],[1,14]],26]},
+  {total:242, L:[194,[[2,97]],24],           M:[154,[[2,38],[2,39]],22],    Q:[110,[[4,18],[2,19]],22],    H:[86,[[4,14],[2,15]],26]},
+  {total:292, L:[232,[[2,116]],30],          M:[182,[[3,36],[2,37]],22],    Q:[132,[[4,16],[4,17]],20],    H:[100,[[4,12],[4,13]],24]},
+  {total:346, L:[274,[[2,68],[2,69]],18],    M:[216,[[4,43],[1,44]],26],    Q:[154,[[6,19],[2,20]],24],    H:[122,[[6,15],[2,16]],28]}
+];
+var ALIGN=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+
+function utf8Encode(str){
+  var out=[];
+  for(var i=0;i<str.length;i++){
+    var c=str.charCodeAt(i);
+    if(c<0x80){out.push(c);}
+    else if(c<0x800){out.push(0xC0|(c>>6));out.push(0x80|(c&0x3F));}
+    else if(c>=0xD800&&c<=0xDBFF){
+      var c2=str.charCodeAt(++i);
+      var cp=0x10000+((c-0xD800)<<10)+(c2-0xDC00);
+      out.push(0xF0|(cp>>18));
+      out.push(0x80|((cp>>12)&0x3F));
+      out.push(0x80|((cp>>6)&0x3F));
+      out.push(0x80|(cp&0x3F));
+    }
+    else{out.push(0xE0|(c>>12));out.push(0x80|((c>>6)&0x3F));out.push(0x80|(c&0x3F));}
+  }
+  return out;
+}
+
+function makeQR(text,ecLevel){
+  var ecKey=['L','M','Q','H'];
+  var ecIdx={L:0,M:1,Q:2,H:3}[ecLevel];
+  if(ecIdx===undefined)ecIdx=1;
+  var bytes=utf8Encode(text);
+  var version=0;
+  for(var v=0;v<VERSIONS.length;v++){
+    var dataCW=VERSIONS[v][ecKey[ecIdx]][0];
+    var countBits=(v+1<=9)?8:16;
+    var totalBits=4+countBits+bytes.length*8;
+    if(totalBits<=dataCW*8){version=v+1;break;}
+  }
+  if(!version)throw new Error('内容太长，超出本工具支持范围（约 271 字节）');
+
+  var spec=VERSIONS[version-1][ecKey[ecIdx]];
+  var dataCW2=spec[0];
+  var blocks=spec[1];
+  var ecPerBlock=spec[2];
+
+  var bits=[];
+  function pushBits(val,len){for(var i=len-1;i>=0;i--)bits.push((val>>i)&1);}
+  pushBits(4,4);
+  var countBits2=(version<=9)?8:16;
+  pushBits(bytes.length,countBits2);
+  for(var bi=0;bi<bytes.length;bi++)pushBits(bytes[bi],8);
+
+  var maxBits=dataCW2*8;
+  var term=Math.min(4,maxBits-bits.length);
+  for(var t=0;t<term;t++)bits.push(0);
+  while(bits.length%8)bits.push(0);
+
+  var dataBytes=[];
+  for(var i=0;i<bits.length;i+=8){
+    var b=0;
+    for(var j=0;j<8;j++)b=(b<<1)|bits[i+j];
+    dataBytes.push(b);
+  }
+  var pad=[0xEC,0x11],pi=0;
+  while(dataBytes.length<dataCW2)dataBytes.push(pad[pi++%2]);
+
+  var dataBlocks=[],ecBlocks=[],offset=0;
+  for(var bk=0;bk<blocks.length;bk++){
+    var cnt=blocks[bk][0],sz=blocks[bk][1];
+    for(var k2=0;k2<cnt;k2++){
+      var blk=dataBytes.slice(offset,offset+sz);
+      offset+=sz;
+      dataBlocks.push(blk);
+      ecBlocks.push(rsEncode(blk,ecPerBlock));
+    }
+  }
+  var finalCW=[],maxD=0;
+  for(var m=0;m<dataBlocks.length;m++)if(dataBlocks[m].length>maxD)maxD=dataBlocks[m].length;
+  for(var i2=0;i2<maxD;i2++)for(var d2=0;d2<dataBlocks.length;d2++)if(i2<dataBlocks[d2].length)finalCW.push(dataBlocks[d2][i2]);
+  for(var i3=0;i3<ecPerBlock;i3++)for(var e2=0;e2<ecBlocks.length;e2++)finalCW.push(ecBlocks[e2][i3]);
+
+  var size=17+version*4;
+  var M=[],R=[];
+  for(var r=0;r<size;r++){
+    M.push(new Array(size));
+    R.push(new Array(size));
+    for(var c=0;c<size;c++){M[r][c]=0;R[r][c]=false;}
+  }
+
+  function placeFinder(row,col){
+    for(var i=-1;i<=7;i++)for(var j=-1;j<=7;j++){
+      var rr=row+i,cc=col+j;
+      if(rr<0||rr>=size||cc<0||cc>=size)continue;
+      R[rr][cc]=true;
+      if(i>=0&&i<=6&&j>=0&&j<=6){
+        var border=(i===0||i===6||j===0||j===6);
+        var inner=(i>=2&&i<=4&&j>=2&&j<=4);
+        M[rr][cc]=(border||inner)?1:0;
+      }else M[rr][cc]=0;
+    }
+  }
+  placeFinder(0,0);placeFinder(0,size-7);placeFinder(size-7,0);
+
+  for(var ti=8;ti<size-8;ti++){
+    M[6][ti]=(ti%2===0)?1:0;R[6][ti]=true;
+    M[ti][6]=(ti%2===0)?1:0;R[ti][6]=true;
+  }
+
+  var al=ALIGN[version-1];
+  for(var ar=0;ar<al.length;ar++)for(var ac=0;ac<al.length;ac++){
+    var r0=al[ar],c0=al[ac];
+    if(R[r0][c0])continue;
+    for(var ii=-2;ii<=2;ii++)for(var jj=-2;jj<=2;jj++){
+      var rr2=r0+ii,cc2=c0+jj;
+      R[rr2][cc2]=true;
+      var bd=(Math.abs(ii)===2||Math.abs(jj)===2);
+      var ct=(ii===0&&jj===0);
+      M[rr2][cc2]=(bd||ct)?1:0;
+    }
+  }
+
+  M[size-8][8]=1;R[size-8][8]=true;
+  for(var fi=0;fi<=8;fi++){R[8][fi]=true;R[fi][8]=true;}
+  for(var fj=0;fj<8;fj++){R[8][size-1-fj]=true;R[size-1-fj][8]=true;}
+
+  if(version>=7){
+    var vBits=version<<12;
+    var rem=vBits;
+    for(var s=17;s>=12;s--){if(rem&(1<<s))rem^=0x1F25<<(s-12);}
+    var vFinal=vBits|(rem&0xFFF);
+    for(var k3=0;k3<6;k3++)for(var l3=0;l3<3;l3++){
+      var bitIdx=k3*3+l3;
+      var bit=(vFinal>>bitIdx)&1;
+      M[size-11+l3][k3]=bit;R[size-11+l3][k3]=true;
+      M[k3][size-11+l3]=bit;R[k3][size-11+l3]=true;
+    }
+  }
+
+  var allBits=[];
+  for(var ci=0;ci<finalCW.length;ci++)for(var bj=7;bj>=0;bj--)allBits.push((finalCW[ci]>>bj)&1);
+
+  var bitIdx2=0,upward=true;
+  for(var col=size-1;col>0;col-=2){
+    if(col===6)col--;
+    for(var k4=0;k4<size;k4++){
+      var row4=upward?size-1-k4:k4;
+      for(var s4=0;s4<2;s4++){
+        var cc4=col-s4;
+        if(R[row4][cc4])continue;
+        var bit4=bitIdx2<allBits.length?allBits[bitIdx2++]:0;
+        M[row4][cc4]=bit4;
+      }
+    }
+    upward=!upward;
+  }
+
+  function applyMask(maskId){
+    var MM=[];
+    for(var r=0;r<size;r++)MM.push(M[r].slice());
+    for(var r=0;r<size;r++)for(var c=0;c<size;c++){
+      if(R[r][c])continue;
+      var inv=false;
+      switch(maskId){
+        case 0:inv=((r+c)%2===0);break;
+        case 1:inv=(r%2===0);break;
+        case 2:inv=(c%3===0);break;
+        case 3:inv=((r+c)%3===0);break;
+        case 4:inv=((Math.floor(r/2)+Math.floor(c/3))%2===0);break;
+        case 5:inv=(((r*c)%2+(r*c)%3)===0);break;
+        case 6:inv=((((r*c)%2+(r*c)%3))%2===0);break;
+        case 7:inv=((((r+c)%2+(r*c)%3))%2===0);break;
+      }
+      if(inv)MM[r][c]^=1;
+    }
+    return MM;
+  }
+
+  function placeFormat(MM,ecBits,maskId){
+    var data=(ecBits<<3)|maskId;
+    var fmt=data<<10;
+    var rem2=fmt;
+    for(var s=14;s>=10;s--){if(rem2&(1<<s))rem2^=0x537<<(s-10);}
+    var finalFmt=((data<<10)|(rem2&0x3FF))^0x5412;
+    var tlPos=[[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
+    for(var i=0;i<15;i++){
+      var p=tlPos[i];
+      MM[p[0]][p[1]]=(finalFmt>>(14-i))&1;
+    }
+    for(var i2=0;i2<8;i2++)MM[8][size-1-i2]=(finalFmt>>i2)&1;
+    for(var i3=0;i3<7;i3++)MM[size-1-i3][8]=(finalFmt>>(8+i3))&1;
+    MM[size-8][8]=1;
+  }
+
+  function evaluateMask(MM){
+    var score=0;
+    for(var r=0;r<size;r++){
+      var run=1;
+      for(var c=1;c<size;c++){
+        if(MM[r][c]===MM[r][c-1])run++;
+        else{if(run>=5)score+=3+(run-5);run=1;}
+      }
+      if(run>=5)score+=3+(run-5);
+    }
+    for(var c=0;c<size;c++){
+      var run2=1;
+      for(var r=1;r<size;r++){
+        if(MM[r][c]===MM[r-1][c])run2++;
+        else{if(run2>=5)score+=3+(run2-5);run2=1;}
+      }
+      if(run2>=5)score+=3+(run2-5);
+    }
+    for(var r=0;r<size-1;r++)for(var c=0;c<size-1;c++){
+      if(MM[r][c]===MM[r][c+1]&&MM[r][c]===MM[r+1][c]&&MM[r][c]===MM[r+1][c+1])score+=3;
+    }
+    var dark=0;
+    for(var r=0;r<size;r++)for(var c=0;c<size;c++)if(MM[r][c])dark++;
+    var ratio=dark*100/(size*size);
+    score+=Math.floor(Math.abs(ratio-50)/5)*10;
+    return score;
+  }
+
+  var ecBits={L:1,M:0,Q:3,H:2}[ecLevel];
+  if(ecBits===undefined)ecBits=0;
+
+  var bestMM=null,bestScore=Infinity;
+  for(var mk=0;mk<8;mk++){
+    var MM=applyMask(mk);
+    placeFormat(MM,ecBits,mk);
+    var score=evaluateMask(MM);
+    if(score<bestScore){bestScore=score;bestMM=MM;}
+  }
+  return bestMM;
+}
+
+/* ═══════════════ 彩色 + Logo 渲染 ═══════════════ */
+function renderQR(matrix,sizePx,opts){
+  var n=matrix.length;
+  var margin=4;
+  var total=n+margin*2;
+  var scale=Math.max(2,Math.floor(sizePx/total));
+  var canvas=document.createElement('canvas');
+  canvas.width=total*scale;
+  canvas.height=total*scale;
+  canvas.style.width=canvas.width+'px';
+  canvas.style.height=canvas.height+'px';
+  var ctx=canvas.getContext('2d');
+
+  ctx.fillStyle=opts.bg;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  var fillStyle=opts.fg;
+  if(opts.grad && opts.grad!=='none' && opts.fg2){
+    var g;
+    if(opts.grad==='diag'){
+      g=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    }else if(opts.grad==='horiz'){
+      g=ctx.createLinearGradient(0,0,canvas.width,0);
+    }else if(opts.grad==='vert'){
+      g=ctx.createLinearGradient(0,0,0,canvas.height);
+    }else{
+      g=ctx.createRadialGradient(canvas.width/2,canvas.height/2,0,canvas.width/2,canvas.height/2,canvas.width/2);
+    }
+    g.addColorStop(0,opts.fg);
+    g.addColorStop(1,opts.fg2);
+    fillStyle=g;
+  }
+  ctx.fillStyle=fillStyle;
+
+  for(var r=0;r<n;r++)for(var c=0;c<n;c++){
+    if(matrix[r][c])ctx.fillRect((c+margin)*scale,(r+margin)*scale,scale,scale);
+  }
+
+  if(opts.logoImg){
+    var logoRatio=opts.logoSize||20;
+    var logoSize=Math.floor(canvas.width*logoRatio/100);
+    var lx=Math.floor((canvas.width-logoSize)/2);
+    var ly=Math.floor((canvas.height-logoSize)/2);
+    var pad=Math.floor(logoSize*0.12);
+
+    ctx.fillStyle=opts.bg;
+    ctx.fillRect(lx-pad,ly-pad,logoSize+pad*2,logoSize+pad*2);
+    ctx.strokeStyle='rgba(0,0,0,.08)';
+    ctx.lineWidth=Math.max(1,Math.floor(scale/2));
+    ctx.strokeRect(lx-pad+0.5,ly-pad+0.5,logoSize+pad*2-1,logoSize+pad*2-1);
+    try{
+      ctx.drawImage(opts.logoImg,lx,ly,logoSize,logoSize);
+    }catch(e){}
+  }
+
+  return canvas;
+}
+
+/* ═══════════════ 内容构造 ═══════════════ */
+function buildContent(type){
+  var s='';
+  if(type==='text'){
+    s=(val('tText')||'').trim();
+  }
+  else if(type==='wifi'){
+    var ssid=(val('wSsid')||'').trim();
+    var enc=val('wEnc')||'WPA';
+    var pass=(val('wPass')||'').trim();
+    var hid=val('wHidden')||'false';
+    if(!ssid)throw new Error('WiFi 名称不能为空');
+    if(enc!=='nopass'&&!pass)throw new Error('密码不能为空（无密码请选择「无密码」）');
+    function escW(s){return String(s).replace(/([\\;,":])/g,'\\$1');}
+    s='WIFI:T:'+enc+';S:'+escW(ssid)+';';
+    if(enc!=='nopass')s+='P:'+escW(pass)+';';
+    if(hid==='true')s+='H:true;';
+    s+=';';
+  }
+  else if(type==='vcard'){
+    var name=(val('vName')||'').trim();
+    if(!name)throw new Error('姓名不能为空');
+    s='BEGIN:VCARD\r\nVERSION:3.0\r\n';
+    s+='FN:'+name+'\r\n';
+    s+='N:'+name+';;;;\r\n';
+    var tel=(val('vTel')||'').trim();
+    var em=(val('vEmail')||'').trim();
+    var org=(val('vOrg')||'').trim();
+    var title=(val('vTitle')||'').trim();
+    var url=(val('vUrl')||'').trim();
+    var note=(val('vNote')||'').trim();
+    if(tel)s+='TEL;TYPE=CELL:'+tel+'\r\n';
+    if(em)s+='EMAIL:'+em+'\r\n';
+    if(org)s+='ORG:'+org+'\r\n';
+    if(title)s+='TITLE:'+title+'\r\n';
+    if(url)s+='URL:'+url+'\r\n';
+    if(note)s+='NOTE:'+note+'\r\n';
+    s+='END:VCARD';
+  }
+  if(!s)throw new Error('内容不能为空');
+  return s;
+}
+function val(id){var e=document.getElementById(id);return e?e.value:'';}
+
+/* ═══════════════ 预设 ═══════════════ */
+var PRESETS=[
+  {fg:'#000000',fg2:'#000000',bg:'#ffffff',grad:'none'},
+  {fg:'#1a3d7c',fg2:'#7c1a3d',bg:'#ffffff',grad:'diag'},
+  {fg:'#0a6b4a',fg2:'#3d8c1f',bg:'#ffffff',grad:'diag'},
+  {fg:'#4a2080',fg2:'#a060ff',bg:'#ffffff',grad:'diag'},
+  {fg:'#c04040',fg2:'#d48830',bg:'#ffffff',grad:'diag'},
+  {fg:'#0080a0',fg2:'#30c0b0',bg:'#ffffff',grad:'diag'},
+  {fg:'#d04080',fg2:'#ff80a0',bg:'#ffffff',grad:'diag'},
+  {fg:'#2a1a3a',fg2:'#6a4080',bg:'#ffffff',grad:'diag'}
+];
+
+/* ═══════════════ UI ═══════════════ */
 function $(id){return document.getElementById(id);}
 var toastEl=$('toast'),toastT=null;
-function toast(m){if(!toastEl)return;toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('show');},2000);}
-
-var canvas=$('qrCanvas'),box=$('qrBox'),genBtn=$('btnGen'),dlBtn=$('btnDownload'),clrBtn=$('btnClear');
-var textEl=$('qrText'),sizeEl=$('qrSize'),levelEl=$('qrLevel');
-var hasQR=false;
-
-function showEmpty(msg){
-  box.innerHTML='<div class="qr-empty">'+msg+'</div>';
-  hasQR=false;dlBtn.disabled=true;
+function toast(m){
+  if(!toastEl)return;
+  toastEl.textContent=m;toastEl.classList.add('show');
+  clearTimeout(toastT);
+  toastT=setTimeout(function(){toastEl.classList.remove('show');},2200);
 }
+
+var curType='text';
+var logoImg=null;
+var lastMatrix=null;
+
+$('typeTabs').addEventListener('click',function(e){
+  var t=e.target.closest('.tab');if(!t)return;
+  curType=t.getAttribute('data-type');
+  var tabs=this.querySelectorAll('.tab');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.toggle('active',tabs[i]===t);
+  var panels=document.querySelectorAll('.panel');
+  for(var j=0;j<panels.length;j++){
+    panels[j].classList.toggle('active',panels[j].getAttribute('data-panel')===curType);
+  }
+  if(lastMatrix)generate();
+});
+
+$('presetRow').addEventListener('click',function(e){
+  var b=e.target.closest('.preset');if(!b)return;
+  var idx=parseInt(b.getAttribute('data-preset'),10);
+  var p=PRESETS[idx];if(!p)return;
+  var btns=this.querySelectorAll('.preset');
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i]===b);
+  $('fgColor').value=p.fg;
+  $('fg2Color').value=p.fg2;
+  $('bgColor').value=p.bg;
+  $('gradMode').value=p.grad;
+  $('fg2Row').style.display=(p.grad==='none')?'none':'flex';
+  if(lastMatrix)generate();
+});
+
+$('fgColor').addEventListener('input',function(){if(lastMatrix)generate();});
+$('bgColor').addEventListener('input',function(){if(lastMatrix)generate();});
+$('fg2Color').addEventListener('input',function(){if(lastMatrix)generate();});
+$('gradMode').addEventListener('change',function(){
+  $('fg2Row').style.display=(this.value==='none')?'none':'flex';
+  if(lastMatrix)generate();
+});
+
+$('logoBtn').addEventListener('click',function(){$('logoFile').click();});
+$('logoClear').addEventListener('click',function(){
+  logoImg=null;
+  $('logoPreview').innerHTML='无';
+  $('logoFile').value='';
+  if(lastMatrix)generate();
+});
+$('logoFile').addEventListener('change',function(){
+  var f=this.files&&this.files[0];if(!f)return;
+  if(!/^image\//.test(f.type)){toast('请选择图片文件');return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      logoImg=img;
+      var pv=$('logoPreview');pv.innerHTML='';
+      var im=document.createElement('img');im.src=ev.target.result;pv.appendChild(im);
+      if(lastMatrix)generate();
+    };
+    img.onerror=function(){toast('图片加载失败');};
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(f);
+});
+$('logoSize').addEventListener('input',function(){
+  $('logoSizeVal').textContent=this.value+'%';
+  if(lastMatrix)generate();
+});
+
+$('qrSize').addEventListener('change',function(){if(lastMatrix)generate();});
+$('qrLevel').addEventListener('change',function(){if(lastMatrix)generate();});
 
 function generate(){
-  var text=(textEl.value||'').trim();
-  if(!text){toast('请输入内容');textEl.focus();return;}
-  if(typeof QRCode==='undefined'){
-    toast('二维码库未加载，请检查网络');
-    showEmpty('二维码库加载失败，请刷新重试');
+  $('errBox').style.display='none';
+  var text;
+  try{
+    text=buildContent(curType);
+  }catch(err){
+    $('errBox').textContent='⚠ '+err.message;
+    $('errBox').style.display='block';
     return;
   }
-  var size=parseInt(sizeEl.value,10)||320;
-  if(size<120)size=120;if(size>1024)size=1024;
-  var level=(levelEl.value||'M').toUpperCase();
+  var size=parseInt($('qrSize').value,10)||360;
+  if(size<120)size=120;
+  if(size>1024)size=1024;
+  var level=($('qrLevel').value||'H').toUpperCase();
 
-  /* 重建 canvas（因为可能被 empty 覆盖掉了） */
-  box.innerHTML='';
-  canvas=document.createElement('canvas');
-  canvas.id='qrCanvas';
-  box.appendChild(canvas);
-
-  QRCode.toCanvas(canvas,text,{
-    width:size,
-    margin:2,
-    errorCorrectionLevel:level,
-    color:{dark:'#000000',light:'#ffffff'}
-  },function(err){
-    if(err){
-      console.error(err);
-      toast('生成失败：'+err.message);
-      showEmpty('生成失败，请检查输入');
-      return;
-    }
-    hasQR=true;
-    dlBtn.disabled=false;
-    toast('生成成功');
-  });
+  try{
+    var matrix=makeQR(text,level);
+    lastMatrix=matrix;
+    var opts={
+      fg:$('fgColor').value||'#000000',
+      fg2:$('fg2Color').value||'#1a3d7c',
+      bg:$('bgColor').value||'#ffffff',
+      grad:$('gradMode').value||'none',
+      logoImg:logoImg,
+      logoSize:parseInt($('logoSize').value,10)||20
+    };
+    var canvas=renderQR(matrix,size,opts);
+    var box=$('qrBox');
+    box.innerHTML='';
+    box.appendChild(canvas);
+    $('btnDownload').disabled=false;
+    var ver=(matrix.length-17)/4;
+    $('qrMeta').textContent='版本 '+ver+' · '+matrix.length+'×'+matrix.length+' 模块 · 容错 '+level+(logoImg?' · 含 Logo':'');
+  }catch(err){
+    $('errBox').textContent='⚠ '+(err.message||String(err));
+    $('errBox').style.display='block';
+  }
 }
+$('btnGen').addEventListener('click',generate);
 
-function download(){
-  if(!hasQR)return;
-  var c=box.querySelector('canvas');
+$('btnDownload').addEventListener('click',function(){
+  var c=$('qrBox').querySelector('canvas');
   if(!c)return;
   try{
     var url=c.toDataURL('image/png');
@@ -188,27 +784,37 @@ function download(){
     a.download='qrcode-'+Date.now()+'.png';
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     toast('已下载');
-  }catch(e){
-    toast('下载失败：'+e.message);
-  }
-}
-
-function clearAll(){
-  textEl.value='';
-  showEmpty('点击「生成二维码」后在此显示');
-  textEl.focus();
-}
-
-genBtn.addEventListener('click',generate);
-dlBtn.addEventListener('click',download);
-clrBtn.addEventListener('click',clearAll);
-
-textEl.addEventListener('keydown',function(e){
-  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();generate();}
+  }catch(e){toast('下载失败：'+e.message);}
 });
 
-sizeEl.addEventListener('change',function(){if(hasQR)generate();});
-levelEl.addEventListener('change',function(){if(hasQR)generate();});
+$('btnClear').addEventListener('click',function(){
+  lastMatrix=null;
+  logoImg=null;
+  $('qrBox').innerHTML='<div class="qr-empty">点击「生成二维码」后在此显示</div>';
+  $('qrMeta').textContent='—';
+  $('btnDownload').disabled=true;
+  $('logoPreview').innerHTML='无';
+  $('logoFile').value='';
+});
+
+function autoBind(ids){
+  for(var i=0;i<ids.length;i++){
+    (function(id){
+      var el=$(id);if(!el)return;
+      var ev=(el.tagName==='SELECT')?'change':'input';
+      el.addEventListener(ev,function(){
+        if(lastMatrix){
+          clearTimeout(el.__genT);
+          el.__genT=setTimeout(generate,300);
+        }
+      });
+    })(ids[i]);
+  }
+}
+autoBind(['tText','wSsid','wEnc','wPass','wHidden','vName','vTel','vEmail','vOrg','vTitle','vUrl','vNote']);
+
+generate();
+
 })();
 </script>
 </body>
