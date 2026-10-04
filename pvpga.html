@@ -15,18 +15,15 @@
   }
   canvas{display:block;width:100vw;height:100vh;touch-action:none;-webkit-tap-highlight-color:transparent}
   body.mouse-mode canvas{cursor:none}
-
   .overlay{
     position:fixed;inset:0;z-index:50;
     display:flex;align-items:center;justify-content:center;
     background:rgba(255,255,255,.96);
-    backdrop-filter:blur(6px);
-    padding:20px;
-    transition:opacity .25s ease;
+    backdrop-filter:blur(6px);padding:20px;
   }
   .overlay.hidden{display:none}
   .panel{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}
-  .panel.wide{max-width:560px}
+  .panel.wide{max-width:640px}
 
   .title{font-size:26px;font-weight:800;color:#000;letter-spacing:.14em;text-align:center}
   .sub{font-size:10px;color:rgba(0,0,0,.35);letter-spacing:.5em;text-align:center;margin-top:-6px;margin-bottom:8px;text-transform:uppercase}
@@ -36,8 +33,7 @@
     padding:18px 20px;border:2px solid #000;border-radius:12px;
     background:#fff;cursor:pointer;text-align:left;
     transition:background .18s ease, box-shadow .18s ease;
-    -webkit-tap-highlight-color:transparent;
-    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;font-family:inherit;
   }
   .mode-btn:hover{background:#000;color:#fff;box-shadow:0 10px 26px rgba(0,0,0,.18)}
   .mode-btn:hover .mode-title{color:#fff}
@@ -45,58 +41,136 @@
   .mode-title{font-size:16px;font-weight:800;color:#000;letter-spacing:.12em}
   .mode-desc{font-size:11px;color:rgba(0,0,0,.45);letter-spacing:.06em;line-height:1.5}
 
-  .room-toolbar{display:flex;gap:8px;margin-bottom:4px}
+  /* ============ 房间列表 ============ */
+  .room-toolbar{display:flex;gap:8px;margin-bottom:6px}
   .room-filter{
-    flex:1;padding:12px 15px;
+    flex:1;padding:11px 14px;
     border:2px solid #000;border-radius:11px;
     background:#fff;font-family:inherit;font-size:13px;
     color:#000;outline:none;
   }
-  .room-filter::placeholder{color:rgba(0,0,0,.28)}
+  .room-filter::placeholder{color:rgba(0,0,0,.3)}
   .icon-btn{
-    width:44px;height:44px;flex-shrink:0;
+    width:42px;height:42px;flex-shrink:0;
     border:2px solid #000;border-radius:11px;
-    background:#fff;color:#000;font-size:18px;line-height:1;
-    cursor:pointer;transition:background .15s, color .15s;-webkit-tap-highlight-color:transparent;
+    background:#fff;color:#000;font-size:17px;line-height:1;
+    cursor:pointer;transition:background .15s,color .15s;
+    -webkit-tap-highlight-color:transparent;
+    display:flex;align-items:center;justify-content:center;
   }
   .icon-btn:hover{background:#000;color:#fff}
+  .icon-btn.spin{animation:spin .5s linear}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+  .room-tabs{
+    display:flex;gap:6px;margin-bottom:6px;
+    font-size:11px;letter-spacing:.12em;
+  }
+  .room-tab{
+    padding:6px 12px;border:1.5px solid rgba(0,0,0,.16);
+    border-radius:8px;background:#fff;color:rgba(0,0,0,.55);
+    cursor:pointer;transition:all .14s;-webkit-tap-highlight-color:transparent;
+    font-family:inherit;
+  }
+  .room-tab:hover{border-color:#000;color:#000}
+  .room-tab.active{background:#000;border-color:#000;color:#fff}
 
   .room-list{
     display:flex;flex-direction:column;gap:8px;
-    max-height:340px;overflow-y:auto;
+    max-height:400px;overflow-y:auto;
     padding:10px;border:1.5px solid rgba(0,0,0,.12);
     border-radius:12px;background:rgba(0,0,0,.02);
+    min-height:180px;
   }
   .room-list::-webkit-scrollbar{width:5px}
   .room-list::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:3px}
 
   .room-card{
+    position:relative;
     display:flex;align-items:center;gap:12px;
     padding:12px 14px;border:1.6px solid rgba(0,0,0,.14);
-    border-radius:10px;background:#fff;
-    transition:border-color .14s, box-shadow .14s;cursor:pointer;
+    border-radius:11px;background:#fff;
+    transition:border-color .14s, box-shadow .14s, background .14s;
+    cursor:pointer;
   }
-  .room-card:hover{border-color:#000;box-shadow:0 6px 16px rgba(0,0,0,.08)}
-  .room-card.locked{opacity:.75}
+  .room-card:hover{border-color:#000;box-shadow:0 6px 16px rgba(0,0,0,.09)}
+  .room-card.mine{border-color:#000;background:rgba(0,0,0,.03)}
+  .room-card.mine::after{
+    content:'我';
+    position:absolute;top:-8px;left:10px;
+    padding:2px 7px;background:#000;color:#fff;
+    font-size:9px;letter-spacing:.16em;border-radius:4px;
+  }
+  .room-card-avatar{
+    width:38px;height:38px;flex-shrink:0;
+    border:2px solid #000;border-radius:9px;
+    background:#fff;color:#000;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:16px;
+    font-family:'SF Mono',Menlo,Consolas,monospace;
+  }
+  .room-card.playing .room-card-avatar{background:#000;color:#fff}
   .room-card-main{flex:1;min-width:0}
   .room-card-name{
-    font-size:14px;font-weight:700;color:#000;letter-spacing:.04em;
+    font-size:14px;font-weight:700;color:#000;letter-spacing:.03em;
     display:flex;align-items:center;gap:6px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .room-card-lock{font-size:11px;color:rgba(0,0,0,.5)}
-  .room-card-meta{display:flex;gap:10px;font-size:10px;color:rgba(0,0,0,.42);letter-spacing:.08em;margin-top:3px}
-  .room-card-count{
-    font-size:13px;font-weight:700;color:#000;
-    font-variant-numeric:tabular-nums;letter-spacing:.05em;white-space:nowrap;
+  .room-card-meta{
+    display:flex;gap:8px;flex-wrap:wrap;
+    font-size:10px;color:rgba(0,0,0,.45);
+    letter-spacing:.06em;margin-top:4px;
   }
-  .room-card-count .full{color:rgba(0,0,0,.28)}
-  .room-card-status{width:8px;height:8px;border-radius:50%;background:#000;flex-shrink:0}
+  .room-card-meta span{
+    display:inline-flex;align-items:center;gap:3px;
+  }
+  .room-card-meta .tag{
+    padding:1px 6px;border-radius:4px;
+    background:rgba(0,0,0,.06);color:rgba(0,0,0,.65);
+  }
+  .room-card-meta .tag.live{
+    background:#000;color:#fff;
+  }
+  .room-card-right{
+    display:flex;flex-direction:column;align-items:flex-end;gap:5px;
+    flex-shrink:0;
+  }
+  .room-card-count{
+    font-size:14px;font-weight:800;color:#000;
+    font-variant-numeric:tabular-nums;letter-spacing:.04em;
+  }
+  .room-card-count.full{color:rgba(0,0,0,.3)}
+  .room-card-ping{
+    font-size:9px;color:rgba(0,0,0,.4);
+    letter-spacing:.1em;font-variant-numeric:tabular-nums;
+  }
+  .room-card-status{
+    width:9px;height:9px;border-radius:50%;
+    background:#000;flex-shrink:0;
+    box-shadow:0 0 0 2px rgba(255,255,255,.9);
+  }
   .room-card-status.waiting{background:#000;animation:pulse 1.2s infinite}
-  .room-card-status.playing{background:rgba(0,0,0,.35)}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.18}}
+  .room-card-status.playing{background:rgba(0,0,0,.3);animation:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 
-  .room-empty{text-align:center;padding:36px 20px;font-size:12px;color:rgba(0,0,0,.35);letter-spacing:.14em}
+  .room-empty{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;padding:52px 20px;
+    font-size:12px;color:rgba(0,0,0,.35);
+    letter-spacing:.14em;text-align:center;
+  }
+  .room-empty-icon{
+    width:52px;height:52px;
+    border:2px dashed rgba(0,0,0,.2);
+    border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;color:rgba(0,0,0,.25);
+  }
+  .room-empty-sub{
+    font-size:10px;color:rgba(0,0,0,.28);
+    letter-spacing:.1em;
+  }
 
   .create-panel{
     padding:16px;border:2px solid #000;border-radius:12px;background:#fff;
@@ -118,8 +192,8 @@
   .btn-ghost,.btn-primary{
     flex:1;padding:12px;border-radius:10px;
     font-family:inherit;font-size:13px;font-weight:700;
-    letter-spacing:.14em;cursor:pointer;transition:background .15s;
-    -webkit-tap-highlight-color:transparent;
+    letter-spacing:.14em;cursor:pointer;
+    transition:background .15s;-webkit-tap-highlight-color:transparent;
   }
   .btn-ghost{border:1.6px solid rgba(0,0,0,.2);background:#fff;color:rgba(0,0,0,.6)}
   .btn-ghost:hover{border-color:#000;color:#000}
@@ -128,14 +202,14 @@
   .btn-primary.big{padding:14px;font-size:14px;letter-spacing:.2em}
   .btn-primary:disabled,.btn-ghost:disabled{opacity:.4;cursor:not-allowed}
 
-  .room-code-box{border:2px solid #000;border-radius:14px;padding:20px;text-align:center;background:#fff}
-  .room-code-label{font-size:10px;color:rgba(0,0,0,.4);letter-spacing:.3em;margin-bottom:8px}
+  .room-code-box{border:2px solid #000;border-radius:14px;padding:18px;text-align:center;background:#fff}
+  .room-code-label{font-size:10px;color:rgba(0,0,0,.4);letter-spacing:.3em;margin-bottom:6px}
   .room-code{
-    font-size:38px;font-weight:800;letter-spacing:.18em;color:#000;
+    font-size:34px;font-weight:800;letter-spacing:.16em;color:#000;
     font-variant-numeric:tabular-nums;
     font-family:'SF Mono',Menlo,Consolas,monospace;line-height:1.1;
   }
-  .room-code-tip{font-size:10px;color:rgba(0,0,0,.36);letter-spacing:.16em;margin-top:8px}
+  .room-code-tip{font-size:10px;color:rgba(0,0,0,.36);letter-spacing:.16em;margin-top:6px}
 
   .players-area{border:2px solid rgba(0,0,0,.14);border-radius:12px;padding:14px 16px;background:#fff}
   .players-title{font-size:11px;color:rgba(0,0,0,.5);letter-spacing:.2em;margin-bottom:10px}
@@ -153,7 +227,7 @@
     padding:12px;border:1.5px solid rgba(0,0,0,.2);border-radius:10px;
     background:#fff;color:rgba(0,0,0,.55);
     font-family:inherit;font-size:12px;letter-spacing:.2em;cursor:pointer;
-    transition:border-color .16s, color .16s;-webkit-tap-highlight-color:transparent;
+    transition:border-color .16s,color .16s;-webkit-tap-highlight-color:transparent;
   }
   .cancel-btn:hover{border-color:#000;color:#000}
 
@@ -182,17 +256,16 @@
     max-width:92vw;overflow:hidden;text-overflow:ellipsis;text-align:center;
   }
   .hint.hidden{display:none}
-
   .sound-btn{
     position:fixed;right:14px;top:calc(12px + env(safe-area-inset-top,0px));
     width:40px;height:40px;
     border:1px solid rgba(0,0,0,.16);border-radius:10px;
     background:rgba(255,255,255,.88);color:rgba(0,0,0,.55);
     font-size:15px;line-height:1;cursor:pointer;z-index:6;
-    transition:background .18s, color .18s, border-color .18s;-webkit-tap-highlight-color:transparent;
+    transition:background .18s,color .18s,border-color .18s;
+    -webkit-tap-highlight-color:transparent;
   }
   .sound-btn:hover{background:#000;color:#fff;border-color:#000}
-
   .weapon-hud{
     position:fixed;right:14px;
     top:calc(60px + env(safe-area-inset-top,0px));
@@ -200,7 +273,7 @@
     border-radius:10px;background:rgba(255,255,255,.9);
     text-align:right;cursor:pointer;z-index:5;
     user-select:none;-webkit-tap-highlight-color:transparent;
-    transition:background .16s, border-color .16s;min-width:104px;
+    transition:background .16s,border-color .16s;min-width:104px;
   }
   .weapon-hud:hover{background:#000;border-color:#000}
   .weapon-hud:hover .wname{color:#fff}
@@ -208,18 +281,17 @@
   .wname{font-size:13px;font-weight:600;color:#000;letter-spacing:.06em;line-height:1.25}
   .widx{font-size:11px;line-height:1.4;color:rgba(0,0,0,.4);letter-spacing:.1em}
   .weapon-hud.hidden,.sound-btn.hidden{display:none}
-
   .menu-btn{
     position:fixed;left:14px;top:calc(12px + env(safe-area-inset-top,0px));
     padding:9px 14px;border:1px solid rgba(0,0,0,.16);
     border-radius:10px;background:rgba(255,255,255,.88);
     color:rgba(0,0,0,.55);font-family:inherit;font-size:11px;
     letter-spacing:.16em;cursor:pointer;z-index:6;
-    transition:background .18s, color .18s, border-color .18s;-webkit-tap-highlight-color:transparent;
+    transition:background .18s,color .18s,border-color .18s;
+    -webkit-tap-highlight-color:transparent;
   }
   .menu-btn:hover{background:#000;color:#fff;border-color:#000}
   .menu-btn.hidden{display:none}
-
   .net-status{
     position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));
     padding:6px 11px;border-radius:8px;background:rgba(0,0,0,.75);
@@ -235,7 +307,7 @@
 <div id="startScreen" class="overlay">
   <div class="panel">
     <div class="title">方块战场</div>
-    <div class="sub">Square Arena</div>
+    <div class="sub">Square Arena · 100 Weapons</div>
     <button class="mode-btn" id="btnModeAI">
       <span class="mode-title">人机模式</span>
       <span class="mode-desc">与 AI 对手作战 · 8 名敌人巡逻追击</span>
@@ -253,13 +325,22 @@
     <div class="sub">Room List</div>
 
     <div class="room-toolbar" id="roomToolbar">
-      <input id="inputRoomFilter" class="room-filter" placeholder="筛选房间名 / 房主…" autocomplete="off">
+      <input id="inputRoomFilter" class="room-filter" placeholder="筛选房间名 / 房主 / 房间码…" autocomplete="off">
       <button class="icon-btn" id="btnRefreshRooms" title="刷新">↻</button>
       <button class="icon-btn" id="btnCreateRoom" title="创建房间">+</button>
     </div>
 
+    <div class="room-tabs" id="roomTabs">
+      <button class="room-tab active" data-sort="new">最新</button>
+      <button class="room-tab" data-sort="players">人数</button>
+      <button class="room-tab" data-sort="waiting">等待中</button>
+    </div>
+
     <div id="roomList" class="room-list">
-      <div class="room-empty">正在加载房间…</div>
+      <div class="room-empty">
+        <div class="room-empty-icon">◌</div>
+        <div>正在加载房间…</div>
+      </div>
     </div>
 
     <div id="createPanel" class="create-panel hidden">
@@ -315,7 +396,7 @@
 <button class="menu-btn hidden" id="btnExitGame">← 退出</button>
 <div class="weapon-hud hidden" id="weaponHud">
   <div class="wname" id="wname">拳头</div>
-  <div class="widx" id="widx">1 / 38</div>
+  <div class="widx" id="widx">1 / 100</div>
 </div>
 <button class="sound-btn hidden" id="soundBtn" title="音效开关">🔊</button>
 <div class="net-status hidden" id="netStatus">连接中…</div>
@@ -325,9 +406,6 @@
 (function () {
   'use strict';
 
-  /* ============================================================
-     云端配置
-  ============================================================ */
   const SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 
@@ -340,9 +418,6 @@
     }
   } catch (e) { console.warn('Supabase init failed:', e); }
 
-  /* ============================================================
-     DOM
-  ============================================================ */
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
 
@@ -351,6 +426,7 @@
   const roomTitle   = document.getElementById('roomTitle');
   const roomToolbar = document.getElementById('roomToolbar');
   const roomListEl  = document.getElementById('roomList');
+  const roomTabs    = document.getElementById('roomTabs');
   const createPanel = document.getElementById('createPanel');
   const roomLobby   = document.getElementById('roomLobby');
   const roomError   = document.getElementById('roomError');
@@ -414,56 +490,159 @@
   }
 
   /* ============================================================
-     武器表 · 38 把
+     100 把武器
   ============================================================ */
-  const WEAPONS = [
-    { id:'fist',     name:'拳头',   melee:true, style:'fist',     dmg:22, range:40, dur:230, cd:0.38 },
-    { id:'dagger',   name:'匕首',   melee:true, style:'dagger',   dmg:18, range:34, dur:150, cd:0.20 },
-    { id:'nunchaku', name:'双截棍', melee:true, style:'nunchaku', dmg:14, range:42, dur:130, cd:0.16 },
-    { id:'chainsaw', name:'电锯',   melee:true, style:'chainsaw', dmg:9,  range:46, dur:100, cd:0.10 },
-    { id:'katana',   name:'武士刀', melee:true, style:'katana',   dmg:36, range:64, dur:280, cd:0.46 },
-    { id:'hammer',   name:'大锤',   melee:true, style:'hammer',   dmg:62, range:54, dur:520, cd:0.92 },
+  const WEAPONS = [];
 
-    { id:'pistol',  name:'手枪',     style:'pistol', interval:130, speed:26, spread:0.012, push:1.0, shakeAmt:3.2, decay:0.0075, width:2.0, len:0.8, dmg:18, pellets:1 },
-    { id:'glock',   name:'格洛克',   style:'pistol', interval:110, speed:27, spread:0.016, push:0.9, shakeAmt:3.0, decay:0.0078, width:1.9, len:0.75, dmg:16, pellets:1 },
-    { id:'deagle',  name:'沙漠之鹰', style:'pistol', interval:360, speed:34, spread:0.008, push:3.6, shakeAmt:6.6, decay:0.0055, width:3.0, len:1.05, dmg:46, pellets:1 },
-    { id:'revolver',name:'左轮',     style:'pistol', interval:420, speed:34, spread:0.010, push:4.0, shakeAmt:7.0, decay:0.0055, width:3.0, len:1.0, dmg:52, pellets:1 },
+  /* --- 近战 10 把 --- */
+  [
+    { id:'fist',       name:'拳头',   style:'fist',       dmg:22, range:40, dur:230, cd:0.38 },
+    { id:'knuckle',    name:'拳套',   style:'knuckle',    dmg:26, range:38, dur:200, cd:0.32 },
+    { id:'dagger',     name:'匕首',   style:'dagger',     dmg:18, range:34, dur:150, cd:0.20 },
+    { id:'shortsword', name:'短剑',   style:'shortsword', dmg:20, range:48, dur:180, cd:0.28 },
+    { id:'nunchaku',   name:'双截棍', style:'nunchaku',   dmg:14, range:42, dur:130, cd:0.16 },
+    { id:'chainsaw',   name:'电锯',   style:'chainsaw',   dmg:9,  range:46, dur:100, cd:0.10 },
+    { id:'katana',     name:'武士刀', style:'katana',     dmg:36, range:64, dur:280, cd:0.46 },
+    { id:'spear',      name:'长枪',   style:'spear',      dmg:44, range:78, dur:320, cd:0.55 },
+    { id:'axe',        name:'战斧',   style:'axe',        dmg:52, range:58, dur:420, cd:0.72 },
+    { id:'hammer',     name:'大锤',   style:'hammer',     dmg:62, range:54, dur:520, cd:0.92 }
+  ].forEach(m => WEAPONS.push(Object.assign({ melee:true }, m)));
 
-    { id:'smg',     name:'冲锋枪', style:'smg', interval:62, speed:28, spread:0.055, push:0.9, shakeAmt:2.8, decay:0.0080, width:1.8, len:0.7, dmg:14, pellets:1 },
-    { id:'uzi',     name:'UZI',    style:'smg', interval:52, speed:26, spread:0.078, push:0.8, shakeAmt:2.6, decay:0.0090, width:1.7, len:0.6, dmg:12, pellets:1 },
-    { id:'mp5',     name:'MP5',    style:'smg', interval:66, speed:28, spread:0.046, push:0.9, shakeAmt:2.6, decay:0.0082, width:1.8, len:0.72, dmg:15, pellets:1 },
-    { id:'p90',     name:'P90',    style:'smg', interval:56, speed:30, spread:0.062, push:0.9, shakeAmt:2.7, decay:0.0078, width:1.8, len:0.7, dmg:13, pellets:1 },
-    { id:'vector',  name:'维克托', style:'smg', interval:48, speed:28, spread:0.058, push:0.7, shakeAmt:2.4, decay:0.0092, width:1.7, len:0.6, dmg:11, pellets:1 },
+  /* --- 远程 90 把 ---
+     参数顺序：[style, name, variant, interval, speed, spread, push, shake, decay, width, len, dmg, pellets?, burst?, burstDelay?, pierce?] */
+  const GUN_DATA = [
 
-    { id:'ak47',    name:'AK47',   style:'rifle', interval:82, speed:32, spread:0.050, push:1.9, shakeAmt:4.0, decay:0.0050, width:2.6, len:1.2, dmg:28, pellets:1 },
-    { id:'m4a1',    name:'M4A1',   style:'rifle', interval:76, speed:34, spread:0.038, push:1.7, shakeAmt:3.6, decay:0.0050, width:2.4, len:1.15, dmg:25, pellets:1 },
-    { id:'aug',     name:'AUG',    style:'rifle', interval:80, speed:33, spread:0.042, push:1.8, shakeAmt:3.8, decay:0.0051, width:2.5, len:1.1, dmg:26, pellets:1 },
-    { id:'scar',    name:'SCAR',   style:'rifle', interval:88, speed:34, spread:0.036, push:2.0, shakeAmt:4.0, decay:0.0048, width:2.6, len:1.2, dmg:30, pellets:1 },
-    { id:'famas',   name:'FAMAS',  style:'rifle', interval:74, speed:32, spread:0.044, push:1.7, shakeAmt:3.6, decay:0.0053, width:2.4, len:1.1, dmg:24, pellets:1 },
-    { id:'g36',     name:'G36',    style:'rifle', interval:78, speed:33, spread:0.040, push:1.8, shakeAmt:3.7, decay:0.0050, width:2.5, len:1.15, dmg:26, pellets:1 },
-    { id:'burst',   name:'三连发', style:'rifle', interval:250, speed:32, spread:0.030, push:2.0, shakeAmt:4.2, decay:0.0055, width:2.4, len:1.0, dmg:26, pellets:1, burst:3, burstDelay:62 },
+    /* === 手枪 12 把 === */
+    ['pistol','手枪',0,130,26,0.012,1.0,3.2,0.0075,2.0,0.8,18],
+    ['pistol','格洛克',1,110,27,0.016,0.9,3.0,0.0078,1.9,0.75,16],
+    ['pistol','M1911',2,145,28,0.011,1.1,3.4,0.0072,2.1,0.85,20],
+    ['pistol','USP',3,125,27,0.014,1.0,3.1,0.0075,2.0,0.8,17],
+    ['pistol','鲁格',4,155,25,0.013,1.2,3.5,0.0070,2.1,0.85,19],
+    ['pistol','Five-seveN',5,118,29,0.015,0.9,3.0,0.0076,1.9,0.78,16],
+    ['pistol','P250',6,138,26,0.0125,1.05,3.3,0.0074,2.0,0.8,18],
+    ['pistol','沙漠之鹰',7,360,34,0.008,3.6,6.6,0.0055,3.0,1.05,46],
+    ['pistol','左轮',8,420,34,0.010,4.0,7.0,0.0055,3.0,1.0,52],
+    ['pistol','.50马格南',9,480,36,0.009,4.4,7.4,0.0052,3.2,1.1,58],
+    ['pistol','R8',10,500,38,0.007,4.8,7.8,0.0050,3.3,1.15,62],
+    ['pistol','大口径',11,400,35,0.011,4.2,7.2,0.0054,3.1,1.08,55],
 
-    { id:'shotgun',      name:'霰弹枪',   style:'shotgun', interval:640, speed:24, spread:0.155, push:6.0, shakeAmt:9.5, decay:0.0110, width:2.2, len:0.7, dmg:9, pellets:7 },
-    { id:'auto_shotgun', name:'战斗霰弹', style:'shotgun', interval:340, speed:25, spread:0.135, push:4.2, shakeAmt:7.2, decay:0.0105, width:2.2, len:0.75, dmg:8, pellets:6 },
+    /* === 冲锋枪 14 把 === */
+    ['smg','冲锋枪',0,62,28,0.055,0.9,2.8,0.0080,1.8,0.7,14],
+    ['smg','UZI',1,52,26,0.078,0.8,2.6,0.0090,1.7,0.6,12],
+    ['smg','MP5',2,66,28,0.046,0.9,2.6,0.0082,1.8,0.72,15],
+    ['smg','P90',3,56,30,0.062,0.9,2.7,0.0078,1.8,0.7,13],
+    ['smg','维克托',4,48,28,0.058,0.7,2.4,0.0092,1.7,0.6,11],
+    ['smg','MP7',5,58,29,0.052,0.85,2.5,0.0084,1.75,0.68,13],
+    ['smg','MAC-10',6,46,25,0.085,0.75,2.3,0.0095,1.65,0.58,11],
+    ['smg','汤姆逊',7,68,27,0.062,1.0,2.9,0.0080,1.9,0.75,16],
+    ['smg','MP40',8,72,28,0.055,1.0,2.7,0.0078,1.85,0.72,15],
+    ['smg','PP-19',9,60,29,0.048,0.9,2.6,0.0082,1.8,0.7,14],
+    ['smg','斯登',10,74,26,0.068,1.0,2.8,0.0076,1.85,0.73,15],
+    ['smg','UZI Pro',11,50,27,0.072,0.8,2.5,0.0088,1.7,0.62,12],
+    ['smg','蝎式',12,54,30,0.060,0.85,2.6,0.0084,1.75,0.65,12],
+    ['smg','野牛',13,78,28,0.052,1.1,3.0,0.0076,1.9,0.78,17],
 
-    { id:'dmr',      name:'精确射手', style:'sniper', interval:300, speed:40, spread:0.008, push:3.2, shakeAmt:5.6, decay:0.0045, width:2.6, len:1.4, dmg:44, pellets:1 },
-    { id:'scar_h',   name:'SCAR-H',   style:'sniper', interval:280, speed:42, spread:0.006, push:3.0, shakeAmt:5.4, decay:0.0044, width:2.8, len:1.5, dmg:50, pellets:1 },
-    { id:'crossbow', name:'弩',       style:'sniper', interval:500, speed:36, spread:0.004, push:2.4, shakeAmt:4.2, decay:0.0040, width:2.4, len:1.6, dmg:60, pellets:1 },
+    /* === 突击步枪 18 把 === */
+    ['rifle','AK47',0,82,32,0.050,1.9,4.0,0.0050,2.6,1.2,28],
+    ['rifle','M4A1',1,76,34,0.038,1.7,3.6,0.0050,2.4,1.15,25],
+    ['rifle','AUG',2,80,33,0.042,1.8,3.8,0.0051,2.5,1.1,26],
+    ['rifle','SCAR',3,88,34,0.036,2.0,4.0,0.0048,2.6,1.2,30],
+    ['rifle','FAMAS',4,74,32,0.044,1.7,3.6,0.0053,2.4,1.1,24],
+    ['rifle','G36',5,78,33,0.040,1.8,3.7,0.0050,2.5,1.15,26],
+    ['rifle','三连发',6,250,32,0.030,2.0,4.2,0.0055,2.4,1.0,26,1,3,62],
+    ['rifle','AK74',7,84,33,0.046,1.85,3.9,0.0049,2.55,1.18,27],
+    ['rifle','M16',8,96,35,0.032,1.9,3.9,0.0048,2.5,1.22,29],
+    ['rifle','AR15',9,90,34,0.036,1.8,3.7,0.0050,2.45,1.16,28],
+    ['rifle','SG553',10,82,34,0.038,1.85,3.8,0.0050,2.5,1.18,27],
+    ['rifle','QBZ95',11,86,33,0.040,1.9,3.9,0.0049,2.55,1.2,28],
+    ['rifle','M416',12,78,35,0.034,1.75,3.7,0.0050,2.45,1.14,26],
+    ['rifle','HK416',13,80,34,0.036,1.8,3.7,0.0050,2.5,1.16,27],
+    ['rifle','TAR21',14,84,33,0.042,1.9,3.9,0.0049,2.55,1.18,28],
+    ['rifle','ACR',15,88,34,0.038,1.85,3.8,0.0050,2.5,1.2,27],
+    ['rifle','95式',16,92,35,0.036,1.9,3.9,0.0048,2.55,1.2,29],
+    ['rifle','CZ805',17,86,34,0.040,1.85,3.8,0.0050,2.5,1.18,28],
 
-    { id:'sniper',  name:'狙击枪', style:'sniper', interval:800, speed:52, spread:0.002, push:5.5, shakeAmt:9.0, decay:0.0035, width:3.4, len:2.0, dmg:88, pellets:1 },
-    { id:'awp',     name:'AWP',    style:'sniper', interval:950, speed:56, spread:0.001, push:6.0, shakeAmt:10,  decay:0.0032, width:3.6, len:2.2, dmg:110,pellets:1 },
-    { id:'harpoon', name:'鱼叉枪', style:'sniper', interval:600, speed:44, spread:0.003, push:3.6, shakeAmt:6.4, decay:0.0038, width:3.0, len:1.9, dmg:76, pellets:1 },
+    /* === 霰弹枪 8 把 === */
+    ['shotgun','霰弹枪',0,640,24,0.155,6.0,9.5,0.0110,2.2,0.7,9,7],
+    ['shotgun','战斗霰弹',1,340,25,0.135,4.2,7.2,0.0105,2.2,0.75,8,6],
+    ['shotgun','泵动',2,700,24,0.145,5.5,9.0,0.0110,2.3,0.72,10,6],
+    ['shotgun','双管',3,850,23,0.165,6.5,10.0,0.0115,2.4,0.7,12,8],
+    ['shotgun','半自动',4,420,26,0.140,4.5,7.6,0.0102,2.2,0.73,9,6],
+    ['shotgun','自动霰弹',5,260,24,0.150,4.0,7.0,0.0108,2.15,0.72,7,7],
+    ['shotgun','短管霰弹',6,560,22,0.180,5.8,9.2,0.0112,2.5,0.68,11,6],
+    ['shotgun','重型霰弹',7,780,25,0.130,7.0,10.5,0.0100,2.6,0.78,13,8],
 
-    { id:'lmg',     name:'轻机枪', style:'heavy', interval:74, speed:30, spread:0.070, push:2.2, shakeAmt:4.6, decay:0.0050, width:2.6, len:1.2, dmg:26, pellets:1 },
-    { id:'minigun', name:'加特林', style:'heavy', interval:40, speed:30, spread:0.098, push:2.6, shakeAmt:5.2, decay:0.0060, width:2.4, len:1.0, dmg:18, pellets:1 },
-    { id:'tommy',   name:'汤普森', style:'heavy', interval:70, speed:28, spread:0.082, push:1.6, shakeAmt:3.4, decay:0.0058, width:2.3, len:1.0, dmg:20, pellets:1 },
+    /* === 精确射手 10 把 === */
+    ['dmr','精确射手',0,300,40,0.008,3.2,5.6,0.0045,2.6,1.4,44],
+    ['dmr','SCAR-H',1,280,42,0.006,3.0,5.4,0.0044,2.8,1.5,50],
+    ['dmr','弩',2,500,36,0.004,2.4,4.2,0.0040,2.4,1.6,60],
+    ['dmr','M14',3,320,41,0.007,3.3,5.7,0.0044,2.7,1.45,46],
+    ['dmr','SKS',4,290,40,0.009,3.1,5.5,0.0046,2.6,1.42,42],
+    ['dmr','伽兰德',5,340,39,0.008,3.4,5.8,0.0044,2.75,1.48,48],
+    ['dmr','VSS',6,260,38,0.010,2.8,5.2,0.0048,2.5,1.38,40],
+    ['dmr','MK14',7,310,43,0.006,3.2,5.6,0.0043,2.85,1.52,52],
+    ['dmr','SL8',8,270,41,0.007,3.0,5.4,0.0044,2.7,1.44,45],
+    ['dmr','G3',9,330,40,0.008,3.3,5.7,0.0044,2.75,1.46,47],
 
-    { id:'railgun',  name:'电磁炮',     style:'sniper', interval:950, speed:70, spread:0.000, push:6.5, shakeAmt:11,  decay:0.0028, width:4.0, len:2.6, dmg:120, pellets:1, pierce:3 },
-    { id:'laser',    name:'激光枪',     style:'sniper', interval:220, speed:80, spread:0.001, push:1.4, shakeAmt:3.0, decay:0.0000, width:2.0, len:6.0, dmg:22, pellets:1, pierce:5 },
-    { id:'plasma',   name:'等离子',     style:'heavy',  interval:280, speed:22, spread:0.030, push:2.0, shakeAmt:4.4, decay:0.0040, width:3.6, len:1.2, dmg:42, pellets:1 },
-    { id:'tesla',    name:'特斯拉',     style:'smg',    interval:90,  speed:34, spread:0.110, push:0.5, shakeAmt:2.0, decay:0.0070, width:1.6, len:0.7, dmg:10, pellets:1 },
-    { id:'grenade_launcher', name:'榴弹发射器', style:'heavy', interval:900, speed:20, spread:0.014, push:5.6, shakeAmt:8.6, decay:0.0028, width:4.4, len:1.0, dmg:80, pellets:1 }
+    /* === 狙击枪 8 把 === */
+    ['sniper','狙击枪',0,800,52,0.002,5.5,9.0,0.0035,3.4,2.0,88],
+    ['sniper','AWP',1,950,56,0.001,6.0,10.0,0.0032,3.6,2.2,110],
+    ['sniper','鱼叉枪',2,600,44,0.003,3.6,6.4,0.0038,3.0,1.9,76],
+    ['sniper','M24',3,780,53,0.002,5.6,9.2,0.0034,3.5,2.05,90],
+    ['sniper','巴雷特',4,1200,58,0.0015,7.0,11.5,0.0030,3.8,2.4,130],
+    ['sniper','猎枪',5,700,50,0.0035,5.0,8.4,0.0038,3.2,1.95,80],
+    ['sniper','反器材',6,1400,60,0.001,7.5,12.5,0.0028,4.0,2.5,145],
+    ['sniper','高级狙',7,900,55,0.0018,6.2,10.5,0.0031,3.7,2.3,100],
+
+    /* === 机枪 8 把 === */
+    ['lmg','轻机枪',0,74,30,0.070,2.2,4.6,0.0050,2.6,1.2,26],
+    ['lmg','加特林',1,40,30,0.098,2.6,5.2,0.0060,2.4,1.0,18],
+    ['lmg','汤普森',2,70,28,0.082,1.6,3.4,0.0058,2.3,1.0,20],
+    ['lmg','M60',3,78,31,0.075,2.4,4.8,0.0050,2.65,1.22,28],
+    ['lmg','PKM',4,82,32,0.068,2.5,4.9,0.0049,2.7,1.25,30],
+    ['lmg','内格夫',5,68,30,0.080,2.3,4.7,0.0052,2.55,1.18,24],
+    ['lmg','米尼米',6,72,31,0.072,2.2,4.6,0.0051,2.6,1.2,26],
+    ['lmg','MG42',7,44,32,0.095,2.8,5.4,0.0058,2.5,1.1,22],
+
+    /* === 特殊 12 把 === */
+    ['special','电磁炮',0,950,70,0.000,6.5,11,0.0028,4.0,2.6,120,1,0,0,3],
+    ['special','激光枪',1,220,80,0.001,1.4,3.0,0.0000,2.0,6.0,22,1,0,0,5],
+    ['special','等离子',2,280,22,0.030,2.0,4.4,0.0040,3.6,1.2,42],
+    ['special','特斯拉',3,90,34,0.110,0.5,2.0,0.0070,1.6,0.7,10],
+    ['special','榴弹',4,900,20,0.014,5.6,8.6,0.0028,4.4,1.0,80],
+    ['special','火焰枪',5,60,18,0.180,0.4,1.8,0.0085,3.2,0.6,6],
+    ['special','冰冻枪',6,130,24,0.080,0.8,2.4,0.0075,2.2,0.75,12],
+    ['special','毒液枪',7,110,26,0.090,0.9,2.6,0.0070,2.0,0.7,10],
+    ['special','声波枪',8,180,32,0.045,1.6,3.6,0.0055,2.8,1.0,24],
+    ['special','磁轨枪',9,700,60,0.003,5.0,8.0,0.0035,3.4,2.0,90,1,0,0,2],
+    ['special','反物质',10,1500,75,0.001,7.0,13.0,0.0026,4.2,2.8,160,1,0,0,4],
+    ['special','时空枪',11,500,50,0.005,4.0,7.0,0.0040,3.6,1.8,70,1,0,0,1]
   ];
+
+  GUN_DATA.forEach((row, i) => {
+    WEAPONS.push({
+      id: 'gun_' + i,
+      name: row[1],
+      style: row[0],
+      variant: row[2],
+      interval: row[3],
+      speed: row[4],
+      spread: row[5],
+      push: row[6],
+      shakeAmt: row[7],
+      decay: row[8],
+      width: row[9],
+      len: row[10],
+      dmg: row[11],
+      pellets: row[12] || 1,
+      burst: row[13] || 0,
+      burstDelay: row[14] || 0,
+      pierce: row[15] || 0,
+      melee: false
+    });
+  });
+
+  console.log('[武器库] 共 ' + WEAPONS.length + ' 把武器');
 
   let weaponIndex = 0;
   function weapon() { return WEAPONS[weaponIndex]; }
@@ -554,7 +733,7 @@
   }
 
   /* ============================================================
-     联机状态
+     联机
   ============================================================ */
   const myId = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
   let myName = '玩家' + Math.floor(Math.random() * 900 + 100);
@@ -567,15 +746,13 @@
   const presenceSet = {};
   let mpSendAccum = 0;
   const MP_SEND_INTERVAL = 2;
-
-  /* 玩家消失修复：超时从 4s 提升到 15s */
   const REMOTE_TIMEOUT_MS = 15000;
-  /* 断线保留余晖 */
   const REMOTE_FADE_MS = 2500;
 
   let mpStartHandled = false;
   let roomsRefreshTimer = null;
   let roomListData = [];
+  let roomSortMode = 'new';
 
   /* ============================================================
      工具
@@ -631,6 +808,13 @@
   function setNetStatus(text, show) {
     netStatusEl.textContent = text;
     netStatusEl.classList.toggle('hidden', !show);
+  }
+  function timeAgo(ts) {
+    const d = (Date.now() - new Date(ts).getTime()) / 1000;
+    if (d < 10) return '刚刚';
+    if (d < 60) return Math.floor(d) + '秒前';
+    if (d < 3600) return Math.floor(d / 60) + '分钟前';
+    return Math.floor(d / 3600) + '小时前';
   }
 
   /* ============================================================
@@ -692,7 +876,7 @@
     if (!soundOn) return;
     const c = ensureCtx(); if (!c) return;
     const t = c.currentTime;
-    const baseFreq = { fist: 520, dagger: 900, nunchaku: 1100, chainsaw: 180, katana: 700, hammer: 260 }[w.id] || 500;
+    const baseFreq = { fist:520, knuckle:640, dagger:900, shortsword:760, nunchaku:1100, chainsaw:180, katana:700, spear:600, axe:340, hammer:260 }[w.id] || 500;
     const osc = c.createOscillator();
     const g = c.createGain();
     osc.type = w.id === 'chainsaw' ? 'sawtooth' : 'triangle';
@@ -712,19 +896,19 @@
     src.buffer = noiseBuffer(c, 0.14, 2.6);
     const lp = c.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = w.id === 'hammer' ? 500 : 1300;
+    lp.frequency.value = (w.id === 'hammer' || w.id === 'axe') ? 500 : 1300;
     const g = c.createGain();
-    g.gain.value = w.id === 'hammer' ? 0.18 : 0.13;
+    g.gain.value = (w.id === 'hammer' || w.id === 'axe') ? 0.18 : 0.13;
     src.connect(lp).connect(g).connect(c.destination);
     src.start(t);
     const osc = c.createOscillator();
     osc.type = 'square';
-    const startFreq = w.id === 'hammer' ? 100 : 240;
+    const startFreq = (w.id === 'hammer' || w.id === 'axe') ? 100 : 240;
     osc.frequency.setValueAtTime(startFreq, t);
     osc.frequency.exponentialRampToValueAtTime(40, t + 0.12);
     const og = c.createGain();
     og.gain.setValueAtTime(0.0001, t);
-    og.gain.exponentialRampToValueAtTime(w.id === 'hammer' ? 0.14 : 0.09, t + 0.005);
+    og.gain.exponentialRampToValueAtTime((w.id === 'hammer' || w.id === 'axe') ? 0.14 : 0.09, t + 0.005);
     og.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
     osc.connect(og).connect(c.destination);
     osc.start(t); osc.stop(t + 0.16);
@@ -733,7 +917,7 @@
     if (!soundOn) return;
     const c = ensureCtx(); if (!c) return;
     const t = c.currentTime;
-    const heavy = (w.style === 'heavy' || w.style === 'shotgun' || w.id === 'railgun');
+    const heavy = (w.style === 'lmg' || w.style === 'shotgun' || w.name === '电磁炮' || w.name === '反物质' || w.name === '榴弹');
     const light = (w.style === 'smg');
     const src = c.createBufferSource();
     src.buffer = noiseBuffer(c, heavy ? 0.11 : (light ? 0.06 : 0.09), heavy ? 3.2 : (light ? 4.4 : 3.8));
@@ -815,7 +999,7 @@
     }
   }
   function spawnMeleeHit(x, y, angle, w) {
-    const big = w.id === 'hammer' || w.id === 'katana';
+    const big = (w.id === 'hammer' || w.id === 'axe' || w.id === 'katana' || w.id === 'spear');
     const cnt = big ? 22 : 16;
     rings.push({ x, y, radius: 0, maxR: big ? 72 : 52, life: 1, lineW: big ? 3 : 2.2 });
     rings.push({ x, y, radius: 0, maxR: big ? 42 : 30, life: 1, lineW: 1.4 });
@@ -878,16 +1062,14 @@
       if (s.life <= 0) shells.splice(i, 1);
     }
   }
-
-  /* 残影 */
   function pushSlashTrail(w) {
     const reach = (w.range || 40) * 0.95;
-    const arcSize = { fist: 0.9, dagger: 0.7, nunchaku: 1.2, chainsaw: 0.5, katana: 1.6, hammer: 1.3 }[w.id] || 1.0;
+    const arcSize = { fist:0.9, knuckle:0.85, dagger:0.7, shortsword:0.9, nunchaku:1.2, chainsaw:0.5, katana:1.6, spear:0.55, axe:1.2, hammer:1.3 }[w.id] || 1.0;
     slashTrails.push({
-      x: player.x, y: player.y,
-      angle: aimAngle, reach: reach, arcSize: arcSize,
-      life: 1, decay: w.id === 'hammer' ? 0.06 : 0.09,
-      w: w.id === 'hammer' ? 14 : (w.id === 'katana' ? 9 : 7)
+      x: player.x, y: player.y, angle: aimAngle,
+      reach: reach, arcSize: arcSize, life: 1,
+      decay: (w.id === 'hammer' || w.id === 'axe') ? 0.06 : 0.09,
+      w: (w.id === 'hammer' || w.id === 'axe') ? 14 : (w.id === 'katana' || w.id === 'spear' ? 9 : 7)
     });
     if (slashTrails.length > 20) slashTrails.shift();
   }
@@ -911,18 +1093,14 @@
     if (now - punchStart < dur * cd) return;
     punchStart = now;
     hitFired = false;
-
-    const pushBase = { fist: 2.4, dagger: 1.6, nunchaku: 1.2, chainsaw: 0.5, katana: 3.8, hammer: 6.2 }[w.id] || 2.4;
-    const shakeBase = { fist: 2.8, dagger: 2.2, nunchaku: 1.8, chainsaw: 1.4, katana: 4.2, hammer: 6.5 }[w.id] || 2.8;
-
+    const pushBase = { fist:2.4, knuckle:2.8, dagger:1.6, shortsword:2.0, nunchaku:1.2, chainsaw:0.5, katana:3.8, spear:3.0, axe:5.2, hammer:6.2 }[w.id] || 2.4;
+    const shakeBase = { fist:2.8, knuckle:3.2, dagger:2.2, shortsword:2.6, nunchaku:1.8, chainsaw:1.4, katana:4.2, spear:3.8, axe:5.5, hammer:6.5 }[w.id] || 2.8;
     shake = Math.max(shake, shakeBase);
     player.vx -= Math.cos(aimAngle) * pushBase;
     player.vy -= Math.sin(aimAngle) * pushBase;
-
     pushSlashTrail(w);
     playMeleeSound(w);
   }
-
   function shootOne() {
     const w = weapon();
     if (!w || w.melee) return;
@@ -931,7 +1109,7 @@
       const a = aimAngle + (Math.random() - 0.5) * 2 * w.spread;
       let muzzleDist = player.size / 2 + 12;
       if (w.style === 'sniper') muzzleDist = player.size / 2 + 30;
-      else if (w.style === 'heavy') muzzleDist = player.size / 2 + 24;
+      else if (w.style === 'lmg') muzzleDist = player.size / 2 + 24;
       else if (w.style === 'rifle') muzzleDist = player.size / 2 + 20;
       else if (w.style === 'shotgun') muzzleDist = player.size / 2 + 26;
       const mx = player.x + Math.cos(a) * muzzleDist;
@@ -947,8 +1125,13 @@
     }
     let flashDist = player.size / 2 + 22;
     if (w.style === 'sniper') flashDist = player.size / 2 + 42;
-    else if (w.style === 'heavy') flashDist = player.size / 2 + 34;
-    muzzleFlash = { x: player.x + Math.cos(aimAngle) * flashDist, y: player.y + Math.sin(aimAngle) * flashDist, life: 1, size: w.style === 'sniper' ? 22 : (w.style === 'heavy' ? 20 : 15) };
+    else if (w.style === 'lmg') flashDist = player.size / 2 + 34;
+    muzzleFlash = {
+      x: player.x + Math.cos(aimAngle) * flashDist,
+      y: player.y + Math.sin(aimAngle) * flashDist,
+      life: 1,
+      size: w.style === 'sniper' ? 22 : (w.style === 'lmg' ? 20 : 15)
+    };
     gunRecoil = Math.min(16, (w.push || 1) * 4.2);
     shake = Math.max(shake, w.shakeAmt);
     const pushBack = Math.min(6.5, w.push || 1);
@@ -1142,10 +1325,13 @@
   }
 
   /* ============================================================
-     房间列表
+     房间列表（优化版）
   ============================================================ */
   async function fetchRooms() {
-    if (!sb) { roomListEl.innerHTML = '<div class="room-empty">云端不可用</div>'; return; }
+    if (!sb) {
+      roomListEl.innerHTML = '<div class="room-empty"><div class="room-empty-icon">⚠</div><div>云端不可用</div></div>';
+      return;
+    }
     try {
       const { data, error } = await sb
         .from('brawl_rooms')
@@ -1153,46 +1339,84 @@
         .in('status', ['waiting', 'playing'])
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
-        .limit(40);
+        .limit(50);
       if (error) throw error;
       roomListData = data || [];
       renderRoomList();
     } catch (e) {
       console.warn('[房间列表] 拉取失败:', e);
-      roomListEl.innerHTML = '<div class="room-empty">加载失败，请刷新</div>';
+      roomListEl.innerHTML = '<div class="room-empty"><div class="room-empty-icon">!</div><div>加载失败</div><div class="room-empty-sub">请检查网络后点击 ↻ 重试</div></div>';
     }
   }
+
+  function sortRooms(list) {
+    const arr = list.slice();
+    if (roomSortMode === 'players') {
+      arr.sort((a, b) => (b.player_count || 0) - (a.player_count || 0));
+    } else if (roomSortMode === 'waiting') {
+      arr.sort((a, b) => {
+        const aw = a.status === 'waiting' ? 0 : 1;
+        const bw = b.status === 'waiting' ? 0 : 1;
+        if (aw !== bw) return aw - bw;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+    } else {
+      arr.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+    return arr;
+  }
+
   function renderRoomList() {
     const filter = (inputRoomFilter.value || '').trim().toLowerCase();
-    const filtered = roomListData.filter(r => {
+    let filtered = roomListData.filter(r => {
       if (!filter) return true;
       return (r.name || '').toLowerCase().includes(filter) ||
              (r.host_name || '').toLowerCase().includes(filter) ||
              (r.code || '').toLowerCase().includes(filter);
     });
+    filtered = sortRooms(filtered);
+
     if (filtered.length === 0) {
-      roomListEl.innerHTML = filter ? '<div class="room-empty">没有匹配的房间</div>' : '<div class="room-empty">暂无房间 · 点击 + 创建</div>';
+      roomListEl.innerHTML = filter
+        ? '<div class="room-empty"><div class="room-empty-icon">◌</div><div>没有匹配的房间</div><div class="room-empty-sub">试试其他关键词</div></div>'
+        : '<div class="room-empty"><div class="room-empty-icon">+</div><div>暂无房间</div><div class="room-empty-sub">点击右上 + 创建新房间</div></div>';
       return;
     }
+
     roomListEl.innerHTML = filtered.map(r => {
       const isFull = r.player_count >= r.max_players;
       const isLocked = !!r.password;
+      const isMine = r.host_id === myId;
       const statusClass = r.status === 'playing' ? 'playing' : 'waiting';
+      const initial = (r.host_name || 'A').trim().charAt(0).toUpperCase();
       const lock = isLocked ? '<span class="room-card-lock">🔒</span>' : '';
+      const statusTag = r.status === 'playing'
+        ? '<span class="tag live">游戏中</span>'
+        : '<span class="tag">等待中</span>';
+
       return `
-        <div class="room-card ${statusClass}" data-code="${r.code}" data-locked="${isLocked ? '1' : '0'}" data-full="${isFull ? '1' : '0'}">
+        <div class="room-card ${statusClass} ${isMine ? 'mine' : ''}"
+             data-code="${r.code}"
+             data-locked="${isLocked ? '1' : '0'}"
+             data-full="${isFull ? '1' : '0'}">
+          <div class="room-card-avatar">${escapeHtml(initial)}</div>
           <div class="room-card-status ${statusClass}"></div>
           <div class="room-card-main">
             <div class="room-card-name">${escapeHtml(r.name || '无名房间')}${lock}</div>
             <div class="room-card-meta">
-              <span>房主 ${escapeHtml(r.host_name || '匿名')}</span>
-              <span>${r.code}</span>
-              <span>${r.status === 'playing' ? '游戏中' : '等待中'}</span>
+              <span>👤 ${escapeHtml(r.host_name || '匿名')}</span>
+              <span>#${r.code}</span>
+              ${statusTag}
+              <span>${timeAgo(r.created_at)}</span>
             </div>
           </div>
-          <div class="room-card-count ${isFull ? 'full' : ''}">${r.player_count}/${r.max_players}</div>
+          <div class="room-card-right">
+            <div class="room-card-count ${isFull ? 'full' : ''}">${r.player_count}/${r.max_players}</div>
+            ${isFull ? '<div class="room-card-ping">已满</div>' : '<div class="room-card-ping">可加入</div>'}
+          </div>
         </div>`;
     }).join('');
+
     roomListEl.querySelectorAll('.room-card').forEach(card => {
       card.addEventListener('click', () => {
         const code = card.dataset.code;
@@ -1209,6 +1433,16 @@
       });
     });
   }
+
+  /* 排序标签 */
+  roomTabs.querySelectorAll('.room-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      roomTabs.querySelectorAll('.room-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      roomSortMode = tab.dataset.sort;
+      renderRoomList();
+    });
+  });
 
   btnCreateRoom.addEventListener('click', () => {
     createPanel.classList.remove('hidden');
@@ -1252,6 +1486,7 @@
       roomCode = code;
       createPanel.classList.add('hidden');
       roomToolbar.style.display = 'none';
+      roomTabs.style.display = 'none';
       roomListEl.style.display = 'none';
       roomLobby.classList.remove('hidden');
       roomTitle.textContent = '房间大厅';
@@ -1285,6 +1520,7 @@
       isHost = false;
       roomCode = code;
       roomToolbar.style.display = 'none';
+      roomTabs.style.display = 'none';
       roomListEl.style.display = 'none';
       roomLobby.classList.remove('hidden');
       roomTitle.textContent = '房间大厅';
@@ -1305,7 +1541,9 @@
   });
 
   btnRefreshRooms.addEventListener('click', () => {
-    roomListEl.innerHTML = '<div class="room-empty">刷新中…</div>';
+    btnRefreshRooms.classList.add('spin');
+    setTimeout(() => btnRefreshRooms.classList.remove('spin'), 500);
+    roomListEl.innerHTML = '<div class="room-empty"><div class="room-empty-icon">◌</div><div>刷新中…</div></div>';
     fetchRooms();
   });
   inputRoomFilter.addEventListener('input', renderRoomList);
@@ -1359,19 +1597,13 @@
           presenceSet[id] = { joinedAt: (arr?.[0]?.joinedAt) || Date.now() };
         });
         updatePlayerListUI();
-
-        /* 修复：新玩家入房立刻广播一次完整状态 */
-        if (gameRunning && gameMode === 'mp') {
-          sendMyState(true);
-        }
+        if (gameRunning && gameMode === 'mp') sendMyState(true);
       });
       channel.on('presence', { event: 'leave' }, (payload) => {
-        /* 只弹提示，不立刻删玩家（等超时自然清） */
         if (gameRunning && gameMode === 'mp') {
           setNetStatus('有玩家离开', true);
           setTimeout(() => setNetStatus('', false), 2500);
         }
-        /* 如果离开的是远端玩家，标记一下 faded 让它自然淡出 */
         if (payload && payload.leftPresences) {
           payload.leftPresences.forEach(p => {
             if (p && p.id && remotePlayers[p.id]) {
@@ -1406,9 +1638,7 @@
           if (status === 'SUBSCRIBED') {
             try { await channel.track({ id: myId, joinedAt: Date.now() }); } catch (e) {}
             done(true);
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            done(false);
-          }
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') done(false);
         });
         setTimeout(() => done(false), 12000);
       });
@@ -1446,11 +1676,9 @@
   function updateRemotePlayer(p) {
     let rp = remotePlayers[p.id];
     if (!rp) {
-      /* 新玩家：初始位置直接放到目标位置，避免从 0,0 飞过来 */
       rp = {
         id: p.id,
-        x: p.x, y: p.y,
-        prevX: p.x, prevY: p.y,
+        x: p.x, y: p.y, prevX: p.x, prevY: p.y,
         tx: p.x, ty: p.y,
         angle: p.angle || 0, tangle: p.angle || 0,
         ext: 0, text: 0,
@@ -1464,7 +1692,6 @@
       };
       remotePlayers[p.id] = rp;
     }
-    /* 双缓冲：把当前值记为 prev，目标值设为新值 */
     rp.prevX = rp.x; rp.prevY = rp.y;
     rp.tx = p.x; rp.ty = p.y;
     rp.tangle = p.angle || 0;
@@ -1483,7 +1710,7 @@
       const a = p.angle + (Math.random() - 0.5) * 2 * (w.spread || 0.02);
       let muzzleDist = 24;
       if (w.style === 'sniper') muzzleDist = 42;
-      else if (w.style === 'heavy') muzzleDist = 34;
+      else if (w.style === 'lmg') muzzleDist = 34;
       else if (w.style === 'shotgun') muzzleDist = 30;
       bullets.push({ x: p.x + Math.cos(a) * muzzleDist, y: p.y + Math.sin(a) * muzzleDist, vx: Math.cos(a) * (w.speed || 28), vy: Math.sin(a) * (w.speed || 28), life: 1, decay: w.decay || 0.006, width: w.width || 2.2, len: w.len || 1, pierce: 0, hostile: false, damage: 0, visual: true });
     }
@@ -1507,42 +1734,21 @@
     const now = performance.now();
     for (const id in remotePlayers) {
       const rp = remotePlayers[id];
-
-      /* 断线余晖：fading 状态逐渐淡出，然后移除 */
       if (rp.fading) {
         const fadeAge = now - rp.fadeStart;
-        if (fadeAge > REMOTE_FADE_MS) {
-          delete remotePlayers[id];
-          continue;
-        }
-        /* fading 期间冻结位置 */
+        if (fadeAge > REMOTE_FADE_MS) { delete remotePlayers[id]; continue; }
         continue;
       }
-
-      /* 超时保护：从 4s 提升到 15s */
-      if (now - rp.lastSeen > REMOTE_TIMEOUT_MS) {
-        delete remotePlayers[id];
-        continue;
-      }
-
-      /* 若长时间没收到新状态（>500ms），标为断线淡出 */
+      if (now - rp.lastSeen > REMOTE_TIMEOUT_MS) { delete remotePlayers[id]; continue; }
       if (now - rp.lastUpdate > 3000 && !rp.fading) {
-        rp.fading = true;
-        rp.fadeStart = now;
-        continue;
+        rp.fading = true; rp.fadeStart = now; continue;
       }
-
-      /* 双缓冲插值：向目标位置平滑移动 */
       const k = Math.min(1, 0.22 * dt);
       rp.x += (rp.tx - rp.x) * k;
       rp.y += (rp.ty - rp.y) * k;
-
-      /* 朝向插值 */
       let dA = rp.tangle - rp.angle;
       dA = Math.atan2(Math.sin(dA), Math.cos(dA));
       rp.angle += dA * k;
-
-      /* 出拳伸展插值 */
       rp.ext += (rp.text - rp.ext) * k;
     }
   }
@@ -1576,11 +1782,9 @@
     hintEl.textContent = isTouchDevice
       ? '左侧摇杆移动 · 右侧拖动瞄准 · 右下按钮开火'
       : 'WASD 移动 · Shift 疾跑 · 左键攻击 · 右键瞄准松开射击 · 滚轮换枪';
-    gameMode = 'mp';
-    gameRunning = true;
+    gameMode = 'mp'; gameRunning = true;
     setNetStatus('已连接 · ' + roomCode, true);
     setTimeout(() => setNetStatus('', false), 2500);
-    /* 开局立刻广播一次状态 */
     sendMyState(true);
     try {
       const { data } = await sb.from('brawl_room_players').select('user_id, user_name').eq('room_code', roomCode);
@@ -1631,6 +1835,7 @@
     hideAllScreens();
     roomScreen.classList.remove('hidden');
     roomToolbar.style.display = 'flex';
+    roomTabs.style.display = 'flex';
     roomListEl.style.display = 'flex';
     roomLobby.classList.add('hidden');
     createPanel.classList.add('hidden');
@@ -1665,8 +1870,7 @@
     hintEl.textContent = isTouchDevice
       ? '左侧摇杆移动 · 右侧拖动瞄准 · 右下按钮开火 · 点右上武器名换枪'
       : 'WASD 移动 · Shift 疾跑 · 左键攻击 · 右键瞄准松开射击 · 滚轮换枪';
-    gameMode = 'ai';
-    gameRunning = true;
+    gameMode = 'ai'; gameRunning = true;
   }
 
   btnModeAI.addEventListener('click', startAIGame);
@@ -1708,13 +1912,9 @@
   });
 
   window.addEventListener('pointerdown', e => {
-    /* UI 元素上的点击直接交给浏览器处理 */
     const target = e.target;
     if (target && target !== cv) {
-      if (target.closest && target.closest(
-        '.overlay, button, input, select, textarea, label, ' +
-        '.weapon-hud, .sound-btn, .menu-btn, .hint, .net-status'
-      )) return;
+      if (target.closest && target.closest('.overlay, button, input, select, textarea, label, .weapon-hud, .sound-btn, .menu-btn, .hint, .net-status')) return;
     }
     if (!gameRunning) return;
 
@@ -1752,14 +1952,10 @@
   });
 
   window.addEventListener('pointerup', e => {
-    /* UI 元素上松手不进入游戏逻辑 */
     const upTarget = e.target;
     if (upTarget && upTarget !== cv) {
-      if (upTarget.closest && upTarget.closest(
-        '.overlay, button, input, select, textarea, label'
-      )) return;
+      if (upTarget.closest && upTarget.closest('.overlay, button, input, select, textarea, label')) return;
     }
-
     if (e.pointerType === 'touch') {
       if (e.pointerId === aimBtn.pointerId) { aimBtn.pointerId = null; aimBtn.pressed = false; aiming = false; }
       if (e.pointerId === fireBtn.pointerId) { fireBtn.pointerId = null; fireBtn.pressed = false; firing = false; }
@@ -1801,8 +1997,8 @@
     if (e.code === 'Space') { e.preventDefault(); if (weapon().melee) punch(); else { firing = true; fireGun(); } }
     if (e.code === 'KeyQ') cycleWeapon(1);
     if (e.code === 'Digit1') setWeaponIndex(0);
-    if (e.code === 'Digit2') setWeaponIndex(1);
-    if (e.code === 'Digit3') setWeaponIndex(6);
+    if (e.code === 'Digit2') setWeaponIndex(10);
+    if (e.code === 'Digit3') setWeaponIndex(22);
     if (e.code === 'Escape') { leaveChannel(); showStartScreen(); }
     if (e.code.indexOf('Arrow') === 0) e.preventDefault();
   });
@@ -1950,7 +2146,6 @@
 
   function update(dt, now) {
     if (!gameRunning) return;
-
     if (hitStop > 0) {
       hitStop -= dt;
       updateParticles(dt);
@@ -1960,7 +2155,6 @@
       if (shake < 0.08) shake = 0;
       return;
     }
-
     if (player.dead) { player.respawnTimer -= dt; if (player.respawnTimer <= 0) respawnPlayer(); }
     if (player.invuln > 0) player.invuln -= dt;
 
@@ -2000,7 +2194,6 @@
     let px, py;
     if (touchAim.active) { px = touchAim.x; py = touchAim.y; }
     else { px = mouse.x; py = mouse.y; }
-
     const worldMouseX = cam.x + px / zoom;
     const worldMouseY = cam.y + py / zoom;
     const targetAngle = Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
@@ -2042,8 +2235,7 @@
           if (Math.abs(ea) > coneHalf) continue;
           if (!hasLineOfSight(player.x, player.y, e.x, e.y)) continue;
           damageEnemy(e, dmgVal, e.x, e.y, true, w);
-          hitSomething = true;
-          break;
+          hitSomething = true; break;
         }
       } else if (gameMode === 'mp') {
         const coneHalf = 0.55;
@@ -2059,20 +2251,19 @@
           if (!hasLineOfSight(player.x, player.y, rp.x, rp.y)) continue;
           if (channel) channel.send({ type: 'broadcast', event: 'hit', payload: { target: rid, damage: dmgVal, from: myId } });
           spawnMeleeHit(rp.x, rp.y, aimAngle, w);
-          hitSomething = true;
-          break;
+          hitSomething = true; break;
         }
       }
 
       if (hitSomething) {
-        const hsBase = { fist: 5, dagger: 4, nunchaku: 3, chainsaw: 2, katana: 7, hammer: 11 }[w.id] || 5;
+        const hsBase = { fist:5, knuckle:5, dagger:4, shortsword:5, nunchaku:3, chainsaw:2, katana:7, spear:6, axe:9, hammer:11 }[w.id] || 5;
         hitStop = hsBase;
-        shake = Math.max(shake, { fist: 5.5, dagger: 4.5, nunchaku: 4, chainsaw: 3, katana: 8.5, hammer: 13 }[w.id] || 5);
+        shake = Math.max(shake, { fist:5.5, knuckle:6, dagger:4.5, shortsword:5.5, nunchaku:4, chainsaw:3, katana:8.5, spear:7.5, axe:10.5, hammer:13 }[w.id] || 5);
         playMeleeHitSound(w);
       } else if (hitObs) {
         spawnMeleeHit(state.fx, state.fy, aimAngle, w);
         addBulletMark(state.fx, state.fy, Math.cos(aimAngle), Math.sin(aimAngle), 1.4);
-        shake = Math.max(shake, { katana: 6, hammer: 9 }[w.id] || 4);
+        shake = Math.max(shake, { katana:6, spear:5.5, axe:8, hammer:9 }[w.id] || 4);
         playHitSound();
       } else {
         spawnImpact(state.fx, state.fy, aimAngle, 6);
@@ -2080,7 +2271,6 @@
     }
 
     if (burstLeft > 0 && w.burst && now >= burstNext) { burstLeft--; burstNext = now + (w.burstDelay || 60); shootOne(); }
-
     if (firing && !player.dead) { if (w.melee) punch(); else fireGun(); }
 
     updateBullets(dt);
@@ -2269,30 +2459,23 @@
     for (const rid in remotePlayers) {
       const rp = remotePlayers[rid];
       const s = 34;
-      /* 淡出余晖：fading 状态降低透明度 */
       let alpha = 1;
       if (rp.fading) {
         const fadeAge = now - rp.fadeStart;
         alpha = Math.max(0, 1 - fadeAge / REMOTE_FADE_MS) * 0.55;
       }
-
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.translate(rp.x, rp.y);
-
-      /* 死亡玩家：灰色墓碑 */
       if (rp.dead) {
         ctx.fillStyle = '#888';
         ctx.fillRect(-s / 2, -s / 2, s, s);
         ctx.strokeStyle = '#444'; ctx.lineWidth = 2;
         ctx.strokeRect(-s / 2 + 1, -s / 2 + 1, s - 2, s - 2);
         ctx.beginPath();
-        ctx.moveTo(-s / 4, -s / 4);
-        ctx.lineTo(s / 4, s / 4);
-        ctx.moveTo(s / 4, -s / 4);
-        ctx.lineTo(-s / 4, s / 4);
+        ctx.moveTo(-s / 4, -s / 4); ctx.lineTo(s / 4, s / 4);
+        ctx.moveTo(s / 4, -s / 4); ctx.lineTo(-s / 4, s / 4);
         ctx.stroke();
-        /* 名字 */
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.font = '600 10px -apple-system,"PingFang SC",system-ui,sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
@@ -2300,34 +2483,20 @@
         ctx.restore();
         continue;
       }
-
-      /* 正常玩家：黑底白边（与己方区分） */
       ctx.fillStyle = '#000000';
       ctx.fillRect(-s / 2, -s / 2, s, s);
       ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
       ctx.strokeRect(-s / 2 + 1, -s / 2 + 1, s - 2, s - 2);
-
-      /* 朝向指示 */
       ctx.save();
       ctx.rotate(rp.angle);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(s / 2 - 3, -3, 5, 6);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(s / 2 - 3, -3, 5, 6);
       ctx.restore();
-
-      /* 手持武器 */
       ctx.save();
       ctx.rotate(rp.angle);
       const rw = WEAPONS[rp.weapon];
-      if (rw && !rw.melee) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(s / 2 - 4, -2, 20, 4);
-      } else if (rw && rw.melee) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(s / 2, -2, 8 + rp.ext * 12, 4);
-      }
+      if (rw && !rw.melee) { ctx.fillStyle = '#ffffff'; ctx.fillRect(s / 2 - 4, -2, 20, 4); }
+      else if (rw && rw.melee) { ctx.fillStyle = '#ffffff'; ctx.fillRect(s / 2, -2, 8 + rp.ext * 12, 4); }
       ctx.restore();
-
-      /* 血条 */
       if (rp.hp < rp.maxHp) {
         const bw = s + 4, bh = 4, by = -s / 2 - 12;
         const ratio = Math.max(0, rp.hp / rp.maxHp);
@@ -2338,13 +2507,10 @@
         ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
         ctx.strokeRect(-bw / 2 + 0.5, by + 0.5, bw - 1, bh - 1);
       }
-
-      /* 名字 */
       ctx.fillStyle = 'rgba(0,0,0,0.6)';
       ctx.font = '600 10px -apple-system,"PingFang SC",system-ui,sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
       ctx.fillText(rp.name || '玩家', 0, -s / 2 - 16);
-
       ctx.restore();
     }
     ctx.globalAlpha = 1;
@@ -2378,83 +2544,152 @@
   }
 
   /* ============================================================
-     近战武器独立造型
+     近战绘制（10 种独立造型）
   ============================================================ */
-  function drawMeleeShape(style, ext, progress) {
+  function drawMeleeShape(style) {
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-
     const s = 20;
 
-    if (style === 'fist') {
-      ctx.beginPath(); ctx.rect(-s / 2, -s / 2, s, s); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-s / 2 + 4, 0); ctx.lineTo(s / 2 - 4, 0); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-s / 2, -s / 4); ctx.lineTo(s / 2, -s / 4); ctx.stroke();
-    }
-    else if (style === 'dagger') {
-      ctx.beginPath(); ctx.rect(-s * 0.9, -s * 0.14, s * 0.6, s * 0.28); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.rect(-s * 0.32, -s * 0.3, s * 0.16, s * 0.6); ctx.fill(); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-s * 0.16, -s * 0.14); ctx.lineTo(s * 0.9, -s * 0.05);
-      ctx.lineTo(s * 1.05, 0); ctx.lineTo(s * 0.9, s * 0.05);
-      ctx.lineTo(-s * 0.16, s * 0.14); ctx.closePath();
-      ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-s * 0.1, 0); ctx.lineTo(s * 0.75, 0); ctx.stroke();
-    }
-    else if (style === 'nunchaku') {
-      ctx.beginPath(); ctx.rect(-s * 0.95, -s * 0.13, s * 0.55, s * 0.26); ctx.fill(); ctx.stroke();
-      ctx.beginPath();
-      ctx.setLineDash([3, 3]); ctx.moveTo(-s * 0.4, 0); ctx.lineTo(s * 0.15, 0);
-      ctx.stroke(); ctx.setLineDash([]);
-      ctx.beginPath(); ctx.rect(s * 0.15, -s * 0.13, s * 0.9, s * 0.26); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(s * 0.35, -s * 0.13); ctx.lineTo(s * 0.35, s * 0.13); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(s * 0.85, -s * 0.13); ctx.lineTo(s * 0.85, s * 0.13); ctx.stroke();
-    }
-    else if (style === 'chainsaw') {
-      ctx.beginPath(); ctx.rect(-s * 0.85, -s * 0.28, s * 1.8, s * 0.56); ctx.fill(); ctx.stroke();
-      ctx.beginPath();
-      for (let i = 0; i < 7; i++) {
-        const x = -s * 0.85 + i * (s * 1.8 / 7);
-        const ww = s * 1.8 / 14;
-        ctx.moveTo(x, -s * 0.28); ctx.lineTo(x + ww, -s * 0.5); ctx.lineTo(x + ww * 2, -s * 0.28); ctx.closePath();
+    switch (style) {
+      case 'fist':
+        ctx.beginPath(); ctx.rect(-s/2, -s/2, s, s); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-s/2+4, 0); ctx.lineTo(s/2-4, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-s/2, -s/4); ctx.lineTo(s/2, -s/4); ctx.stroke();
+        break;
+      case 'knuckle': {
+        ctx.beginPath(); ctx.rect(-s/2, -s/2, s, s); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-s/2, 0); ctx.lineTo(s/2, 0); ctx.stroke();
+        /* 4个金属刺 */
+        for (let i = 0; i < 4; i++) {
+          const x = -s/2 + 4 + i * (s-8)/3;
+          ctx.beginPath();
+          ctx.moveTo(x, -s/2);
+          ctx.lineTo(x, -s/2 - 5);
+          ctx.lineTo(x + 3, -s/2 - 3);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        }
+        break;
       }
-      ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.rect(-s * 1.05, -s * 0.15, s * 0.35, s * 0.3); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.arc(s * 0.9, 0, s * 0.18, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    }
-    else if (style === 'katana') {
-      ctx.beginPath(); ctx.rect(-s * 1.15, -s * 0.1, s * 0.55, s * 0.2); ctx.fill(); ctx.stroke();
-      for (let i = 0; i < 4; i++) {
+      case 'dagger':
+        ctx.beginPath(); ctx.rect(-s*0.9, -s*0.14, s*0.6, s*0.28); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.rect(-s*0.32, -s*0.3, s*0.16, s*0.6); ctx.fill(); ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(-s * 1.1 + i * s * 0.13, -s * 0.1);
-        ctx.lineTo(-s * 1.0 + i * s * 0.13, s * 0.1);
+        ctx.moveTo(-s*0.16, -s*0.14); ctx.lineTo(s*0.9, -s*0.05);
+        ctx.lineTo(s*1.05, 0); ctx.lineTo(s*0.9, s*0.05);
+        ctx.lineTo(-s*0.16, s*0.14); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-s*0.1, 0); ctx.lineTo(s*0.75, 0); ctx.stroke();
+        break;
+      case 'shortsword':
+        ctx.beginPath(); ctx.rect(-s*1.0, -s*0.15, s*0.5, s*0.3); ctx.fill(); ctx.stroke();
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo(-s*0.95 + i*s*0.15, -s*0.15);
+          ctx.lineTo(-s*0.85 + i*s*0.15, s*0.15);
+          ctx.stroke();
+        }
+        ctx.beginPath(); ctx.rect(-s*0.55, -s*0.35, s*0.13, s*0.7); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-s*0.42, -s*0.14); ctx.lineTo(s*0.95, -s*0.07);
+        ctx.lineTo(s*1.1, 0); ctx.lineTo(s*0.95, s*0.07);
+        ctx.lineTo(-s*0.42, s*0.14); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        break;
+      case 'nunchaku':
+        ctx.beginPath(); ctx.rect(-s*0.95, -s*0.13, s*0.55, s*0.26); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.setLineDash([3, 3]); ctx.moveTo(-s*0.4, 0); ctx.lineTo(s*0.15, 0);
+        ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.rect(s*0.15, -s*0.13, s*0.9, s*0.26); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s*0.35, -s*0.13); ctx.lineTo(s*0.35, s*0.13); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s*0.85, -s*0.13); ctx.lineTo(s*0.85, s*0.13); ctx.stroke();
+        break;
+      case 'chainsaw':
+        ctx.beginPath(); ctx.rect(-s*0.85, -s*0.28, s*1.8, s*0.56); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        for (let i = 0; i < 7; i++) {
+          const x = -s*0.85 + i * (s*1.8/7);
+          const ww = s*1.8/14;
+          ctx.moveTo(x, -s*0.28); ctx.lineTo(x+ww, -s*0.5); ctx.lineTo(x+ww*2, -s*0.28); ctx.closePath();
+        }
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.rect(-s*1.05, -s*0.15, s*0.35, s*0.3); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(s*0.9, 0, s*0.18, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        break;
+      case 'katana':
+        ctx.beginPath(); ctx.rect(-s*1.15, -s*0.1, s*0.55, s*0.2); ctx.fill(); ctx.stroke();
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.moveTo(-s*1.1 + i*s*0.13, -s*0.1);
+          ctx.lineTo(-s*1.0 + i*s*0.13, s*0.1);
+          ctx.stroke();
+        }
+        ctx.beginPath(); ctx.arc(-s*0.55, 0, s*0.16, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-s*0.4, -s*0.07);
+        ctx.quadraticCurveTo(s*0.4, -s*0.18, s*1.5, -s*0.24);
+        ctx.lineTo(s*1.55, -s*0.14);
+        ctx.quadraticCurveTo(s*0.4, -s*0.08, -s*0.4, s*0.07);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-s*0.3, -s*0.02);
+        ctx.quadraticCurveTo(s*0.4, -s*0.13, s*1.45, -s*0.19);
         ctx.stroke();
-      }
-      ctx.beginPath(); ctx.arc(-s * 0.55, 0, s * 0.16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-s * 0.4, -s * 0.07);
-      ctx.quadraticCurveTo(s * 0.4, -s * 0.18, s * 1.5, -s * 0.24);
-      ctx.lineTo(s * 1.55, -s * 0.14);
-      ctx.quadraticCurveTo(s * 0.4, -s * 0.08, -s * 0.4, s * 0.07);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-s * 0.3, -s * 0.02);
-      ctx.quadraticCurveTo(s * 0.4, -s * 0.13, s * 1.45, -s * 0.19);
-      ctx.stroke();
-    }
-    else if (style === 'hammer') {
-      ctx.beginPath(); ctx.rect(-s * 1.15, -s * 0.1, s * 1.4, s * 0.2); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.rect(-s * 1.3, -s * 0.16, s * 0.18, s * 0.32); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.rect(s * 0.25, -s * 0.55, s * 1.05, s * 1.1); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(s * 0.6, -s * 0.55); ctx.lineTo(s * 0.6, s * 0.55); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(s * 0.95, -s * 0.55); ctx.lineTo(s * 0.95, s * 0.55); ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(s * 0.25, -s * 0.4); ctx.lineTo(s * 0.4, -s * 0.55);
-      ctx.moveTo(s * 0.25, s * 0.4); ctx.lineTo(s * 0.4, s * 0.55);
-      ctx.stroke();
+        break;
+      case 'spear':
+        /* 长柄 */
+        ctx.beginPath(); ctx.rect(-s*1.5, -s*0.06, s*2.6, s*0.12); ctx.fill(); ctx.stroke();
+        /* 握把纹路 */
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo(-s*1.4 + i*s*0.2, -s*0.06);
+          ctx.lineTo(-s*1.4 + i*s*0.2, s*0.06);
+          ctx.stroke();
+        }
+        /* 三角矛头 */
+        ctx.beginPath();
+        ctx.moveTo(s*1.1, -s*0.4);
+        ctx.lineTo(s*1.6, 0);
+        ctx.lineTo(s*1.1, s*0.4);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        /* 矛头与杆连接 */
+        ctx.beginPath(); ctx.rect(s*0.95, -s*0.08, s*0.16, s*0.16); ctx.fill(); ctx.stroke();
+        break;
+      case 'axe':
+        /* 柄 */
+        ctx.beginPath(); ctx.rect(-s*1.15, -s*0.09, s*1.8, s*0.18); ctx.fill(); ctx.stroke();
+        /* 战斧头（单刃大弧） */
+        ctx.beginPath();
+        ctx.moveTo(s*0.35, -s*0.55);
+        ctx.lineTo(s*1.15, -s*0.6);
+        ctx.quadraticCurveTo(s*1.4, 0, s*1.15, s*0.6);
+        ctx.lineTo(s*0.35, s*0.55);
+        ctx.quadraticCurveTo(s*0.55, 0, s*0.35, -s*0.55);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        /* 斧刃高光线 */
+        ctx.beginPath();
+        ctx.moveTo(s*1.1, -s*0.5);
+        ctx.quadraticCurveTo(s*1.3, 0, s*1.1, s*0.5);
+        ctx.stroke();
+        break;
+      case 'hammer':
+        ctx.beginPath(); ctx.rect(-s*1.15, -s*0.1, s*1.4, s*0.2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.rect(-s*1.3, -s*0.16, s*0.18, s*0.32); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.rect(s*0.25, -s*0.55, s*1.05, s*1.1); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s*0.6, -s*0.55); ctx.lineTo(s*0.6, s*0.55); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s*0.95, -s*0.55); ctx.lineTo(s*0.95, s*0.55); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(s*0.25, -s*0.4); ctx.lineTo(s*0.4, -s*0.55);
+        ctx.moveTo(s*0.25, s*0.4); ctx.lineTo(s*0.4, s*0.55);
+        ctx.stroke();
+        break;
     }
   }
 
@@ -2466,20 +2701,31 @@
     ctx.translate(state.fx, state.fy);
     ctx.rotate(aimAngle);
     ctx.scale(scale, scale);
-    drawMeleeShape(w.style || 'fist', ext, ext);
+    drawMeleeShape(w.style || 'fist');
     ctx.restore();
   }
 
   /* ============================================================
-     远程武器造型
+     远程绘制（参数化，每种武器外观不同）
   ============================================================ */
-  function drawGunShape(id, recoil, s) {
+  function drawGunShape(w, recoil, s) {
     const h = s / 2;
     const r = recoil;
+    const style = w.style;
+    const v = w.variant || 0;
 
-    const B = (x, y, w, hh) => {
-      if (w < 1) w = 1; if (hh < 1) hh = 1;
-      ctx.beginPath(); ctx.rect(x, y, w, hh); ctx.fill(); ctx.stroke();
+    /* 变体参数：不同组合生成不同外观 */
+    const stockT = v % 3;                 // 0=无, 1=标准托, 2=折叠托
+    const magT = ((v / 3) | 0) % 4;       // 0=短, 1=标准, 2=长, 3=弹鼓
+    const scopeT = ((v / 12) | 0) % 3;    // 0=无, 1=小, 2=大
+
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+
+    const B = (x, y, ww, hh) => {
+      if (ww < 1) ww = 1; if (hh < 1) hh = 1;
+      ctx.beginPath(); ctx.rect(x, y, ww, hh); ctx.fill(); ctx.stroke();
     };
     const T = (x1, y1, x2, y2, x3, y3) => {
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3);
@@ -2488,47 +2734,167 @@
     const C = (cx, cy, cr) => {
       ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     };
-    const L = (x1, y1, x2, y2) => {
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-    };
 
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
+    /* 各种风格的基础框架 */
+    let bodyX = h - 4, bodyY = -5, bodyW = 20, bodyH = 11;
+    let barrelLen = 12, barrelY = -3, barrelH = 6;
+    let gripX = h + 2, gripY = 6, gripW = 9, gripH = 13;
+    let magX = h + 1, magY = 7, magW = 9, magH = 18;
+    let scopeW = 0;
 
-    switch (id) {
-      case 'pistol': { const bl = Math.max(10, 18 - r * 0.5); B(h - 6, -5, bl, 10); B(h - 11, 4, 9, 13); B(h + bl - 4, -3.5, 4, 7); break; }
-      case 'glock': { const bl = Math.max(9, 16 - r * 0.5); B(h - 5, -6, bl, 12); B(h - 10, 5, 9, 13); B(h + bl - 4, -4, 3, 8); break; }
-      case 'deagle': { const bl = Math.max(14, 22 - r * 0.6); B(h - 9, -7, bl, 14); B(h - 14, 6, 10, 15); B(h + bl - 5, -5, 5, 10); L(h - 9, -7, h + bl - 9, -7); break; }
-      case 'revolver': { B(h - 6, -5, 12, 10); C(h + 6, 0, 7); B(h - 11, 5, 9, 13); const bl = Math.max(10, 16 - r * 0.5); B(h + 12, -2.5, bl, 5); break; }
-      case 'smg': { B(h - 5, -6, 22, 12); B(h + 17, -3, Math.max(6, 12 - r * 0.4), 6); B(h - 9, 6, 8, 12); B(h + 4, 6, 8, 20); B(h - 13, -3, 8, 6); break; }
-      case 'uzi': { B(h - 6, -7, 18, 14); B(h + 12, -3, Math.max(5, 8 - r * 0.3), 6); B(h - 4, 7, 7, 14); B(h + 4, 7, 7, 24); B(h - 2, -11, 12, 3); break; }
-      case 'mp5': { B(h - 8, -6, 24, 12); B(h + 16, -3, Math.max(8, 14 - r * 0.4), 6); T(h, 6, h + 8, 6, h + 6, 24, h - 2, 24); B(h - 12, 6, 8, 13); B(h - 16, -3, 9, 7); break; }
-      case 'p90': { B(h - 8, -8, 22, 16); B(h + 14, -3, Math.max(6, 10 - r * 0.4), 6); B(h - 5, -13, 16, 5); B(h - 9, 8, 8, 10); B(h + 6, 6, 5, 10); break; }
-      case 'vector': { B(h - 7, -6, 20, 12); B(h + 13, -3, Math.max(5, 8 - r * 0.3), 6); B(h - 10, 6, 8, 13); B(h + 2, 6, 8, 18); B(h - 15, -3, 8, 6); break; }
-      case 'ak47': { B(h - 16, -3, 12, 7); B(h - 4, -5, 20, 11); B(h + 16, -3, Math.max(10, 14 - r * 0.5), 6); T(h - 1, 6, h + 10, 6, h + 8, 26, h - 3, 26); B(h - 2, 6, 9, 13); B(h + 14, -8, 12, 4); break; }
-      case 'm4a1': { B(h - 16, -3, 12, 7); B(h - 4, -5, 20, 11); B(h + 16, -3, Math.max(11, 16 - r * 0.5), 6); B(h, 6, 8, 16); B(h - 2, 6, 9, 13); B(h + 2, -9, 16, 3); break; }
-      case 'aug': { B(h - 10, -6, 26, 12); B(h + 16, -3, Math.max(9, 12 - r * 0.4), 6); B(h + 4, 6, 6, 12); B(h - 8, -12, 14, 5); B(h - 6, 6, 8, 16); break; }
-      case 'scar': { B(h - 16, -3, 12, 7); B(h - 4, -5, 22, 11); B(h + 18, -3, Math.max(11, 14 - r * 0.5), 6); T(h, 6, h + 10, 6, h + 8, 24, h - 2, 24); B(h - 2, 6, 9, 13); break; }
-      case 'famas': { B(h - 8, -5, 24, 11); B(h + 16, -3, Math.max(8, 10 - r * 0.4), 6); B(h - 2, -12, 11, 4); B(h + 6, 6, 5, 10); B(h - 6, 6, 8, 16); break; }
-      case 'g36': { B(h - 16, -3, 11, 7); B(h - 5, -5, 20, 11); B(h + 15, -3, Math.max(10, 13 - r * 0.5), 6); B(h + 2, 6, 8, 16); B(h, -9, 12, 3); B(h - 2, 6, 9, 12); break; }
-      case 'burst': { B(h - 14, -3, 10, 6); B(h - 4, -5, 18, 11); B(h + 14, -3, Math.max(8, 12 - r * 0.4), 5); B(h, 6, 8, 14); B(h - 2, 6, 8, 12); C(h - 2, -8, 2); C(h + 4, -8, 2); C(h + 10, -8, 2); break; }
-      case 'shotgun': { B(h - 18, -4, 16, 9); B(h - 2, -5, 12, 10); B(h + 10, -5, Math.max(18, 28 - r * 0.7), 6); B(h + 10, 2, Math.max(14, 22 - r * 0.5), 5); B(h + 8, 4, 12, 6); break; }
-      case 'auto_shotgun': { B(h - 16, -4, 14, 9); B(h - 2, -5, 14, 10); B(h + 12, -7, Math.max(14, 22 - r * 0.6), 14); B(h - 4, 4, 8, 12); break; }
-      case 'dmr': { B(h - 18, -3, 14, 7); B(h - 4, -4, 20, 9); B(h + 16, -3, Math.max(13, 18 - r * 0.6), 5); B(h - 6, -12, 20, 6); B(h - 2, 5, 8, 12); B(h + 2, -7, 3, 4); B(h + 12, -7, 3, 4); break; }
-      case 'scar_h': { B(h - 18, -4, 14, 8); B(h - 4, -5, 22, 11); B(h + 18, -3, Math.max(12, 16 - r * 0.6), 6); B(h - 4, -13, 18, 6); T(h, 6, h + 10, 6, h + 8, 24, h - 2, 24); B(h - 2, 6, 9, 13); break; }
-      case 'crossbow': { B(h - 16, -3, 10, 6); B(h - 6, -2, 22, 4); B(h + 6, -14, 3, 28); L(h - 4, -12, h + 8, -12); L(h - 4, 12, h + 8, 12); L(h - 4, -12, h + 8, 12); L(h - 4, 12, h + 8, -12); B(h - 10, 4, 8, 12); T(h + 14, -2, h + 24, 0, h + 14, 2); break; }
-      case 'sniper': { B(h - 18, -3, 14, 7); B(h - 4, -4, 18, 9); B(h + 14, -3, Math.max(16, 26 - r * 0.7), 5); B(h - 8, -13, 24, 6); B(h - 6, -8, 3, 4); B(h + 10, -8, 3, 4); B(h - 2, 5, 8, 12); break; }
-      case 'awp': { B(h - 20, -4, 16, 8); B(h - 4, -5, 20, 10); B(h + 16, -3, Math.max(18, 30 - r * 0.8), 6); B(h - 8, -14, 26, 7); B(h - 5, -9, 3, 4); B(h + 11, -9, 3, 4); B(h - 2, 6, 9, 13); break; }
-      case 'harpoon': { B(h - 8, -3, 24, 6); B(h - 10, 4, 8, 12); C(h - 4, 9, 5); T(h + 16, -8, h + 30, 0, h + 16, 8); B(h + 16, -1, 10, 2); break; }
-      case 'lmg': { B(h - 16, -3, 14, 8); B(h - 4, -6, 22, 12); B(h + 18, -3, Math.max(12, 16 - r * 0.6), 7); B(h - 2, 6, 12, 14); B(h - 2, 6, 8, 13); L(h + 20, 4, h + 14, 14); L(h + 22, 4, h + 28, 14); break; }
-      case 'minigun': { B(h - 16, -8, 12, 16); for (let i = -2; i <= 2; i++) B(h - 6, -8 + i * 3.4, Math.max(16, 22 - r * 0.8), 2.4); B(h - 20, 8, 8, 12); for (let i = 0; i < 4; i++) B(h - 14 + i * 3, 14, 2.4, 4); break; }
-      case 'tommy': { B(h - 18, -3, 14, 7); B(h - 4, -5, 20, 11); B(h + 16, -3, Math.max(10, 14 - r * 0.5), 6); C(h + 2, 8, 9); B(h - 2, 6, 9, 13); B(h + 12, 4, 5, 10); break; }
-      case 'railgun': { B(h - 10, -6, 22, 12); B(h + 12, -6, Math.max(18, 24 - r * 0.6), 3); B(h + 12, 3, Math.max(18, 24 - r * 0.6), 3); C(h - 2, 0, 4); B(h - 8, 6, 8, 12); B(h - 18, -4, 10, 8); break; }
-      case 'laser': { B(h - 6, -5, 20, 10); B(h + 14, -2, Math.max(12, 16 - r * 0.5), 4); T(h - 2, -5, h + 4, -12, h + 10, -5); B(h - 8, 5, 8, 12); C(h + 10, 0, 3); break; }
-      case 'plasma': { B(h - 6, -5, 16, 10); C(h + 10, 0, 8); B(h + 18, -3, Math.max(8, 12 - r * 0.4), 6); B(h - 8, 5, 8, 12); C(h + 10, 0, 3); break; }
-      case 'tesla': { B(h - 8, -5, 20, 10); C(h - 2, 0, 5); C(h + 6, 0, 5); for (let i = -1; i <= 1; i++) { L(h + 14, i * 4, h + 22, i * 6); L(h + 22, i * 6, h + 26, i * 4); } B(h - 10, 5, 8, 12); break; }
-      case 'grenade_launcher': { B(h - 18, -4, 12, 8); B(h - 6, -8, 20, 16); B(h + 12, -6, Math.max(6, 10 - r * 0.5), 12); B(h - 6, 8, 8, 12); B(h + 2, 8, 6, 10); C(h + 8, 0, 6); break; }
+    switch (style) {
+      case 'pistol':
+        bodyX = h - 6; bodyY = -5; bodyW = 14; bodyH = 10;
+        barrelLen = 4; barrelY = -2.5; barrelH = 5;
+        gripX = h - 11; gripY = 4; gripW = 9; gripH = 13;
+        magW = 0; magH = 0; scopeW = 0;
+        break;
+      case 'smg':
+        bodyX = h - 6; bodyY = -6; bodyW = 20; bodyH = 12;
+        barrelLen = 8; barrelY = -3; barrelH = 6;
+        gripX = h - 8; gripY = 6; gripW = 8; gripH = 12;
+        magX = h + 4; magY = 6; magW = 8; magH = 16;
+        break;
+      case 'rifle':
+        bodyX = h - 4; bodyY = -5; bodyW = 22; bodyH = 11;
+        barrelLen = 14; barrelY = -3; barrelH = 6;
+        gripX = h + 2; gripY = 6; gripW = 9; gripH = 13;
+        magX = h + 1; magY = 7; magW = 9; magH = 18;
+        break;
+      case 'shotgun':
+        bodyX = h - 2; bodyY = -5; bodyW = 14; bodyH = 10;
+        barrelLen = 20; barrelY = -4; barrelH = 8;
+        gripX = h + 4; gripY = 5; gripW = 8; gripH = 11;
+        magW = 0; magH = 0;
+        break;
+      case 'dmr':
+        bodyX = h - 4; bodyY = -4; bodyW = 20; bodyH = 9;
+        barrelLen = 18; barrelY = -3; barrelH = 5;
+        gripX = h + 2; gripY = 5; gripW = 8; gripH = 12;
+        magX = h + 1; magY = 6; magW = 8; magH = 15;
+        scopeW = 16;
+        break;
+      case 'sniper':
+        bodyX = h - 4; bodyY = -4; bodyW = 20; bodyH = 9;
+        barrelLen = 24; barrelY = -3; barrelH = 5;
+        gripX = h + 2; gripY = 5; gripW = 8; gripH = 12;
+        magX = h + 1; magY = 6; magW = 8; magH = 14;
+        scopeW = 22;
+        break;
+      case 'lmg':
+        bodyX = h - 4; bodyY = -7; bodyW = 24; bodyH = 14;
+        barrelLen = 16; barrelY = -4; barrelH = 7;
+        gripX = h + 2; gripY = 7; gripW = 9; gripH = 14;
+        magX = h + 1; magY = 8; magW = 10; magH = 16;
+        break;
+      case 'special':
+        bodyX = h - 6; bodyY = -6; bodyW = 22; bodyH = 12;
+        barrelLen = 18; barrelY = -4; barrelH = 8;
+        gripX = h - 4; gripY = 6; gripW = 8; gripH = 12;
+        magX = h + 4; magY = 6; magW = 8; magH = 14;
+        scopeW = 14;
+        break;
+    }
+
+    /* --- 枪托 --- */
+    if (stockT === 1) {
+      B(bodyX - 12, bodyY + 2, 14, bodyH - 6);
+    } else if (stockT === 2) {
+      B(bodyX - 9, bodyY + 2, 10, bodyH - 5);
+      ctx.beginPath();
+      ctx.moveTo(bodyX - 9, bodyY + bodyH * 0.5);
+      ctx.lineTo(bodyX - 9, bodyY + bodyH - 3);
+      ctx.stroke();
+    }
+
+    /* --- 机匣 --- */
+    B(bodyX, bodyY, bodyW, bodyH);
+
+    /* 机匣上的细节装饰 */
+    if (v % 2 === 0) {
+      /* 顶部导轨 */
+      ctx.beginPath(); ctx.rect(bodyX + 4, bodyY - 2, bodyW - 8, 2); ctx.fill(); ctx.stroke();
+    }
+    if (v % 3 === 0 && style !== 'pistol') {
+      /* 抛壳口 */
+      ctx.beginPath(); ctx.rect(bodyX + bodyW * 0.5, bodyY + 1, 5, 3); ctx.fill(); ctx.stroke();
+    }
+
+    /* --- 枪管 --- */
+    const bLen = Math.max(3, barrelLen - r * 0.4);
+    B(bodyX + bodyW, barrelY, bLen, barrelH);
+    /* 枪管口 */
+    ctx.beginPath(); ctx.rect(bodyX + bodyW + bLen, barrelY, 3, barrelH); ctx.fill(); ctx.stroke();
+
+    /* --- 握把 --- */
+    B(gripX, gripY, gripW, gripH);
+    /* 握把纹路 */
+    if (v % 2 === 1) {
+      ctx.beginPath(); ctx.moveTo(gripX + 2, gripY + 3); ctx.lineTo(gripX + gripW - 2, gripY + 3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(gripX + 2, gripY + 6); ctx.lineTo(gripX + gripW - 2, gripY + 6); ctx.stroke();
+    }
+
+    /* --- 弹匣 --- */
+    if (magW > 0 && magH > 0) {
+      if (magT === 3 && style !== 'pistol') {
+        /* 弹鼓 */
+        C(magX + magW / 2, magY + magH * 0.4, 8);
+      } else {
+        let mh = magH;
+        if (magT === 0) mh *= 0.6;
+        else if (magT === 2) mh *= 1.5;
+        /* 弧形弹匣（rifle 特色） */
+        if (style === 'rifle' && magT >= 1) {
+          ctx.beginPath();
+          ctx.moveTo(magX, magY);
+          ctx.lineTo(magX + magW, magY);
+          ctx.lineTo(magX + magW - 2, magY + mh);
+          ctx.lineTo(magX - 2, magY + mh);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        } else {
+          B(magX, magY, magW, mh);
+        }
+      }
+    }
+
+    /* --- 瞄准镜 --- */
+    if (scopeW > 0) {
+      if (scopeT === 0) {
+        B(bodyX + 6, bodyY - 4, 5, 3);
+      } else if (scopeT === 1) {
+        B(bodyX + 3, bodyY - 7, 12, 4);
+        B(bodyX + 5, bodyY - 3, 2, 4);
+        B(bodyX + 12, bodyY - 3, 2, 4);
+      } else {
+        B(bodyX + 2, bodyY - 9, scopeW, 6);
+        B(bodyX + 4, bodyY - 3, 2, 4);
+        B(bodyX + 14, bodyY - 3, 2, 4);
+        /* 大倍镜分划 */
+        ctx.beginPath();
+        ctx.moveTo(bodyX + 10, bodyY - 7);
+        ctx.lineTo(bodyX + 10, bodyY - 5);
+        ctx.stroke();
+      }
+    }
+
+    /* --- 特殊武器装饰 --- */
+    if (style === 'special') {
+      /* 能量核心 */
+      C(bodyX + bodyW * 0.5, bodyY + bodyH * 0.5, 3.5);
+      /* 能量管 */
+      if (v % 2 === 0) {
+        ctx.beginPath(); ctx.rect(bodyX + 4, bodyY - 3, bodyW - 8, 2); ctx.fill(); ctx.stroke();
+      }
+    }
+
+    /* --- 霰弹枪双管 --- */
+    if (style === 'shotgun') {
+      ctx.beginPath();
+      ctx.rect(bodyX + bodyW, barrelY + barrelH + 1, bLen - 2, 3);
+      ctx.fill(); ctx.stroke();
+      /* 泵动护木 */
+      ctx.beginPath(); ctx.rect(bodyX + bodyW + 2, barrelY + barrelH + 2, 10, 5); ctx.fill(); ctx.stroke();
     }
   }
 
@@ -2539,7 +2905,7 @@
     ctx.save();
     ctx.translate(player.x, player.y);
     ctx.rotate(aimAngle);
-    drawGunShape(w.id, gunRecoil, player.size);
+    drawGunShape(w, gunRecoil, player.size);
     ctx.restore();
   }
 
