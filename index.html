@@ -100,7 +100,6 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 .hero-sub{margin:0 auto 6px;max-width:520px;font-size:15px;color:var(--muted);line-height:1.65;opacity:0;animation:heroIn .7s cubic-bezier(.22,1,.36,1) .5s forwards}
 .hero-line{display:inline-block;margin-top:12px;padding-top:12px;border-top:1px dashed var(--bd);font-size:12.5px;color:var(--muted);letter-spacing:.02em;opacity:0;animation:heroIn .7s cubic-bezier(.22,1,.36,1) .65s forwards}
 @keyframes heroIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-/* 筛选区 */
 .filter-section{max-width:1180px;margin:0 auto 20px;display:flex;flex-direction:column;gap:10px}
 .filter-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .filter-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
@@ -331,8 +330,20 @@ var DATA_FILE='tools-data.json';
 var ANNOUNCE_FILE='announcement.json';
 var RAW_BASE='https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/'+GH_BRANCH+'/';
 var CDN_BASE='https://cdn.jsdelivr.net/gh/'+GH_OWNER+'/'+GH_REPO+'@'+GH_BRANCH+'/';
-var K_TOOLS_CACHE='tools-cache-v2',K_THEME='wiki-theme';
-var K_ANN_DISMISS='announce-dismissed',K_ANN_COLLAPSE='announce-collapsed';
+
+/* ═══════════════ 页面签名：按路径区分缓存 ═══════════════
+   主页 → PAGE_SIG = '_root'
+   子目录 /wiki/ → PAGE_SIG = '_wiki'
+   子目录 /download/ → PAGE_SIG = '_download'
+   这样主页和子目录各用一份缓存，刷新互不覆盖
+*/
+var PAGE_SIG=(function(){
+  var p=location.pathname.replace(/\/[^\/]*$/,'').replace(/[^a-zA-Z0-9]/g,'_');
+  return p||'_root';
+})();
+
+var K_TOOLS_CACHE='tools-cache-v3_'+PAGE_SIG,K_THEME='wiki-theme';
+var K_ANN_DISMISS='announce-dismissed_'+PAGE_SIG,K_ANN_COLLAPSE='announce-collapsed_'+PAGE_SIG;
 var CLOCK_MS=1000,LAT_PING_MS=3000,REFRESH_MS=120000;
 
 var DEFAULT_TOOLS=[
@@ -346,6 +357,14 @@ function $(id){return document.getElementById(id);}
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function pad2(n){return n<10?'0'+n:''+n;}
 function fmtTime(ts){var d=new Date(ts);return pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());}
+
+/* 把相对路径解析为绝对路径，防止子目录跳转 404 */
+function absoluteUrl(url){
+  if(!url) return url;
+  if(/^(https?:|data:|javascript:|mailto:|tel:|\/\/)/i.test(url)) return url;
+  try { return new URL(url, window.location.href).href; }
+  catch(e){ return url; }
+}
 
 var storage={
   get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
@@ -428,7 +447,9 @@ function fetchAnnounce(url){
   });
 }
 function loadAnnouncement(){
-  return fetchAnnounce(CDN_BASE+ANNOUNCE_FILE)
+  /* 公告也同样本地优先 */
+  return fetchAnnounce(ANNOUNCE_FILE)
+    .catch(function(){return fetchAnnounce(CDN_BASE+ANNOUNCE_FILE);})
     .catch(function(){return fetchAnnounce(RAW_BASE+ANNOUNCE_FILE);})
     .then(function(data){
       if(!Array.isArray(data))return [];
@@ -464,7 +485,7 @@ function renderAnnouncement(){
       +'</div>'
       +'<div class="announce-body-wrap"><div class="announce-body">'
       +(it.content?escapeHtml(it.content):'')
-      +(it.link?'<div><a class="announce-link" href="'+escapeHtml(it.link)+'" target="_blank" rel="noopener">'+escapeHtml(it.linkText||'查看详情')+' →</a></div>':'')
+      +(it.link?'<div><a class="announce-link" href="'+escapeHtml(absoluteUrl(it.link))+'" target="_blank" rel="noopener">'+escapeHtml(it.linkText||'查看详情')+' →</a></div>':'')
       +'</div></div>'
       +'</div>';
   });
@@ -505,12 +526,7 @@ function bindAnnounceEvents(){
   });
 }
 
-/* ═══════════════ 工具数据 ═══════════════
-   字段兼容说明：
-   - 新版 admin 写入 category: 'needDB' | 'noDB' | ''
-   - 旧版可能写 requiresDb: true/false
-   统一归一化为 category：'needDB' | 'noDB' | ''
-*/
+/* ═══════════════ 工具数据 ═══════════════ */
 function normTool(t,i){
   if(!t||typeof t!=='object')return null;
   var name=(typeof t.name==='string'&&t.name.trim())?t.name.trim():('未命名 '+(i+1));
@@ -520,7 +536,6 @@ function normTool(t,i){
     var c=t.category.trim();
     if(c==='needDB'||c==='noDB')cat=c;
   }
-  /* 兼容旧的 requiresDb 布尔字段 */
   if(!cat && typeof t.requiresDb==='boolean'){
     cat = t.requiresDb ? 'needDB' : 'noDB';
   }
@@ -540,8 +555,32 @@ function normTool(t,i){
 }
 function normList(arr){if(!Array.isArray(arr))return [];var list=[];arr.forEach(function(t,i){var n=normTool(t,i);if(n)list.push(n);});return list;}
 
+/* ═══════════════ 合并工具：远程 + 本地默认 ═══════════════
+   远程优先，本地默认的工具若远程没有则补进来
+   这样即使远程 tools-data.json 不含某板块，本地默认也不会丢
+*/
+function mergeTools(remote,defaults){
+  var map={},out=[];
+  if(Array.isArray(remote)){
+    remote.forEach(function(t){
+      var n=normTool(t,out.length);
+      if(n&&!map[n.id]){map[n.id]=true;out.push(n);}
+    });
+  }
+  if(Array.isArray(defaults)){
+    defaults.forEach(function(t){
+      if(t&&t.id&&!map[t.id]){map[t.id]=true;out.push(t);}
+    });
+  }
+  return out;
+}
+
 function loadToolsCache(){
-  try{var raw=storage.get(K_TOOLS_CACHE);if(!raw)return null;var o=JSON.parse(raw);if(!o||!Array.isArray(o.data)||o.data.length===0)return null;var list=normList(o.data);return list.length>0?list:null;}catch(e){return null;}
+  try{
+    var raw=storage.get(K_TOOLS_CACHE);if(!raw)return null;
+    var o=JSON.parse(raw);if(!o||!Array.isArray(o.data)||o.data.length===0)return null;
+    var list=normList(o.data);return list.length>0?list:null;
+  }catch(e){return null;}
 }
 function saveToolsCache(list){try{storage.set(K_TOOLS_CACHE,JSON.stringify({t:Date.now(),data:list}));}catch(e){}}
 
@@ -565,50 +604,60 @@ function fetchJson(url){return fetch(url,{cache:'no-store'}).then(function(r){if
 
 var hasLoadedOnce=false;
 function loadTools(){
+  /* 三级回落：本地 → raw → cdn */
+  var urlLocal=DATA_FILE+'?t='+Date.now();
   var url1=RAW_BASE+DATA_FILE+'?t='+Date.now();
   var url2=CDN_BASE+DATA_FILE+'?t='+Date.now();
   var t0=Date.now();
   spSetBusy();
-  return fetchJson(url1).catch(function(){return fetchJson(url2);}).then(function(data){
-    var lat=Date.now()-t0;
-    if(Array.isArray(data)&&data.length>0){
-      var list=normList(data);
-      if(list.length>0){
-        if(hasLoadedOnce){
-          var d=diffTools(TOOLS,list);var msgs=[];
-          if(d.added.length>0)msgs.push('新增 '+d.added.length+' 个');
-          if(d.removed.length>0)msgs.push('移除 '+d.removed.length+' 个');
-          if(d.edited.length>0)msgs.push('更新 '+d.edited.length+' 个');
-          if(msgs.length>0)toast('工具已同步：'+msgs.join(' · '));
+  return fetchJson(urlLocal)
+    .catch(function(){return fetchJson(url1);})
+    .catch(function(){return fetchJson(url2);})
+    .then(function(data){
+      var lat=Date.now()-t0;
+      if(Array.isArray(data)&&data.length>0){
+        /* 关键：合并远程和本地默认，本地工具永不丢失 */
+        var list=mergeTools(data,DEFAULT_TOOLS);
+        if(list.length>0){
+          if(hasLoadedOnce){
+            var d=diffTools(TOOLS,list);var msgs=[];
+            if(d.added.length>0)msgs.push('新增 '+d.added.length+' 个');
+            if(d.removed.length>0)msgs.push('移除 '+d.removed.length+' 个');
+            if(d.edited.length>0)msgs.push('更新 '+d.edited.length+' 个');
+            if(msgs.length>0)toast('工具已同步：'+msgs.join(' · '));
+          }
+          hasLoadedOnce=true;
+          TOOLS=list;saveToolsCache(list);spSetOK();
+          return {ok:true,lat:lat};
         }
-        hasLoadedOnce=true;
-        TOOLS=list;saveToolsCache(list);spSetOK();
-        return {ok:true,lat:lat};
       }
-    }
-    spSetOK();return {ok:false,lat:lat};
-  }).catch(function(err){
-    var lat=Date.now()-t0;
-    console.warn('[index] 远程加载失败',err);
-    spSetErr();
-    return {ok:false,lat:lat,err:true};
-  });
+      spSetOK();return {ok:false,lat:lat};
+    }).catch(function(err){
+      var lat=Date.now()-t0;
+      console.warn('[index] 远程加载失败',err);
+      spSetErr();
+      return {ok:false,lat:lat,err:true};
+    });
 }
 
 function pingLatency(){
   var t0=Date.now();
-  return fetch(RAW_BASE+DATA_FILE+'?_='+Date.now(),{method:'HEAD',cache:'no-store'})
+  return fetch(DATA_FILE+'?_='+Date.now(),{method:'HEAD',cache:'no-store'})
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return Date.now()-t0;})
     .catch(function(){
-      return fetch(CDN_BASE+DATA_FILE+'?_='+Date.now(),{method:'HEAD',cache:'no-store'})
+      return fetch(RAW_BASE+DATA_FILE+'?_='+Date.now(),{method:'HEAD',cache:'no-store'})
         .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return Date.now()-t0;})
-        .catch(function(){return -1;});
+        .catch(function(){
+          return fetch(CDN_BASE+DATA_FILE+'?_='+Date.now(),{method:'HEAD',cache:'no-store'})
+            .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return Date.now()-t0;})
+            .catch(function(){return -1;});
+        });
     });
 }
 
 /* ═══════════════ 筛选/搜索状态 ═══════════════ */
 var filterTag='__all__';
-var filterDb='__all__';   /* __all__ | __db__ | __nodb__ | __unset__ */
+var filterDb='__all__';
 var searchQuery='';
 
 function getVisibleTools(){
@@ -664,7 +713,8 @@ function buildFilterChips(){
 
 function renderCard(t,delay){
   var cls='tool-card'+(t.deprecated?' deprecated':'');
-  var href=t.disabled?'javascript:void(0)':t.url;
+  /* 关键：用 absoluteUrl 解析相对路径，从子目录访问也能正确跳转 */
+  var href=t.disabled?'javascript:void(0)':absoluteUrl(t.url);
 
   var dbBadge;
   if(t.category==='needDB'){
@@ -1171,6 +1221,10 @@ function boot(){
 
   var cached=loadToolsCache();
   if(cached)TOOLS=cached;
+  /* 首次进入确保本地默认工具在位（即便缓存里没有） */
+  if(!cached){
+    TOOLS=mergeTools([],DEFAULT_TOOLS);
+  }
   lastSignature=toolsSignature(TOOLS);
   buildFilterChips();
   renderTools();
