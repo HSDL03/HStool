@@ -914,6 +914,39 @@ canvas#game3d{display:block}
   var fillLight=new THREE.DirectionalLight(0xbfd4ff,0.16);
   fillLight.position.set(-0.6,0.4,-0.7);scene.add(fillLight);
   var ambientLight=new THREE.AmbientLight(0xffffff,0.12);scene.add(ambientLight);
+
+  /* ═══ 昼夜循环：0=午夜 0.25=日出 0.5=正午 0.75=日落 ═══ */
+  var worldTime=0.30;
+  var DAY_LENGTH=900;          /* 一整天 15 分钟 */
+  var SKY_DAY=new THREE.Color(0x87ceeb),SKY_DUSK=new THREE.Color(0xe8895a),SKY_NIGHT=new THREE.Color(0x0a1024);
+  var FOG_DAY=new THREE.Color(0x9fd4f0),FOG_DUSK=new THREE.Color(0xc98a63),FOG_NIGHT=new THREE.Color(0x0b1228);
+  var _skyC=new THREE.Color(),_fogC=new THREE.Color();
+  function updateDayNight(dt){
+    worldTime=(worldTime+dt/DAY_LENGTH)%1;
+    var ang=(worldTime-0.25)*Math.PI*2;
+    var sy=Math.sin(ang),sx=Math.cos(ang);
+    var R=150,cx=player.pos.x,cz=player.pos.z;
+    if(sunMesh){sunMesh.position.set(cx+sx*R,sy*R*0.85+10,cz-sx*40);}
+    if(sunGlow){sunGlow.position.copy(sunMesh.position);}
+    /* 亮度：太阳低于地平线后迅速变暗 */
+    var dayAmt=Math.max(0,Math.min(1,(sy+0.20)/0.55));
+    var duskAmt=Math.max(0,1-Math.abs(sy)*3.0);
+    _skyC.copy(SKY_NIGHT).lerp(SKY_DAY,dayAmt);
+    if(duskAmt>0)_skyC.lerp(SKY_DUSK,duskAmt*0.6);
+    scene.background.copy(_skyC);
+    _fogC.copy(FOG_NIGHT).lerp(FOG_DAY,dayAmt);
+    if(duskAmt>0)_fogC.lerp(FOG_DUSK,duskAmt*0.55);
+    scene.fog.color.copy(_fogC);
+    hemiLight.intensity=0.16+0.74*dayAmt;
+    sunLight.intensity=0.05+0.50*dayAmt;
+    fillLight.intensity=0.04+0.12*dayAmt;
+    ambientLight.intensity=0.04+0.08*dayAmt;
+    if(sunLight){sunLight.position.set(cx+sx*70,sy*90+8,cz-sx*20);}
+    /* 太阳落山后换成偏冷的月亮色 */
+    if(sunMesh&&sunMesh.material){
+      sunMesh.material.color.setHex(dayAmt>0.35?0xffdd66:0xdfe8ff);
+    }
+  }
   var sunMesh=new THREE.Mesh(new THREE.SphereGeometry(6,16,16),new THREE.MeshBasicMaterial({color:0xffdd66,fog:false}));
   sunMesh.visible=false;scene.add(sunMesh);
   var sunGlow=new THREE.Mesh(new THREE.SphereGeometry(12,16,16),new THREE.MeshBasicMaterial({color:0xffdd88,transparent:true,opacity:0.3,depthWrite:false,fog:false}));
@@ -1513,10 +1546,21 @@ canvas#game3d{display:block}
   function execCmd(cmdStr){
     var parts=cmdStr.trim().split(/\s+/),cmd=parts[0].toLowerCase(),args=parts.slice(1);
     switch(cmd){
-      case 'help':addChat('指令：/help /seed /gamemode /tp /kill /spawn /list /clear /give /save /spawnanimals','system');break;
+      case 'help':addChat('指令：/help /seed /gamemode /time /tp /kill /spawn /list /clear /give /save /spawnanimals','system');break;
       case 'seed':addChat('世界种子：'+WORLD_SEED,'success');break;
       case 'save':saveWorldNow(true);break;
       case 'spawnanimals':for(var z=0;z<8;z++)spawnAnimalNearPlayer();addChat('已生成 8 只动物','success');break;
+      case 'time':{
+        var tv=(args[0]||'').toLowerCase();
+        if(tv==='set')tv=(args[1]||'').toLowerCase();
+        if(tv==='day'||tv==='noon')worldTime=0.5;
+        else if(tv==='night'||tv==='midnight')worldTime=0.0;
+        else if(tv==='sunset'||tv==='dusk')worldTime=0.75;
+        else if(tv==='sunrise'||tv==='dawn')worldTime=0.25;
+        else{addChat('用法：/time set day|noon|sunset|night','error');break;}
+        addChat('时间已设为 '+tv,'success');
+        break;
+      }
       case 'gamemode':case 'gm':{
         var mode=(args[0]||'').toLowerCase();
         var mm={'0':'survival','1':'creative','2':'adventure','3':'spectator','s':'survival','c':'creative','a':'adventure','sp':'spectator'};
@@ -2477,6 +2521,7 @@ canvas#game3d{display:block}
   /* ★ 破坏方块（公共方法） */
   function destroyBlock(x,y,z,b){
     setBlock(x,y,z,0);
+    sfxDig(b);
     markDirty(x,z);
     if(gameMode==='survival'||gameMode==='hardcore')addItem(b,1);
     if(isMultiplayer&&net.connected)net.sendBlockChange(x,y,z,0);
@@ -2533,12 +2578,14 @@ canvas#game3d{display:block}
       if(it2){it2.count--;if(it2.count<=0)hotbarSlots[selectedSlot]=null;
         updHotSlot(hotbarEl.children[selectedSlot],hotbarSlots[selectedSlot]);}
     }
+    sfxDig(bid);
     if(isMultiplayer&&net.connected)net.sendBlockChange(x,y,z,bid);
   }
   function applyDamage(amt){
     if(gameMode!=='survival'&&gameMode!=='hardcore')return;
     if(difficulty==='peaceful')return;
     player.health-=amt;
+    sfx('hit',0.6);
     if(player.health<=0){player.health=0;updateHP();onDeath();}
     else updateHP();
   }
@@ -2650,6 +2697,7 @@ canvas#game3d{display:block}
       }else if(player.onGround)player.fallStartY=null;
     }
     updateHungerSystem(dt,sprint,movingSpeed>0.8,movedDist);
+    updateFootsteps(movedDist);
     if(player.pos.y<WORLD_MIN_Y-20){
       if(gameMode==='survival'||gameMode==='hardcore')applyDamage(20);
       if(player.health>0||gameMode==='creative'||gameMode==='spectator'||gameMode==='adventure'){
@@ -2664,6 +2712,143 @@ canvas#game3d{display:block}
   /* ═══════════════════════════════════════════════════
      ★ 动物系统：猪 / 牛 / 羊
      ═══════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════
+     ★ 音效：原版 26.3 资源包里抽出来的 ogg（assets/mc-sounds/）
+     ═══════════════════════════════════════════════════ */
+  var SFX_BASE='../assets/mc-sounds/';
+  var SFX_FILES={
+    dig_grass:['dig_grass1.ogg','dig_grass2.ogg','dig_grass3.ogg'],
+    dig_stone:['dig_stone1.ogg','dig_stone2.ogg','dig_stone3.ogg'],
+    dig_wood:['dig_wood1.ogg','dig_wood2.ogg','dig_wood3.ogg'],
+    dig_sand:['dig_sand1.ogg','dig_sand2.ogg'],
+    dig_snow:['dig_snow1.ogg','dig_snow2.ogg'],
+    dig_gravel:['dig_gravel1.ogg','dig_gravel2.ogg'],
+    step_grass:['step_grass1.ogg','step_grass2.ogg','step_grass3.ogg'],
+    step_stone:['step_stone1.ogg','step_stone2.ogg','step_stone3.ogg'],
+    step_wood:['step_wood1.ogg','step_wood2.ogg'],
+    step_sand:['step_sand1.ogg','step_sand2.ogg'],
+    step_snow:['step_snow1.ogg','step_snow2.ogg'],
+    step_gravel:['step_gravel1.ogg','step_gravel2.ogg'],
+    hit:['hit1.ogg','hit2.ogg','hit3.ogg'],
+    click:['click1.ogg'],
+    pop:['pop1.ogg'],
+    pig:['pig1.ogg','pig2.ogg'],
+    cow:['cow1.ogg','cow2.ogg'],
+    sheep:['sheep1.ogg','sheep2.ogg'],
+    chicken:['chicken1.ogg','chicken2.ogg']
+  };
+  var SFX_POOL={},SFX_ON=true,SFX_VOL=0.55;
+  (function preloadSfx(){
+    Object.keys(SFX_FILES).forEach(function(k){
+      SFX_POOL[k]=SFX_FILES[k].map(function(f){
+        var a=new Audio(SFX_BASE+f);
+        a.preload='auto';
+        return a;
+      });
+    });
+  })();
+  function sfx(name,vol){
+    if(!SFX_ON)return;
+    var pool=SFX_POOL[name];
+    if(!pool||!pool.length)return;
+    var a=pool[(Math.random()*pool.length)|0];
+    try{
+      a.currentTime=0;
+      a.volume=(vol==null?SFX_VOL:vol);
+      var pr=a.play();
+      if(pr&&pr.catch)pr.catch(function(){});
+    }catch(e){}
+  }
+  /* 方块 → 材质分组，决定用哪套挖掘/脚步音 */
+  function sfxGroup(b){
+    switch(b){
+      case 1:case 2:case 5:case 12:case 14:return 'grass';
+      case 4:case 8:case 13:return 'wood';
+      case 6:case 11:return 'sand';
+      case 10:case 15:return 'snow';
+      default:return 'stone';
+    }
+  }
+  function sfxDig(b){sfx('dig_'+sfxGroup(b));}
+  function sfxStep(b){sfx('step_'+sfxGroup(b),0.32);}
+
+  /* 走路脚步声：累计移动距离，每 1.6 格响一次 */
+  var stepAccum=0;
+  function updateFootsteps(dist){
+    if(!player.onGround){stepAccum=0;return;}
+    if(!(dist>0))return;
+    stepAccum+=dist;
+    if(stepAccum>=1.6){
+      stepAccum=0;
+      var b=getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y)-0.3,Math.floor(player.pos.z));
+      if(b)sfxStep(b);
+    }
+  }
+
+  /* 动物叫声：每隔一会儿从附近的动物里挑一只叫一声 */
+  var ambientSfxTimer=8;
+  function updateAmbientSfx(dt){
+    ambientSfxTimer-=dt;
+    if(ambientSfxTimer>0)return;
+    ambientSfxTimer=8+Math.random()*10;
+    if(!animals.length)return;
+    var a=animals[(Math.random()*animals.length)|0];
+    if(!a||!a.pos)return;
+    var dx=a.pos.x-player.pos.x,dy=a.pos.y-player.pos.y,dz=a.pos.z-player.pos.z;
+    if(dx*dx+dy*dy+dz*dz<400)sfx(a.type,0.35);
+  }
+
+  /* ═══════════════════════════════════════════════════
+     ★ 动物贴图：从原版 entity 皮肤里取样铺到方块上
+     ═══════════════════════════════════════════════════ */
+  var ANIMAL_SKIN={},WOOL_IMG=null,ANIMAL_MAT_CACHE={};
+  (function preloadAnimalSkins(){
+    var files={pig:'pig_temperate.png',cow:'cow_temperate.png',sheep:'sheep.png',chicken:'chicken_temperate.png'};
+    Object.keys(files).forEach(function(k){
+      var im=new Image();
+      im.onload=function(){ANIMAL_SKIN[k]=im;};
+      im.src='../assets/mc-entity/'+files[k];
+    });
+    var w=new Image();
+    w.onload=function(){WOOL_IMG=w;};
+    w.src='../assets/mc-entity/sheep_wool.png';
+  })();
+  /* 每种动物各部位从哪张皮肤、哪个矩形取样（用方差扫描挑出的平整区，
+     避免取到眼睛、鸡冠这类细节，贴到方块上才不会出现「满脸是眼」） */
+  var ANIMAL_MAP={
+    pig:    {body:['pig',      8, 2,8,8], legs:['pig',      8, 2,8,8]},
+    cow:    {body:['cow',     28,12,8,8], legs:['cow',     28,12,8,8]},
+    sheep:  {body:['wool',    48,15,8,8], legs:['sheep',   12, 0,8,8]},
+    chicken:{body:['chicken',  6,12,8,8], legs:['chicken',  6,12,8,8]}
+  };
+  function cropTex(img,x,y,w,h){
+    var c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    var g=c.getContext('2d');
+    g.imageSmoothingEnabled=false;
+    g.drawImage(img,x,y,w,h,0,0,w,h);
+    var t=new THREE.CanvasTexture(c);
+    t.magFilter=THREE.NearestFilter;
+    t.minFilter=THREE.NearestFilter;
+    t.generateMipmaps=false;
+    return t;
+  }
+  function animalMat(type,part,fallback){
+    if(part==='accent')return new THREE.MeshLambertMaterial({color:fallback});
+    var key=type+':'+part;
+    if(ANIMAL_MAT_CACHE[key])return ANIMAL_MAT_CACHE[key];
+    var spec=(ANIMAL_MAP[type]||{})[part];
+    if(!spec)return new THREE.MeshLambertMaterial({color:fallback});
+    var img;
+    if(spec[0]==='wool')img=WOOL_IMG;
+    else if(spec[0]==='sheep')img=ANIMAL_SKIN.sheep;
+    else img=ANIMAL_SKIN[spec[0]];
+    if(!img)return new THREE.MeshLambertMaterial({color:fallback});
+    var m=new THREE.MeshLambertMaterial({map:cropTex(img,spec[1],spec[2],spec[3],spec[4])});
+    ANIMAL_MAT_CACHE[key]=m;
+    return m;
+  }
+
   var animals=[];
   var MAX_ANIMALS=24;
   var animalSpawnTimer=3;
@@ -2676,9 +2861,9 @@ canvas#game3d{display:block}
       sheep:{body:0xf0f0f0,accent:0xd8d8d8,legs:0xc8c8c8}
     };
     var m=mats[type]||mats.pig;
-    var bodyMat=new THREE.MeshLambertMaterial({color:m.body});
-    var accentMat=new THREE.MeshLambertMaterial({color:m.accent});
-    var legMat=new THREE.MeshLambertMaterial({color:m.legs});
+    var bodyMat=animalMat(type,'body',m.body);
+    var accentMat=animalMat(type,'accent',m.accent);
+    var legMat=animalMat(type,'legs',m.legs);
 
     var bw=0.7,bh=0.6,bl=1.2;
     var body=new THREE.Mesh(new THREE.BoxGeometry(bw,bh,bl),bodyMat);
@@ -2761,6 +2946,7 @@ canvas#game3d{display:block}
   }
 
   function updateAnimals(dt){
+    updateAmbientSfx(dt);
     animalSpawnTimer-=dt;
     if(animals.length<MAX_ANIMALS&&animalSpawnTimer<=0){
       animalSpawnTimer=2.5;
@@ -2956,6 +3142,7 @@ canvas#game3d{display:block}
       $('chunkLoadingCount').textContent=Math.max(0,dirtyChunks.size);
     }else chunkLoadingEl.classList.remove('show');
     if(appState==='playing'||appState==='paused'||appState==='dead'){
+      updateDayNight(dt);
       updateCamera();updateHand(dt);updateHighlight();updateHUD();
     }
     if(isMultiplayer&&net.connected)net.tick(now);
