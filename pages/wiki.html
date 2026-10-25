@@ -7,14 +7,7 @@
 <meta name="description" content="红石的答辩 Wiki —— 按大板块 / 板块 / 分类整理的条目式知识库，支持全文搜索、目录跳转与阅读进度。">
 <meta name="theme-color" content="#3d521f">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
-<script>
-(function(){try{
-  var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');
-  var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
-  if(t==='auto'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'mc-night':'mc-wiki';}
-  if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
-}catch(e){}})();
-</script>
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="stylesheet" href="../assets/css/core.css">
 <style>
 /* ── Wiki 阅读器 ─────────────────────────────────────────────── */
@@ -277,7 +270,6 @@ body[data-fs="l"] .prose{font-size:16.5px}
 <script>
 (function () {
   'use strict';
-  var GH = 'HSDL03/HStool';
   var K_TREE = 'hs-wiki-tree';
   var K_FS = 'hs-wiki-fs';
 
@@ -335,7 +327,6 @@ body[data-fs="l"] .prose{font-size:16.5px}
     });
   }
 
-  function treeKey(k) { return k; }
   function isOpen(key, dflt) {
     return treeOpen.hasOwnProperty(key) ? !!treeOpen[key] : !!dflt;
   }
@@ -486,16 +477,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
     document.title = a.title + ' · 红石答辩 Wiki';
   }
 
-  function copy(text) {
-    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
-    return new Promise(function (res, rej) {
-      var ta = document.createElement('textarea');
-      ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy') ? res() : rej(); } catch (e) { rej(e); }
-      document.body.removeChild(ta);
-    });
-  }
+  var copy = HS.copy;
 
   /* ── 目录高亮 ── */
   var spyIO = null;
@@ -648,7 +630,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
   applyFs(fs);
   window.addEventListener('hashchange', route);
 
-  HS.fetchJSON('../data/wiki-data.json', { remote: GH })
+  HS.data('wiki-data')
     .then(function (data) {
       ARTICLES = norm(data);
       buildTree();
@@ -657,9 +639,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
       route();
       HS.palette.init({
         actions: [
-          { icon: '🎲', title: '随机条目', desc: '随便翻一条看看', run: randomArticle },
-          { icon: '🎨', title: '切换风格', desc: '打开主题选择器', run: function () { HS.theme.open(); } },
-          { icon: '🧰', title: '回工具台', desc: '红石的小站首页', run: function () { location.href = '../index.html'; } }
+          { icon: '🎲', title: '随机条目', desc: '随便翻一条看看', run: randomArticle }
         ],
         source: function () {
           return ARTICLES.map(function (a) {
@@ -675,7 +655,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
       $('#dataState').textContent = '离线模式';
     });
 
-  HS.status.mount('../data/wiki-data.json');
+  HS.status.mount(HS.dataURL('wiki-data'));
 })();
 </script>
 </body>

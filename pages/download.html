@@ -7,14 +7,7 @@
 <meta name="description" content="红石的小站下载站 —— GitHub Releases 与手动补录资源，支持按分类筛选、排序、复制直链。">
 <meta name="theme-color" content="#3d521f">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📥</text></svg>">
-<script>
-(function(){try{
-  var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');
-  var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
-  if(t==='auto'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'mc-night':'mc-wiki';}
-  if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
-}catch(e){}})();
-</script>
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="stylesheet" href="../assets/css/core.css">
 <style>
 /* ── 下载站专属 ─────────────────────────────────────────── */
@@ -157,12 +150,7 @@
 <script>
 (function () {
   'use strict';
-  var GH_OWNER = 'HSDL03', GH_REPO = 'HStool', GH_BRANCH = 'main';
-  var REPO = GH_OWNER + '/' + GH_REPO;
-  var DATA_FILE = '../data/download-data.json';
-  var RAW_BASE = 'https://raw.githubusercontent.com/' + REPO + '/' + GH_BRANCH + '/';
-  var CDN_BASE = 'https://cdn.jsdelivr.net/gh/' + REPO + '@' + GH_BRANCH + '/';
-  var RELEASES_API = 'https://api.github.com/repos/' + REPO + '/releases';
+  var RELEASES_API = 'https://api.github.com/repos/' + HS.site.repo + '/releases';
   var TTL = 5 * 60 * 1000;
 
   var FILES = [];
@@ -290,7 +278,7 @@
     render();
     Promise.all([
       fetchReleasesCached(force).catch(function (e) { return { __err: e }; }),
-      HS.fetchJSON(DATA_FILE, { remote: REPO }).catch(function () { return []; })
+      HS.data('download-data').catch(function () { return []; })
     ]).then(function (res) {
       var relRaw = res[0], manual = Array.isArray(res[1]) ? res[1] : [];
       var relErr = relRaw && relRaw.__err;
@@ -459,17 +447,7 @@
       a.addEventListener('click', function () { /* 让浏览器原生下载 */ });
     });
   }
-  function copyText(text) {
-    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
-    return new Promise(function (resolve, reject) {
-      var ta = document.createElement('textarea');
-      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy') ? resolve() : reject(); }
-      catch (e) { reject(e); }
-      document.body.removeChild(ta);
-    });
-  }
+  var copyText = HS.copy;
 
   /* ── 事件 ── */
   document.getElementById('tagChips').addEventListener('click', function (e) {
@@ -515,9 +493,7 @@
   HS.palette.init({
     actions: [
       { icon: '🔄', title: '刷新资源列表', desc: '重新拉取 GitHub Releases', run: function () { loadData(true); } },
-      { icon: '🎨', title: '切换风格', desc: '打开主题选择器', run: function () { HS.theme.open(); } },
-      { icon: '🧰', title: '回工具台', desc: '红石的小站首页', run: function () { location.href = '../index.html'; } },
-      { icon: '📚', title: '打开 Wiki', desc: '个人知识库', run: function () { location.href = './wiki.html'; } }
+      { icon: '📚', title: '打开 Wiki', desc: '个人知识库', run: function () { location.href = HS.site.url('pages/wiki.html'); } }
     ],
     source: function () {
       return FILES.map(function (f) {
@@ -530,7 +506,7 @@
   });
 
   loadData(false);
-  HS.status.mount(DATA_FILE);
+  HS.status.mount(HS.dataURL('download-data'));
 })();
 </script>
 </body>

@@ -6,14 +6,7 @@
 <title>404 · 走丢了 · 红石的小站</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
-<script>
-(function(){try{
-  var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');
-  var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
-  if(t==='auto'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'mc-night':'mc-wiki';}
-  if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
-}catch(e){}})();
-</script>
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="stylesheet" href="/HStool/assets/css/core.css">
 <style>
 .nf{max-width:560px;margin:0 auto;padding:12vh 0 0;text-align:center}
@@ -47,7 +40,7 @@
 <script src="/HStool/assets/js/core.js"></script>
 <script>
   document.getElementById('p').textContent = location.pathname;
-  HS.status.mount("/HStool/index.html");
+  HS.status.mount(HS.site.url("index.html"));
 </script>
 </body>
 </html>

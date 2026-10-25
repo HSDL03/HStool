@@ -6,14 +6,7 @@
 <title>像素画板 · 红石的小站</title>
 <meta name="description" content="16×16 像素画板：MC 色板、画笔/填充/取色、撤销重做，一键导出 PNG。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖌️</text></svg>">
-<script>
-(function(){try{
-  var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');
-  var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
-  if(t==='auto'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'mc-night':'mc-wiki';}
-  if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
-}catch(e){}})();
-</script>
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="stylesheet" href="../assets/css/core.css">
 <style>
 .app{max-width:480px;margin:0 auto}

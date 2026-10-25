@@ -7,15 +7,7 @@
 <meta name="description" content="红石的小站 —— 一堆轻量、无依赖、点开即用的小工具，外加资源下载与个人 Wiki。">
 <meta name="theme-color" content="#3d521f">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
-<script>
-/* 主题预置，避免刷新闪烁；兼容旧版键名 wiki-theme */
-(function(){try{
-  var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');
-  var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
-  if(t==='auto'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'mc-night':'mc-wiki';}
-  if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
-}catch(e){}})();
-</script>
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="stylesheet" href="./assets/css/core.css">
 <style>
 /* ── 首页专属 ─────────────────────────────────────────────── */
@@ -209,8 +201,6 @@
 <script>
 (function () {
   'use strict';
-  var GH = 'HSDL03/HStool';
-
   /* 远程数据缺项时的兜底，保证核心入口永远在 */
   var FALLBACK = [
     { id: 'wiki', icon: '📚', name: '红石答辩wiki', desc: '个人知识库 · 条目式整理', tag: '知识', url: './pages/wiki.html', category: 'noDB' },
@@ -267,12 +257,8 @@
     fallback.forEach(add);
     return out;
   }
-  function absUrl(u) {
-    if (!u) return '';
-    if (/^(https?:|mailto:|tel:|javascript:|data:|\/\/)/i.test(u)) return u;
-    try { return new URL(u, location.href).href; } catch (e) { return u; }
-  }
-  function isExternal(u) { return /^https?:/i.test(u) && u.indexOf(location.host) === -1; }
+  /* 通用工具统一由 core.js 提供 */
+  var absUrl = HS.absUrl, isExternal = HS.isExternal;
 
   /* 标题逐字入场（渐变按字数切片，视觉上仍是连续的一条） */
   (function heroIn() {
@@ -301,7 +287,7 @@
   var annWrap = document.getElementById('annWrap');
 
   function loadAnnounce() {
-    HS.fetchJSON('data/announcement.json', { remote: GH })
+    HS.data('announcement')
       .then(function (data) {
         var list = (Array.isArray(data) ? data : []).filter(function (it) {
           return it && it.enabled !== false && dismissed.indexOf(it.id) === -1;
@@ -577,7 +563,7 @@
       document.getElementById('dataState').textContent = '本地缓存';
       return;
     }
-    HS.fetchJSON('data/tools-data.json', { remote: GH })
+    HS.data('tools-data')
       .then(function (data) {
         TOOLS = merge(normAll(data), normAll(FALLBACK));
         HS.store.setJson('hs-tools-cache', { t: Date.now(), data: TOOLS });
@@ -596,11 +582,10 @@
   /* ── 命令面板 ── */
   HS.palette.init({
     actions: [
-      { icon: '🎨', title: '切换风格', desc: '打开主题选择器', kbd: 'T', run: function () { HS.theme.open(); } },
       { icon: '🔄', title: '刷新工具列表', desc: '重新从仓库拉取数据', run: function () { loadTools(true); } },
-      { icon: '📚', title: '打开 Wiki', desc: '个人知识库', run: function () { location.href = './pages/wiki.html'; } },
-      { icon: '📥', title: '打开下载站', desc: '资源文件列表', run: function () { location.href = './pages/download.html'; } },
-      { icon: '🗂️', title: '数据管理', desc: '编辑站点 JSON 数据', run: function () { location.href = './pages/admin.html'; } }
+      { icon: '📚', title: '打开 Wiki', desc: '个人知识库', run: function () { location.href = HS.site.url('pages/wiki.html'); } },
+      { icon: '📥', title: '打开下载站', desc: '资源文件列表', run: function () { location.href = HS.site.url('pages/download.html'); } },
+      { icon: '🗂️', title: '数据管理', desc: '编辑站点 JSON 数据', run: function () { location.href = HS.site.url('pages/admin.html'); } }
     ],
     source: function () {
       return TOOLS.filter(function (t) { return !t.hidden; }).map(function (t) {
@@ -623,7 +608,7 @@
   });
   loadTools(false);
   loadAnnounce();
-  HS.status.mount('data/tools-data.json');
+  HS.status.mount(HS.dataURL('tools-data'));
 })();
 </script>
 </body>

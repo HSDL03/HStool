@@ -73,6 +73,72 @@ data/
 | `Ctrl + B` | Wiki 页展开 / 收起目录 |
 | `Esc` | 关闭面板或清空搜索 |
 
+## 代码怎么接（新增页面 / 工具时看这里）
+
+所有公共能力都在 `assets/js/core.js`，页面只写自己的业务逻辑，**不要重复实现**。
+
+### 换仓库 / 换分支
+
+只改一处：`assets/js/core.js` 里的 `SITE`
+
+```js
+var SITE = { repo: 'HSDL03/HStool', branch: 'main', ... };
+```
+
+页面里不要再硬编码 `HSDL03`、`HStool`，用 `HS.site.repo` / `HS.site.url('pages/wiki.html')`。
+
+### 新增一个页面
+
+1. 放到 `pages/`（整站页面）或 `tools/`（小工具）。
+2. 头部三件套（路径按目录层级写死，不要写绝对路径）：
+
+```html
+<link rel="stylesheet" href="../assets/css/core.css">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+...
+<header class="topbar">…<button class="iconbtn" data-act="theme">🎨</button></header>
+<div class="decor" aria-hidden="true"></div>
+<main class="wrap">…</main>
+<script src="../assets/js/core.js"></script>
+```
+
+主题按钮、装饰背景、Toast、命令面板都由 `core.js` 提供，页面不用自己写。
+
+### 读数据
+
+```js
+HS.data('tools-data')     // → data/tools-data.json，自动走 本地 → raw → jsDelivr 三级回落
+HS.dataURL('wiki-data')   // → 只要地址（给状态条、预加载用）
+```
+
+文件名传完整基名（`tools-data` 而不是 `tools`）。
+
+### 常用 API
+
+| 调用 | 作用 |
+| --- | --- |
+| `HS.toast(msg,{icon})` | 底部提示 |
+| `HS.copy(text)` | 复制到剪贴板（带降级） |
+| `HS.absUrl(p)` / `HS.isExternal(p)` | 相对路径转绝对、判断站外 |
+| `HS.site.url(p)` | 站内路径 → 绝对地址（页面在任意层级都对） |
+| `HS.theme.open()` / `HS.theme.set(id)` | 主题面板 / 直接切主题 |
+| `HS.palette.init({actions,source})` | 命令面板；`切换风格`、`回工具台` 已内置，只传自己特有的 |
+| `HS.status.mount(url)` | 右下角延迟胶囊 |
+| `HS.esc(s)` / `HS.$` / `HS.$$` | 转义与选择器 |
+| `HS.store.json(k,d)` | 读写 localStorage（自带 try/catch） |
+
+### 新增一个工具卡片
+
+编辑 `data/tools-data.json`（或走 `pages/admin.html` 后台），`url` 写**相对站点根**的路径：
+
+```json
+{ "id": "tool-xxx", "icon": "🎲", "name": "名字", "desc": "一句话",
+  "tag": "工具", "url": "./tools/xxx.html", "category": "noDB",
+  "deprecated": false, "disabled": false, "hidden": false }
+```
+
+`category` 用 `noDB`（纯前端）或 `needDB`（要后端/账号），首页据此显示「⚡ 纯前端 / ☁ 需后端」徽标。
+
 ## 本地预览
 
 ```bash

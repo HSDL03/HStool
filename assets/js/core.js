@@ -77,7 +77,12 @@
     paintTheme(resolveTheme(pref), pref);
     decor.refresh();
   }
-  function getThemePref() { return store.get(K_THEME, 'mc-wiki'); }
+  function getThemePref() {
+    var p = store.get(K_THEME, 'mc-wiki');
+    if (p === 'auto') return p;
+    for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === p) return p;
+    return 'mc-wiki';
+  }
 
   function buildThemeGrid(pref) {
     var grid = $('#themeGrid');
@@ -286,7 +291,7 @@
     init: function (opts) {
       opts = opts || {};
       this.source = opts.source || null;
-      this.actions = opts.actions || [];
+      this.actions = this.mergeActions(opts.actions);
       var self = this;
       if (!this.root) this.mount();
       on(document, 'keydown', function (e) {
@@ -298,6 +303,20 @@
         else if (e.key === 'ArrowUp') { e.preventDefault(); self.move(-1); }
         else if (e.key === 'Enter') { e.preventDefault(); self.commit(); }
       });
+    },
+    /* 每个页面都需要的动作放这里，页面只传自己的，标题去重 */
+    mergeActions: function (extra) {
+      var common = [
+        { icon: '🎨', title: '切换风格', desc: '打开主题选择器', kbd: 'T', run: function () { openTheme(); } },
+        { icon: '🧰', title: '回工具台', desc: '红石的小站首页', run: function () { location.href = SITE.url('index.html'); } }
+      ];
+      var out = [], seen = {};
+      common.concat(extra || []).forEach(function (a) {
+        if (!a || seen[a.title]) return;
+        seen[a.title] = 1;
+        out.push(a);
+      });
+      return out;
     },
     mount: function () {
       var self = this;
@@ -459,23 +478,69 @@
     }
   };
 
-  /* ─────────────────────────── 通用取数 ─────────────────────────── */
-  function fetchJSON(file, opts) {
-    opts = opts || {};
+  /* ─────────────────────────── 站点配置（只在这里改） ─────────────
+     仓库、分支、路径全部集中于此：换仓库或改目录只改 SITE 一处。
+     base 从 core.js 自身的地址反推，页面在根目录还是子目录都不用管层级。
+  ────────────────────────────────────────────────────────────── */
+  var BASE = (function () {
+    var s = document.currentScript && document.currentScript.src;
+    if (!s) return location.origin + '/';
+    return s.replace(/assets\/js\/core\.js.*$/, '');
+  })();
+
+  var SITE = {
+    repo: 'HSDL03/HStool',
+    branch: 'main',
+    base: BASE,
+    /* 站内路径 → 绝对地址 */
+    url: function (p) { return new URL(String(p).replace(/^\.\//, ''), BASE).href; },
+    repoUrl: function (p) { return 'https://github.com/' + SITE.repo + (p || ''); }
+  };
+
+  /* 数据文件：data/<name>.json（传入完整基名，如 'tools-data'），本地 → raw → jsDelivr 三级回落 */
+  function dataURL(name) { return SITE.url('data/' + name + '.json'); }
+  function data(name) {
+    var tail = 'data/' + name + '.json';
     var t = '?_=' + Date.now();
-    var tries = [file + t];
-    if (opts.remote) {
-      tries.push('https://raw.githubusercontent.com/' + opts.remote + '/' + (opts.branch || 'main') + '/' + file + t);
-      tries.push('https://cdn.jsdelivr.net/gh/' + opts.remote + '@' + (opts.branch || 'main') + '/' + file);
-    }
+    return firstOK([
+      dataURL(name) + t,
+      'https://raw.githubusercontent.com/' + SITE.repo + '/' + SITE.branch + '/' + tail + t,
+      'https://cdn.jsdelivr.net/gh/' + SITE.repo + '@' + SITE.branch + '/' + tail
+    ]);
+  }
+
+  /* ─────────────────────────── 通用取数 ─────────────────────────── */
+  function firstOK(urls) {
     return new Promise(function (resolve, reject) {
       (function next(i) {
-        if (i >= tries.length) { reject(new Error('全部数据源均失败')); return; }
-        fetch(tries[i], { cache: 'no-store' })
+        if (i >= urls.length) { reject(new Error('全部数据源均失败')); return; }
+        fetch(urls[i], { cache: 'no-store' })
           .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
           .then(resolve)
-          .catch(function (e) { if (i === tries.length - 1) reject(e); else next(i + 1); })
+          .catch(function (e) { if (i === urls.length - 1) reject(e); else next(i + 1); });
       })(0);
+    });
+  }
+  /* ─────────────────────────── 通用小工具 ───────────────────────── */
+  function absUrl(u) {
+    if (!u) return '';
+    if (/^(https?:|mailto:|tel:|javascript:|data:|\/\/)/i.test(u)) return u;
+    try { return new URL(u, location.href).href; } catch (e) { return u; }
+  }
+  function isExternal(u) {
+    try { return new URL(u, location.href).host !== location.host; } catch (e) { return false; }
+  }
+  function copy(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy') ? resolve() : reject(new Error('复制失败')); }
+      catch (e) { reject(e); }
+      document.body.removeChild(ta);
     });
   }
 
@@ -506,7 +571,12 @@
   HS.reduced = reduced;
   HS.toast = toast;
   HS.reveal = reveal;
-  HS.fetchJSON = fetchJSON;
+  HS.site = SITE;
+  HS.data = data;
+  HS.dataURL = dataURL;
+  HS.absUrl = absUrl;
+  HS.isExternal = isExternal;
+  HS.copy = copy;
   HS.THEMES = THEMES;
   HS.theme = {
     get: function () { return curTheme; },
