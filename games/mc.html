@@ -65,6 +65,36 @@ canvas#game3d{display:block}
 #healthBar{left:calc(50% - 180px);bottom:calc(62px + env(safe-area-inset-bottom))}
 #hungerBar{right:calc(50% - 180px);bottom:calc(62px + env(safe-area-inset-bottom))}
 #healthBar canvas,#hungerBar canvas{display:block;height:18px;image-rendering:pixelated}
+/* ═══ 原版物品栏窗口：左侧 2×2 合成 + 结果，右侧护甲列 + 玩家立绘 ═══ */
+.vanilla-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:10px 12px 4px}
+.vanilla-craft{display:flex;align-items:center;gap:10px}
+.craft-grid.c2{grid-template-columns:repeat(2,44px)}
+.craft-grid.c3{grid-template-columns:repeat(3,44px)}
+.vanilla-right{display:flex;align-items:center;gap:10px}
+.armor-col{display:flex;flex-direction:column;gap:2px}
+.armor-col .inv-cell{width:44px;height:44px;aspect-ratio:auto;background:rgba(139,139,139,.45);opacity:.6;cursor:not-allowed}
+.armor-col .inv-cell:hover{filter:none}
+.armor-col .inv-cell .armor-icon{font-size:20px;color:#565656;pointer-events:none}
+.offhand-slot .inv-cell{width:44px;height:44px;aspect-ratio:auto;background:rgba(139,139,139,.45)}
+.vanilla-rows{padding:0 12px 10px}
+.vanilla-rows .inv-grid-9{margin-top:4px}
+.vanilla-label{font-size:11px;color:#3f3f3f;padding:6px 0 2px;font-weight:bold;letter-spacing:1px}
+.vanilla-hotbar{border-top:2px solid #8b8b8b;margin-top:8px;padding-top:8px}
+/* 耐久条：原版是在物品图标下方叠一条彩色条 */
+.dur-bar{position:absolute;left:2px;right:2px;bottom:1px;height:3px;background:#000;pointer-events:none;border-radius:1px;overflow:hidden}
+.dur-bar i{display:block;height:100%;width:100%}
+.slot .dur-bar{left:4px;right:4px;bottom:2px;height:4px}
+/* 攻击冷却：原版用物品图标变暗表示 */
+.cool-veil{position:absolute;inset:0;background:rgba(0,0,0,.55);pointer-events:none;display:none}
+/* 地图界面 */
+#mapScreen{position:fixed;inset:0;z-index:44;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+#mapScreen.show{display:flex}
+.map-window{background:#c6c6c6;border:2px solid #565656;box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #8b8b8b,4px 4px 0 rgba(0,0,0,.4);padding:10px;color:#3f3f3f}
+.map-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;font-weight:bold;color:#fff;background:#8b8b8b;padding:6px 10px;border-bottom:2px solid #565656;text-shadow:2px 2px 0 #3f3f3f}
+.map-head .sp{flex:1}
+#mapCanvas{display:block;image-rendering:pixelated;border:2px solid #565656;background:#8b8b8b}
+.map-foot{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:12px}
+.map-foot .sp{flex:1}
 #tips{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));color:#fff;font-size:12.5px;line-height:1.8;background:rgba(0,0,0,.42);padding:6px 10px;border:0;pointer-events:none;z-index:15;display:none;text-shadow:1px 1px 0 rgba(0,0,0,.85);max-width:46vw}
 #tips b{color:#ffe12b}
 #chatBox{position:fixed;left:12px;bottom:calc(112px + env(safe-area-inset-bottom));width:460px;max-width:60vw;z-index:22;pointer-events:none;display:none;flex-direction:column;gap:3px;max-height:220px;overflow:hidden;font-size:13px}
@@ -477,37 +507,23 @@ canvas#game3d{display:block}
     </div>
     <div class="inv-panel player">
       <div class="inv-panel-header">物品栏<span class="sp"></span><button class="icon-btn" id="invCloseBtn">✕</button></div>
-      <div class="inv-craft-section">
-        <div class="inv-section-title" style="background:transparent;padding:4px 0 6px">合成区</div>
-        <div class="craft-row">
-          <div class="craft-grid" id="invCraftGrid"></div>
+      <!-- 原版布局：左上是合成区（箭头 + 结果），右侧是护甲列与玩家立绘 -->
+      <div class="vanilla-top">
+        <div class="vanilla-craft">
+          <div class="craft-grid c2" id="invCraftGrid"></div>
           <div class="craft-arrow">➜</div>
-          <div class="craft-result">
-            <div class="inv-cell" id="invCraftResult" title="合成结果"></div>
-          </div>
+          <div class="craft-result"><div class="inv-cell" id="invCraftResult" title="合成结果"></div></div>
+        </div>
+        <div class="vanilla-right">
+          <div class="armor-col" id="invArmorRow"></div>
+          <div class="inv-player-preview"><canvas id="invPlayerCanvas" width="90" height="150"></canvas></div>
+          <div class="offhand-slot"><div class="inv-cell disabled" id="invOffhand" title="副手槽"><span class="armor-icon">✋</span></div></div>
         </div>
       </div>
-      <div class="inv-recipe-section">
-        <div class="inv-section-title">配方区</div>
-        <div class="inv-recipe-list" id="invRecipeList"></div>
-      </div>
-      <div class="inv-armor-section">
-        <div class="inv-section-title">护甲区</div>
-        <div class="inv-armor-row" id="invArmorRow"></div>
-      </div>
-      <div class="inv-player-section">
-        <div class="inv-player-preview"><canvas id="invPlayerCanvas" width="90" height="150"></canvas></div>
-        <div class="inv-player-stats">
-          <div class="row"><span>❤ 生命</span><b id="statHealth">20 / 20</b></div>
-          <div class="row"><span>🍗 饥饿</span><b id="statHunger">20 / 20</b></div>
-          <div class="row"><span>🎮 模式</span><b id="statMode">创造</b></div>
-          <div class="row"><span>📦 背包</span><b id="statSlots">0 / 36</b></div>
-        </div>
-      </div>
-      <div class="inv-player-body">
-        <div class="inv-section-title">物品区（背包 27 格）</div>
+      <div class="vanilla-rows">
+        <div class="vanilla-label">背包</div>
         <div class="inv-grid-9" id="invGridBackpack"></div>
-        <div class="inv-section-title">快捷栏区</div>
+        <div class="vanilla-label vanilla-hotbar">快捷栏</div>
         <div class="inv-grid-9" id="invGridHotbar"></div>
       </div>
       <div class="inv-hint">左键点物品跟随鼠标 · 再点放入对应格子 · 右键取一半/放一个 · Shift 点击快速切换 · Q 丢弃</div>
@@ -515,6 +531,20 @@ canvas#game3d{display:block}
   </div>
 </div>
 
+<div id="mapScreen">
+  <div class="map-window">
+    <div class="map-head"><span id="mapTitle">地图</span><span class="sp"></span><button class="icon-btn" id="mapCloseBtn">✕</button></div>
+    <canvas id="mapCanvas" width="384" height="384"></canvas>
+    <div class="map-foot">
+      <button class="mc-btn small" id="mapZoomIn">放大</button>
+      <button class="mc-btn small" id="mapZoomOut">缩小</button>
+      <span class="sp"></span>
+      <span id="mapInfo" style="font-family:monospace"></span>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/mc-inline-textures.js"></script>
 <script src="../assets/mc-items-data.js"></script>
 <script src="../assets/vendor/three.min.js"></script>
 <script>if(typeof THREE==='undefined')document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
@@ -647,12 +677,178 @@ canvas#game3d{display:block}
     return b?b.name:('#'+id);
   }
 
-  /* ★ 挖掘硬度：数值越大越慢；-1 不可破坏 */
+  /* ═══════════════════════════════════════════════════
+     ★ 物品元数据：工具种类 / 挖掘等级 / 挖掘速度 / 耐久 / 食物回复
+     全部按原版数值整理；工具在物品栏里不可堆叠。
+     ═══════════════════════════════════════════════════ */
+  var MAT_INFO={
+    '木质':{tier:1,dur:59},'石质':{tier:2,dur:131},'铁质':{tier:3,dur:250},
+    '金质':{tier:1,dur:32},'钻石':{tier:4,dur:1561},'下界合金':{tier:5,dur:2031}
+  };
+  var TOOL_SPEED={
+    '镐':{'木质':2,'石质':4,'铁质':6,'金质':12,'钻石':8,'下界合金':9},
+    '斧':{'木质':2,'石质':4,'铁质':6,'金质':12,'钻石':8,'下界合金':9},
+    '锹':{'木质':1.5,'石质':2,'铁质':3,'金质':6,'钻石':4,'下界合金':4.5},
+    '锄':{'木质':1,'石质':1,'铁质':1,'金质':1,'钻石':1,'下界合金':1}
+  };
+  var SWORD_DMG={'木质':4,'石质':5,'铁质':6,'金质':4,'钻石':7,'下界合金':8};
+  /* 食物：名称 → [饥饿回复, 饱和度] */
+  var FOOD_INFO={
+    '面包':[5,6],'熟猪排':[8,12.8],'牛排':[8,12.8],'熟牛肉':[8,12.8],'生牛肉':[3,1.8],
+    '熟鸡肉':[6,7.2],'生鸡肉':[2,1.2],'熟羊肉':[6,7.2],'生羊肉':[2,1.2],'熟兔肉':[5,6],'生兔肉':[3,1.8],
+    '熟鳕鱼':[5,6],'鳕鱼':[2,1.2],'熟鲑鱼':[6,7.2],'鲑鱼':[2,1.2],
+    '苹果':[4,2.4],'金苹果':[4,9.6],'附魔金苹果':[4,9.6],'曲奇':[2,0.4],
+    '胡萝卜':[3,3.6],'金胡萝卜':[6,14.4],'马铃薯':[1,0.6],'烤马铃薯':[5,6],
+    '甜菜根':[1,0.6],'蘑菇煲':[6,7.2],'南瓜派':[8,4.8],'兔肉煲':[5,6],'甜菜汤':[6,7.2],
+    '西瓜片':[2,1.2],'甜浆果':[2,0.4],'发光浆果':[2,0.4],'蛋糕':[14,2.8],'牛奶桶':[0,0],
+    '腐肉':[4,0.8],'毒马铃薯':[2,0.4],'蜘蛛眼':[2,1.6],'海带干':[1,0.6]
+  };
+  var ITEM_META={};
+  (function buildItemMeta(){
+    for(var k in ITEMS){
+      var def=ITEMS[k],id=Number(k),nm=def.name;
+      var m=null,mat=null;
+      for(var mk in MAT_INFO){if(nm.indexOf(mk)===0){mat=mk;m=MAT_INFO[mk];break;}}
+      var kind=null;
+      if(mat){
+        if(nm.indexOf('镐')>=0)kind='镐';
+        else if(nm.indexOf('斧')>=0)kind='斧';
+        else if(nm.indexOf('锹')>=0)kind='锹';
+        else if(nm.indexOf('锄')>=0)kind='锄';
+        else if(nm.indexOf('剑')>=0)kind='剑';
+      }
+      var meta={name:nm,kind:kind,mat:mat,tier:m?m.tier:0,dur:m?m.dur:0,speed:1,dmg:1,food:null,stack:64,tool:false};
+      if(kind&&kind!=='剑'){
+        meta.tool=true;meta.stack=1;
+        meta.speed=(TOOL_SPEED[kind]&&TOOL_SPEED[kind][mat])||1;
+      }else if(kind==='剑'){
+        meta.tool=true;meta.stack=1;meta.dmg=SWORD_DMG[mat]||4;
+      }
+      if(FOOD_INFO[nm]){meta.food=FOOD_INFO[nm][0];meta.sat=FOOD_INFO[nm][1];}
+      ITEM_META[id]=meta;
+    }
+  })();
+  function itemMeta(id){return ITEM_META[id]||null;}
+  function isToolItem(id){var m=ITEM_META[id];return !!(m&&m.tool);}
+  function maxStack(id){var m=ITEM_META[id];return m?m.stack:64;}
+
+  /* ★ 挖掘等级：某些方块必须用对应等级的工具才能掉落 */
+  var HARVEST_RULES=[
+    {k:'钻石矿石',tool:'镐',lv:3},{k:'金矿石',tool:'镐',lv:3},{k:'红石矿石',tool:'镐',lv:3},
+    {k:'青金石矿石',tool:'镐',lv:2},{k:'绿宝石矿石',tool:'镐',lv:3},{k:'铁矿石',tool:'镐',lv:2},
+    {k:'煤矿石',tool:'镐',lv:1},{k:'铜矿石',tool:'镐',lv:2},{k:'下界金矿石',tool:'镐',lv:3},
+    {k:'下界石英矿石',tool:'镐',lv:2},
+    {k:'黑曜石',tool:'镐',lv:4},{k:'哭泣的黑曜石',tool:'镐',lv:4},
+    {k:'远古残骸',tool:'镐',lv:4},{k:'下界合金块',tool:'镐',lv:4},{k:'钻石块',tool:'镐',lv:3},
+    {k:'金块',tool:'镐',lv:3},{k:'铁块',tool:'镐',lv:2},{k:'铜块',tool:'镐',lv:2},
+    {k:'红石块',tool:'镐',lv:2},{k:'青金石块',tool:'镐',lv:2},{k:'绿宝石块',tool:'镐',lv:3},
+    {k:'煤炭块',tool:'镐',lv:1},
+    {k:'石头',tool:'镐',lv:1},{k:'圆石',tool:'镐',lv:1},{k:'深板岩',tool:'镐',lv:2},
+    {k:'平滑石头',tool:'镐',lv:1},
+    {k:'石砖',tool:'镐',lv:1},{k:'苔石砖',tool:'镐',lv:1},{k:'裂纹石砖',tool:'镐',lv:1},
+    {k:'錾制石砖',tool:'镐',lv:1},{k:'平滑石块',tool:'镐',lv:1},{k:'平滑石砖',tool:'镐',lv:1},
+    {k:'花岗岩',tool:'镐',lv:1},{k:'闪长岩',tool:'镐',lv:1},{k:'安山岩',tool:'镐',lv:1},
+    {k:'黑石',tool:'镐',lv:1},{k:'玄武岩',tool:'镐',lv:1},{k:'下界岩',tool:'镐',lv:1},
+    {k:'末地石',tool:'镐',lv:1},{k:'方解石',tool:'镐',lv:1},{k:'凝灰岩',tool:'镐',lv:1},
+    {k:'海晶石',tool:'镐',lv:1},{k:'平滑砂岩',tool:'镐',lv:1},{k:'砂岩',tool:'镐',lv:1},
+    {k:'红砂岩',tool:'镐',lv:1},{k:'平滑红砂岩',tool:'镐',lv:1},{k:'石英块',tool:'镐',lv:1},
+    {k:'磨制黑石',tool:'镐',lv:1},{k:'磨制玄武岩',tool:'镐',lv:1}
+  ];
+  var HARVEST_MAP=null;
+  function buildHarvestMap(){
+    HARVEST_MAP={};
+    for(var id in BLOCKS){
+      var nm=BLOCKS[id].name,rule=null;
+      for(var i=0;i<HARVEST_RULES.length;i++){
+        var r=HARVEST_RULES[i];
+        if(nm===r.k||nm.indexOf(r.k)===0||nm.indexOf(r.k)>0){rule=r;break;}
+      }
+      if(rule)HARVEST_MAP[id]={tool:rule.tool,lv:rule.lv};
+    }
+    HARVEST_MAP[7]={tool:'镐',lv:99};  /* 基岩：永远挖不动 */
+  }
+  buildHarvestMap();
+  function harvestReq(id){return HARVEST_MAP?HARVEST_MAP[id]:null;}
+
+  /* ★ 方块硬度：原版编号 1~21 用手写表，其余按材质推断 */
   var BLOCK_HARDNESS={
     1:0.6,2:0.5,3:1.5,4:2.0,5:0.2,6:0.5,7:-1,8:2.0,
     9:2.0,10:0.5,11:0.8,12:0.4,13:2.0,14:0.2,15:0.5,
     16:3.0,17:3.0,18:3.0,19:3.0,20:3.0,21:3.0
   };
+  function blockHardness(id){
+    if(BLOCK_HARDNESS[id]!==undefined)return BLOCK_HARDNESS[id];
+    var nm=(BLOCKS[id]||{}).name||'';
+    if(nm.indexOf('基岩')>=0)return -1;
+    if(nm.indexOf('黑曜石')>=0)return 50;
+    if(nm.indexOf('远古残骸')>=0)return 30;
+    if(nm.indexOf('下界合金块')>=0)return 50;
+    if(nm.indexOf('玻璃')>=0)return 0.3;
+    if(nm.indexOf('地毯')>=0)return 0.1;
+    if(nm.indexOf('树叶')>=0)return 0.2;
+    if(nm.indexOf('羊毛')>=0)return 0.8;
+    if(nm.indexOf('混凝土')>=0)return 1.8;
+    if(nm.indexOf('陶瓦')>=0)return 1.5;
+    if(nm.indexOf('蓝冰')>=0)return 2.8;
+    if(nm.indexOf('浮冰')>=0)return 0.5;
+    if(nm.indexOf('冰')>=0)return 0.5;
+    if(nm.indexOf('雪')>=0)return 0.5;
+    if(nm.indexOf('沙')>=0)return 0.5;
+    if(nm.indexOf('砂砾')>=0)return 0.6;
+    if(nm.indexOf('黏土')>=0)return 0.6;
+    if(nm.indexOf('泥土')>=0||nm.indexOf('砂土')>=0||nm.indexOf('灰化土')>=0||nm.indexOf('菌丝')>=0)return 0.5;
+    if(nm.indexOf('草方块')>=0)return 0.6;
+    if(nm.indexOf('矿石')>=0)return 3.0;
+    if(nm.indexOf('深层')>=0&&nm.indexOf('矿石')>=0)return 4.5;
+    if(nm.indexOf('原木')>=0||nm.indexOf('木板')>=0||nm.indexOf('木台阶')>=0||nm.indexOf('楼梯')>=0||nm.indexOf('栅栏')>=0)return 2.0;
+    if(nm.indexOf('深板岩')>=0)return 3.0;
+    if(nm.indexOf('石')>=0)return 1.5;
+    if(nm.indexOf('砖块')>=0)return 2.0;
+    if(nm.indexOf('铁块')>=0||nm.indexOf('金块')>=0||nm.indexOf('铜块')>=0||nm.indexOf('钻石块')>=0||
+       nm.indexOf('煤炭块')>=0||nm.indexOf('红石块')>=0||nm.indexOf('青金石块')>=0||nm.indexOf('绿宝石块')>=0)return 5.0;
+    if(nm.indexOf('岩浆块')>=0)return 0.5;
+    if(nm.indexOf('荧石')>=0)return 0.3;
+    return 1.0;
+  }
+  /* ★ 方块对应的工具类别（决定工具加速是否生效） */
+  function blockToolClass(id){
+    var nm=(BLOCKS[id]||{}).name||'';
+    if(nm.indexOf('矿石')>=0)return '镐';
+    if(nm.indexOf('石头')>=0||nm.indexOf('石砖')>=0||nm.indexOf('圆石')>=0||nm.indexOf('深板岩')>=0||
+       nm.indexOf('黑石')>=0||nm.indexOf('玄武岩')>=0||nm.indexOf('平滑石')>=0||nm.indexOf('石块')>=0||
+       nm.indexOf('石')>=0)return '镐';
+    if(nm.indexOf('原木')>=0||nm.indexOf('木板')>=0||nm.indexOf('木台阶')>=0||nm.indexOf('栅栏')>=0||nm.indexOf('楼梯')>=0)return '斧';
+    if(nm.indexOf('泥土')>=0||nm.indexOf('沙')>=0||nm.indexOf('砂砾')>=0||nm.indexOf('黏土')>=0||nm.indexOf('草方块')>=0)return '锹';
+    return null;
+  }
+  /* ★ 挖掘耗时：原版公式
+       base = 硬度 × 1.5（能收获）/ 硬度 × 5（工具等级不够，挖很久且不掉落）
+       实际耗时 = base ÷ 工具速度（工具类型对口才生效） */
+  function breakTimeFor(id,toolId){
+    var h=blockHardness(id);
+    if(h<0)return Infinity;
+    var req=harvestReq(id);
+    var tm=toolId?itemMeta(toolId):null;
+    var effective=false;
+    if(tm&&tm.tool){
+      if(req)effective=(tm.kind===req.tool);
+      else{
+        var cls=blockToolClass(id);
+        effective=(cls?tm.kind===cls:true);
+      }
+    }
+    var harvestOk=canHarvest(id,toolId);
+    var base=h*(harvestOk?1.5:5);
+    return base/(effective?tm.speed:1);
+  }
+  /* 当前手持工具能否挖掉这个方块并掉落 */
+  function canHarvest(id,toolId){
+    var req=harvestReq(id);
+    if(!req)return true;
+    var tm=toolId?itemMeta(toolId):null;
+    if(!tm||!tm.tool)return false;
+    return tm.kind===req.tool&&tm.tier>=req.lv;
+  }
 
   /* ═══ 纹理图集 ═══ */
   var ATLAS_COLS=8,ATLAS_ROWS=(window.MC_ATLAS_ROWS&&MC_ATLAS_ROWS>4)?MC_ATLAS_ROWS:4,TILE_PX=16;
@@ -1143,7 +1339,9 @@ canvas#game3d{display:block}
         atlasTexture.needsUpdate=true;
       };
       img.onerror=function(){ /* 缺图就用程序化纹理兜底 */ };
-      img.src='../assets/mc-textures/'+TEX_FILES[ti]+'.png';
+      /* ★ 优先用内联 dataURL：file:// 双击打开时外部 png 会污染 canvas，
+         WebGL 上传直接报 SecurityError，整个世界黑块。dataURL 不受影响。 */
+      img.src=(window.MC_TEX_B64&&MC_TEX_B64[TEX_FILES[ti]])||'../assets/mc-textures/'+TEX_FILES[ti]+'.png';
     });
   })();
 
@@ -1386,7 +1584,8 @@ canvas#game3d{display:block}
   var CRACK_IMG=[];
   for(var ci=0;ci<10;ci++){
     var cimg=new Image();
-    cimg.src='../assets/mc-gui/destroy_'+ci+'.png';
+    /* ★ dataURL 优先，避免 file:// 下 canvas 污染（同上） */
+    cimg.src=(window.MC_GUI_B64&&MC_GUI_B64['destroy_'+ci])||'../assets/mc-gui/destroy_'+ci+'.png';
     CRACK_IMG.push(cimg);
   }
   function crackTexture(i){
@@ -1420,7 +1619,7 @@ canvas#game3d{display:block}
      26.3 的 64×64 经典皮肤。UV 按官方模型布局：每 1 像素 = 1/16 格。
      BoxGeometry 的材质顺序是 [+x,-x,+y,-y,+z,-z]，对应皮肤 right/left/top/bottom/back/front。 */
   var STEVE_IMG=new Image();
-  STEVE_IMG.src='../assets/mc-entity/steve.png';
+  STEVE_IMG.src=(window.MC_ENT_B64&&MC_ENT_B64.steve)||'../assets/mc-entity/steve.png';
   var SKIN_UV={
     head:{right:[0,8,8,8],left:[16,8,8,8],top:[8,0,8,8],bottom:[16,0,8,8],front:[8,8,8,8],back:[24,8,8,8]},
     body:{right:[16,20,4,12],left:[28,20,4,12],top:[20,16,8,4],bottom:[28,16,8,4],front:[20,20,8,12],back:[32,20,8,12]},
@@ -1528,6 +1727,10 @@ canvas#game3d{display:block}
   var breakTimer=0,placeTimer=0;
 
   window.addEventListener('keydown',function(e){
+    if(mapOpen){
+      if(e.key==='Escape'||e.key.toLowerCase()==='m'){closeMap();e.preventDefault();}
+      return;
+    }
     if(chatOpen){
       if(e.key==='Escape'){closeChat();e.preventDefault();}
       else if(e.key==='Enter'){sendChat();e.preventDefault();}
@@ -1587,6 +1790,8 @@ canvas#game3d{display:block}
       mouseHeld[0]=true;
       breakProgress=0;breakTargetKey='';
       breakTimer=0;
+      /* ★ 准星对着动物时，左键是攻击而不是挖掘 */
+      if(tryAttackAnimal())return;
       if(gameMode==='creative')updateBreaking(0);
     }
     if(e.button===2){
@@ -2286,6 +2491,28 @@ canvas#game3d{display:block}
     g.drawImage(atlasCanvas,col*TILE_PX,row*TILE_PX,TILE_PX,TILE_PX,0,0,32,32);
     return c;
   }
+  /* ★ 耐久条：原版是把一条彩色细条叠在物品图标上 */
+  function appendDurBar(parent,item){
+    if(!item||item.dur==null)return;
+    var meta=itemMeta(item.id);
+    if(!meta||!meta.dur)return;
+    var ratio=Math.max(0,Math.min(1,item.dur/meta.dur));
+    var bar=document.createElement('span');
+    bar.className='dur-bar';
+    var fill=document.createElement('i');
+    /* 原版：绿 → 黄 → 红 */
+    var col=ratio>0.5?'#5bd75b':(ratio>0.25?'#e0c020':'#d02020');
+    fill.style.background=col;
+    fill.style.width=(ratio*100)+'%';
+    bar.appendChild(fill);
+    parent.appendChild(bar);
+  }
+  function durText(item){
+    if(!item||item.dur==null)return '';
+    var meta=itemMeta(item.id);
+    if(!meta||!meta.dur)return '';
+    return '（耐久 '+item.dur+'/'+meta.dur+'）';
+  }
 
   function buildHotbar(){
     hotbarEl.innerHTML='';
@@ -2303,8 +2530,12 @@ canvas#game3d{display:block}
       var icon=makeIcon(item.id);
       if(icon){
         el.appendChild(icon);
-        var b=document.createElement('span');b.className='count';b.textContent=item.count;
-        el.appendChild(b);el.title=itemName(item.id)+' x'+item.count;
+        appendDurBar(el,item);
+        if(item.count>1){
+          var b=document.createElement('span');b.className='count';b.textContent=item.count;
+          el.appendChild(b);
+        }
+        el.title=itemName(item.id)+' x'+item.count+durText(item);
       }
     }else el.title='空';
   }
@@ -2317,9 +2548,33 @@ canvas#game3d{display:block}
     var kids=hotbarEl.children;
     for(var j=0;j<kids.length;j++)kids[j].classList.toggle('active',j===i);
   }
+  /* ★ 攻击冷却指示：原版用武器图标变暗表示蓄力进度 */
+  function updateAttackVeil(){
+    var slot=hotbarEl.children[selectedSlot];
+    if(!slot)return;
+    var veil=slot.querySelector('.cool-veil');
+    var it=hotbarSlots[selectedSlot];
+    var meta=it?itemMeta(it.id):null;
+    if(!meta||!meta.tool||meta.kind!=='剑'){
+      if(veil)veil.remove();
+      return;
+    }
+    if(!veil){
+      veil=document.createElement('span');veil.className='cool-veil';
+      slot.appendChild(veil);
+    }
+    if(attackCooldown>=1){veil.style.display='none';return;}
+    veil.style.display='block';
+    veil.style.opacity=String(0.55*(1-attackCooldown));
+  }
   buildHotbar();
 
   function getSelectedBlockId(){
+    var item=hotbarSlots[selectedSlot];
+    return item&&item.count>0?item.id:0;
+  }
+  /* 当前手持物品 id（用于工具判定） */
+  function getSelectedItemId(){
     var item=hotbarSlots[selectedSlot];
     return item&&item.count>0?item.id:0;
   }
@@ -2332,16 +2587,23 @@ canvas#game3d{display:block}
     updateHotbarDisplay();
   }
 
+  /* ★ 新建物品堆：工具带耐久，且不可堆叠（stack=1） */
+  function newStack(id,count){
+    var st={id:id,count:count};
+    var meta=itemMeta(id);
+    if(meta&&meta.tool)st.dur=meta.dur;
+    return st;
+  }
   function addItem(bid,count){
     count=count||1;
     if(!BLOCKS[bid]&&!ITEMS[bid])return false;
-    var i;
+    var max=maxStack(bid),i;
     for(i=0;i<9;i++){var s=hotbarSlots[i];
-      if(s&&s.id===bid&&s.count<64){var a1=Math.min(64-s.count,count);s.count+=a1;count-=a1;updHotSlot(hotbarEl.children[i],s);if(count<=0)return true;}}
+      if(s&&s.id===bid&&s.count<max){var a1=Math.min(max-s.count,count);s.count+=a1;count-=a1;updHotSlot(hotbarEl.children[i],s);if(count<=0)return true;}}
     for(i=0;i<BACKPACK_SIZE;i++){var b=backpackSlots[i];
-      if(b&&b.id===bid&&b.count<64){var a2=Math.min(64-b.count,count);b.count+=a2;count-=a2;if(count<=0)return true;}}
-    for(i=0;i<9;i++){if(!hotbarSlots[i]){var a3=Math.min(64,count);hotbarSlots[i]={id:bid,count:a3};count-=a3;updHotSlot(hotbarEl.children[i],hotbarSlots[i]);if(count<=0)return true;}}
-    for(i=0;i<BACKPACK_SIZE;i++){if(!backpackSlots[i]){var a4=Math.min(64,count);backpackSlots[i]={id:bid,count:a4};count-=a4;if(count<=0)return true;}}
+      if(b&&b.id===bid&&b.count<max){var a2=Math.min(max-b.count,count);b.count+=a2;count-=a2;if(count<=0)return true;}}
+    for(i=0;i<9;i++){if(!hotbarSlots[i]){var a3=Math.min(max,count);hotbarSlots[i]=newStack(bid,a3);count-=a3;updHotSlot(hotbarEl.children[i],hotbarSlots[i]);if(count<=0)return true;}}
+    for(i=0;i<BACKPACK_SIZE;i++){if(!backpackSlots[i]){var a4=Math.min(max,count);backpackSlots[i]=newStack(bid,a4);count-=a4;if(count<=0)return true;}}
     toast('背包已满');
     return false;
   }
@@ -2357,6 +2619,7 @@ canvas#game3d{display:block}
     invCursorEl.innerHTML='';
     var icon=makeIcon(cursorItem.id);
     if(icon)invCursorEl.appendChild(icon);
+    appendDurBar(invCursorEl,cursorItem);
     if(cursorItem.count>1){
       var c=document.createElement('span');
       c.className='cnt';c.textContent=cursorItem.count;
@@ -2367,6 +2630,7 @@ canvas#game3d{display:block}
   }
 
   function fillInvCell(cell,item){
+    while(cell.firstChild)cell.removeChild(cell.firstChild);
     if(item&&item.id&&item.count>0){
       var icon=makeIcon(item.id);
       if(icon)cell.appendChild(icon);
@@ -2374,7 +2638,8 @@ canvas#game3d{display:block}
         var c=document.createElement('span');c.className='cnt';c.textContent=item.count;
         cell.appendChild(c);
       }
-      cell.title=itemName(item.id)+' x'+item.count;
+      appendDurBar(cell,item);
+      cell.title=itemName(item.id)+' x'+item.count+durText(item);
     }else cell.title='';
   }
 
@@ -2388,8 +2653,8 @@ canvas#game3d{display:block}
         if(targetArr){
           for(var t=0;t<targetArr.length;t++){
             var ts=targetArr[t];
-            if(ts&&ts.id===item.id&&ts.count<64){
-              var mv=Math.min(64-ts.count,item.count);
+            if(ts&&ts.id===item.id&&ts.count<maxStack(item.id)){
+              var mv=Math.min(maxStack(item.id)-ts.count,item.count);
               ts.count+=mv;item.count-=mv;
               if(item.count<=0){arr[idx]=null;break;}
             }
@@ -2404,7 +2669,9 @@ canvas#game3d{display:block}
         return;
       }
       if(e.button===0){
-        if(cursorItem&&item&&cursorItem.id===item.id&&item.count+cursorItem.count<=64){
+        /* ★ 工具不可堆叠：数量固定为 1，只做整格交换 */
+        var cmax=cursorItem?maxStack(cursorItem.id):64;
+        if(cursorItem&&item&&cursorItem.id===item.id&&item.count+cursorItem.count<=cmax){
           item.count+=cursorItem.count;
           cursorItem=null;
         }else{
@@ -2415,15 +2682,15 @@ canvas#game3d{display:block}
       }else if(e.button===2){
         if(cursorItem){
           if(!item){
-            arr[idx]={id:cursorItem.id,count:1};
+            arr[idx]=newStack(cursorItem.id,1);
             cursorItem.count--;
-          }else if(item.id===cursorItem.id&&item.count<64){
+          }else if(item.id===cursorItem.id&&item.count<maxStack(item.id)){
             item.count++;cursorItem.count--;
           }
           if(cursorItem&&cursorItem.count<=0)cursorItem=null;
         }else if(item){
           var half=Math.ceil(item.count/2);
-          cursorItem={id:item.id,count:half};
+          cursorItem={id:item.id,count:half,dur:item.dur};
           item.count-=half;
           if(item.count<=0)arr[idx]=null;
         }
@@ -2470,7 +2737,7 @@ canvas#game3d{display:block}
       if(icon)cell.appendChild(icon);
       cell.addEventListener('mousedown',function(e){
         e.preventDefault();e.stopPropagation();
-        cursorItem={id:id,count:(e.button===2)?1:64};
+        cursorItem=newStack(id,e.button===2?1:maxStack(id));
         renderCursor();
       });
       cell.addEventListener('contextmenu',function(e){e.preventDefault();});
@@ -2519,10 +2786,13 @@ canvas#game3d{display:block}
     })(i);
   }
 
+  /* ★ 原版生存合成区是 2×2（创造 3×3 需要工作台），这里用 2×2 */
   function buildCraftGrid(){
     var grid=$('invCraftGrid');
     grid.innerHTML='';
-    for(var i=0;i<9;i++)(function(idx){
+    grid.className='craft-grid '+(gameMode==='creative'?'c3':'c2');
+    var n=(gameMode==='creative')?9:4;
+    for(var i=0;i<n;i++)(function(idx){
       var cell=document.createElement('div');
       cell.className='inv-cell';
       fillInvCell(cell,craftGrid[idx]);
@@ -2532,6 +2802,7 @@ canvas#game3d{display:block}
   }
   function buildRecipeList(){
     var list=$('invRecipeList');
+    if(!list)return;
     list.innerHTML='';
     var hint=document.createElement('div');
     hint.style.cssText='font-size:11.5px;color:var(--muted);padding:8px 4px';
@@ -2614,21 +2885,20 @@ canvas#game3d{display:block}
 
   function returnCursorToInv(){
     if(!cursorItem||!cursorItem.id)return;
-    var bid=cursorItem.id,remaining=cursorItem.count;
-    var i;
+    var bid=cursorItem.id,remaining=cursorItem.count,max=maxStack(bid),i;
     for(i=0;i<9&&remaining>0;i++){
       var s=hotbarSlots[i];
-      if(s&&s.id===bid&&s.count<64){var a1=Math.min(64-s.count,remaining);s.count+=a1;remaining-=a1;}
+      if(s&&s.id===bid&&s.count<max){var a1=Math.min(max-s.count,remaining);s.count+=a1;remaining-=a1;}
     }
     for(i=0;i<BACKPACK_SIZE&&remaining>0;i++){
       var b=backpackSlots[i];
-      if(b&&b.id===bid&&b.count<64){var a2=Math.min(64-b.count,remaining);b.count+=a2;remaining-=a2;}
+      if(b&&b.id===bid&&b.count<max){var a2=Math.min(max-b.count,remaining);b.count+=a2;remaining-=a2;}
     }
     for(i=0;i<9&&remaining>0;i++){
-      if(!hotbarSlots[i]){var a3=Math.min(64,remaining);hotbarSlots[i]={id:bid,count:a3};remaining-=a3;}
+      if(!hotbarSlots[i]){var a3=Math.min(max,remaining);hotbarSlots[i]=newStack(bid,a3);remaining-=a3;}
     }
     for(i=0;i<BACKPACK_SIZE&&remaining>0;i++){
-      if(!backpackSlots[i]){var a4=Math.min(64,remaining);backpackSlots[i]={id:bid,count:a4};remaining-=a4;}
+      if(!backpackSlots[i]){var a4=Math.min(max,remaining);backpackSlots[i]=newStack(bid,a4);remaining-=a4;}
     }
     updateHotbarDisplay();
     cursorItem=null;
@@ -2815,16 +3085,44 @@ canvas#game3d{display:block}
     sfxDig(b);
     markDirty(x,z);
     queueWaterAround(x,y,z);
-    if(gameMode==='survival'||gameMode==='hardcore')addItem(b,1);
+    /* 掉落：工具等级不够就只挖不捡（原版规则） */
+    if(gameMode==='survival'||gameMode==='hardcore'){
+      var held=getSelectedItemId();
+      if(canHarvest(b,held))addItem(b,1);
+    }
     if(isMultiplayer&&net.connected)net.sendBlockChange(x,y,z,0);
   }
 
-  /* ★ 挖掘进度更新（生存按硬度计时，创造瞬间）；按住左键期间持续挥手 */
+  /* ★ 手持工具耐久 -1；耐久耗尽则工具损坏消失 */
+  function damageHeldTool(amount){
+    var it=hotbarSlots[selectedSlot];
+    if(!it||it.dur==null)return;
+    it.dur-=amount;
+    if(it.dur<=0){
+      it.dur=0;
+      updHotSlot(hotbarEl.children[selectedSlot],it);
+      toast('「'+itemName(it.id)+'」已损坏');
+      sfx('pop',0.5);
+      hotbarSlots[selectedSlot]=null;
+      updHotSlot(hotbarEl.children[selectedSlot],null);
+      if(inventoryOpen)refreshInvUI();
+    }else{
+      updHotSlot(hotbarEl.children[selectedSlot],it);
+      if(inventoryOpen)refreshInvUI();
+    }
+  }
+
+  /* ★ 挖掘进度更新
+     - 生存模式按「硬度 → 工具速度」计算耗时（原版公式）
+     - 工具等级不足时挖得慢且不掉落
+     - 按住左键期间持续挥手 */
   function updateBreaking(dt){
     swingCd=Math.max(0,swingCd-dt);
     if(!mouseHeld[0]||appState!=='playing'||inventoryOpen||chatOpen){breakProgress=0;breakTargetKey='';return;}
     if(gameMode==='spectator'||gameMode==='adventure'){breakProgress=0;breakTargetKey='';return;}
     breakTimer-=dt;
+    /* ★ 准星对着动物时优先攻击（原版：左键攻击生物） */
+    if(tryAttackAnimal()){breakProgress=0;breakTargetKey='';return;}
     var hit=camHit();
     if(!hit){breakProgress=0;breakTargetKey='';return;}
     var b=getBlock(hit.x,hit.y,hit.z);
@@ -2840,17 +3138,122 @@ canvas#game3d{display:block}
       }
       return;
     }
-    var hardness=BLOCK_HARDNESS[b]||1;
-    if(hardness<0){breakProgress=0;return;}
-    breakProgress+=dt/hardness;
+    var held=getSelectedItemId();
+    var bt=breakTimeFor(b,held);
+    if(!isFinite(bt)){breakProgress=0;return;}
+    /* 挖掘会累积疲劳（消耗饱和度/饥饿） */
+    player.exhaustion+=dt*0.02;
+    if(player.exhaustion>=4){
+      player.exhaustion-=4;
+      if(player.saturation>0)player.saturation--;
+      else if(player.hunger>0)player.hunger--;
+      updateHunger();
+    }
+    breakProgress+=dt/bt;
     if(breakProgress>=1){
       destroyBlock(hit.x,hit.y,hit.z,b);swing();
+      /* 挖掉方块消耗 1 点耐久 */
+      var meta=held?itemMeta(held):null;
+      if(meta&&meta.tool)damageHeldTool(1);
       breakProgress=0;breakTargetKey='';
     }
   }
 
+  /* ★ 进食：右键食物，恢复饥饿值与饱和度（原版：饱食度高时回复更快） */
+  var eatCooldown=0;
+  function tryEat(){
+    if(eatCooldown>0)return false;
+    var it=hotbarSlots[selectedSlot];
+    if(!it||it.count<=0)return false;
+    var meta=itemMeta(it.id);
+    if(!meta||meta.food==null)return false;
+    if(gameMode!=='survival'&&gameMode!=='hardcore'){toast('只有生存模式可以进食');return false;}
+    if(player.hunger>=player.maxHunger&&meta.food>0){toast('你现在并不饿');return false;}
+    eatCooldown=1.0;
+    player.hunger=Math.min(player.maxHunger,player.hunger+meta.food);
+    player.saturation=Math.min(player.hunger,player.saturation+(meta.sat||meta.food*0.6));
+    it.count--;
+    if(it.count<=0)hotbarSlots[selectedSlot]=null;
+    updHotSlot(hotbarEl.children[selectedSlot],hotbarSlots[selectedSlot]);
+    if(inventoryOpen)refreshInvUI();
+    sfx('pop',0.6);
+    updateHunger();
+    toast('吃掉了「'+meta.name+'」');
+    return true;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     ★ 地图：手持「地图」右键打开，显示以玩家为中心的地形俯视图
+     ═══════════════════════════════════════════════════ */
+  var mapOpen=false,mapZoom=2,mapCanvasEl=null,mapCtx=null,mapRedrawTimer=0;
+  function openMap(){
+    if(mapOpen)return;
+    mapOpen=true;
+    mouseHeld[2]=false;
+    mapCanvasEl=$('mapCanvas');mapCtx=mapCanvasEl.getContext('2d');
+    $('mapScreen').classList.add('show');
+    $('crosshair').style.display='none';
+    if(document.pointerLockElement)document.exitPointerLock();
+    drawMap();
+  }
+  function closeMap(){
+    if(!mapOpen)return;
+    mapOpen=false;
+    $('mapScreen').classList.remove('show');
+    if(appState==='playing'&&gameMode!=='spectator')$('crosshair').style.display='block';
+    if(appState==='playing'&&hasFine&&!document.pointerLockElement&&!isTouchUI){
+      try{renderer.domElement.requestPointerLock();}catch(e){}
+    }
+  }
+  function drawMap(){
+    if(!mapOpen||!mapCtx)return;
+    var size=384;
+    var px=Math.floor(player.pos.x),pz=Math.floor(player.pos.z);
+    /* 缩放：1=每像素 2 格，2=每像素 1 格，3=每像素 0.5 格 */
+    var scale=mapZoom===1?2:(mapZoom===2?1:0.5);
+    var half=Math.floor(size/2);
+    var img=mapCtx.createImageData(size,size);
+    var d=img.data;
+    for(var y=0;y<size;y++){
+      for(var x=0;x<size;x++){
+        var wx=px+Math.round((x-half)*scale);
+        var wz=pz+Math.round((y-half)*scale);
+        var p=tp(wx,wz);
+        var info=BI[p.biome];
+        var c=hexToRgb(info.color);
+        /* 高度做明暗处理，山有阴影、海更暗 */
+        var rel=(p.height-SEA_LEVEL)/40;
+        var shade=1+Math.max(-0.45,Math.min(0.45,rel*0.5));
+        var i=(y*size+x)*4;
+        d[i]=Math.max(0,Math.min(255,c[0]*shade));
+        d[i+1]=Math.max(0,Math.min(255,c[1]*shade));
+        d[i+2]=Math.max(0,Math.min(255,c[2]*shade));
+        d[i+3]=255;
+      }
+    }
+    mapCtx.putImageData(img,0,0);
+    /* 玩家标记 */
+    mapCtx.fillStyle='#ff2b2b';
+    mapCtx.fillRect(half-3,half-3,6,6);
+    mapCtx.strokeStyle='#fff';mapCtx.lineWidth=1;
+    mapCtx.strokeRect(half-4.5,half-4.5,9,9);
+    $('mapInfo').textContent='中心 X '+px+' Z '+pz+' · 比例 1格='+(scale)+'像素';
+  }
+  function hexToRgb(h){
+    h=h.replace('#','');
+    return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];
+  }
+  $('mapCloseBtn').addEventListener('click',closeMap);
+  $('mapZoomIn').addEventListener('click',function(){mapZoom=Math.min(3,mapZoom+1);drawMap();});
+  $('mapZoomOut').addEventListener('click',function(){mapZoom=Math.max(1,mapZoom-1);drawMap();});
+
   function doPlace(){
     if(gameMode==='spectator')return;
+    /* 手里拿的是食物 → 优先进食 */
+    if(tryEat())return;
+    /* 手里拿的是地图 → 打开地图 */
+    var heldItem=hotbarSlots[selectedSlot];
+    if(heldItem&&heldItem.count>0&&itemName(heldItem.id)==='地图'){openMap();return;}
     var hit=camHit();if(!hit)return;
     var x=hit.x+hit.normal.x,y=hit.y+hit.normal.y,z=hit.z+hit.normal.z;
     var cur=getBlock(x,y,z);
@@ -2892,9 +3295,21 @@ canvas#game3d{display:block}
     setTimeout(function(){deathScreen.classList.add('hidden');spawnPlayer();updateChunks(true);updateHP();updateHunger();setAppState('playing');},2000);
   }
 
+  /* ★ 饥饿机制（贴近原版）
+     - 饱和度随时间下降，饱和度归零后开始扣饥饿值
+     - 剧烈动作（疾跑/跳跃/挖掘/攻击）累积疲劳，疲劳满 4 点扣一点饥饿
+     - 饥饿值 ≥ 18 时可以自然回血，但会消耗饱和度
+     - 饥饿值 = 0 时持续掉血（普通难度 1 点 / 4 秒，困难更快）
+  */
   function updateHungerSystem(dt,sprinting,moving,dist){
     if(gameMode!=='survival'&&gameMode!=='hardcore')return;
     if(difficulty==='peaceful')return;
+    /* 饱和度自然衰减（不移动时也会缓慢下降） */
+    if(player.saturation>0){
+      player.saturation-=(sprinting?dt*0.6:(moving?dt*0.2:dt*0.08));
+      if(player.saturation<0)player.saturation=0;
+    }
+    /* 疲劳累积 */
     var ex=0;
     if(sprinting) ex=dist*0.10;
     else if(moving) ex=dist*0.01;
@@ -2906,12 +3321,14 @@ canvas#game3d{display:block}
       else if(player.hunger>0)player.hunger--;
       updateHunger();
     }
+    /* 自然回血：需要饥饿值 ≥ 18 */
     if(player.hunger>=18&&player.health<player.maxHealth){
       player.hungerTimer+=dt;
-      if(player.hungerTimer>=3.5){
+      var need=(player.saturation>0)?3.5:4.5;
+      if(player.hungerTimer>=need){
         player.hungerTimer=0;
         player.health=Math.min(player.maxHealth,player.health+1);
-        if(player.saturation>0)player.saturation-=0.5;
+        if(player.saturation>0)player.saturation=Math.max(0,player.saturation-0.6);
         else player.exhaustion+=1;
         if(player.exhaustion>=4){
           player.exhaustion-=4;
@@ -2921,13 +3338,101 @@ canvas#game3d{display:block}
         updateHP();updateHunger();
       }
     }else player.hungerTimer=0;
+    /* 饥饿归零：持续掉血 */
     if(player.hunger<=0){
       player.starveTimer+=dt;
-      if(player.starveTimer>=4){
+      var gap=(difficulty==='hard')?2.0:(difficulty==='normal'?4.0:4.0);
+      if(player.starveTimer>=gap){
         player.starveTimer=0;
         applyDamage(1);
       }
     }else player.starveTimer=0;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     ★ 攻击冷却机制（原版 1.9 战斗）
+       - 冷却值 0~1，攻击前需蓄满才打出满伤害
+       - 伤害 = 基础伤害 × (0.2 + 0.8 × 冷却²)
+       - 剑伤害最高，徒手 1 点
+     ═══════════════════════════════════════════════════ */
+  var attackCooldown=1, ATTACK_FULL=0.6;   /* 蓄满所需秒数（剑 0.6s，徒手更快） */
+  function attackDamage(){
+    var held=getSelectedItemId();
+    var meta=held?itemMeta(held):null;
+    var base=(meta&&meta.kind==='剑')?meta.dmg:1;
+    var mul=0.2+0.8*attackCooldown*attackCooldown;
+    return base*mul;
+  }
+  function updateAttackCooldown(dt){
+    if(attackCooldown<1)attackCooldown=Math.min(1,attackCooldown+dt/ATTACK_FULL);
+  }
+  /* 命中动物：扣血 + 击退 */
+  function hitAnimal(a,dmg,dirX,dirZ){
+    a.health-=dmg;
+    a.hurtTimer=0.35;
+    a.vel.x+=dirX*5.5;a.vel.z+=dirZ*5.5;
+    a.wanderTimer=3;
+    a.targetSpeed=0;
+    sfx('hit',0.5);
+    if(a.health<=0){
+      scene.remove(a.mesh);
+      animals.splice(animals.indexOf(a),1);
+      /* 掉落：猪→生猪排，牛→生牛肉，羊→生羊肉 */
+      if(gameMode==='survival'||gameMode==='hardcore'){
+        var drop=0;
+        if(a.type==='pig')drop=findItemIdByName('生猪排');
+        else if(a.type==='cow')drop=findItemIdByName('生牛肉');
+        else if(a.type==='sheep')drop=findItemIdByName('生羊肉');
+        if(drop)addItem(drop,1);
+      }
+    }
+  }
+  var ITEM_ID_BY_NAME=null;
+  function findItemIdByName(nm){
+    if(!ITEM_ID_BY_NAME){
+      ITEM_ID_BY_NAME={};
+      for(var k in ITEMS)ITEM_ID_BY_NAME[ITEMS[k].name]=Number(k);
+    }
+    return ITEM_ID_BY_NAME[nm]||0;
+  }
+
+  /* ★ 攻击判定：准星方向与动物包围球相交即命中（原版 3 格攻击距离） */
+  var ATTACK_RANGE=3.0;
+  function tryAttackAnimal(){
+    if(gameMode==='creative'||gameMode==='spectator')return false;
+    if(attackCooldown<1)return false;   /* 冷却没好，打不动 */
+    var d=getLook();
+    var ox=camera.position.x,oy=camera.position.y,oz=camera.position.z;
+    var best=null,bestT=1e9;
+    for(var i=0;i<animals.length;i++){
+      var a=animals[i];
+      var cx=a.pos.x,cy=a.pos.y+0.7,cz=a.pos.z;
+      var ex=cx-ox,ey=cy-oy,ez=cz-oz;
+      var t=ex*d.x+ey*d.y+ez*d.z;
+      if(t<0||t>ATTACK_RANGE)continue;
+      var dx=ex-d.x*t,dy=ey-d.y*t,dz=ez-d.z*t;
+      var dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      if(dist>0.9)continue;
+      if(t<bestT){bestT=t;best=a;}
+    }
+    if(!best)return false;
+    var dmg=attackDamage();
+    var nx=best.pos.x-ox,nz=best.pos.z-oz;
+    var nl=Math.hypot(nx,nz)||1;
+    hitAnimal(best,dmg,nx/nl,nz/nl);
+    /* 攻击消耗耐久：剑 2 点，其它工具 1 点 */
+    var held=getSelectedItemId();
+    var meta=held?itemMeta(held):null;
+    if(meta&&meta.tool)damageHeldTool(meta.kind==='剑'?2:1);
+    attackCooldown=0;                    /* 打出后重新蓄力 */
+    player.exhaustion+=0.1;
+    if(player.exhaustion>=4){
+      player.exhaustion-=4;
+      if(player.saturation>0)player.saturation--;
+      else if(player.hunger>0)player.hunger--;
+      updateHunger();
+    }
+    return true;
   }
 
   function physics(dt){
@@ -3118,11 +3623,12 @@ canvas#game3d{display:block}
     Object.keys(files).forEach(function(k){
       var im=new Image();
       im.onload=function(){ANIMAL_SKIN[k]=im;};
-      im.src='../assets/mc-entity/'+files[k];
+      /* ★ dataURL 优先，避免 file:// 下 canvas 污染（同上） */
+      im.src=(window.MC_ENT_B64&&MC_ENT_B64[files[k].slice(0,-4)])||'../assets/mc-entity/'+files[k];
     });
     var w=new Image();
     w.onload=function(){WOOL_IMG=w;};
-    w.src='../assets/mc-entity/sheep_wool.png';
+    w.src=(window.MC_ENT_B64&&MC_ENT_B64.sheep_wool)||'../assets/mc-entity/sheep_wool.png';
   })();
   /* 每种动物各部位从哪张皮肤、哪个矩形取样（用方差扫描挑出的平整区，
      避免取到眼睛、鸡冠这类细节，贴到方块上才不会出现「满脸是眼」） */
@@ -3249,7 +3755,7 @@ canvas#game3d{display:block}
         pos:{x:ax+0.5,y:topY+1,z:az+0.5},vel:{x:0,y:0,z:0},
         yaw:Math.random()*Math.PI*2,
         wanderTimer:Math.random()*5,targetSpeed:0,walkPhase:0,
-        onGround:false
+        onGround:false,health:type==='sheep'?8:10,hurtTimer:0
       });
       return true;
     }
@@ -3351,6 +3857,7 @@ canvas#game3d{display:block}
       $('hudOnline').style.display='block';
       $('hudOnline').textContent='联机 · '+currentRoom.name+' ('+(net.remotePlayers.size+1)+'/'+currentRoom.max_players+')'+(currentRoom.isHost?' [房主]':'');
     }else $('hudOnline').style.display='none';
+    updateAttackVeil();
   }
   function updatePlayerList(){
     if(!isMultiplayer){$('playerList').innerHTML='';return;}
@@ -3454,6 +3961,8 @@ canvas#game3d{display:block}
       updateBreaking(dt);
       updateActions(dt);
       updateAnimals(dt);
+      updateAttackCooldown(dt);
+      eatCooldown=Math.max(0,eatCooldown-dt);
       waterTick(dt);
       var pcx=Math.floor(player.pos.x/CHUNK_SIZE),pcz=Math.floor(player.pos.z/CHUNK_SIZE);
       if(pcx!==lastPCX||pcz!==lastPCZ)updateChunks();
@@ -3477,6 +3986,7 @@ canvas#game3d{display:block}
       updateCamera();updateHand(dt);updateHighlight();updateHUD();updateUnderwaterState();
     }
     if(isMultiplayer&&net.connected)net.tick(now);
+    if(mapOpen){mapRedrawTimer+=dt;if(mapRedrawTimer>0.5){mapRedrawTimer=0;drawMap();}}
     renderer.render(scene,camera);
   }
 
