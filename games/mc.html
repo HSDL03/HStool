@@ -28,6 +28,8 @@ canvas#game3d{display:block}
   background:url(../assets/mc-gui/crosshair.png) center/100% 100% no-repeat;
   image-rendering:pixelated;
 }
+/* 水下滤镜：压住画面，配合蓝色雾 */
+#waterOverlay{position:fixed;inset:0;z-index:14;display:none;pointer-events:none;background:rgba(26,86,148,.28)}
 #hudTop{position:fixed;top:calc(8px + env(safe-area-inset-top));left:10px;z-index:15;pointer-events:none;display:none;flex-direction:column;gap:2px}
 /* 原版 HUD 文字：白字 + 硬黑描边，没有底板 */
 .hud-card{
@@ -289,6 +291,7 @@ canvas#game3d{display:block}
 </div>
 
 <div id="playerList"></div>
+<div id="waterOverlay"></div>
 <div id="crosshair"></div>
 <div id="healthBar"></div>
 <div id="hungerBar"></div>
@@ -610,8 +613,17 @@ canvas#game3d{display:block}
     19:{name:'金矿石',top:24,side:24,bottom:24},
     20:{name:'钻石矿石',top:25,side:25,bottom:25},
     21:{name:'青金石矿石',top:26,side:26,bottom:26},
-    22:{name:'水',top:27,side:27,bottom:27}
+    22:{name:'水',top:27,side:27,bottom:27},
+    23:{name:'水',top:27,side:27,bottom:27},
+    24:{name:'水',top:27,side:27,bottom:27},
+    25:{name:'水',top:27,side:27,bottom:27},
+    26:{name:'水',top:27,side:27,bottom:27},
+    27:{name:'水',top:27,side:27,bottom:27},
+    28:{name:'水',top:27,side:27,bottom:27},
+    29:{name:'水',top:27,side:27,bottom:27}
   };
+  /* 22 = 水源；23~29 = 流动水（level 1~7，越远越稀） */
+  function isWaterId(b){return b>=22&&b<=29;}
   var ALL_BLOCK_IDS=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
 
   /* ★ 挖掘硬度：数值越大越慢；-1 不可破坏 */
@@ -776,7 +788,7 @@ canvas#game3d{display:block}
     return false;
   }
 
-  var chunkData=new Map(),chunkMeshes=new Map(),dirtyChunks=new Set(),loadingIndicators=new Map();
+  var chunkData=new Map(),chunkMeshes=new Map(),waterMeshes=new Map(),dirtyChunks=new Set(),loadingIndicators=new Map();
   var worldMods=new Map();
   function ck(cx,cz){return cx+','+cz;}
   function yIdx(wy){return wy-WORLD_MIN_Y;}
@@ -804,7 +816,7 @@ canvas#game3d{display:block}
     if(wy<WORLD_MIN_Y)return true;
     if(wy>=WORLD_MAX_Y)return false;
     var b=getBlock(wx,wy,wz);
-    return b!==0&&b!==22;   /* 水不实心：能穿过、能游泳 */
+    return b!==0&&!isWaterId(b);   /* 水不实心：能穿过、能游泳 */
   }
   function isOcc(wx,wy,wz){
     if(wy<WORLD_MIN_Y||wy>=WORLD_MAX_Y)return false;
@@ -995,6 +1007,8 @@ canvas#game3d{display:block}
   var DAY_LENGTH=900;          /* 一整天 15 分钟 */
   var SKY_DAY=new THREE.Color(0x87ceeb),SKY_DUSK=new THREE.Color(0xe8895a),SKY_NIGHT=new THREE.Color(0x0a1024);
   var FOG_DAY=new THREE.Color(0x9fd4f0),FOG_DUSK=new THREE.Color(0xc98a63),FOG_NIGHT=new THREE.Color(0x0b1228);
+  var FOG_WATER=new THREE.Color(0x1d5f9e);
+  var underwater=false;
   var _skyC=new THREE.Color(),_fogC=new THREE.Color();
   function updateDayNight(dt){
     worldTime=(worldTime+dt/DAY_LENGTH)%1;
@@ -1011,7 +1025,11 @@ canvas#game3d{display:block}
     scene.background.copy(_skyC);
     _fogC.copy(FOG_NIGHT).lerp(FOG_DAY,dayAmt);
     if(duskAmt>0)_fogC.lerp(FOG_DUSK,duskAmt*0.55);
+    /* 水下：换成偏青的深蓝，并把视距压到二十格出头 */
+    if(underwater)_fogC.lerp(FOG_WATER,0.9);
     scene.fog.color.copy(_fogC);
+    scene.fog.near=underwater?1.2:22;
+    scene.fog.far=underwater?21:58;
     hemiLight.intensity=0.16+0.74*dayAmt;
     sunLight.intensity=0.05+0.50*dayAmt;
     fillLight.intensity=0.04+0.12*dayAmt;
@@ -1060,9 +1078,10 @@ canvas#game3d{display:block}
   atlasTexture.wrapS=THREE.ClampToEdgeWrapping;atlasTexture.wrapT=THREE.ClampToEdgeWrapping;
   var blockMaterial=new THREE.MeshLambertMaterial({map:atlasTexture,side:THREE.FrontSide,vertexColors:true});
   /* 水：半透明、不写深度，从里从外都能看见 */
+  /* 水：半透明、双面（水下能看到水面）、不写深度避免自遮挡 */
   var waterMaterial=new THREE.MeshLambertMaterial({
     map:atlasTexture,side:THREE.DoubleSide,vertexColors:true,
-    transparent:true,opacity:0.72,depthWrite:false
+    transparent:true,opacity:0.75,depthWrite:false
   });
 
   /* ═══ 原版材质贴图 ═══
@@ -1130,7 +1149,7 @@ canvas#game3d{display:block}
           var b=data[(ay*CHUNK_SIZE+lz)*CHUNK_SIZE+lx];
           if(b===0)continue;
           var def=BLOCKS[b];if(!def)continue;
-          var isWater=(b===22);
+          var isWater=isWaterId(b);
 
           var nP=getL(lx+1,ay,lz),nN=getL(lx-1,ay,lz),
               nU=getL(lx,ay+1,lz),nD=getL(lx,ay-1,lz),
@@ -1145,7 +1164,7 @@ canvas#game3d{display:block}
           for(var f=0;f<6;f++){
             var nb=(f===0)?nP:(f===1)?nN:(f===2)?nU:(f===3)?nD:(f===4)?nQ:nB;
             /* 水只被水遮挡；固体面遇到水仍然要画，否则从水下看岸壁会穿帮 */
-            if(nb!==0&&!(nb===22&&!isWater))continue;
+            if(nb!==0&&!(isWaterId(nb)&&!isWater))continue;
 
             var face=FACES[f];
             var tile=(f===2)?def.top:(f===3)?def.bottom:def.side;
@@ -1195,17 +1214,20 @@ canvas#game3d{display:block}
       old.traverse(function(o){if(o.geometry)o.geometry.dispose();});
       chunkMeshes.delete(key);
     }
+    var oldW=waterMeshes.get(key);
+    if(oldW){scene.remove(oldW);oldW.geometry.dispose();waterMeshes.delete(key);}
     var res=buildChunkGeo(cx,cz);
     if(!res||(!res.solid&&!res.water))return;
-    var sg=res.solid;
-    if(!sg){sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute([],3));}
-    var mesh=new THREE.Mesh(sg,blockMaterial);
+    /* 水和固体分成两个对象：半球形的包围球不会互相连累剔除 */
+    if(res.solid){
+      var mesh=new THREE.Mesh(res.solid,blockMaterial);
+      mesh.frustumCulled=true;scene.add(mesh);chunkMeshes.set(key,mesh);
+    }
     if(res.water){
       var wm=new THREE.Mesh(res.water,waterMaterial);
-      wm.renderOrder=1;
-      mesh.add(wm);
+      wm.frustumCulled=true;wm.renderOrder=2;
+      scene.add(wm);waterMeshes.set(key,wm);
     }
-    mesh.frustumCulled=true;scene.add(mesh);chunkMeshes.set(key,mesh);
   }
   function createLoadInd(cx,cz){
     var key=ck(cx,cz);if(loadingIndicators.has(key))return;
@@ -1251,6 +1273,8 @@ canvas#game3d{display:block}
       chunkData.delete(k);
     var mesh=chunkMeshes.get(k);
     if(mesh){scene.remove(mesh);mesh.traverse(function(o){if(o.geometry)o.geometry.dispose();});chunkMeshes.delete(k);}
+    var wm=waterMeshes.get(k);
+    if(wm){scene.remove(wm);wm.geometry.dispose();waterMeshes.delete(k);}
       removeLoadInd(cx2,cz2);
     }
     for(var j=0;j<newLoaded.length;j++){
@@ -1288,8 +1312,10 @@ canvas#game3d{display:block}
   }
   function clearAllChunks(){
     chunkData.clear();
-    chunkMeshes.forEach(function(m){scene.remove(m);m.traverse(function(o){if(o.geometry)o.geometry.dispose();});});
-    chunkMeshes.clear();dirtyChunks.clear();
+  chunkMeshes.forEach(function(m){scene.remove(m);m.traverse(function(o){if(o.geometry)o.geometry.dispose();});});
+  chunkMeshes.clear();
+  waterMeshes.forEach(function(m){scene.remove(m);m.geometry.dispose();});
+  waterMeshes.clear();dirtyChunks.clear();
     loadingIndicators.forEach(function(m){scene.remove(m);m.geometry.dispose();});
     loadingIndicators.clear();
     /* 也清理动物 */
@@ -1306,6 +1332,13 @@ canvas#game3d{display:block}
     var maxD=LOAD_RADIUS*CHUNK_SIZE*CULL_DISTANCE_MUL;
     var maxSq=maxD*maxD;
     chunkMeshes.forEach(function(mesh,key){
+      var parts=key.split(',');
+      var cx=parseInt(parts[0],10)*CHUNK_SIZE+CHUNK_SIZE/2;
+      var cz=parseInt(parts[1],10)*CHUNK_SIZE+CHUNK_SIZE/2;
+      var dx=cx-px,dz=cz-pz;
+      mesh.visible=(dx*dx+dz*dz)<maxSq;
+    });
+    waterMeshes.forEach(function(mesh,key){
       var parts=key.split(',');
       var cx=parseInt(parts[0],10)*CHUNK_SIZE+CHUNK_SIZE/2;
       var cz=parseInt(parts[1],10)*CHUNK_SIZE+CHUNK_SIZE/2;
@@ -2681,11 +2714,61 @@ canvas#game3d{display:block}
   function camHit(){var d=getLook();return raycast(camera.position.x,camera.position.y,camera.position.z,d.x,d.y,d.z,REACH);}
   function swing(){swingTime=SWING_DURATION;}
 
+  /* ═══ 水流 ═══
+     22 = 水源，23~29 = 流动水 level1~7。
+     规则简化的原版逻辑：能往下就先往下；落不下去了才向四周摊，每摊一格稀一级，7 级停。 */
+  var waterQ=[],waterQSet=Object.create(null),waterTimer=0;
+
+  function queueWater(x,y,z){
+    if(y<WORLD_MIN_Y||y>=WORLD_MAX_Y)return;
+    var k=x+','+y+','+z;
+    if(waterQSet[k])return;
+    waterQSet[k]=1;waterQ.push([x,y,z]);
+  }
+  function queueWaterAround(x,y,z){
+    queueWater(x+1,y,z);queueWater(x-1,y,z);queueWater(x,y+1,z);
+    queueWater(x,y-1,z);queueWater(x,y,z+1);queueWater(x,y,z-1);
+  }
+  function spreadWater(x,y,z){
+    var b=getBlock(x,y,z);
+    if(!isWaterId(b))return;
+    var lv=b-22;
+    var below=getBlock(x,y-1,z);
+    if(below===0){
+      setBlock(x,y-1,z,23);markDirty(x,z);queueWater(x,y-1,z);
+      return;
+    }
+    if(isWaterId(below)&&(below-22)>1){
+      setBlock(x,y-1,z,23);markDirty(x,z);queueWater(x,y-1,z);
+      return;
+    }
+    if(lv>=7)return;
+    var dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(var i=0;i<4;i++){
+      var nx=x+dirs[i][0],nz=z+dirs[i][1];
+      if(getBlock(nx,y,nz)!==0)continue;
+      if(getBlock(nx,y-1,nz)===0)continue;   /* 下面悬空就先落下去，不悬空横流 */
+      setBlock(nx,y,nz,22+lv+1);markDirty(nx,nz);queueWater(nx,y,nz);
+    }
+  }
+  function waterTick(dt){
+    waterTimer+=dt;
+    if(waterTimer<0.22)return;
+    waterTimer=0;
+    var budget=800;
+    while(waterQ.length&&budget-->0){
+      var p=waterQ.shift();
+      delete waterQSet[p[0]+','+p[1]+','+p[2]];
+      spreadWater(p[0],p[1],p[2]);
+    }
+  }
+
   /* ★ 破坏方块（公共方法） */
   function destroyBlock(x,y,z,b){
     setBlock(x,y,z,0);
     sfxDig(b);
     markDirty(x,z);
+    queueWaterAround(x,y,z);
     if(gameMode==='survival'||gameMode==='hardcore')addItem(b,1);
     if(isMultiplayer&&net.connected)net.sendBlockChange(x,y,z,0);
   }
@@ -2725,7 +2808,7 @@ canvas#game3d{display:block}
     var hit=camHit();if(!hit)return;
     var x=hit.x+hit.normal.x,y=hit.y+hit.normal.y,z=hit.z+hit.normal.z;
     var cur=getBlock(x,y,z);
-    if(cur!==0&&cur!==22)return;   /* 水可以被方块替换 */
+    if(cur!==0&&!isWaterId(cur))return;   /* 水可以被方块替换 */
     var bid=getSelectedBlockId();
     if(!bid||bid===0){toast('空手无法放置');return;}
     if(gameMode==='survival'||gameMode==='hardcore'){
@@ -2740,6 +2823,7 @@ canvas#game3d{display:block}
       if(ox&&oy&&oz)return;
     }
     setBlock(x,y,z,bid);markDirty(x,z);swing();
+    queueWaterAround(x,y,z);
     if(gameMode==='survival'||gameMode==='hardcore'){
       var it2=hotbarSlots[selectedSlot];
       if(it2){it2.count--;if(it2.count<=0)hotbarSlots[selectedSlot]=null;
@@ -2814,7 +2898,7 @@ canvas#game3d{display:block}
     /* 水里：脚或腰所在格是水。水方块不实心，所以能游进去 */
     var fb=getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y+0.1),Math.floor(player.pos.z));
     var bb=getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y+1.0),Math.floor(player.pos.z));
-    var inWater=!isFly&&(fb===22||bb===22);
+    var inWater=!isFly&&(isWaterId(fb)||isWaterId(bb));
     /* ★ 疾跑：Shift 或 双击 W */
     var sprint=(keys['shift']||sprintLock)&&!isFly;
     var speed=isFly?(keys['shift']?FLY_SPEED*1.7:FLY_SPEED):(sprint?RUN_SPEED:WALK_SPEED);
@@ -3256,6 +3340,15 @@ canvas#game3d{display:block}
     camera.position.set(player.pos.x+bx,player.pos.y+EYE_HEIGHT+by,player.pos.z);
     camera.rotation.x=pitch;camera.rotation.y=yaw;camera.rotation.z=0;
   }
+  function updateUnderwaterState(){
+    var hx=Math.floor(player.pos.x),hy=Math.floor(player.pos.y+EYE_HEIGHT),hz=Math.floor(player.pos.z);
+    var u=isWaterId(getBlock(hx,hy,hz));
+    if(u===underwater)return;
+    underwater=u;
+    var ov=$('waterOverlay');
+    if(ov)ov.style.display=u?'block':'none';
+  }
+
   function updateActions(dt){
     /* ★ 右键：仅按住时循环放置，mousedown 已单独触发过一次 */
     placeTimer-=dt;
@@ -3314,6 +3407,7 @@ canvas#game3d{display:block}
       updateBreaking(dt);
       updateActions(dt);
       updateAnimals(dt);
+      waterTick(dt);
       var pcx=Math.floor(player.pos.x/CHUNK_SIZE),pcz=Math.floor(player.pos.z/CHUNK_SIZE);
       if(pcx!==lastPCX||pcz!==lastPCZ)updateChunks();
       processDirty();
@@ -3333,7 +3427,7 @@ canvas#game3d{display:block}
     }else chunkLoadingEl.classList.remove('show');
     if(appState==='playing'||appState==='paused'||appState==='dead'){
       updateDayNight(dt);
-      updateCamera();updateHand(dt);updateHighlight();updateHUD();
+      updateCamera();updateHand(dt);updateHighlight();updateHUD();updateUnderwaterState();
     }
     if(isMultiplayer&&net.connected)net.tick(now);
     renderer.render(scene,camera);
