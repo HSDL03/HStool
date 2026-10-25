@@ -22,39 +22,59 @@ canvas#game3d{display:block}
 .blob.b3{width:340px;height:340px;background:rgba(180,150,80,.07);top:40%;left:45%}
 .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(61,82,31,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(61,82,31,.04) 1px,transparent 1px);background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse at center,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse at center,#000 20%,transparent 75%)}
 #particles{position:absolute;inset:0;width:100%;height:100%}
-#crosshair{position:fixed;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);pointer-events:none;z-index:20;opacity:.9;mix-blend-mode:difference;display:none}
-#crosshair::before,#crosshair::after{content:'';position:absolute;background:#fff}
-#crosshair::before{left:50%;top:0;width:2px;height:100%;margin-left:-1px}
-#crosshair::after{top:50%;left:0;height:2px;width:100%;margin-top:-1px}
-#hudTop{position:fixed;top:calc(14px + env(safe-area-inset-top));left:18px;z-index:15;pointer-events:none;display:none;flex-direction:column;gap:6px}
-.hud-card{font-family:monospace;font-size:13px;color:var(--text);background:var(--bg2);padding:5px 12px;border:2px solid var(--bd2);box-shadow:var(--sh),var(--bevel);white-space:nowrap}
-.hud-card .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.hud-card.mode{color:var(--ac);font-weight:bold}
-.hud-card.online{color:#0060a0}
+#crosshair{
+  position:fixed;left:50%;top:50%;width:30px;height:30px;transform:translate(-50%,-50%);
+  pointer-events:none;z-index:20;display:none;
+  background:url(../assets/mc-gui/crosshair.png) center/100% 100% no-repeat;
+  image-rendering:pixelated;
+}
+#hudTop{position:fixed;top:calc(8px + env(safe-area-inset-top));left:10px;z-index:15;pointer-events:none;display:none;flex-direction:column;gap:2px}
+/* 原版 HUD 文字：白字 + 硬黑描边，没有底板 */
+.hud-card{
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;font-weight:600;
+  color:#fff;padding:0 2px;white-space:nowrap;text-shadow:2px 2px 0 #3f3f3f;
+}
+.hud-card .dot{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:middle;box-shadow:1px 1px 0 rgba(0,0,0,.6)}
+.hud-card.mode{color:#ffe985}
+.hud-card.online{color:#a8e2ff}
 #playerList{position:fixed;top:calc(14px + env(safe-area-inset-top));right:18px;z-index:15;pointer-events:none;display:none;flex-direction:column;gap:3px;max-height:40vh;overflow:hidden}
 .player-tag{font-family:monospace;font-size:12px;color:#fff;background:rgba(30,30,20,.65);padding:3px 10px;text-shadow:1px 1px 0 rgba(0,0,0,.8);white-space:nowrap}
 .player-tag.me{color:#8fd94f}
-#hotbar{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;padding:3px;background:rgba(40,40,30,.6);border:2px solid var(--bd2);box-shadow:var(--sh);z-index:15;display:none}
-.slot{width:52px;height:52px;position:relative;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:2px solid var(--bd2);cursor:pointer;overflow:visible;flex-shrink:0}
-.slot+.slot{margin-left:-2px}
-.slot canvas{width:38px;height:38px;image-rendering:pixelated;pointer-events:none}
-.slot .count{position:absolute;bottom:1px;right:3px;font-family:monospace;font-size:12px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
-.slot.active{background:var(--acs);z-index:2;box-shadow:var(--bevel),0 0 0 2px var(--ac)}
-#healthBar,#hungerBar{position:fixed;left:50%;transform:translateX(-50%);height:22px;z-index:15;pointer-events:none;display:none;image-rendering:pixelated}
-#healthBar{bottom:calc(78px + env(safe-area-inset-bottom))}
-#hungerBar{bottom:calc(104px + env(safe-area-inset-bottom))}
-#tips{position:fixed;left:16px;bottom:calc(18px + env(safe-area-inset-bottom));color:var(--text);font-size:12.5px;line-height:1.8;background:var(--bg2);padding:10px 14px;border:2px solid var(--bd2);box-shadow:var(--sh),var(--bevel);pointer-events:none;z-index:15;display:none}
-#tips b{color:var(--ac)}
-#chatBox{position:fixed;left:16px;bottom:calc(260px + env(safe-area-inset-bottom));width:460px;max-width:60vw;z-index:22;pointer-events:none;display:none;flex-direction:column;gap:3px;max-height:220px;overflow:hidden;font-size:13px}
+/* 原版热键栏：贴图 182×22 逻辑像素，这里 2 倍渲染 */
+#hotbar{
+  position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  width:364px;height:44px;padding:2px;display:none;gap:0;z-index:15;
+  background:url(../assets/mc-gui/hotbar.png) center/100% 100% no-repeat;
+  image-rendering:pixelated;
+}
+.slot{
+  width:40px;height:40px;position:relative;display:flex;align-items:center;justify-content:center;
+  background:none;border:0;box-shadow:none;cursor:pointer;overflow:visible;flex-shrink:0;
+}
+.slot canvas{width:32px;height:32px;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(1px 1px 0 rgba(0,0,0,.45))}
+.slot .count{position:absolute;bottom:-1px;right:1px;font-family:monospace;font-size:13px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #3f3f3f}
+.slot.active::after{
+  content:'';position:absolute;left:-3px;top:-3px;width:46px;height:46px;pointer-events:none;
+  background:url(../assets/mc-gui/hotbar_selection.png) center/100% 100% no-repeat;
+  image-rendering:pixelated;
+}
+/* 原版 HUD 对齐：血条在热键栏左上、饥饿条在右上，都贴着经验条上方 */
+#healthBar,#hungerBar{position:fixed;height:18px;z-index:15;pointer-events:none;display:none;image-rendering:pixelated}
+#healthBar{left:calc(50% - 180px);bottom:calc(62px + env(safe-area-inset-bottom))}
+#hungerBar{right:calc(50% - 180px);bottom:calc(62px + env(safe-area-inset-bottom))}
+#healthBar canvas,#hungerBar canvas{display:block;height:18px;image-rendering:pixelated}
+#tips{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));color:#fff;font-size:12.5px;line-height:1.8;background:rgba(0,0,0,.42);padding:6px 10px;border:0;pointer-events:none;z-index:15;display:none;text-shadow:1px 1px 0 rgba(0,0,0,.85);max-width:46vw}
+#tips b{color:#ffe12b}
+#chatBox{position:fixed;left:12px;bottom:calc(112px + env(safe-area-inset-bottom));width:460px;max-width:60vw;z-index:22;pointer-events:none;display:none;flex-direction:column;gap:3px;max-height:220px;overflow:hidden;font-size:13px}
 #chatBox.visible{display:flex}
 .chat-msg{background:rgba(30,30,20,.65);color:#fff;padding:4px 10px;text-shadow:1px 1px 0 rgba(0,0,0,.8);font-size:13px;line-height:1.35;word-wrap:break-word;pointer-events:auto}
 .chat-msg.system{color:#ffe9a0}.chat-msg.error{color:#ff8080}.chat-msg.success{color:#a0ffa0}
 .chat-msg .sender{color:#8fd94f;font-weight:bold}
-#chatInput{position:fixed;left:16px;bottom:calc(230px + env(safe-area-inset-bottom));width:460px;max-width:60vw;z-index:23;display:none;background:rgba(0,0,0,.7);border:2px solid var(--bd2);padding:6px 10px}
+#chatInput{position:fixed;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));width:460px;max-width:60vw;z-index:23;display:none;background:rgba(0,0,0,.7);border:2px solid var(--bd2);padding:6px 10px}
 #chatInput.visible{display:block}
 #chatInput .prefix{color:#8fd94f;font-family:monospace;font-weight:bold;margin-right:6px;font-size:14px}
 #chatInput input{background:transparent;border:none;outline:none;color:#fff;font-family:inherit;font-size:13.5px;width:calc(100% - 20px)}
-#toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:50;padding:10px 20px;background:var(--bg2);border:2px solid var(--bd2);box-shadow:var(--sh),var(--bevel);color:var(--text);font-size:13.5px;letter-spacing:2px;pointer-events:none;opacity:0;transition:opacity .2s}
+#toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:50;padding:5px 14px;background:rgba(0,0,0,.45);border:0;color:#fff;font-size:13.5px;letter-spacing:1px;text-shadow:2px 2px 0 #3f3f3f;pointer-events:none;opacity:0;transition:opacity .2s}
 #toast.show{opacity:1}
 #chunkLoading{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:18;pointer-events:none;display:none;align-items:center;gap:12px;padding:8px 18px;background:rgba(30,30,20,.75);border:2px solid #8fd94f;color:#fff;font-size:12px;font-family:monospace}
 #chunkLoading.show{display:flex}
@@ -62,122 +82,140 @@ canvas#game3d{display:block}
 @keyframes cs{to{transform:rotate(360deg)}}
 #chunkLoading .bar{width:120px;height:6px;background:rgba(0,0,0,.4);border:1px solid rgba(143,217,79,.4);position:relative}
 #chunkLoading .bar-inner{position:absolute;left:0;top:0;bottom:0;background:#8fd94f;transition:width .2s;width:0}
-.screen{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.screen{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;background:rgba(8,10,6,.55)}
 .screen.hidden{display:none}
 .screen-title{color:var(--ac);font-size:40px;font-weight:bold;letter-spacing:10px;text-shadow:2px 2px 0 rgba(0,0,0,.15);margin-bottom:6px}
+.screen-logo{display:block;width:min(430px,74vw);height:auto;image-rendering:pixelated;margin-bottom:4px;filter:drop-shadow(4px 5px 0 rgba(0,0,0,.35))}
 .screen-sub{color:var(--muted);font-size:13px;letter-spacing:4px;margin-bottom:30px}
 .menu-buttons{display:flex;flex-direction:column;gap:12px;align-items:center}
-.mc-btn{min-width:280px;padding:14px 34px;color:var(--text);font-family:inherit;font-size:15px;letter-spacing:3px;font-weight:bold;background:var(--bg2);border:2px solid var(--bd2);box-shadow:var(--sh),var(--bevel);cursor:pointer;transition:transform .1s,box-shadow .15s,background .15s}
-.mc-btn:hover{background:var(--acs)}
-.mc-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(0,0,0,.2),var(--bevel-in)}
-.mc-btn.primary{background:var(--topbar-bg);color:#fff;border-color:var(--topbar-bd)}
-.mc-btn.danger{background:var(--dgr);color:#fff;border-color:#5a1010}
-.mc-btn.small{min-width:110px;padding:9px 18px;font-size:13px}
-.mc-btn:disabled{opacity:.5;cursor:not-allowed}
+/* 原版按钮：200×20 九宫格拉伸，文字白字灰描边 */
+.mc-btn{
+  min-width:280px;padding:9px 26px;color:#fff;font-family:inherit;font-size:15px;letter-spacing:2px;font-weight:bold;
+  text-shadow:2px 2px 0 #3f3f3f;cursor:pointer;
+  background:none;border:8px solid transparent;
+  border-image:url(../assets/mc-gui/btn.png) 4 fill stretch;
+  image-rendering:pixelated;transition:filter .12s,transform .08s;
+}
+.mc-btn:hover{border-image-source:url(../assets/mc-gui/btn_hover.png);filter:brightness(1.1)}
+.mc-btn:active{transform:translateY(1px);filter:brightness(.9)}
+.mc-btn.primary{border-image-source:url(../assets/mc-gui/btn_hover.png);filter:brightness(1.06)}
+.mc-btn.primary:hover{filter:brightness(1.2)}
+.mc-btn.danger{color:#ffc0b4}
+.mc-btn.small{min-width:110px;padding:5px 16px;font-size:13px;border-width:6px}
+.mc-btn:disabled{border-image-source:url(../assets/mc-gui/btn_disabled.png);color:#9a9a9a;text-shadow:2px 2px 0 #2c2c2c;cursor:not-allowed;filter:none;opacity:1}
 .btn-row{display:flex;gap:12px;margin-top:24px;justify-content:center;flex-wrap:wrap}
-.panel{width:660px;max-width:96vw;background:var(--bg);border:2px solid var(--bd2);box-shadow:3px 3px 0 rgba(0,0,0,.3),var(--bevel);overflow:hidden}
-.panel-header{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:2px solid var(--topbar-bd)}
+.panel{width:660px;max-width:96vw;background:#c6c6c6;border:2px solid #000;box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #8b8b8b,4px 4px 0 rgba(0,0,0,.45);overflow:hidden;color:#3f3f3f}
+.panel-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#8b8b8b;color:#fff;border-bottom:2px solid #000;text-shadow:2px 2px 0 #3f3f3f}
 .panel-header strong{font-size:14px}
 .panel-header .sp{flex:1}
-.panel-body{padding:18px 24px}
-.icon-btn{background:transparent;border:2px solid transparent;color:var(--topbar-fg);font-size:16px;width:30px;height:30px;cursor:pointer}
-.icon-btn:hover{background:rgba(0,0,0,.25)}
+.panel-body{padding:16px 20px}
+.icon-btn{background:transparent;border:2px solid transparent;color:#fff;font-size:16px;width:28px;height:28px;cursor:pointer}
+.icon-btn:hover{background:rgba(255,255,255,.18)}
 #multiplayerScreen .panel{width:900px;height:70vh;min-height:380px;display:flex;flex-direction:column}
-#roomList{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--bg2)}
-.room-card{display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel)}
+#roomList{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;background:#b8b8b8}
+.room-card{display:flex;align-items:center;gap:14px;padding:10px 14px;background:#c6c6c6;border:2px solid #565656;box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #8b8b8b}
 .room-card.full{opacity:.65}
-.room-icon{width:52px;height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--topbar-bg);color:#fff;border:2px solid var(--topbar-bd);font-size:24px}
+.room-icon{width:52px;height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#8b8b8b;color:#fff;border:2px solid #000;font-size:24px}
 .room-info{flex:1;min-width:0}
-.room-info .name{font-size:15px;font-weight:bold;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.room-info .meta{color:var(--muted);font-size:11.5px;font-family:monospace;display:flex;gap:12px;flex-wrap:wrap}
-.room-info .meta .players{color:var(--ac);font-weight:bold}
+.room-info .name{font-size:15px;font-weight:bold;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f1f1f}
+.room-info .meta{color:#3f3f3f;font-size:11.5px;font-family:monospace;display:flex;gap:12px;flex-wrap:wrap}
+.room-info .meta .players{color:#1f4d0a;font-weight:bold}
 .room-actions{flex-shrink:0;display:flex;gap:8px}
-.room-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:14px;gap:10px;padding:40px}
+.room-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#3f3f3f;font-size:14px;gap:10px;padding:40px}
 #createRoomScreen .panel{width:720px;max-height:92vh;display:flex;flex-direction:column}
 #createRoomScreen .panel-body{overflow-y:auto}
-.form-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px dashed var(--bd)}
+.form-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #8b8b8b}
 .form-row:last-child{border-bottom:none}
-.form-row>label{width:130px;flex-shrink:0;font-size:13.5px;font-weight:bold}
-.form-row input[type="text"]{flex:1;padding:10px 14px;background:var(--bg2);color:var(--text);font-family:inherit;font-size:14px;border:2px solid var(--bd2);box-shadow:var(--bevel-in);outline:none}
-.save-list{flex:1;overflow-y:auto;max-height:240px;border:2px solid var(--bd2);background:var(--bg2)}
-.save-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px dashed var(--bd);cursor:pointer}
-.save-card.selected{background:var(--acs);box-shadow:inset 3px 0 0 var(--ac)}
-.save-thumb{width:44px;height:44px;flex-shrink:0;border:2px solid var(--bd2);background:linear-gradient(180deg,#87ceeb 0%,#87ceeb 42%,#6fbe44 42%,#6fbe44 58%,#8b6b43 58%,#8b6b43 100%)}
+.form-row>label{width:130px;flex-shrink:0;font-size:13.5px;font-weight:bold;color:#1f1f1f}
+.form-row input[type="text"]{flex:1;padding:8px 10px;background:#000;color:#e8e8e8;font-family:inherit;font-size:14px;border:2px solid #a0a0a0;outline:none}
+.save-list{flex:1;overflow-y:auto;max-height:240px;border:2px solid #565656;background:#b8b8b8}
+.save-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid #8b8b8b;cursor:pointer}
+.save-card.selected{background:#8b8b8b;box-shadow:inset 3px 0 0 #1f4d0a}
+.save-thumb{width:44px;height:44px;flex-shrink:0;border:2px solid #565656;background:linear-gradient(180deg,#87ceeb 0%,#87ceeb 42%,#6fbe44 42%,#6fbe44 58%,#8b6b43 58%,#8b6b43 100%)}
 .save-info{flex:1;min-width:0}
-.save-info .name{font-size:13.5px;font-weight:bold;margin-bottom:2px}
-.save-info .meta{font-size:11px;color:var(--muted);font-family:monospace}
+.save-info .name{font-size:13.5px;font-weight:bold;margin-bottom:2px;color:#1f1f1f}
+.save-info .meta{font-size:11px;color:#3f3f3f;font-family:monospace}
 .btn-group{display:flex;gap:6px;flex-wrap:wrap;flex:1}
-.option-btn{padding:8px 16px;color:var(--text);font-family:inherit;font-size:13px;background:var(--bg2);border:2px solid var(--bd2);box-shadow:var(--bevel);cursor:pointer}
-.option-btn.active{background:var(--topbar-bg);color:#fff;border-color:var(--topbar-bd)}
-.toggle-btn{display:inline-flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;background:var(--bg2);border:2px solid var(--bd2);box-shadow:var(--bevel);cursor:pointer;font-family:inherit;font-size:13px;color:var(--text)}
-.toggle-btn .knob{width:20px;height:20px;background:var(--bd2)}
-.toggle-btn[data-value="on"]{background:var(--acs);border-color:var(--ac)}
-.toggle-btn[data-value="on"] .knob{background:var(--ac)}
+.option-btn{padding:7px 14px;color:#fff;font-family:inherit;font-size:13px;background:#8b8b8b;border:2px solid #000;box-shadow:inset 1px 1px 0 #b0b0b0,inset -1px -1px 0 #565656;cursor:pointer;text-shadow:1px 1px 0 #3f3f3f}
+.option-btn:hover{background:#9d9d9d}
+.option-btn.active{background:#4f7d2a;border-color:#22330f}
+.toggle-btn{display:inline-flex;align-items:center;gap:10px;padding:4px 12px 4px 4px;background:#8b8b8b;border:2px solid #000;box-shadow:inset 1px 1px 0 #b0b0b0,inset -1px -1px 0 #565656;cursor:pointer;font-family:inherit;font-size:13px;color:#fff;text-shadow:1px 1px 0 #3f3f3f}
+.toggle-btn .knob{width:20px;height:20px;background:#565656;border:1px solid #000}
+.toggle-btn[data-value="on"]{background:#4f7d2a;border-color:#22330f}
+.toggle-btn[data-value="on"] .knob{background:#8fd94f}
 #settingsScreen .panel{width:860px;height:72vh;min-height:420px;display:flex;flex-direction:column}
 .settings-layout{flex:1;display:flex;overflow:hidden}
-.settings-tabs{width:150px;flex-shrink:0;background:var(--bg2);border-right:2px solid var(--bd2);display:flex;flex-direction:column;padding:8px 0}
-.tab-btn{padding:12px 18px;color:var(--text);font-family:inherit;font-size:13.5px;text-align:left;background:transparent;border:none;border-left:4px solid transparent;cursor:pointer}
-.tab-btn.active{background:var(--acs);border-left-color:var(--ac);color:var(--ac);font-weight:bold}
-.settings-panels{flex:1;overflow-y:auto;padding:8px 22px}
+.settings-tabs{width:150px;flex-shrink:0;background:#b8b8b8;border-right:2px solid #565656;display:flex;flex-direction:column;padding:8px 0}
+.tab-btn{padding:11px 16px;color:#1f1f1f;font-family:inherit;font-size:13.5px;text-align:left;background:transparent;border:none;border-left:4px solid transparent;cursor:pointer}
+.tab-btn:hover{background:#c6c6c6}
+.tab-btn.active{background:#8b8b8b;border-left-color:#1f4d0a;color:#fff;text-shadow:1px 1px 0 #3f3f3f;font-weight:bold}
+.settings-panels{flex:1;overflow-y:auto;padding:8px 22px;background:#c6c6c6}
 .settings-panel{display:none}
 .settings-panel.active{display:block}
-.setting-row{display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:1px dashed var(--bd)}
-.setting-row>label{width:140px;flex-shrink:0;font-size:13.5px;font-weight:bold}
-.setting-row input[type="range"]{flex:1;height:10px;background:var(--bg3);border:2px solid var(--bd2);outline:none;cursor:pointer}
-.setting-row .valBox{width:90px;text-align:right;font-family:monospace;font-size:13px;color:var(--ac);font-weight:bold;flex-shrink:0}
-.toggle-settings-btn{padding:8px 20px;color:var(--text);font-family:inherit;font-size:13.5px;background:var(--bg2);border:2px solid var(--bd2);box-shadow:var(--bevel);cursor:pointer}
-.toggle-settings-btn.on{background:var(--topbar-bg);border-color:var(--topbar-bd);color:#fff}
+.setting-row{display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid #8b8b8b}
+.setting-row>label{width:140px;flex-shrink:0;font-size:13.5px;font-weight:bold;color:#1f1f1f}
+.setting-row input[type="range"]{flex:1;height:10px;background:#8b8b8b;border:2px solid #565656;outline:none;cursor:pointer}
+.setting-row .valBox{width:90px;text-align:right;font-family:monospace;font-size:13px;color:#1f4d0a;font-weight:bold;flex-shrink:0}
+.toggle-settings-btn{padding:6px 18px;color:#fff;font-family:inherit;font-size:13.5px;background:#8b8b8b;border:2px solid #000;box-shadow:inset 1px 1px 0 #b0b0b0,inset -1px -1px 0 #565656;cursor:pointer;text-shadow:1px 1px 0 #3f3f3f}
+.toggle-settings-btn.on{background:#4f7d2a;border-color:#22330f}
 
 #inventoryScreen{position:fixed;inset:0;z-index:42;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55)}
 #inventoryScreen.hidden{display:none}
 .inv-window{display:flex;gap:12px;align-items:stretch;max-width:96vw;max-height:92vh}
-.inv-panel{background:var(--bg);border:2px solid var(--bd2);box-shadow:3px 3px 0 rgba(0,0,0,.35),var(--bevel);display:flex;flex-direction:column;overflow:hidden}
+/* 原版物品栏：灰底 + slot_frame 九宫格边框 */
+.inv-panel{background:#c6c6c6;border:2px solid #565656;box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #8b8b8b,3px 3px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden;color:#3f3f3f}
 .inv-panel.creative{width:min(500px,48vw)}
 .inv-panel.player{width:min(470px,46vw)}
-.inv-panel-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--topbar-bg);color:var(--topbar-fg);border-bottom:2px solid var(--topbar-bd);font-size:13px;font-weight:bold;letter-spacing:2px;flex-shrink:0}
-.inv-panel-header .sp{flex:1}
-.inv-search-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg2);border-bottom:2px solid var(--bd2);flex-shrink:0}
-.inv-search-row .icon{font-size:14px;flex-shrink:0}
-.inv-search-row input{flex:1;min-width:0;padding:6px 10px;background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel-in);outline:none;font-family:inherit;font-size:13px;color:var(--text)}
-.inv-tabs{display:flex;flex-wrap:wrap;gap:3px;padding:7px 8px;background:var(--bg2);border-bottom:2px solid var(--bd2);flex-shrink:0}
-.inv-tab{padding:4px 11px;font-family:inherit;font-size:12px;background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel);cursor:pointer;color:var(--text);letter-spacing:1px}
-.inv-tab:hover{background:var(--acs)}
-.inv-tab.active{background:var(--topbar-bg);color:#fff;border-color:var(--topbar-bd)}
-.inv-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px;background:var(--bg2);min-height:0}
-.inv-grid-9{display:grid;grid-template-columns:repeat(9,1fr);gap:3px}
-.inv-section-title{font-size:11px;color:var(--muted);font-weight:bold;padding:6px 12px 4px;letter-spacing:1px;background:var(--bg2);flex-shrink:0}
+.inv-panel-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#8b8b8b;color:#fff;border-bottom:2px solid #565656;font-size:13px;font-weight:bold;letter-spacing:2px;flex-shrink:0;text-shadow:2px 2px 0 #3f3f3f}
+.inv-search-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#c6c6c6;border-bottom:2px solid #8b8b8b;flex-shrink:0}
+.inv-tabs{display:flex;flex-wrap:wrap;gap:3px;padding:7px 8px;background:#c6c6c6;border-bottom:2px solid #8b8b8b;flex-shrink:0}
+.inv-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px;background:#c6c6c6;min-height:0}
+.inv-grid-9{display:grid;grid-template-columns:repeat(9,1fr);gap:2px}
+.inv-section-title{font-size:11px;color:#3f3f3f;font-weight:bold;padding:6px 12px 4px;letter-spacing:1px;background:#c6c6c6;flex-shrink:0}
 .inv-panel.player .inv-grid-9{padding:0 12px}
-.inv-cell{aspect-ratio:1;position:relative;background:var(--bg3);border:2px solid var(--bd2);box-shadow:var(--bevel);cursor:pointer;display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden}
-.inv-cell:hover{background:var(--acs)}
-.inv-cell.selected{background:var(--acs);box-shadow:inset 0 0 0 2px var(--ac),var(--bevel)}
-.inv-cell.disabled{opacity:.4;cursor:not-allowed}
-.inv-cell.disabled:hover{background:var(--bg3)}
+.inv-cell{
+  aspect-ratio:1;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  min-width:0;overflow:hidden;background:rgba(139,139,139,.45);
+  border:5px solid transparent;
+  border-image:url(../assets/mc-gui/slot_frame.png) 16 fill stretch;
+  image-rendering:pixelated;
+}
+.inv-cell:hover{filter:brightness(1.18)}
+.inv-cell.selected{outline:2px solid #fff;outline-offset:-4px;filter:brightness(1.2)}
+.inv-cell.disabled{opacity:.45;cursor:not-allowed}
+.inv-cell.disabled:hover{filter:none}
+.inv-panel-header .sp{flex:1}
+.inv-search-row .icon{font-size:14px;flex-shrink:0}
+.inv-search-row input{flex:1;min-width:0;padding:6px 10px;background:#000;border:2px solid #a0a0a0;outline:none;font-family:inherit;font-size:13px;color:#e0e0e0}
+.inv-tab{padding:4px 11px;font-family:inherit;font-size:12px;background:#8b8b8b;cursor:pointer;color:#fff;letter-spacing:1px;text-shadow:1px 1px 0 #3f3f3f;border:2px solid #565656;box-shadow:inset 1px 1px 0 #b0b0b0,inset -1px -1px 0 #565656}
+.inv-tab:hover{background:#a0a0a0}
+.inv-tab.active{background:#4f7d2a;border-color:#2f4d18}
 .inv-cell canvas{width:82%;height:82%;image-rendering:pixelated;pointer-events:none;display:block}
 .inv-cell .cnt{position:absolute;bottom:0;right:2px;font-family:monospace;font-size:11px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;pointer-events:none}
 .inv-empty{grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);font-size:13px}
-.inv-craft-section{background:var(--bg2);border-bottom:2px solid var(--bd2);padding:6px 12px 10px;flex-shrink:0}
+.inv-craft-section{background:#c6c6c6;border-bottom:2px solid #8b8b8b;padding:6px 12px 10px;flex-shrink:0}
 .craft-row{display:flex;align-items:center;gap:12px;justify-content:center}
-.craft-grid{display:grid;grid-template-columns:repeat(3,44px);gap:3px}
-.craft-arrow{font-size:24px;color:var(--muted);font-weight:bold}
+.craft-grid{display:grid;grid-template-columns:repeat(3,44px);gap:2px}
+.craft-arrow{font-size:24px;color:#565656;font-weight:bold}
 .craft-result{display:flex;flex-direction:column;gap:4px}
-.craft-result .inv-cell{width:52px;height:52px;aspect-ratio:auto;background:var(--bg3);box-shadow:var(--bevel-in)}
-.inv-recipe-section{background:var(--bg2);border-bottom:2px solid var(--bd2);flex-shrink:0;max-height:180px;display:flex;flex-direction:column}
+.craft-result .inv-cell{width:52px;height:52px;aspect-ratio:auto;background:rgba(139,139,139,.45)}
+.inv-recipe-section{background:#c6c6c6;border-bottom:2px solid #8b8b8b;flex-shrink:0;max-height:180px;display:flex;flex-direction:column}
 .inv-recipe-list{padding:4px 12px 8px;display:flex;flex-wrap:wrap;gap:5px;overflow-y:auto;max-height:150px}
-.recipe-chip{display:flex;align-items:center;gap:5px;padding:4px 8px 4px 4px;background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel);cursor:pointer;font-size:11px;font-family:inherit;color:var(--text)}
-.recipe-chip:hover{background:var(--acs)}
+.recipe-chip{display:flex;align-items:center;gap:5px;padding:4px 8px 4px 4px;background:#8b8b8b;border:2px solid #565656;box-shadow:inset 1px 1px 0 #b0b0b0,inset -1px -1px 0 #565656;cursor:pointer;font-size:11px;font-family:inherit;color:#fff;text-shadow:1px 1px 0 #3f3f3f}
+.recipe-chip:hover{background:#a0a0a0}
 .recipe-chip canvas{width:22px;height:22px;image-rendering:pixelated;flex-shrink:0}
-.inv-armor-section{background:var(--bg2);border-bottom:2px solid var(--bd2);padding-bottom:6px;flex-shrink:0}
+.inv-armor-section{background:#c6c6c6;border-bottom:2px solid #8b8b8b;padding-bottom:6px;flex-shrink:0}
 .inv-armor-row{padding:0 12px;display:flex;gap:5px;justify-content:center}
-.inv-armor-row .inv-cell{width:44px;height:44px;aspect-ratio:auto;background:var(--bg3);box-shadow:var(--bevel-in);opacity:.6;cursor:not-allowed}
-.inv-armor-row .inv-cell:hover{background:var(--bg3)}
-.inv-armor-row .inv-cell .armor-icon{font-size:20px;color:var(--muted);pointer-events:none}
-.inv-player-body{flex:1;overflow-y:auto;background:var(--bg2);min-height:0}
-.inv-player-section{display:flex;gap:12px;padding:10px 12px 6px;align-items:center;background:var(--bg2);border-bottom:1px dashed var(--bd)}
-.inv-player-preview{width:90px;height:150px;background:var(--bg);border:2px solid var(--bd2);box-shadow:var(--bevel-in);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.inv-player-stats{flex:1;display:flex;flex-direction:column;gap:6px;font-size:12px;font-family:monospace;color:var(--muted)}
+.inv-armor-row .inv-cell{width:44px;height:44px;aspect-ratio:auto;background:rgba(139,139,139,.45);opacity:.6;cursor:not-allowed}
+.inv-armor-row .inv-cell:hover{filter:none}
+.inv-armor-row .inv-cell .armor-icon{font-size:20px;color:#565656;pointer-events:none}
+.inv-player-body{flex:1;overflow-y:auto;background:#c6c6c6;min-height:0}
+.inv-player-section{display:flex;gap:12px;padding:10px 12px 6px;align-items:center;background:#c6c6c6;border-bottom:1px solid #8b8b8b}
+.inv-player-preview{width:90px;height:150px;background:#8b8b8b;border:2px solid #565656;box-shadow:inset 2px 2px 0 #6a6a6a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inv-player-stats{flex:1;display:flex;flex-direction:column;gap:6px;font-size:12px;font-family:monospace;color:#3f3f3f}
 .inv-player-stats .row{display:flex;justify-content:space-between}
-.inv-player-stats .row b{color:var(--ac)}
-.inv-hint{font-size:11px;color:var(--muted);text-align:center;padding:8px 12px;border-top:1px dashed var(--bd);flex-shrink:0;line-height:1.7}
+.inv-player-stats .row b{color:#1f4d0a}
+.inv-hint{font-size:11px;color:#3f3f3f;text-align:center;padding:8px 12px;border-top:1px solid #8b8b8b;flex-shrink:0;line-height:1.7}
 .inv-cursor{position:fixed;pointer-events:none;z-index:120;width:46px;height:46px;display:none;transform:translate(-50%,-50%);filter:drop-shadow(2px 2px 0 rgba(0,0,0,.55))}
 .inv-cursor canvas{width:100%;height:100%;image-rendering:pixelated;display:block}
 .inv-cursor .cnt{position:absolute;bottom:-2px;right:0;font-family:monospace;font-size:12px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
@@ -295,7 +333,7 @@ canvas#game3d{display:block}
 </div>
 
 <div id="mainMenuScreen" class="screen">
-  <div class="screen-title">我的世界</div>
+  <img class="screen-logo" src="../assets/mc-gui/logo.png" alt="我的世界" draggable="false">
   <div class="screen-sub">3D 体素沙盒 · Y -64~320</div>
   <div class="menu-buttons">
     <button class="mc-btn primary" id="singlePlayerBtn">单人游戏</button>
@@ -571,7 +609,8 @@ canvas#game3d{display:block}
     18:{name:'铁矿石',top:23,side:23,bottom:23},
     19:{name:'金矿石',top:24,side:24,bottom:24},
     20:{name:'钻石矿石',top:25,side:25,bottom:25},
-    21:{name:'青金石矿石',top:26,side:26,bottom:26}
+    21:{name:'青金石矿石',top:26,side:26,bottom:26},
+    22:{name:'水',top:27,side:27,bottom:27}
   };
   var ALL_BLOCK_IDS=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
 
@@ -626,6 +665,12 @@ canvas#game3d{display:block}
     dt(24,function(g){nf(g,128,128,128,26);oreSpots(g,'rgba(248,220,80,0.95)');});
     dt(25,function(g){nf(g,128,128,128,26);oreSpots(g,'rgba(90,230,230,0.95)');});
     dt(26,function(g){nf(g,128,128,128,26);oreSpots(g,'rgba(45,80,200,0.95)');});
+    /* 27：水（半透明材质会再压一层透明，这里只画颜色与波纹） */
+    dt(27,function(g){
+      nf(g,56,108,196,12);
+      for(var i=0;i<20;i++)pxf(g,(Math.random()*15)|0,(Math.random()*16)|0,2,1,'rgba(126,184,242,0.34)');
+      for(var j=0;j<12;j++)pxf(g,(Math.random()*16)|0,(Math.random()*15)|0,1,2,'rgba(26,66,146,0.32)');
+    });
   })();
 
   /* ═══ 噪声 ═══ */
@@ -659,24 +704,53 @@ canvas#game3d{display:block}
     return lerp(y0i,y1i,sz);
   }
 
-  var BP=0,BF=1,BD=2,BS=3,BM=4;
-  var BI=[{name:'平原',color:'#8fd94f'},{name:'森林',color:'#3f9e3a'},{name:'沙漠',color:'#e8d47a'},{name:'雪原',color:'#bfe6ff'},{name:'山地',color:'#b8b8b8'}];
+  var BP=0,BF=1,BD=2,BS=3,BM=4,BO=5,BC=6;
+  var BI=[
+    {name:'平原',color:'#8fd94f'},{name:'森林',color:'#3f9e3a'},{name:'沙漠',color:'#e8d47a'},
+    {name:'雪原',color:'#bfe6ff'},{name:'山地',color:'#b8b8b8'},
+    {name:'海洋',color:'#3a6fc4'},{name:'沙滩',color:'#e8dba8'}
+  ];
+  function smooth01(t){t=t<0?0:(t>1?1:t);return t*t*(3-2*t);}
+
+  /* 地形高度 —— 三层噪声分工，替代原来"海平面起步 + 突变山峰"的算法：
+       continentalness 决定海陆，erosion 决定平坦/破碎，ridged 噪声决定山脊。
+     海平面以下真正存在海底，因此会灌水，出现海、湖岸和沙滩。 */
   function tp(wx,wz){
-    var bs=(worldType==='largeBiomes')?0.25:1,hm=(worldType==='amplified')?2.0:1.0;
-    var bn=fbm(wx*0.055*bs,wz*0.055*bs,10),mf=fbm(wx*0.035*bs+200,wz*0.035*bs+200,110);
-    var t=fbm(wx*0.013*bs+700,wz*0.013*bs+700,210),hu=fbm(wx*0.016*bs+300,wz*0.016*bs+300,310);
-    var bh=SEA_LEVEL+bn*18*hm,mb=0;
-    if(mf>0.54)mb=(mf-0.54)*130*hm;
-    var h=Math.floor(bh+mb);
+    var bs=(worldType==='largeBiomes')?0.45:1, hm=(worldType==='amplified')?1.9:1.0;
+    var cont=fbm(wx*0.0042*bs,wz*0.0042*bs,10);
+    var ero =fbm(wx*0.013*bs+500,wz*0.013*bs+500,20);
+    var rid =fbm(wx*0.021*bs+900,wz*0.021*bs+900,30);
+    var temp=fbm(wx*0.0055*bs+1700,wz*0.0055*bs+1700,40);
+    var hum =fbm(wx*0.0068*bs+2100,wz*0.0068*bs+2100,50);
+    var det =fbm(wx*0.045*bs+2500,wz*0.045*bs+2500,60);
+
+    var land=smooth01((cont-0.40)/0.16);     /* 0=纯海洋 1=纯陆地 */
+    var inland=smooth01((cont-0.46)/0.42);
+    var deep=1-smooth01((cont-0.20)/0.20);   /* 离岸越远越深 */
+    var seaFloor=SEA_LEVEL-3-deep*34;
+
+    var ridge=1-Math.abs(rid*2-1);
+    ridge=ridge*ridge*ridge;                 /* 只有脊线附近才凸起 */
+    var rough=smooth01(Math.abs(ero-0.5)*2.2);
+    var base=SEA_LEVEL+3+inland*14;
+    var hills=(0.25+rough*0.8)*9*(1-Math.max(0,ridge-0.5)*1.4)*inland;
+    var mount=Math.max(0,ridge-0.52)/0.48;
+    mount=Math.pow(mount,1.7)*58*inland*hm;
+    var landH=base+hills+mount+det*0.9;
+
+    var h=Math.round(seaFloor*(1-land)+landH*land);
     if(h<WORLD_MIN_Y+4)h=WORLD_MIN_Y+4;
     if(h>WORLD_MAX_Y-6)h=WORLD_MAX_Y-6;
+
     var biome;
-    if(mf>0.60&&h>SEA_LEVEL+40)biome=BM;
-    else if(t>0.53&&hu<0.45)biome=BD;
-    else if(t<0.40)biome=BS;
-    else if(hu>0.53)biome=BF;
+    if(h<SEA_LEVEL-1)biome=(h<SEA_LEVEL-16)?BO:BC;
+    else if(h<=SEA_LEVEL+2&&cont<0.52)biome=BC;   /* 只有近海低地才算沙滩 */
+    else if(h>SEA_LEVEL+58)biome=BM;
+    else if(temp>0.62&&hum<0.42)biome=BD;
+    else if(temp<0.36)biome=BS;
+    else if(hum>0.56)biome=BF;
     else biome=BP;
-    return {height:h,biome:biome};
+    return {height:h,biome:biome,coast:(h>=SEA_LEVEL-1&&h<=SEA_LEVEL+3&&cont<0.54)};
   }
 
   /* ★ 洞穴系统：隧道 + 大洞穴 + 峡谷 */
@@ -688,16 +762,16 @@ canvas#game3d{display:block}
     var n1=sn(wx*0.065+yOff*0.55,wz*0.065+yOff*0.85,700);
     var n2=sn(wx*0.065-yOff*0.75,wz*0.065+yOff*0.35,701);
     var t=n1-0.5,u=n2-0.5;
-    if((t*t+u*u)<0.0070) return true;
+    if((t*t+u*u)<0.0042) return true;
     /* ② 大洞穴（大型空腔 / 空洞） */
     var big=sn3(wx*0.016,wy*0.032,wz*0.016,750);
-    if(big>0.755 && wy>-52 && wy<SEA_LEVEL+2) return true;
+    if(big>0.815 && wy>-52 && wy<SEA_LEVEL+2) return true;
     /* ③ 峡谷（沿一个方向延伸的细长深谷） */
     if(wy>-32 && wy<62){
       var c1=sn(wx*0.0065,wz*0.055,770);
       var c2=sn(wx*0.0065+120,wz*0.055+60,771);
       var cd=Math.abs(c1-0.5)+Math.abs(c2-0.5);
-      if(cd<0.048) return true;
+      if(cd<0.026) return true;
     }
     return false;
   }
@@ -729,7 +803,8 @@ canvas#game3d{display:block}
   function isSolid(wx,wy,wz){
     if(wy<WORLD_MIN_Y)return true;
     if(wy>=WORLD_MAX_Y)return false;
-    return getBlock(wx,wy,wz)!==0;
+    var b=getBlock(wx,wy,wz);
+    return b!==0&&b!==22;   /* 水不实心：能穿过、能游泳 */
   }
   function isOcc(wx,wy,wz){
     if(wy<WORLD_MIN_Y||wy>=WORLD_MAX_Y)return false;
@@ -782,34 +857,33 @@ canvas#game3d{display:block}
     }else{
       for(var z=0;z<CHUNK_SIZE;z++)for(var x=0;x<CHUNK_SIZE;x++){
         var wx=bx+x,wz=bz+z,p=tp(wx,wz),h=p.height,biome=p.biome;
-        var deepNoise=sh(wx,0,wz);
-        var deepLine=DEEPSLATE_TOP+Math.floor(deepNoise*5)-2;
+        var deepLine=DEEPSLATE_TOP+Math.floor(sh(wx,0,wz)*5)-2;
         for(var y=WORLD_MIN_Y;y<=h;y++){
           var b;
           if(y<=WORLD_MIN_Y)b=7;
           else if(y<=WORLD_MIN_Y+4)b=sh(wx,y,wz)<0.5?7:3;
-          else if(y<h-4)b=(biome===BD)?11:3;
-          else if(y<h){
-            switch(biome){case BD:b=6;break;case BS:b=2;break;case BM:b=3;break;default:b=2;}
-          }else{
-            var lowland=h<=SEA_LEVEL;
-            if(lowland)b=(biome===BS)?10:6;
-            else{
-              switch(biome){
-                case BD:b=6;break;
-                case BS:b=10;break;
-                case BM:
-                  if(h>SEA_LEVEL+40)b=10;
-                  else if(h>SEA_LEVEL+20)b=3;
-                  else b=1;
-                  break;
-                default:b=1;
-              }
+          else if(y<h-3)b=3;
+          else if(y<h)b=(biome===BD)?11:2;
+          else{
+            /* 地表按群系铺：深海砂砾/浅海沙、沙滩、雪原雪块、山地裸岩 */
+            switch(biome){
+              case BO: b=(h<SEA_LEVEL-14)?6:11; break;
+              case BC: b=6; break;
+              case BD: b=6; break;
+              case BS: b=10; break;
+              case BM: b=(h>SEA_LEVEL+70)?10:((h>SEA_LEVEL+40)?3:1); break;
+              default: b=1;
             }
+            if(p.coast&&b===1)b=6;
           }
           if((b===3||b===11)&&y<deepLine)b=16;
-          if((b===3||b===16)&&y>=WORLD_MIN_Y+5&&y<=SEA_LEVEL+6&&isCave(wx,y,wz))b=0;
+          if((b===3||b===16)&&y>=WORLD_MIN_Y+5&&y<=SEA_LEVEL+8&&isCave(wx,y,wz))b=0;
           if(b!==0)d[(yIdx(y)*CHUNK_SIZE+z)*CHUNK_SIZE+x]=b;
+        }
+        /* 海平面以下的空位灌水，海洋/湖泊就出来了 */
+        for(var wy2=h+1;wy2<=SEA_LEVEL;wy2++){
+          var wi=(yIdx(wy2)*CHUNK_SIZE+z)*CHUNK_SIZE+x;
+          if(d[wi]===0)d[wi]=22;
         }
       }
       genOres(d,cx,cz);
@@ -833,6 +907,7 @@ canvas#game3d{display:block}
     switch(p.biome){
       case BP:return r<0.010;case BF:return r<0.090;case BD:return r<0.022;
       case BS:return r<0.045;case BM:return(p.height<SEA_LEVEL+50&&r<0.018);
+      case BC:return r<0.003;
     }
     return false;
   }
@@ -984,6 +1059,11 @@ canvas#game3d{display:block}
   atlasTexture.generateMipmaps=false;
   atlasTexture.wrapS=THREE.ClampToEdgeWrapping;atlasTexture.wrapT=THREE.ClampToEdgeWrapping;
   var blockMaterial=new THREE.MeshLambertMaterial({map:atlasTexture,side:THREE.FrontSide,vertexColors:true});
+  /* 水：半透明、不写深度，从里从外都能看见 */
+  var waterMaterial=new THREE.MeshLambertMaterial({
+    map:atlasTexture,side:THREE.DoubleSide,vertexColors:true,
+    transparent:true,opacity:0.72,depthWrite:false
+  });
 
   /* ═══ 原版材质贴图 ═══
      从 26.3 客户端资源包里抽出的 16×16 方块贴图（assets/mc-textures/），
@@ -1038,8 +1118,8 @@ canvas#game3d{display:block}
       if(lz<0&&lx>=0&&lx<CHUNK_SIZE)return chZN?chZN[(ay*CHUNK_SIZE+(lz+CHUNK_SIZE))*CHUNK_SIZE+lx]:0;
       return 0;
     }
-    var pos=[],nor=[],uvs=[],col=[],idx=[];
-    var vc=0;
+    /* 0 = 固体，1 = 水；两组分开出几何，水用半透明材质 */
+    var G=[{pos:[],nor:[],uvs:[],col:[],idx:[],vc:0},{pos:[],nor:[],uvs:[],col:[],idx:[],vc:0}];
     var invC=1/ATLAS_COLS,invR=1/ATLAS_ROWS,rowOff=ATLAS_ROWS-1;
     var bx=cx*CHUNK_SIZE,bz=cz*CHUNK_SIZE;
 
@@ -1050,6 +1130,7 @@ canvas#game3d{display:block}
           var b=data[(ay*CHUNK_SIZE+lz)*CHUNK_SIZE+lx];
           if(b===0)continue;
           var def=BLOCKS[b];if(!def)continue;
+          var isWater=(b===22);
 
           var nP=getL(lx+1,ay,lz),nN=getL(lx-1,ay,lz),
               nU=getL(lx,ay+1,lz),nD=getL(lx,ay-1,lz),
@@ -1058,15 +1139,13 @@ canvas#game3d{display:block}
 
           var wx=bx+lx,wz=bz+lz;
 
+          var cx0=wx+0.5,cy0=wy+0.5,cz0=wz+0.5;
+          var ee=isWater?0.996:1;   /* 水面向内收一点，避免和固体面 z-fighting */
+
           for(var f=0;f<6;f++){
-            var neighborSolid;
-            if(f===0)neighborSolid=nP!==0;
-            else if(f===1)neighborSolid=nN!==0;
-            else if(f===2)neighborSolid=nU!==0;
-            else if(f===3)neighborSolid=nD!==0;
-            else if(f===4)neighborSolid=nQ!==0;
-            else neighborSolid=nB!==0;
-            if(neighborSolid)continue;
+            var nb=(f===0)?nP:(f===1)?nN:(f===2)?nU:(f===3)?nD:(f===4)?nQ:nB;
+            /* 水只被水遮挡；固体面遇到水仍然要画，否则从水下看岸壁会穿帮 */
+            if(nb!==0&&!(nb===22&&!isWater))continue;
 
             var face=FACES[f];
             var tile=(f===2)?def.top:(f===3)?def.bottom:def.side;
@@ -1079,37 +1158,53 @@ canvas#game3d{display:block}
             var u3=(cc+face.uvs[3][0])*invC,v3=(rowOff-cr+face.uvs[3][1])*invR;
 
             var c0=face.corners[0],c1=face.corners[1],c2=face.corners[2],c3=face.corners[3];
-            pos.push(wx+c0[0],wy+c0[1],wz+c0[2],wx+c1[0],wy+c1[1],wz+c1[2],
-                     wx+c2[0],wy+c2[1],wz+c2[2],wx+c3[0],wy+c3[1],wz+c3[2]);
-            nor.push(face.dir[0],face.dir[1],face.dir[2],face.dir[0],face.dir[1],face.dir[2],
-                     face.dir[0],face.dir[1],face.dir[2],face.dir[0],face.dir[1],face.dir[2]);
-            uvs.push(u0,v0,u1,v1,u2,v2,u3,v3);
+            var grp=G[isWater?1:0],vs=grp.vc,cs=[c0,c1,c2,c3];
+            for(var k=0;k<4;k++){
+              var q=cs[k];
+              grp.pos.push(cx0+(q[0]-0.5)*ee,cy0+(q[1]-0.5)*ee,cz0+(q[2]-0.5)*ee);
+              grp.nor.push(face.dir[0],face.dir[1],face.dir[2]);
+            }
+            grp.uvs.push(u0,v0,u1,v1,u2,v2,u3,v3);
             var l0=aoL(ao[0]),l1=aoL(ao[1]),l2=aoL(ao[2]),l3=aoL(ao[3]);
-            col.push(l0,l0,l0,l1,l1,l1,l2,l2,l2,l3,l3,l3);
-            idx.push(vc,vc+1,vc+2,vc,vc+2,vc+3);
-            vc+=4;
+            grp.col.push(l0,l0,l0,l1,l1,l1,l2,l2,l2,l3,l3,l3);
+            grp.idx.push(vs,vs+1,vs+2,vs,vs+2,vs+3);
+            grp.vc+=4;
           }
         }
       }
     }
-    if(vc===0)return null;
-    var geo=new THREE.BufferGeometry();
-    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
-    geo.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));
-    geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
-    geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
-    var IA=vc>65535?Uint32Array:Uint16Array;
-    geo.setIndex(new THREE.BufferAttribute(new IA(idx),1));
-    geo.computeBoundingSphere();
-    return geo;
+    function make(g){
+      if(!g.vc)return null;
+      var geo=new THREE.BufferGeometry();
+      geo.setAttribute('position',new THREE.Float32BufferAttribute(g.pos,3));
+      geo.setAttribute('normal',new THREE.Float32BufferAttribute(g.nor,3));
+      geo.setAttribute('uv',new THREE.Float32BufferAttribute(g.uvs,2));
+      geo.setAttribute('color',new THREE.Float32BufferAttribute(g.col,3));
+      var IA=g.vc>65535?Uint32Array:Uint16Array;
+      geo.setIndex(new THREE.BufferAttribute(new IA(g.idx),1));
+      geo.computeBoundingSphere();
+      return geo;
+    }
+    return {solid:make(G[0]),water:make(G[1])};
   }
   function rebuildChunk(cx,cz){
     var key=ck(cx,cz);var data=chunkData.get(key);if(!data)return;
     var old=chunkMeshes.get(key);
-    if(old){scene.remove(old);old.geometry.dispose();chunkMeshes.delete(key);}
-    var geo=buildChunkGeo(cx,cz);
-    if(!geo)return;
-    var mesh=new THREE.Mesh(geo,blockMaterial);
+    if(old){
+      scene.remove(old);
+      old.traverse(function(o){if(o.geometry)o.geometry.dispose();});
+      chunkMeshes.delete(key);
+    }
+    var res=buildChunkGeo(cx,cz);
+    if(!res||(!res.solid&&!res.water))return;
+    var sg=res.solid;
+    if(!sg){sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute([],3));}
+    var mesh=new THREE.Mesh(sg,blockMaterial);
+    if(res.water){
+      var wm=new THREE.Mesh(res.water,waterMaterial);
+      wm.renderOrder=1;
+      mesh.add(wm);
+    }
     mesh.frustumCulled=true;scene.add(mesh);chunkMeshes.set(key,mesh);
   }
   function createLoadInd(cx,cz){
@@ -1154,8 +1249,8 @@ canvas#game3d{display:block}
       dirtyChunks.add(ck(cx2+1,cz2));dirtyChunks.add(ck(cx2-1,cz2));
       dirtyChunks.add(ck(cx2,cz2+1));dirtyChunks.add(ck(cx2,cz2-1));
       chunkData.delete(k);
-      var mesh=chunkMeshes.get(k);
-      if(mesh){scene.remove(mesh);mesh.geometry.dispose();chunkMeshes.delete(k);}
+    var mesh=chunkMeshes.get(k);
+    if(mesh){scene.remove(mesh);mesh.traverse(function(o){if(o.geometry)o.geometry.dispose();});chunkMeshes.delete(k);}
       removeLoadInd(cx2,cz2);
     }
     for(var j=0;j<newLoaded.length;j++){
@@ -1193,7 +1288,7 @@ canvas#game3d{display:block}
   }
   function clearAllChunks(){
     chunkData.clear();
-    chunkMeshes.forEach(function(m){scene.remove(m);m.geometry.dispose();});
+    chunkMeshes.forEach(function(m){scene.remove(m);m.traverse(function(o){if(o.geometry)o.geometry.dispose();});});
     chunkMeshes.clear();dirtyChunks.clear();
     loadingIndicators.forEach(function(m){scene.remove(m);m.geometry.dispose();});
     loadingIndicators.clear();
@@ -1225,18 +1320,95 @@ canvas#game3d{display:block}
   );
   highlightMesh.visible=false;scene.add(highlightMesh);
 
-  var skinMat=new THREE.MeshLambertMaterial({color:0xe8b48c});
-  var shirtMat=new THREE.MeshLambertMaterial({color:0x2e9cc9});
+  /* ═══ 方块破裂裂纹 ═══
+     原版 destroy_stage_0~9，按 breakProgress 分 10 档贴到同一个立方体上。
+     用 depthWrite:false + polygonOffset 避免和方块表面打架。 */
+  var CRACK_IMG=[];
+  for(var ci=0;ci<10;ci++){
+    var cimg=new Image();
+    cimg.src='../assets/mc-gui/destroy_'+ci+'.png';
+    CRACK_IMG.push(cimg);
+  }
+  function crackTexture(i){
+    var img=CRACK_IMG[i];
+    if(!img||!img.complete||!img.naturalWidth)return null;
+    if(!img._tex){
+      var t=new THREE.Texture(img);
+      t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;
+      t.generateMipmaps=false;t.needsUpdate=true;
+      img._tex=t;
+    }
+    return img._tex;
+  }
+  /* 26.3 的 destroy_stage 是「白底 + 黑裂纹」，用 multiply 混合才会只留裂纹变暗 */
+  var crackMat=new THREE.MeshBasicMaterial({
+    transparent:true,opacity:1,depthWrite:false,
+    blending:THREE.MultiplyBlending,
+    polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4
+  });
+  var crackMesh=new THREE.Mesh(new THREE.BoxGeometry(1.006,1.006,1.006),crackMat);
+  crackMesh.visible=false;crackMesh.renderOrder=2;scene.add(crackMesh);
+  var crackStage=-1;
+  function setCrackStage(stage){
+    if(stage===crackStage)return;
+    crackStage=stage;
+    crackMat.map=stage<0?null:crackTexture(stage);
+    crackMat.needsUpdate=true;
+  }
+
+  /* ═══ 史蒂夫皮肤 ═══
+     26.3 的 64×64 经典皮肤。UV 按官方模型布局：每 1 像素 = 1/16 格。
+     BoxGeometry 的材质顺序是 [+x,-x,+y,-y,+z,-z]，对应皮肤 right/left/top/bottom/back/front。 */
+  var STEVE_IMG=new Image();
+  STEVE_IMG.src='../assets/mc-entity/steve.png';
+  var SKIN_UV={
+    head:{right:[0,8,8,8],left:[16,8,8,8],top:[8,0,8,8],bottom:[16,0,8,8],front:[8,8,8,8],back:[24,8,8,8]},
+    body:{right:[16,20,4,12],left:[28,20,4,12],top:[20,16,8,4],bottom:[28,16,8,4],front:[20,20,8,12],back:[32,20,8,12]},
+    rArm:{right:[40,20,4,12],left:[48,20,4,12],top:[44,16,4,4],bottom:[48,16,4,4],front:[44,20,4,12],back:[52,20,4,12]},
+    lArm:{right:[32,52,4,12],left:[40,52,4,12],top:[36,48,4,4],bottom:[40,48,4,4],front:[36,52,4,12],back:[44,52,4,12]},
+    rLeg:{right:[0,20,4,12],left:[8,20,4,12],top:[4,16,4,4],bottom:[8,16,4,4],front:[4,20,4,12],back:[12,20,4,12]},
+    lLeg:{right:[16,52,4,12],left:[24,52,4,12],top:[20,48,4,4],bottom:[24,48,4,4],front:[20,52,4,12],back:[28,52,4,12]}
+  };
+  var SKIN_FALLBACK={head:0xc79b6f,body:0x00a0a0,rArm:0xc79b6f,lArm:0xc79b6f,rLeg:0x3b3b8c,lLeg:0x3b3b8c};
+  var skinMatQueue=[], skinTexCache={};
+  function skinTex(rect){
+    var key=rect.join(',');
+    if(!skinTexCache[key])skinTexCache[key]=cropTex(STEVE_IMG,rect[0],rect[1],rect[2],rect[3]);
+    return skinTexCache[key];
+  }
+  function skinMats(part){
+    var uv=SKIN_UV[part]||{}, order=['right','left','top','bottom','back','front'], out=[];
+    var ready=STEVE_IMG.complete&&STEVE_IMG.naturalWidth>0;
+    for(var i=0;i<6;i++){
+      var p=uv[order[i]];
+      var m=new THREE.MeshLambertMaterial({color:SKIN_FALLBACK[part]||0xcccccc});
+      if(p){
+        if(ready){m.map=skinTex(p);m.color.setHex(0xffffff);}
+        else{m.userData.skinRect=p;skinMatQueue.push(m);}
+      }
+      out.push(m);
+    }
+    return out;
+  }
+  STEVE_IMG.onload=function(){
+    for(var i=0;i<skinMatQueue.length;i++){
+      var m=skinMatQueue[i],r=m.userData.skinRect;
+      if(!r)continue;
+      m.map=skinTex(r);m.color.setHex(0xffffff);m.needsUpdate=true;
+    }
+    skinMatQueue.length=0;
+    drawPlayerPreview();
+  };
+
+  /* 第一人称：史蒂夫右臂（4×12×4）。盒子沿 +y 竖直，旋转后向前下方伸出 */
   var handPivot=new THREE.Group();
-  handPivot.position.set(0.34,-0.30,-0.30);camera.add(handPivot);
-  var handArm=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.13,0.52),shirtMat);
-  handArm.position.set(0,0,-0.26);handPivot.add(handArm);
-  var handPalm=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,0.18),skinMat);
-  handPalm.position.set(0,0,-0.60);handPivot.add(handPalm);
-  var thumb=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.10),skinMat);
-  thumb.position.set(0.07,0.04,-0.58);handPivot.add(thumb);
-  var handBasePos={x:0.34,y:-0.30,z:-0.30};
-  var handBaseRot={x:0.14,y:-0.06,z:0};
+  handPivot.position.set(0.30,-0.12,-0.40);camera.add(handPivot);
+  var handArm=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.56,0.16),skinMats('rArm'));
+  handArm.position.set(0,-0.24,0);
+  handArm.rotation.x=0.95;
+  handPivot.add(handArm);
+  var handBasePos={x:0.30,y:-0.12,z:-0.40};
+  var handBaseRot={x:0.10,y:-0.04,z:0};
 
   var player={
     pos:{x:0.5,y:SEA_LEVEL+2,z:0.5},vel:{x:0,y:0,z:0},
@@ -1248,15 +1420,29 @@ canvas#game3d{display:block}
 
   /* ★ 疾跑 + 挖掘状态 */
   var lastWTap=0, sprintLock=false;
-  var breakProgress=0, breakTargetKey='';
+  var breakProgress=0, breakTargetKey='', swingCd=0;
 
   function spawnPlayer(){
-    var sx=0,sz=0;
+    var sx=0,sz=0,best=null;
+    /* 出生点优先落在水面以上的陆地，别一睁眼就在海里 */
+    for(var r=0;r<=256&&!best;r+=8){
+      for(var a=0;a<16;a++){
+        var ang=a/16*Math.PI*2;
+        var tx=Math.round(Math.cos(ang)*r),tz=Math.round(Math.sin(ang)*r);
+        var sp=tp(tx,tz);
+        if(sp.height>=SEA_LEVEL+3&&sp.height<=SEA_LEVEL+34&&sp.biome!==BO&&sp.biome!==BC){best={x:tx,z:tz};break;}
+      }
+    }
+    if(best){sx=best.x;sz=best.z;}
     var cx=Math.floor(sx/CHUNK_SIZE),cz=Math.floor(sz/CHUNK_SIZE);
     if(!chunkData.has(ck(cx,cz)))chunkData.set(ck(cx,cz),genChunk(cx,cz));
     var sy=WORLD_MAX_Y-1;
     for(var y=WORLD_MAX_Y-1;y>=WORLD_MIN_Y;y--)if(isSolid(sx,y,sz)){sy=y;break;}
-    player.pos.x=sx+0.5;player.pos.y=sy+1.05;player.pos.z=sz+0.5;
+    /* 万一还是在水下，浮到水面之上 */
+    var topY=sy+1;
+    while(topY<SEA_LEVEL+2&&getBlock(sx,topY,sz)===22)topY++;
+    if(topY<=SEA_LEVEL)topY=SEA_LEVEL+1;
+    player.pos.x=sx+0.5;player.pos.y=topY+0.05;player.pos.z=sz+0.5;
     player.vel.x=player.vel.y=player.vel.z=0;
     player.health=player.maxHealth;player.fallStartY=null;
     player.hunger=player.maxHunger;player.saturation=5;player.exhaustion=0;
@@ -2290,41 +2476,25 @@ canvas#game3d{display:block}
     }
   }
 
+  /* 用史蒂夫皮肤正面图拼一个 2D 立绘（不加载 3D，打开物品栏不卡） */
   function drawPlayerPreview(){
     var cv=$('invPlayerCanvas');
     if(!cv)return;
     var g=cv.getContext('2d');
     g.imageSmoothingEnabled=false;
     g.clearRect(0,0,cv.width,cv.height);
-    var u=5;
-    var cx=cv.width/2;
-    var topY=8;
-    var skin='#e8b48c',hair='#4a3020',shirt='#2e9cc9',pants='#3b4a8c',shoe='#3a3a3a';
-    var hx=cx-4*u,hy=topY;
-    g.fillStyle=skin;g.fillRect(hx,hy,8*u,8*u);
-    g.fillStyle=hair;
-    g.fillRect(hx,hy,8*u,2*u);
-    g.fillRect(hx-u,hy,1*u,3*u);
-    g.fillRect(hx+8*u,hy,1*u,3*u);
-    g.fillStyle='#2b2b2b';
-    g.fillRect(hx+1.5*u,hy+3.5*u,1.5*u,1.5*u);
-    g.fillRect(hx+5*u,hy+3.5*u,1.5*u,1.5*u);
-    g.fillStyle='#c9825f';g.fillRect(hx+3*u,hy+6*u,2*u,1*u);
-    var by=hy+8*u;
-    g.fillStyle=shirt;g.fillRect(cx-4*u,by,8*u,10*u);
-    g.fillStyle=skin;
-    g.fillRect(cx-6*u,by,2*u,10*u);
-    g.fillRect(cx+4*u,by,2*u,10*u);
-    g.fillStyle=shirt;
-    g.fillRect(cx-6*u,by,2*u,3.5*u);
-    g.fillRect(cx+4*u,by,2*u,3.5*u);
-    var ly=by+10*u;
-    g.fillStyle=pants;
-    g.fillRect(cx-4*u,ly,3.5*u,9*u);
-    g.fillRect(cx+0.5*u,ly,3.5*u,9*u);
-    g.fillStyle=shoe;
-    g.fillRect(cx-4*u,ly+9*u,3.5*u,1.5*u);
-    g.fillRect(cx+0.5*u,ly+9*u,3.5*u,1.5*u);
+    var u=4.2,top=6,cx=cv.width/2;
+    var ready=STEVE_IMG.complete&&STEVE_IMG.naturalWidth>0;
+    function put(rect,dx,dy,w,h){
+      if(ready)g.drawImage(STEVE_IMG,rect[0],rect[1],rect[2],rect[3],dx,dy,w,h);
+      else{g.fillStyle='#9a9a9a';g.fillRect(dx,dy,w,h);}
+    }
+    put([8,8,8,8],   cx-4*u, top,        8*u, 8*u);   /* 头 */
+    put([20,20,8,12],cx-4*u, top+8*u,    8*u, 12*u);  /* 身体 */
+    put([44,20,4,12],cx-8*u, top+8*u,    4*u, 12*u);  /* 右臂 */
+    put([36,52,4,12],cx+4*u, top+8*u,    4*u, 12*u);  /* 左臂 */
+    put([4,20,4,12], cx-4*u, top+20*u,   4*u, 12*u);  /* 右腿 */
+    put([20,52,4,12],cx,     top+20*u,   4*u, 12*u);  /* 左腿 */
   }
 
   function updatePlayerStats(){
@@ -2431,62 +2601,55 @@ canvas#game3d{display:block}
     });
   })();
 
-  /* 生命值 */
-  var hpC=document.createElement('canvas');hpC.width=10*20+4;hpC.height=22;
-  hpC.style.height='20px';hpC.style.width=(10*20+4)*(20/22)+'px';hpC.style.imageRendering='pixelated';
+  /* ★ 生命值 / 饥饿值：直接用 26.3 的 9×9 原版贴图，2 倍绘制 */
+  var HEART={c:new Image(),f:new Image(),h:new Image()};
+  HEART.c.src='../assets/mc-gui/heart_container.png';
+  HEART.f.src='../assets/mc-gui/heart_full.png';
+  HEART.h.src='../assets/mc-gui/heart_half.png';
+  var FOOD={e:new Image(),f:new Image(),h:new Image()};
+  FOOD.e.src='../assets/mc-gui/food_empty.png';
+  FOOD.f.src='../assets/mc-gui/food_full.png';
+  FOOD.h.src='../assets/mc-gui/food_half.png';
+
+  var hpC=document.createElement('canvas');hpC.width=182;hpC.height=18;
+  hpC.style.width='182px';hpC.style.height='18px';hpC.style.imageRendering='pixelated';
   $('healthBar').appendChild(hpC);
   var hpCtx=hpC.getContext('2d');
-  function drawHeart(g,x,y,size,color,fr){
-    var s=size/24;g.save();g.translate(x,y);g.scale(s,s);
-    g.beginPath();g.moveTo(12,21.35);g.lineTo(10.55,20.03);
-    g.bezierCurveTo(5.4,15.36,2,12.28,2,8.5);g.bezierCurveTo(2,5.42,4.42,3,7.5,3);
-    g.bezierCurveTo(9.24,3,10.91,3.81,12,5.09);g.bezierCurveTo(13.09,3.81,14.76,3,16.5,3);
-    g.bezierCurveTo(19.58,3,22,5.42,22,8.5);g.bezierCurveTo(22,12.28,18.6,15.36,13.45,20.03);
-    g.closePath();
-    if(fr>=1){g.fillStyle=color;g.fill();}
-    else{g.clip();g.fillStyle='#3a3a3a';g.fillRect(0,0,24,24);g.fillStyle=color;g.fillRect(0,0,24*fr,24);}
-    g.strokeStyle='rgba(0,0,0,0.55)';g.lineWidth=1;g.stroke();g.restore();
+  hpCtx.imageSmoothingEnabled=false;
+
+  function drawIcon(g,img,x,y){
+    if(!img||!img.complete||!img.naturalWidth)return;
+    g.drawImage(img,x,y,18,18);
   }
   function updateHP(){
     hpCtx.clearRect(0,0,hpC.width,hpC.height);
     if(gameMode!=='survival'&&gameMode!=='hardcore')return;
     for(var i=0;i<10;i++){
-      var x=2+i*20,hp=player.health-i*2;
-      if(hp>=2)drawHeart(hpCtx,x,1,20,'#ff3030',1);
-      else if(hp===1)drawHeart(hpCtx,x,1,20,'#ff3030',0.5);
-      else drawHeart(hpCtx,x,1,20,'#3a3a3a',1);
+      var x=i*18,hp=player.health-i*2;
+      drawIcon(hpCtx,HEART.c,x,0);
+      if(hp>=2)drawIcon(hpCtx,HEART.f,x,0);
+      else if(hp===1)drawIcon(hpCtx,HEART.h,x,0);
     }
   }
-  var hunC=document.createElement('canvas');hunC.width=10*20+4;hunC.height=22;
-  hunC.style.height='20px';hunC.style.width=(10*20+4)*(20/22)+'px';hunC.style.imageRendering='pixelated';
+  var hunC=document.createElement('canvas');hunC.width=182;hunC.height=18;
+  hunC.style.width='182px';hunC.style.height='18px';hunC.style.imageRendering='pixelated';
   $('hungerBar').appendChild(hunC);
   var hunCtx=hunC.getContext('2d');
-  function drawDrumstick(g,x,y,size,color,fr){
-    var s=size/24;g.save();g.translate(x,y);g.scale(s,s);
-    g.beginPath();g.arc(11,9,7,0,Math.PI*2);
-    g.closePath();
-    if(fr>=1){g.fillStyle=color;g.fill();}
-    else{g.clip();g.fillStyle='#3a3a3a';g.fillRect(0,0,24,24);g.fillStyle=color;g.fillRect(0,0,24*fr,24);g.restore();g.save();g.translate(x,y);g.scale(s,s);}
-    g.strokeStyle='rgba(0,0,0,0.55)';g.lineWidth=1;g.stroke();
-    g.beginPath();
-    g.moveTo(14,15);g.lineTo(20,21);
-    g.lineWidth=3;
-    g.strokeStyle=fr>=1?color:'#555';
-    g.stroke();
-    g.beginPath();g.arc(21,22,2.5,0,Math.PI*2);g.fillStyle=fr>=1?color:'#555';g.fill();
-    g.strokeStyle='rgba(0,0,0,0.55)';g.lineWidth=1;g.stroke();
-    g.restore();
-  }
+  hunCtx.imageSmoothingEnabled=false;
   function updateHunger(){
     hunCtx.clearRect(0,0,hunC.width,hunC.height);
     if(gameMode!=='survival'&&gameMode!=='hardcore')return;
     for(var i=0;i<10;i++){
-      var x=2+i*20,hp=player.hunger-i*2;
-      if(hp>=2)drawDrumstick(hunCtx,x,1,20,'#b8601c',1);
-      else if(hp===1)drawDrumstick(hunCtx,x,1,20,'#b8601c',0.5);
-      else drawDrumstick(hunCtx,x,1,20,'#3a3a3a',1);
+      var x=(9-i)*18,hp=player.hunger-i*2;
+      drawIcon(hunCtx,FOOD.e,x,0);
+      if(hp>=2)drawIcon(hunCtx,FOOD.f,x,0);
+      else if(hp===1)drawIcon(hunCtx,FOOD.h,x,0);
     }
   }
+  /* 贴图是异步加载的，回来后补画一次 */
+  [HEART.c,HEART.f,HEART.h,FOOD.e,FOOD.f,FOOD.h].forEach(function(img){
+    img.onload=function(){updateHP();updateHunger();};
+  });
 
   function getLook(){
     var cp=Math.cos(pitch);
@@ -2527,8 +2690,9 @@ canvas#game3d{display:block}
     if(isMultiplayer&&net.connected)net.sendBlockChange(x,y,z,0);
   }
 
-  /* ★ 挖掘进度更新（生存按硬度计时，创造瞬间） */
+  /* ★ 挖掘进度更新（生存按硬度计时，创造瞬间）；按住左键期间持续挥手 */
   function updateBreaking(dt){
+    swingCd=Math.max(0,swingCd-dt);
     if(!mouseHeld[0]||appState!=='playing'||inventoryOpen||chatOpen){breakProgress=0;breakTargetKey='';return;}
     if(gameMode==='spectator'||gameMode==='adventure'){breakProgress=0;breakTargetKey='';return;}
     breakTimer-=dt;
@@ -2536,6 +2700,8 @@ canvas#game3d{display:block}
     if(!hit){breakProgress=0;breakTargetKey='';return;}
     var b=getBlock(hit.x,hit.y,hit.z);
     if(b===0||b===7){breakProgress=0;breakTargetKey='';return;}
+    /* 手臂每 0.25 秒挥一次，和原版挖掘节奏一致 */
+    if(swingCd<=0){swing();swingCd=0.25;}
     var key=hit.x+','+hit.y+','+hit.z;
     if(key!==breakTargetKey){breakTargetKey=key;breakProgress=0;}
     if(gameMode==='creative'){
@@ -2558,7 +2724,8 @@ canvas#game3d{display:block}
     if(gameMode==='spectator')return;
     var hit=camHit();if(!hit)return;
     var x=hit.x+hit.normal.x,y=hit.y+hit.normal.y,z=hit.z+hit.normal.z;
-    if(getBlock(x,y,z)!==0)return;
+    var cur=getBlock(x,y,z);
+    if(cur!==0&&cur!==22)return;   /* 水可以被方块替换 */
     var bid=getSelectedBlockId();
     if(!bid||bid===0){toast('空手无法放置');return;}
     if(gameMode==='survival'||gameMode==='hardcore'){
@@ -2644,11 +2811,16 @@ canvas#game3d{display:block}
     var sy=Math.sin(yaw),cy=Math.cos(yaw);
     var wdx=sy*iz+cy*ix,wdz=cy*iz-sy*ix;
     var isFly=(gameMode==='creative'||gameMode==='spectator')&&flying;
+    /* 水里：脚或腰所在格是水。水方块不实心，所以能游进去 */
+    var fb=getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y+0.1),Math.floor(player.pos.z));
+    var bb=getBlock(Math.floor(player.pos.x),Math.floor(player.pos.y+1.0),Math.floor(player.pos.z));
+    var inWater=!isFly&&(fb===22||bb===22);
     /* ★ 疾跑：Shift 或 双击 W */
     var sprint=(keys['shift']||sprintLock)&&!isFly;
     var speed=isFly?(keys['shift']?FLY_SPEED*1.7:FLY_SPEED):(sprint?RUN_SPEED:WALK_SPEED);
+    if(inWater)speed*=0.55;
     var tvx=wdx*speed,tvz=wdz*speed;
-    var accel=(player.onGround||isFly)?16:4;
+    var accel=(player.onGround||isFly)?16:(inWater?8:4);
     var k=Math.min(1,accel*dt);
     player.vel.x+=(tvx-player.vel.x)*k;
     player.vel.z+=(tvz-player.vel.z)*k;
@@ -2658,23 +2830,31 @@ canvas#game3d{display:block}
       if(keys['shift'])fy-=1;
       player.vel.y+=(fy*FLY_SPEED-player.vel.y)*Math.min(1,14*dt);
     }else{
-      if(keys[' ']&&player.onGround){player.vel.y=JUMP_VELOCITY;player.onGround=false;}
-      if(settings.autoJump&&player.onGround){
-        var moving0=Math.abs(player.vel.x)>0.5||Math.abs(player.vel.z)>0.5;
-        if(moving0){
-          var dx0=player.vel.x,dz0=player.vel.z,lh=Math.hypot(dx0,dz0);
-          if(lh>0.5){
-            var nx=dx0/lh,nz=dz0/lh;
-            var fx=Math.floor(player.pos.x+nx*0.45),fz=Math.floor(player.pos.z+nz*0.45);
-            var fy2=Math.floor(player.pos.y);
-            if(isSolid(fx,fy2,fz)&&!isSolid(fx,fy2+1,fz)&&!isSolid(fx,fy2+2,fz)){
-              player.vel.y=JUMP_VELOCITY;player.onGround=false;
+      if(inWater){
+        /* 水中：缓慢下沉，按住空格上浮（原版的游泳手感） */
+        player.vel.y-=GRAVITY*0.22*dt;
+        if(player.vel.y<-3.2)player.vel.y=-3.2;
+        if(keys[' '])player.vel.y=Math.min(player.vel.y+26*dt,3.0);
+        player.onGround=false;
+      }else{
+        if(keys[' ']&&player.onGround){player.vel.y=JUMP_VELOCITY;player.onGround=false;}
+        if(settings.autoJump&&player.onGround){
+          var moving0=Math.abs(player.vel.x)>0.5||Math.abs(player.vel.z)>0.5;
+          if(moving0){
+            var dx0=player.vel.x,dz0=player.vel.z,lh=Math.hypot(dx0,dz0);
+            if(lh>0.5){
+              var nx=dx0/lh,nz=dz0/lh;
+              var fx=Math.floor(player.pos.x+nx*0.45),fz=Math.floor(player.pos.z+nz*0.45);
+              var fy2=Math.floor(player.pos.y);
+              if(isSolid(fx,fy2,fz)&&!isSolid(fx,fy2+1,fz)&&!isSolid(fx,fy2+2,fz)){
+                player.vel.y=JUMP_VELOCITY;player.onGround=false;
+              }
             }
           }
         }
+        player.vel.y-=GRAVITY*dt;
+        if(player.vel.y<-50)player.vel.y=-50;
       }
-      player.vel.y-=GRAVITY*dt;
-      if(player.vel.y<-50)player.vel.y=-50;
     }
     var prevX=player.pos.x,prevZ=player.pos.z;
     if(gameMode==='spectator'){
@@ -2692,7 +2872,7 @@ canvas#game3d{display:block}
         else if(player.pos.y>player.fallStartY)player.fallStartY=player.pos.y;
       }else if(player.onGround&&player.fallStartY!==null){
         var dist=player.fallStartY-player.pos.y;
-        if(dist>3)applyDamage(Math.floor(dist-3));
+        if(dist>3&&!inWater)applyDamage(Math.floor(dist-3));
         player.fallStartY=null;
       }else if(player.onGround)player.fallStartY=null;
     }
@@ -3004,8 +3184,10 @@ canvas#game3d{display:block}
     var sx=0,sz=0;
     if(swingTime>0){
       swingTime-=dt;if(swingTime<0)swingTime=0;
-      var t=1-swingTime/SWING_DURATION,s=Math.sin(t*Math.PI);
-      sx=-s*1.05;sz=s*0.28;
+      var t=1-swingTime/SWING_DURATION;
+      /* 前段快、后段回收，像原版那样"砸"一下 */
+      var s=Math.pow(Math.sin(t*Math.PI),0.75);
+      sx=s*0.55;sz=-s*0.26;
     }
     var it=performance.now()/1000;
     var ix=Math.sin(it*1.6)*0.020,iy=Math.sin(it*1.1)*0.010,iz=Math.sin(it*0.9)*0.014;
@@ -3080,24 +3262,32 @@ canvas#game3d{display:block}
     if(mouseHeld[2]&&placeTimer<=0){placeTimer=PLACE_COOLDOWN;doPlace();}
   }
   function updateHighlight(){
-    if(gameMode==='spectator'||inventoryOpen||chatOpen){highlightMesh.visible=false;return;}
+    if(gameMode==='spectator'||inventoryOpen||chatOpen){
+      highlightMesh.visible=false;crackMesh.visible=false;setCrackStage(-1);return;
+    }
     var hit=camHit();
     if(hit){
       highlightMesh.position.set(hit.x+0.5,hit.y+0.5,hit.z+0.5);
       highlightMesh.visible=true;
-      /* ★ 挖掘进度视觉反馈 */
+      /* ★ 挖掘进度：高亮框微微放大，方块表面叠裂纹 */
       if(breakProgress>0){
         highlightMesh.material.color.setHex(0xff7744);
         var s=1.004+breakProgress*0.03;
         highlightMesh.scale.set(s,s,s);
+        var stage=Math.min(9,Math.floor(breakProgress*10));
+        crackMesh.position.set(hit.x+0.5,hit.y+0.5,hit.z+0.5);
+        crackMesh.visible=true;
+        setCrackStage(stage);
       }else{
         highlightMesh.material.color.setHex(0x000000);
         highlightMesh.scale.set(1,1,1);
+        crackMesh.visible=false;setCrackStage(-1);
       }
     }else{
       highlightMesh.visible=false;
       highlightMesh.material.color.setHex(0x000000);
       highlightMesh.scale.set(1,1,1);
+      crackMesh.visible=false;setCrackStage(-1);
     }
   }
   function loop(now){
@@ -3318,42 +3508,34 @@ canvas#game3d{display:block}
     addRemote:function(id,name){
       if(this.remotePlayers.has(id))return;
       var g=new THREE.Group();
-      var skinM=new THREE.MeshLambertMaterial({color:0xe8b48c});
-      var shirtM=new THREE.MeshLambertMaterial({color:0x2e9cc9});
-      var pantsM=new THREE.MeshLambertMaterial({color:0x3b4a8c});
-      var hairM=new THREE.MeshLambertMaterial({color:0x4a3020});
-      var shoeM=new THREE.MeshLambertMaterial({color:0x3a3a3a});
+      var P=1/16; /* 皮肤 1 像素 = 1/16 格 */
 
+      /* 头 8×8×8，中心 y=1.75（腿 0.75 + 身 0.75 + 头半高 0.25） */
       var headGroup = new THREE.Group();
-      headGroup.position.y = 1.55;
+      headGroup.position.y = 1.75;
       g.add(headGroup);
-
-      var head=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.5),skinM);
+      var head=new THREE.Mesh(new THREE.BoxGeometry(8*P,8*P,8*P),skinMats('head'));
       headGroup.add(head);
-      var hairTop=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.10,0.52),hairM);
-      hairTop.position.y=0.27;headGroup.add(hairTop);
-      var hairBack=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.42,0.08),hairM);
-      hairBack.position.set(0,0,0.23);headGroup.add(hairBack);
-      var eyeM=new THREE.MeshBasicMaterial({color:0x2b2b2b});
-      var eL=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.02),eyeM);
-      eL.position.set(-0.11,0.05,-0.251);headGroup.add(eL);
-      var eR=eL.clone();eR.position.x=0.11;headGroup.add(eR);
 
-      var torso=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.65,0.28),shirtM);torso.position.y=0.97;g.add(torso);
+      /* 身体 8×12×4 */
+      var torso=new THREE.Mesh(new THREE.BoxGeometry(8*P,12*P,4*P),skinMats('body'));
+      torso.position.y=1.125;g.add(torso);
 
-      var aL=new THREE.Group();aL.position.set(-0.33,1.28,0);
-      var aLm=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.62,0.16),skinM);aLm.position.y=-0.31;aL.add(aLm);
-      var sL=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.20,0.17),shirtM);sL.position.y=-0.10;aL.add(sL);g.add(aL);
-      var aR=new THREE.Group();aR.position.set(0.33,1.28,0);
-      var aRm=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.62,0.16),skinM);aRm.position.y=-0.31;aR.add(aRm);
-      var sR=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.20,0.17),shirtM);sR.position.y=-0.10;aR.add(sR);g.add(aR);
+      /* 手臂 4×12×4，肩关节在 y=1.5、x=±0.375 */
+      var aL=new THREE.Group();aL.position.set(-0.375,1.5,0);
+      var aLm=new THREE.Mesh(new THREE.BoxGeometry(4*P,12*P,4*P),skinMats('lArm'));
+      aLm.position.y=-6*P;aL.add(aLm);g.add(aL);
+      var aR=new THREE.Group();aR.position.set(0.375,1.5,0);
+      var aRm=new THREE.Mesh(new THREE.BoxGeometry(4*P,12*P,4*P),skinMats('rArm'));
+      aRm.position.y=-6*P;aR.add(aRm);g.add(aR);
 
-      var lL=new THREE.Group();lL.position.set(-0.13,0.65,0);
-      var lLm=new THREE.Mesh(new THREE.BoxGeometry(0.20,0.65,0.20),pantsM);lLm.position.y=-0.32;lL.add(lLm);
-      var shL=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.10,0.24),shoeM);shL.position.set(0,-0.65,0.02);lL.add(shL);g.add(lL);
-      var lR=new THREE.Group();lR.position.set(0.13,0.65,0);
-      var lRm=new THREE.Mesh(new THREE.BoxGeometry(0.20,0.65,0.20),pantsM);lRm.position.y=-0.32;lR.add(lRm);
-      var shR=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.10,0.24),shoeM);shR.position.set(0,-0.65,0.02);lR.add(shR);g.add(lR);
+      /* 腿 4×12×4，髋关节在 y=0.75 */
+      var lL=new THREE.Group();lL.position.set(-0.125,0.75,0);
+      var lLm=new THREE.Mesh(new THREE.BoxGeometry(4*P,12*P,4*P),skinMats('lLeg'));
+      lLm.position.y=-6*P;lL.add(lLm);g.add(lL);
+      var lR=new THREE.Group();lR.position.set(0.125,0.75,0);
+      var lRm=new THREE.Mesh(new THREE.BoxGeometry(4*P,12*P,4*P),skinMats('rLeg'));
+      lRm.position.y=-6*P;lR.add(lRm);g.add(lR);
 
       var c=document.createElement('canvas');c.width=256;c.height=64;
       var ctx=c.getContext('2d');
