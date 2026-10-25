@@ -636,6 +636,20 @@ header.head .back:hover{gap:8px}
   var DEFAULT_ANN_PATH   = 'data/announcement.json';
   var DEFAULT_BRANCH     = 'main';
   var K_GH               = 'hs-admin-gh';
+
+  /* 仓库改版（文件下沉到 pages/ games/ tools/ data/）之前保存的扁平路径，
+     老配置直接读会 404，这里统一迁移一次 */
+  var LEGACY_PATHS = {
+    'wiki-data.json':       'data/wiki-data.json',
+    'download-data.json':   'data/download-data.json',
+    'tools-data.json':      'data/tools-data.json',
+    'announcement.json':    'data/announcement.json'
+  };
+  function normPath(p, def){
+    var v = String(p == null ? '' : p).trim().replace(/^\.?\//, '');
+    if (!v) return def;
+    return LEGACY_PATHS[v] || v;
+  }
   var K_TAB              = 'hs-admin-tab';
   var RELEASES_TTL       = 5 * 60 * 1000;
 
@@ -805,6 +819,17 @@ header.head .back:hover{gap:8px}
   /* ==========================================================
      GitHub API
      ========================================================== */
+  /* 把 GitHub 的英文报错翻译成能照着做的提示 */
+  function friendlyGhError(e){
+    var m = (e && e.message) ? e.message : '未知错误';
+    if (/Bad credentials|Requires authentication|401/i.test(m)) return 'Token 无效或已过期，请重新生成后再连接';
+    if (/rate limit/i.test(m)) return 'GitHub 接口限流，等一会儿再试';
+    if (/not accessible by personal access token|Resource not accessible/i.test(m)) return 'Token 权限不足：需要该仓库的 Contents 读写权限';
+    if (/does not match|is at .* but expected|sha/i.test(m)) return '文件已被别处修改（sha 冲突），请先点「读取」再保存';
+    if (/Not Found|404/i.test(m)) return '仓库或文件不存在，请检查 Owner / Repo 与路径';
+    return m;
+  }
+
   function contentUrl(path){
     return 'https://api.github.com/repos/'
       + encodeURIComponent(gh.owner) + '/'
@@ -822,7 +847,11 @@ header.head .back:hover{gap:8px}
   function loadJson(path){
     return fetch(contentUrl(path) + '?ref=' + encodeURIComponent(gh.branch), { headers: ghHeaders() })
       .then(function(r){
-        if (r.status === 404) return [];
+        if (r.status === 404) {
+          var e = new Error('仓库里没有 ' + path);
+          e.notFound = true; e.path = path;
+          throw e;
+        }
         if (!r.ok) {
           return r.json().catch(function(){ return {}; }).then(function(e){
             throw new Error(e.message || ('HTTP ' + r.status));
@@ -2079,6 +2108,12 @@ header.head .back:hover{gap:8px}
       if (els.annHint) els.annHint.textContent = '数据来自 GitHub · ' + (gh.annPath || DEFAULT_ANN_PATH);
       updateButtons();
     }).catch(function(err){
+      if (err && err.notFound) {
+        annItems = []; annSnapshot = snapshotAnn(); annCollapsedState = {}; renderAnn();
+        if (els.annHint) els.annHint.textContent = '未找到 ' + (gh.annPath || DEFAULT_ANN_PATH) + '，保存时会新建';
+        updateButtons();
+        return;
+      }
       console.warn('[admin] 公告加载失败', err);
       if (els.annHint) els.annHint.textContent = '⚠ ' + err.message;
     });
@@ -2261,10 +2296,10 @@ header.head .back:hover{gap:8px}
     var token = (els.ghToken.value || '').trim();
     var owner = (els.ghOwner.value || '').trim();
     var repo  = (els.ghRepo.value || '').trim();
-    var wikiPath  = (els.ghWikiPath.value || '').trim() || DEFAULT_WIKI_PATH;
-    var dlPath    = (els.ghDlPath.value || '').trim() || DEFAULT_DL_PATH;
-    var toolsPath = (els.ghToolsPath.value || '').trim() || DEFAULT_TOOLS_PATH;
-    var annPath   = (els.ghAnnPath.value || '').trim() || DEFAULT_ANN_PATH;
+    var wikiPath  = normPath(els.ghWikiPath.value,  DEFAULT_WIKI_PATH);
+    var dlPath    = normPath(els.ghDlPath.value,    DEFAULT_DL_PATH);
+    var toolsPath = normPath(els.ghToolsPath.value, DEFAULT_TOOLS_PATH);
+    var annPath   = normPath(els.ghAnnPath.value,   DEFAULT_ANN_PATH);
     var branch = (els.ghBranch.value || '').trim() || DEFAULT_BRANCH;
 
     if (!token) { toast('请填 Token'); return; }
@@ -2307,11 +2342,19 @@ header.head .back:hover{gap:8px}
     if (!gh) { toast('请先连接'); return; }
     busy = true; updateButtons();
 
+    var missingPaths = [];
+    function loadOrEmpty(path){
+      return loadJson(path).catch(function(err){
+        if (err && err.notFound) { missingPaths.push(path); return []; }
+        return { __err: err };
+      });
+    }
+
     Promise.all([
-      loadJson(gh.wikiPath).catch(function(err){ return { __err: err }; }),
+      loadOrEmpty(gh.wikiPath),
       fetchReleasesCached(forceReleases).catch(function(err){ return { __err: err }; }),
-      loadJson(gh.dlPath).catch(function(err){ return { __err: err }; }),
-      loadJson(gh.toolsPath).catch(function(err){ return { __err: err }; })
+      loadOrEmpty(gh.dlPath),
+      loadOrEmpty(gh.toolsPath)
     ]).then(function(results){
       var wikiResult = results[0];
       var relResult  = results[1];
@@ -2320,7 +2363,7 @@ header.head .back:hover{gap:8px}
 
       if (wikiResult && wikiResult.__err) {
         console.warn('[admin] wiki 加载失败', wikiResult.__err);
-        toast('Wiki 数据加载失败：' + wikiResult.__err.message);
+        toast('Wiki 数据加载失败：' + friendlyGhError(wikiResult.__err));
         wikiArticles = [];
       } else {
         wikiArticles = (wikiResult || []).map(function(a){ return Object.assign({}, a); });
@@ -2358,14 +2401,16 @@ header.head .back:hover{gap:8px}
 
       busy = false;
       updateButtons();
-      if (!silent) {
+      if (missingPaths.length) {
+        toast('未找到 ' + missingPaths.join('、') + '，已按空数据处理；保存时会新建该文件');
+      } else if (!silent) {
         toast('已加载 · ' + wikiArticles.length + ' 条文章 / ' + files.length + ' 个资源 / ' + tools.length + ' 个工具');
       }
     }).catch(function(err){
       console.warn('[admin] 加载失败', err);
       busy = false;
       updateButtons();
-      toast('加载失败：' + err.message);
+      toast('加载失败：' + friendlyGhError(err));
     });
   }
 
@@ -2408,7 +2453,7 @@ header.head .back:hover{gap:8px}
         console.warn('[admin] 保存失败', err);
         busy = false;
         updateButtons();
-        toast('保存失败：' + err.message);
+        toast('保存失败：' + friendlyGhError(err));
       });
   }
 
@@ -2623,12 +2668,13 @@ header.head .back:hover{gap:8px}
               token: c.token,
               owner: c.owner || DEFAULT_OWNER,
               repo: c.repo || DEFAULT_REPO,
-              wikiPath: c.wikiPath || c.path || DEFAULT_WIKI_PATH,
-              dlPath: c.dlPath || DEFAULT_DL_PATH,
-              toolsPath: c.toolsPath || DEFAULT_TOOLS_PATH,
-              annPath: c.annPath || DEFAULT_ANN_PATH,
+              wikiPath: normPath(c.wikiPath || c.path, DEFAULT_WIKI_PATH),
+              dlPath: normPath(c.dlPath, DEFAULT_DL_PATH),
+              toolsPath: normPath(c.toolsPath, DEFAULT_TOOLS_PATH),
+              annPath: normPath(c.annPath, DEFAULT_ANN_PATH),
               branch: c.branch || DEFAULT_BRANCH
             };
+            storage.set(K_GH, JSON.stringify(gh));   /* 迁移后的路径回写，下次直接用 */
             updatePathTips();
             updateButtons();
             renderWiki();
