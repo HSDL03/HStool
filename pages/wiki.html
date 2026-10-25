@@ -15,7 +15,7 @@
   if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
 }catch(e){}})();
 </script>
-<link rel="stylesheet" href="./assets/css/core.css">
+<link rel="stylesheet" href="../assets/css/core.css">
 <style>
 /* ── Wiki 阅读器 ─────────────────────────────────────────────── */
 :root{--sb-w:266px}
@@ -266,14 +266,14 @@ body[data-fs="l"] .prose{font-size:16.5px}
 <footer class="foot">
   <div class="fl">
     <span>📚 红石的答辩 Wiki</span>
-    <a href="./index.html">回首页</a>
+    <a href="../index.html">回首页</a>
     <a href="./download.html">下载站</a>
     <a href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">数据仓库</a>
   </div>
   <div class="fr"><span>数据 <span id="dataState">加载中</span></span></div>
 </footer>
 
-<script src="./assets/js/core.js"></script>
+<script src="../assets/js/core.js"></script>
 <script>
 (function () {
   'use strict';
@@ -603,7 +603,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
     var b = e.target.closest('[data-go]');
     if (b && b.getAttribute('data-go')) location.hash = '#/' + encodeURIComponent(b.getAttribute('data-go'));
   });
-  $('#btnHome').addEventListener('click', function () { location.href = './index.html'; });
+  $('#btnHome').addEventListener('click', function () { location.href = '../index.html'; });
   $('#btnAdmin').addEventListener('click', function () { location.href = './admin.html'; });
   $('#btnAdmin2').addEventListener('click', function () { location.href = './admin.html'; });
 
@@ -648,7 +648,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
   applyFs(fs);
   window.addEventListener('hashchange', route);
 
-  HS.fetchJSON('wiki-data.json', { remote: GH })
+  HS.fetchJSON('../data/wiki-data.json', { remote: GH })
     .then(function (data) {
       ARTICLES = norm(data);
       buildTree();
@@ -659,7 +659,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
         actions: [
           { icon: '🎲', title: '随机条目', desc: '随便翻一条看看', run: randomArticle },
           { icon: '🎨', title: '切换风格', desc: '打开主题选择器', run: function () { HS.theme.open(); } },
-          { icon: '🧰', title: '回工具台', desc: '红石的小站首页', run: function () { location.href = './index.html'; } }
+          { icon: '🧰', title: '回工具台', desc: '红石的小站首页', run: function () { location.href = '../index.html'; } }
         ],
         source: function () {
           return ARTICLES.map(function (a) {
@@ -675,7 +675,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
       $('#dataState').textContent = '离线模式';
     });
 
-  HS.status.mount('wiki-data.json');
+  HS.status.mount('../data/wiki-data.json');
 })();
 </script>
 </body>

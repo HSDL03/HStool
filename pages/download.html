@@ -15,7 +15,7 @@
   if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
 }catch(e){}})();
 </script>
-<link rel="stylesheet" href="./assets/css/core.css">
+<link rel="stylesheet" href="../assets/css/core.css">
 <style>
 /* ── 下载站专属 ─────────────────────────────────────────── */
 .dl-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 20px;max-width:700px}
@@ -75,7 +75,7 @@
 <a class="skip" href="#main">跳到主要内容</a>
 
 <header class="topbar" id="topbar">
-  <a class="brand" href="./index.html" aria-label="回首页">
+  <a class="brand" href="../index.html" aria-label="回首页">
     <span class="ico">📥</span><span class="txt">下载站</span>
   </a>
   <span class="spacer"></span>
@@ -143,7 +143,7 @@
 <footer class="foot">
   <div class="fl">
     <span>📥 下载站</span>
-    <a href="./index.html">回首页</a>
+    <a href="../index.html">回首页</a>
     <a href="./wiki.html">Wiki</a>
     <a href="https://github.com/HSDL03/HStool/releases" target="_blank" rel="noopener">GitHub Releases</a>
   </div>
@@ -153,13 +153,13 @@
   </div>
 </footer>
 
-<script src="./assets/js/core.js"></script>
+<script src="../assets/js/core.js"></script>
 <script>
 (function () {
   'use strict';
   var GH_OWNER = 'HSDL03', GH_REPO = 'HStool', GH_BRANCH = 'main';
   var REPO = GH_OWNER + '/' + GH_REPO;
-  var DATA_FILE = 'download-data.json';
+  var DATA_FILE = '../data/download-data.json';
   var RAW_BASE = 'https://raw.githubusercontent.com/' + REPO + '/' + GH_BRANCH + '/';
   var CDN_BASE = 'https://cdn.jsdelivr.net/gh/' + REPO + '@' + GH_BRANCH + '/';
   var RELEASES_API = 'https://api.github.com/repos/' + REPO + '/releases';
@@ -496,7 +496,7 @@
     setTimeout(function () { btn.classList.remove('spinning'); }, 900);
   });
   document.getElementById('btnRetry').addEventListener('click', function () { loadData(true); });
-  document.getElementById('btnHome').addEventListener('click', function () { location.href = './index.html'; });
+  document.getElementById('btnHome').addEventListener('click', function () { location.href = '../index.html'; });
   document.getElementById('btnPalette').addEventListener('click', function () { HS.palette.open(); });
 
   var qEl = document.getElementById('q');
@@ -516,7 +516,7 @@
     actions: [
       { icon: '🔄', title: '刷新资源列表', desc: '重新拉取 GitHub Releases', run: function () { loadData(true); } },
       { icon: '🎨', title: '切换风格', desc: '打开主题选择器', run: function () { HS.theme.open(); } },
-      { icon: '🧰', title: '回工具台', desc: '红石的小站首页', run: function () { location.href = './index.html'; } },
+      { icon: '🧰', title: '回工具台', desc: '红石的小站首页', run: function () { location.href = '../index.html'; } },
       { icon: '📚', title: '打开 Wiki', desc: '个人知识库', run: function () { location.href = './wiki.html'; } }
     ],
     source: function () {

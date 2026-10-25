@@ -11,27 +11,49 @@
 ## 结构
 
 ```
-index.html            工具箱首页（搜索 / 筛选 / 排序 / 命令面板）
-wiki.html             答辩 Wiki 阅读器（章节树 / 目录 / 全文搜索 / 阅读进度）
-download.html         下载站（GitHub Releases + 手动补录）
-admin.html            数据管理后台（用 GitHub Token 直接写 JSON）
-chat.html             聊天室（Supabase）
-404.html              自定义 404
-assets/css/core.css   设计系统：主题令牌 + 通用组件
-assets/js/core.js     主题引擎 / 命令面板 / 装饰背景 / Toast / 状态条
-tools/*.html          独立小工具（计算器、二维码、MC 名称）
-game/  pvpga  wuzi_*  独立小游戏
-*.json                站点数据（由 admin.html 写入）
+index.html          工具箱首页（搜索 / 筛选 / 排序 / 命令面板）
+404.html            自定义 404（必须留在根目录）
+README.md
+assets/css/core.css 设计系统：主题令牌 + 通用组件
+assets/js/core.js   主题引擎 / 命令面板 / 装饰背景 / Toast / 状态条
+
+pages/
+  wiki.html         答辩 Wiki 阅读器（章节树 / 目录 / 全文搜索 / 阅读进度）
+  download.html     下载站（GitHub Releases + 手动补录）
+  admin.html        数据管理后台（用 GitHub Token 直接写 JSON）
+  chat.html         聊天室（Supabase）
+
+tools/
+  bigcalc.html      计算器
+  qrcode.html       二维码生成器
+  mcname.html       MC 名称随机器
+  gacha.html        挖矿抽卡
+  pixel.html        像素画板
+
+games/
+  mc.html           MC 小游戏（three.js）
+  pvpga.html        PVP 小游戏
+  wuzi_game.html    五子棋对局
+  wuzi_hotel.html   五子棋大厅（Supabase）
+
+data/
+  tools-data.json   工具卡片
+  wiki-data.json    Wiki 条目
+  download-data.json 资源补录
+  announcement.json 公告
 ```
+
+> 路径约定：`index.html` 与 `404.html` 在根目录，其余页面都下沉到子目录，
+> 所以页内资源用 `../assets/`、数据用 `../data/`，首页引用页面用 `./pages/xxx.html`。
 
 ## 数据文件
 
 | 文件 | 用途 |
 | --- | --- |
-| `tools-data.json` | 工具卡片：`id/icon/name/desc/tag/url/category/deprecated/disabled/hidden` |
-| `wiki-data.json` | Wiki 条目：`id/title/chapter/section/category/content` |
-| `download-data.json` | 资源补录：`releaseTag/fileName/name/desc/tag/version/hidden/offline` |
-| `announcement.json` | 公告：`id/type/category/icon/title/content/link/linkText/enabled` |
+| `data/tools-data.json` | 工具卡片：`id/icon/name/desc/tag/url/category/deprecated/disabled/hidden` |
+| `data/wiki-data.json` | Wiki 条目：`id/title/chapter/section/category/content` |
+| `data/download-data.json` | 资源补录：`releaseTag/fileName/name/desc/tag/version/hidden/offline` |
+| `data/announcement.json` | 公告：`id/type/category/icon/title/content/link/linkText/enabled` |
 
 字段含义与旧版完全一致，`admin.html` 不需要改动即可继续使用。
 

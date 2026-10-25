@@ -194,9 +194,9 @@
 <footer class="foot">
   <div class="fl">
     <span>🧰 红石的小站</span>
-    <a href="./wiki.html">Wiki</a>
-    <a href="./download.html">下载站</a>
-    <a href="./admin.html">数据管理</a>
+    <a href="./pages/wiki.html">Wiki</a>
+    <a href="./pages/download.html">下载站</a>
+    <a href="./pages/admin.html">数据管理</a>
     <a href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GitHub 仓库</a>
   </div>
   <div class="fr">
@@ -213,9 +213,9 @@
 
   /* 远程数据缺项时的兜底，保证核心入口永远在 */
   var FALLBACK = [
-    { id: 'wiki', icon: '📚', name: '红石答辩wiki', desc: '个人知识库 · 条目式整理', tag: '知识', url: './wiki.html', category: 'noDB' },
-    { id: 'download', icon: '📥', name: '下载站', desc: '资源文件 · 便捷下载', tag: '资源', url: './download.html', category: 'noDB' },
-    { id: 'chat', icon: '💬', name: '聊天室', desc: '和朋友们聊天', tag: '社交', url: './chat.html', category: 'needDB' }
+    { id: 'wiki', icon: '📚', name: '红石答辩wiki', desc: '个人知识库 · 条目式整理', tag: '知识', url: './pages/wiki.html', category: 'noDB' },
+    { id: 'download', icon: '📥', name: '下载站', desc: '资源文件 · 便捷下载', tag: '资源', url: './pages/download.html', category: 'noDB' },
+    { id: 'chat', icon: '💬', name: '聊天室', desc: '和朋友们聊天', tag: '社交', url: './pages/chat.html', category: 'needDB' }
   ];
 
   var TOOLS = [];
@@ -301,7 +301,7 @@
   var annWrap = document.getElementById('annWrap');
 
   function loadAnnounce() {
-    HS.fetchJSON('announcement.json', { remote: GH })
+    HS.fetchJSON('data/announcement.json', { remote: GH })
       .then(function (data) {
         var list = (Array.isArray(data) ? data : []).filter(function (it) {
           return it && it.enabled !== false && dismissed.indexOf(it.id) === -1;
@@ -577,7 +577,7 @@
       document.getElementById('dataState').textContent = '本地缓存';
       return;
     }
-    HS.fetchJSON('tools-data.json', { remote: GH })
+    HS.fetchJSON('data/tools-data.json', { remote: GH })
       .then(function (data) {
         TOOLS = merge(normAll(data), normAll(FALLBACK));
         HS.store.setJson('hs-tools-cache', { t: Date.now(), data: TOOLS });
@@ -598,9 +598,9 @@
     actions: [
       { icon: '🎨', title: '切换风格', desc: '打开主题选择器', kbd: 'T', run: function () { HS.theme.open(); } },
       { icon: '🔄', title: '刷新工具列表', desc: '重新从仓库拉取数据', run: function () { loadTools(true); } },
-      { icon: '📚', title: '打开 Wiki', desc: '个人知识库', run: function () { location.href = './wiki.html'; } },
-      { icon: '📥', title: '打开下载站', desc: '资源文件列表', run: function () { location.href = './download.html'; } },
-      { icon: '🗂️', title: '数据管理', desc: '编辑站点 JSON 数据', run: function () { location.href = './admin.html'; } }
+      { icon: '📚', title: '打开 Wiki', desc: '个人知识库', run: function () { location.href = './pages/wiki.html'; } },
+      { icon: '📥', title: '打开下载站', desc: '资源文件列表', run: function () { location.href = './pages/download.html'; } },
+      { icon: '🗂️', title: '数据管理', desc: '编辑站点 JSON 数据', run: function () { location.href = './pages/admin.html'; } }
     ],
     source: function () {
       return TOOLS.filter(function (t) { return !t.hidden; }).map(function (t) {
@@ -623,7 +623,7 @@
   });
   loadTools(false);
   loadAnnounce();
-  HS.status.mount('tools-data.json');
+  HS.status.mount('data/tools-data.json');
 })();
 </script>
 </body>

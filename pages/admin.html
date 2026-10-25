@@ -258,7 +258,7 @@ header.head .back:hover{gap:8px}
   <header class="head">
     <h1>🗂️ 数据管理</h1>
     <span class="sp"></span>
-    <a class="back" href="./index.html">← 返回工具箱</a>
+    <a class="back" href="../index.html">← 返回工具箱</a>
   </header>
 
   <p class="lede" id="lede">管理 Wiki 分类、下载站资源、首页工具箱、站点公告。</p>
@@ -452,10 +452,10 @@ header.head .back:hover{gap:8px}
       <div class="grid2" style="margin-top:14px">
         <div class="fld"><span>Owner</span><input id="ghOwner" type="text" placeholder="HSDL03" autocomplete="off" spellcheck="false"></div>
         <div class="fld"><span>仓库名 Repo</span><input id="ghRepo" type="text" placeholder="HStool" autocomplete="off" spellcheck="false"></div>
-        <div class="fld"><span>Wiki 数据文件</span><input id="ghWikiPath" type="text" placeholder="wiki-data.json" autocomplete="off" spellcheck="false"></div>
-        <div class="fld"><span>下载源数据文件</span><input id="ghDlPath" type="text" placeholder="download-data.json" autocomplete="off" spellcheck="false"></div>
-        <div class="fld"><span>工具数据文件</span><input id="ghToolsPath" type="text" placeholder="tools-data.json" autocomplete="off" spellcheck="false"></div>
-        <div class="fld"><span>公告数据文件</span><input id="ghAnnPath" type="text" placeholder="announcement.json" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><span>Wiki 数据文件</span><input id="ghWikiPath" type="text" placeholder="data/wiki-data.json" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><span>下载源数据文件</span><input id="ghDlPath" type="text" placeholder="data/download-data.json" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><span>工具数据文件</span><input id="ghToolsPath" type="text" placeholder="data/tools-data.json" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><span>公告数据文件</span><input id="ghAnnPath" type="text" placeholder="data/announcement.json" autocomplete="off" spellcheck="false"></div>
         <div class="fld"><span>分支 Branch</span><input id="ghBranch" type="text" placeholder="main" autocomplete="off" spellcheck="false"></div>
       </div>
     </div>
@@ -630,10 +630,10 @@ header.head .back:hover{gap:8px}
      ========================================================== */
   var DEFAULT_OWNER      = 'HSDL03';
   var DEFAULT_REPO       = 'HStool';
-  var DEFAULT_WIKI_PATH  = 'wiki-data.json';
-  var DEFAULT_DL_PATH    = 'download-data.json';
-  var DEFAULT_TOOLS_PATH = 'tools-data.json';
-  var DEFAULT_ANN_PATH   = 'announcement.json';
+  var DEFAULT_WIKI_PATH  = 'data/wiki-data.json';
+  var DEFAULT_DL_PATH    = 'data/download-data.json';
+  var DEFAULT_TOOLS_PATH = 'data/tools-data.json';
+  var DEFAULT_ANN_PATH   = 'data/announcement.json';
   var DEFAULT_BRANCH     = 'main';
   var K_GH               = 'hs-admin-gh';
   var K_TAB              = 'hs-admin-tab';
