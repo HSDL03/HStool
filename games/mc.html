@@ -515,6 +515,7 @@ canvas#game3d{display:block}
   </div>
 </div>
 
+<script src="../assets/mc-items-data.js"></script>
 <script src="../assets/vendor/three.min.js"></script>
 <script>if(typeof THREE==='undefined')document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>
@@ -624,7 +625,27 @@ canvas#game3d{display:block}
   };
   /* 22 = 水源；23~29 = 流动水（level 1~7，越远越稀） */
   function isWaterId(b){return b>=22&&b<=29;}
+  var ITEMS={};
+  if(window.MC_ITEMS){
+    for(var _ik in MC_ITEMS){
+      var _id=MC_ITEMS[_ik];
+      ITEMS[_ik]={name:_id.n,tile:_id.t,cat:_id.c};
+    }
+  }
   var ALL_BLOCK_IDS=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+  /* 合并脚本生成的 1.18 前方块（id 100+），并登记进创造物品栏 */
+  if(window.MC_BLOCKS){
+    for(var _bk in MC_BLOCKS){
+      var _bd=MC_BLOCKS[_bk];
+      BLOCKS[_bk]={name:_bd.n,top:_bd.t,side:_bd.s,bottom:_bd.b,cat:_bd.c};
+      ALL_BLOCK_IDS.push(Number(_bk));
+    }
+  }
+  /* 取物品名：方块或物品都查 */
+  function itemName(id){
+    var b=BLOCKS[id]||ITEMS[id];
+    return b?b.name:('#'+id);
+  }
 
   /* ★ 挖掘硬度：数值越大越慢；-1 不可破坏 */
   var BLOCK_HARDNESS={
@@ -634,7 +655,7 @@ canvas#game3d{display:block}
   };
 
   /* ═══ 纹理图集 ═══ */
-  var ATLAS_COLS=8,ATLAS_ROWS=4,TILE_PX=16;
+  var ATLAS_COLS=8,ATLAS_ROWS=(window.MC_ATLAS_ROWS&&MC_ATLAS_ROWS>4)?MC_ATLAS_ROWS:4,TILE_PX=16;
   var atlasCanvas=document.createElement('canvas');
   atlasCanvas.width=ATLAS_COLS*TILE_PX;atlasCanvas.height=ATLAS_ROWS*TILE_PX;
   var atlasCtx=atlasCanvas.getContext('2d');
@@ -1094,10 +1115,16 @@ canvas#game3d{display:block}
     17:'spruce_log',18:'spruce_log_top',19:'spruce_leaves',20:'ice',21:'deepslate',
     22:'coal_ore',23:'iron_ore',24:'gold_ore',25:'diamond_ore',26:'lapis_ore'
   };
+  /* 合并脚本生成的 1.18 前物品纹理（方块纹理 + item_ 前缀的物品纹理） */
+  if(window.MC_TEX){for(var _tk in MC_TEX)TEX_FILES[_tk]=MC_TEX[_tk];}
   (function loadVanillaTextures(){
-    /* 这三张在原版里是灰度图，靠运行时按生物群系染色；
+    /* 这些在原版里是灰度图，靠运行时按生物群系染色；
        这里直接乘上平原的草色/树叶色，否则地面会渲成灰白 */
-    var TINTS={0:'#91bd59',6:'#77ab2f',19:'#619961'};
+    var LEAF_TINTS={
+      grass_block_top:'#91bd59',oak_leaves:'#77ab2f',spruce_leaves:'#619961',
+      birch_leaves:'#80a755',jungle_leaves:'#4caf50',acacia_leaves:'#67b368',
+      dark_oak_leaves:'#77ab2f',azalea_leaves:'#77ab2f',flowering_azalea_leaves:'#8ac65b'
+    };
     Object.keys(TEX_FILES).forEach(function(ti){
       var img=new Image();
       img.onload=function(){
@@ -1105,7 +1132,7 @@ canvas#game3d{display:block}
           g.imageSmoothingEnabled=false;
           g.clearRect(0,0,TILE_PX,TILE_PX);
           g.drawImage(img,0,0,TILE_PX,TILE_PX);
-          var tint=TINTS[ti];
+          var tint=LEAF_TINTS[TEX_FILES[ti]];
           if(tint){
             g.globalCompositeOperation='multiply';
             g.fillStyle=tint;
@@ -1524,12 +1551,12 @@ canvas#game3d{display:block}
     if(e.key==='Escape'&&inventoryOpen){closeInv();e.preventDefault();return;}
     if(k==='q'){
       if(inventoryOpen){
-        if(cursorItem){addChat('丢弃：'+BLOCKS[cursorItem.id].name+' x'+cursorItem.count,'system');cursorItem=null;refreshInvUI();}
+        if(cursorItem){addChat('丢弃：'+itemName(cursorItem.id)+' x'+cursorItem.count,'system');cursorItem=null;refreshInvUI();}
         return;
       }
       if(gameMode!=='creative'&&gameMode!=='spectator'){
         var it=hotbarSlots[selectedSlot];
-        if(it){addChat('丢弃：'+BLOCKS[it.id].name+' x'+it.count,'system');hotbarSlots[selectedSlot]=null;updHotSlot(hotbarEl.children[selectedSlot],null);}
+        if(it){addChat('丢弃：'+itemName(it.id)+' x'+it.count,'system');hotbarSlots[selectedSlot]=null;updHotSlot(hotbarEl.children[selectedSlot],null);}
       }
       return;
     }
@@ -1789,7 +1816,7 @@ canvas#game3d{display:block}
       }
       case 'give':{
         var id=parseInt(args[0],10),cnt=parseInt(args[1],10)||1;
-        if(BLOCKS[id]){addItem(id,cnt);addChat('已获得 '+BLOCKS[id].name+' x'+cnt,'success');}
+        if(BLOCKS[id]||ITEMS[id]){addItem(id,cnt);addChat('已获得 '+itemName(id)+' x'+cnt,'success');}
         else addChat('未知方块 ID','error');
         break;
       }
@@ -2215,13 +2242,27 @@ canvas#game3d{display:block}
   var cursorItem=null;
   var invMouseX=0,invMouseY=0;
 
-  var CREATIVE_CATS=[
-    {id:'all',name:'全部',items:ALL_BLOCK_IDS.slice()},
-    {id:'building',name:'建筑',items:[3,8,9,11,10,15,16]},
-    {id:'nature',name:'自然',items:[1,2,4,5,6,12,13,14,7]},
-    {id:'ore',name:'矿物',items:[17,18,19,20,21]}
-  ];
-  var creativeCat='all';
+  var CREATIVE_CATS=[];
+  (function buildCreativeCats(){
+    var defs=[
+      {id:'building',name:'建筑方块'},{id:'decoration',name:'装饰方块'},
+      {id:'redstone',name:'红石'},{id:'nature',name:'自然方块'},
+      {id:'tools',name:'工具'},{id:'combat',name:'战斗'},
+      {id:'food',name:'食物'},{id:'materials',name:'材料'},{id:'misc',name:'杂项'}
+    ];
+    var map={};defs.forEach(function(d){map[d.id]=d;d.items=[];});
+    ALL_BLOCK_IDS.forEach(function(id){
+      var b=BLOCKS[id];if(!b)return;
+      var c=b.cat||'nature';
+      (map[c]||map.misc).items.push(id);
+    });
+    Object.keys(ITEMS).forEach(function(k){
+      var id=Number(k),it=ITEMS[id];
+      (map[it.cat]||map.misc).items.push(id);
+    });
+    defs.forEach(function(d){if(d.items.length)CREATIVE_CATS.push(d);});
+  })();
+  var creativeCat=(CREATIVE_CATS[0]||{id:'building'}).id;
   var creativeSearch='';
 
   var invCursorEl=document.createElement('div');
@@ -2236,8 +2277,9 @@ canvas#game3d{display:block}
   });
 
   function makeIcon(bid){
-    var def=BLOCKS[bid];if(!def)return null;
-    var tile=def.side;
+    var def=BLOCKS[bid]||ITEMS[bid];
+    if(!def)return null;
+    var tile=(def.side!==undefined)?def.side:def.tile;
     var col=tile%ATLAS_COLS,row=Math.floor(tile/ATLAS_COLS);
     var c=document.createElement('canvas');c.width=32;c.height=32;
     var g=c.getContext('2d');g.imageSmoothingEnabled=false;
@@ -2262,7 +2304,7 @@ canvas#game3d{display:block}
       if(icon){
         el.appendChild(icon);
         var b=document.createElement('span');b.className='count';b.textContent=item.count;
-        el.appendChild(b);el.title=BLOCKS[item.id].name+' x'+item.count;
+        el.appendChild(b);el.title=itemName(item.id)+' x'+item.count;
       }
     }else el.title='空';
   }
@@ -2292,7 +2334,7 @@ canvas#game3d{display:block}
 
   function addItem(bid,count){
     count=count||1;
-    if(!BLOCKS[bid])return false;
+    if(!BLOCKS[bid]&&!ITEMS[bid])return false;
     var i;
     for(i=0;i<9;i++){var s=hotbarSlots[i];
       if(s&&s.id===bid&&s.count<64){var a1=Math.min(64-s.count,count);s.count+=a1;count-=a1;updHotSlot(hotbarEl.children[i],s);if(count<=0)return true;}}
@@ -2332,7 +2374,7 @@ canvas#game3d{display:block}
         var c=document.createElement('span');c.className='cnt';c.textContent=item.count;
         cell.appendChild(c);
       }
-      cell.title=BLOCKS[item.id].name+' x'+item.count;
+      cell.title=itemName(item.id)+' x'+item.count;
     }else cell.title='';
   }
 
@@ -2401,7 +2443,11 @@ canvas#game3d{display:block}
       items=[];
       for(var a=0;a<ALL_BLOCK_IDS.length;a++){
         var id=ALL_BLOCK_IDS[a];
-        if(BLOCKS[id].name.toLowerCase().indexOf(q)>=0)items.push(id);
+        if(itemName(id).toLowerCase().indexOf(q)>=0)items.push(id);
+      }
+      for(var _ik in ITEMS){
+        var _iid=Number(_ik);
+        if(itemName(_iid).toLowerCase().indexOf(q)>=0)items.push(_iid);
       }
     }else{
       var cat=null;
@@ -2419,7 +2465,7 @@ canvas#game3d{display:block}
     for(var j=0;j<items.length;j++)(function(id){
       var cell=document.createElement('div');
       cell.className='inv-cell';
-      cell.title=BLOCKS[id].name;
+      cell.title=itemName(id);
       var icon=makeIcon(id);
       if(icon)cell.appendChild(icon);
       cell.addEventListener('mousedown',function(e){
@@ -2811,6 +2857,7 @@ canvas#game3d{display:block}
     if(cur!==0&&!isWaterId(cur))return;   /* 水可以被方块替换 */
     var bid=getSelectedBlockId();
     if(!bid||bid===0){toast('空手无法放置');return;}
+    if(!BLOCKS[bid]){toast('这个物品不能放置');return;}
     if(gameMode==='survival'||gameMode==='hardcore'){
       var it=hotbarSlots[selectedSlot];
       if(!it||it.count<=0){toast('没有物品');return;}
