@@ -3,267 +3,375 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>红石答辩 Wiki · 红石的小站</title>
-<meta name="description" content="红石的答辩 Wiki —— 按大板块 / 板块 / 分类整理的条目式知识库，支持全文搜索、目录跳转与阅读进度。">
+<title>红石Wiki · 红石的小站</title>
+<meta name="description" content="红石Wiki —— 按大板块 / 板块 / 分类整理的条目式知识库，支持全文搜索、目录跳转与阅读进度。">
 <meta name="theme-color" content="#3d521f">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
 <script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="stylesheet" href="../assets/css/core.css">
 <style>
-/* ── Wiki 阅读器 ─────────────────────────────────────────────── */
-:root{--sb-w:266px}
-body{padding-top:var(--topbar-h,52px)}
+/* ═══════════════════════════════════════════════════════════
+   Wiki 版式：参考 MediaWiki（zh.minecraft.wiki）的结构
+   顶部条 / 左侧固定导航 + 目录 / 内容区 / 信息框 / 分类栏 / 页脚
+   ═══════════════════════════════════════════════════════════ */
+:root{--mw-side:248px;--mw-gap:26px;--mw-max:1180px}
 
-#progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:200;background:var(--ac);box-shadow:0 0 8px rgba(var(--p1),.6);transition:width .1s linear;pointer-events:none}
+body{padding-top:56px;background:var(--bg)}
+#progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:200;background:var(--ac);transition:width .1s linear;pointer-events:none}
 
-.layout{position:relative;z-index:2;display:grid;grid-template-columns:var(--sb-w) minmax(0,1fr);gap:0;max-width:1320px;margin:0 auto;padding:0 20px 60px;align-items:start}
-
-/* 侧栏 */
-.side{
-  position:sticky;top:calc(var(--topbar-h,52px) + 16px);
-  max-height:calc(100vh - var(--topbar-h,52px) - 32px);
-  display:flex;flex-direction:column;margin:16px 0 0;
-  background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
-  box-shadow:var(--bevel);overflow:hidden;
+/* ── 顶部条 ── */
+.mw-head{
+  position:fixed;top:0;left:0;right:0;height:56px;z-index:60;
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+  background:var(--topbar-bg);color:var(--topbar-fg);
+  border-bottom:2px solid var(--topbar-bd);
 }
-[data-theme^="github-"] .side{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
-.side-head{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--bd);flex:none}
-.side-head .t{flex:1;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
-.side-body{flex:1;min-height:0;overflow-y:auto;padding:7px}
-.side-foot{flex:none;padding:7px;border-top:1px solid var(--bd);display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.side-foot .btn{height:28px;padding:0 6px;font-size:11.5px}
+[data-theme^="github-"] .mw-head{border-bottom-width:1px}
+.mw-head.scrolled{box-shadow:0 3px 12px rgba(0,0,0,.16)}
+.mw-logo{display:flex;align-items:center;gap:9px;flex:none;color:inherit;text-decoration:none}
+.mw-logo .mark{
+  width:34px;height:34px;display:grid;place-items:center;font-size:19px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+  border-radius:var(--r);
+}
+[data-theme^="github-"] .mw-logo .mark{background:var(--bg2);border-color:var(--bd);color:var(--text)}
+.mw-logo .txt{display:flex;flex-direction:column;line-height:1.15}
+.mw-logo .txt b{font-size:15.5px;font-weight:800;letter-spacing:-.01em}
+[data-theme^="mc-"] .mw-logo .txt b{text-shadow:1px 1px 0 rgba(0,0,0,.35)}
+.mw-logo .txt i{font-size:10px;font-style:normal;letter-spacing:.1em;opacity:.72;text-transform:uppercase}
 
-/* 树 */
-.tree{display:flex;flex-direction:column;gap:2px}
-.node>.th{display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:var(--r);cursor:pointer;user-select:none;transition:background .12s;font-size:12.5px}
-.node>.th:hover{background:var(--bg3)}
-.node .arw{width:11px;flex:none;display:grid;place-items:center;font-size:8px;color:var(--muted);transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
+.mw-search{flex:1 1 320px;max-width:520px;position:relative;display:flex;align-items:center}
+.mw-search .sico{position:absolute;left:10px;font-size:13px;opacity:.65;pointer-events:none}
+.mw-search input{
+  width:100%;height:34px;padding:0 12px 0 30px;font-family:inherit;font-size:13.5px;
+  color:var(--text);background:var(--bg);border:2px solid var(--topbar-bd);
+  border-radius:var(--r);outline:none;transition:box-shadow .15s,border-color .15s;
+  box-shadow:var(--bevel-in);
+}
+[data-theme^="github-"] .mw-search input{border-width:1px;box-shadow:none;background:var(--bg2);border-color:var(--bd)}
+.mw-search input::placeholder{color:var(--faint)}
+.mw-search input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+
+.mw-tools{margin-left:auto;display:flex;align-items:center;gap:2px;flex:none}
+.mw-tools .tbtn{
+  display:inline-flex;align-items:center;gap:5px;height:30px;min-width:30px;padding:0 8px;
+  font-family:inherit;font-size:12px;font-weight:700;color:inherit;
+  background:transparent;border:1px solid transparent;border-radius:var(--r);
+  cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s;
+}
+.mw-tools .tbtn:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.22)}
+[data-theme^="github-"] .mw-tools .tbtn:hover{background:var(--bg3);border-color:var(--bd)}
+
+/* ── 主体 ── */
+.mw-body{
+  position:relative;z-index:2;max-width:var(--mw-max);margin:0 auto;
+  display:grid;grid-template-columns:var(--mw-side) minmax(0,1fr);gap:var(--mw-gap);
+  padding:0 20px 40px;align-items:start;
+}
+
+/* ── 左侧栏 ── */
+.mw-side{
+  position:sticky;top:72px;max-height:calc(100vh - 88px);overflow-y:auto;
+  padding:16px 0 20px;font-size:13px;
+}
+.side-block{margin-bottom:18px}
+.side-block h3{
+  margin:0 0 7px;padding-bottom:5px;font-size:11px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  border-bottom:1px solid var(--bd);
+}
+.tree{display:flex;flex-direction:column}
+.node>.th{
+  display:flex;align-items:center;gap:5px;padding:3.5px 6px;border-radius:var(--r);
+  cursor:pointer;user-select:none;font-size:12.5px;color:var(--text);transition:background .12s;
+}
+.node>.th:hover{background:var(--bg2)}
+.node .arw{width:10px;flex:none;font-size:8px;color:var(--faint);transition:transform .2s;display:grid;place-items:center}
 .node.open>.th .arw{transform:rotate(90deg)}
-.node .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
-.node .ct{font-size:9.5px;padding:0 5px;color:var(--muted);background:var(--bg);border-radius:8px;font-variant-numeric:tabular-nums;flex:none}
-.node>.tb{overflow:hidden;max-height:0;transition:max-height .3s cubic-bezier(.22,1,.36,1)}
-.node.open>.tb{max-height:4000px}
-.node.lv-ch>.th{font-size:13px;font-weight:800;background:var(--bg);border:1px solid var(--bd);box-shadow:var(--bevel)}
-.node.lv-ch>.tb{padding:3px 0 3px 8px}
-.node.lv-se>.tb{padding:2px 0 3px 10px}
-.node.lv-se>.th{font-size:12px}
-.node.lv-se>.th .lb::before{content:"§";margin-right:3px;color:var(--ac);font-weight:900}
-.node.lv-ca>.tb{padding:1px 0 3px 12px}
-.node.lv-ca>.th{font-size:11.5px;font-weight:600;color:var(--muted)}
-.node.lv-ca>.th .lb::before{content:"#";margin-right:2px;color:var(--ac);opacity:.7}
+.node .lb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.node .ct{flex:none;font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums}
+.node>.tb{overflow:hidden;max-height:0;transition:max-height .28s cubic-bezier(.22,1,.36,1)}
+.node.open>.tb{max-height:3000px}
+.node.lv-ch>.th{font-weight:800}
+.node.lv-ch>.tb{padding-left:9px}
+.node.lv-se>.tb{padding-left:11px}
+.node.lv-se>.th{font-size:12.5px}
+.node.lv-ca>.th{font-size:12px;color:var(--muted)}
+.node.lv-ca>.tb{padding-left:13px}
 .art-link{
-  display:block;padding:3px 8px;margin:1px 0;font-size:12.5px;color:var(--muted);
-  border-radius:var(--r);border-left:2px solid transparent;text-decoration:none;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:all .14s;
+  display:block;padding:2.5px 8px;font-size:12.5px;color:var(--muted);
+  border-left:2px solid transparent;text-decoration:none;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:all .12s;
 }
-.art-link:hover{color:var(--text);background:var(--bg3)}
-.art-link.on{color:var(--ac);background:var(--acs);border-left-color:var(--ac);font-weight:700}
+.art-link:hover{color:var(--ac);background:var(--bg2)}
+.art-link.on{color:var(--ac);border-left-color:var(--ac);background:var(--acs);font-weight:700}
 
-/* 内容区 */
-.main{min-width:0;padding:22px 0 0 26px}
-.wiki-hero{text-align:center;padding:10px 0 22px}
-.wiki-hero h1{
-  margin:0 0 10px;font-size:clamp(1.9rem,4vw,2.8rem);font-weight:900;letter-spacing:-.035em;line-height:1.1;
-  background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;color:transparent;
+/* 目录（放在侧栏，学 Vector 2022） */
+#toc a{
+  display:block;padding:3px 8px;font-size:12.5px;color:var(--muted);
+  border-left:2px solid transparent;text-decoration:none;line-height:1.45;transition:all .12s;
 }
-.wiki-hero p{margin:0 auto;max-width:520px;font-size:13.5px;color:var(--muted);line-height:1.7}
-.wiki-stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:18px 0 0}
-.wstat{min-width:82px;padding:9px 14px;text-align:center;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
-[data-theme^="github-"] .wstat{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
-.wstat b{display:block;font-size:18px;font-weight:900;color:var(--ac);line-height:1.2}
-.wstat span{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
-
-.chapter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:11px;margin-top:22px}
-.ch-card{
-  display:flex;align-items:center;gap:11px;padding:13px 15px;text-align:left;width:100%;
-  background:linear-gradient(135deg,var(--bg2),var(--bg));border:2px solid var(--bd2);
-  border-radius:var(--r);box-shadow:var(--bevel);cursor:pointer;color:inherit;
-  transition:transform .22s cubic-bezier(.34,1.56,.64,1),border-color .22s,box-shadow .22s;
+#toc a:hover{color:var(--ac);border-left-color:var(--ac)}
+#toc a.lv3{padding-left:19px;font-size:11.5px;opacity:.88}
+#toc a.on{color:var(--ac);border-left-color:var(--ac);font-weight:700;background:var(--acs)}
+.side-acts{display:flex;flex-wrap:wrap;gap:4px}
+.side-acts a,.side-acts button{
+  flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  padding:5px 8px;font-family:inherit;font-size:11.5px;font-weight:700;color:var(--muted);
+  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);
+  text-decoration:none;cursor:pointer;transition:all .14s;
 }
-[data-theme^="github-"] .ch-card{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
-.ch-card:hover{transform:translateY(-2px);border-color:var(--ac);box-shadow:var(--bevel),0 12px 26px rgba(0,0,0,.14)}
-.ch-ico{width:40px;height:40px;flex:none;display:grid;place-items:center;font-size:19px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
-[data-theme^="github-"] .ch-ico{border-width:1px;border-radius:9px}
-.ch-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.ch-name{display:block;font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.35}
-.ch-sub{display:block;font-size:11px;color:var(--muted)}
+.side-acts a:hover,.side-acts button:hover{color:var(--ac);border-color:var(--ac);background:var(--acs)}
 
-/* 文章 */
-.crumb{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:11.5px;color:var(--faint);margin-bottom:10px}
-.crumb b{color:var(--ac);font-weight:700}
-.crumb .sep{opacity:.5}
-.art-title{margin:0 0 8px;font-size:clamp(1.55rem,3.4vw,2.1rem);font-weight:900;letter-spacing:-.025em;line-height:1.2}
-.art-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 18px;padding-bottom:14px;border-bottom:2px solid var(--bd-soft)}
-.art-tools{margin-left:auto;display:flex;gap:5px}
-.art-tools .btn{height:28px;padding:0 9px;font-size:11.5px}
-
-.art-layout{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:30px;align-items:start}
-.art-body{min-width:0}
-.toc{
-  position:sticky;top:calc(var(--topbar-h,52px) + 16px);
-  padding:11px 12px;background:var(--bg2);border:2px solid var(--bd);
-  border-radius:var(--r);font-size:12px;
+/* ── 内容区 ── */
+.mw-content{min-width:0;padding-top:14px}
+.mw-title{
+  margin:0 0 4px;font-size:clamp(1.7rem,3.4vw,2.3rem);font-weight:800;
+  line-height:1.2;letter-spacing:-.02em;color:var(--text);
+  border-bottom:2px solid var(--bd);padding-bottom:8px;
 }
-[data-theme^="github-"] .toc{border-width:1px;border-radius:var(--r-lg)}
-.toc .th{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
-.toc a{display:block;padding:2px 0 2px 8px;color:var(--muted);border-left:2px solid transparent;font-size:12px;line-height:1.45;transition:all .14s}
-.toc a:hover{color:var(--ac);border-left-color:var(--ac)}
-.toc a.lv3{padding-left:20px;font-size:11.5px;opacity:.85}
-.toc a.on{color:var(--ac);border-left-color:var(--ac);font-weight:700;background:var(--acs)}
+.mw-subline{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin:0 0 16px;font-size:12px;color:var(--faint);
+}
+.mw-subline .sep{opacity:.5}
 
-.pager{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:34px;padding-top:18px;border-top:2px solid var(--bd-soft)}
+/* 页签（阅读 / 编辑等） */
+.mw-tabs{display:flex;gap:2px;margin:0 0 14px;border-bottom:1px solid var(--bd);font-size:12.5px}
+.mw-tabs span,.mw-tabs a{
+  padding:6px 11px;font-weight:700;color:var(--muted);text-decoration:none;
+  border:1px solid transparent;border-bottom:none;border-radius:3px 3px 0 0;
+}
+.mw-tabs .on{background:var(--bg);border-color:var(--bd);color:var(--ac);margin-bottom:-1px;border-bottom:1px solid var(--bg)}
+.mw-tabs a:hover{color:var(--ac)}
+
+/* 信息框 */
+.infobox{
+  float:right;width:290px;margin:0 0 16px 20px;
+  font-size:12.5px;line-height:1.55;
+  background:var(--bg);border:1px solid var(--bd);
+  border-radius:var(--r);overflow:hidden;
+}
+[data-theme^="mc-"] .infobox{border:2px solid var(--bd2);box-shadow:var(--bevel)}
+.infobox .ib-head{
+  padding:7px 11px;font-weight:800;font-size:13px;text-align:center;
+  background:var(--bg2);border-bottom:1px solid var(--bd);
+}
+.infobox .ib-body{padding:0}
+.infobox .row{display:flex;gap:10px;padding:5px 11px;border-bottom:1px solid var(--bd-soft)}
+.infobox .row:last-child{border-bottom:none}
+.infobox .k{flex:none;width:64px;color:var(--muted);font-weight:600}
+.infobox .v{flex:1;min-width:0;word-break:break-word}
+.infobox .v a{color:var(--ac);text-decoration:none}
+.infobox .v a:hover{text-decoration:underline}
+
+/* 正文 */
+.prose{font-size:14.5px;line-height:1.75;color:var(--text)}
+.prose h2{
+  margin:1.5em 0 .55em;padding-bottom:.25em;font-size:1.35em;font-weight:700;
+  border-bottom:1px solid var(--bd);letter-spacing:-.01em;scroll-margin-top:70px;
+}
+.prose h3{margin:1.2em 0 .45em;font-size:1.13em;font-weight:700;color:var(--text);scroll-margin-top:70px}
+.prose h4{margin:1em 0 .4em;font-size:1em;font-weight:700;color:var(--muted)}
+.prose p{margin:0 0 .95em}
+.prose a{color:var(--ac);text-decoration:none;border-bottom:none}
+.prose a:hover{text-decoration:underline}
+.prose ul,.prose ol{margin:0 0 .95em;padding-left:1.6em}
+.prose li{margin:.2em 0}
+.prose li::marker{color:var(--ac)}
+.prose blockquote{margin:1em 0;padding:.55em .9em;border-left:3px solid var(--bd);background:var(--bg2);color:var(--muted)}
+.prose img{border:1px solid var(--bd);border-radius:var(--r);margin:.5em 0}
+.prose table{width:100%;border-collapse:collapse;margin:1em 0;font-size:13px;border:1px solid var(--bd)}
+.prose th,.prose td{padding:6px 9px;border:1px solid var(--bd)}
+.prose th{background:var(--bg2);font-weight:700}
+.prose hr{margin:1.6em 0;border:none;border-top:1px solid var(--bd)}
+
+/* 分类栏 */
+.mw-cats{
+  margin:26px 0 0;padding:9px 12px;font-size:12.5px;
+  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);
+}
+.mw-cats .lb{font-weight:800;color:var(--muted);margin-right:6px}
+.mw-cats a{color:var(--ac);text-decoration:none}
+.mw-cats a:hover{text-decoration:underline}
+.mw-cats .sep{color:var(--faint);margin:0 4px}
+
+/* 上一篇 / 下一篇 */
+.pager{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 0}
 .pg{
-  display:flex;flex-direction:column;gap:3px;padding:11px 14px;text-decoration:none;color:inherit;
-  background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel);
-  transition:all .2s;min-width:0;
+  display:flex;flex-direction:column;gap:2px;padding:9px 12px;text-decoration:none;color:inherit;
+  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);transition:all .16s;min-width:0;
 }
-[data-theme^="github-"] .pg{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
-.pg:hover{border-color:var(--ac);transform:translateY(-2px)}
+.pg:hover{border-color:var(--ac);background:var(--acs)}
 .pg .lbl{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
-.pg .tt{font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pg .tt{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pg.next{text-align:right;grid-column:2}
 .pg.empty{visibility:hidden}
 
-.search-res{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-.sr-item{
-  display:block;padding:11px 14px;text-decoration:none;color:inherit;
-  background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);transition:all .18s;
+/* 首页 */
+.lead{font-size:14.5px;line-height:1.8;color:var(--text);margin:0 0 18px}
+.lead b{font-weight:800}
+.stat-inline{color:var(--muted);font-size:13px;margin:0 0 18px}
+.stat-inline b{color:var(--ac);font-weight:800;font-variant-numeric:tabular-nums}
+.portal{display:grid;grid-template-columns:1fr 1fr;gap:10px 26px;margin:6px 0 4px}
+.portal .col h4{
+  margin:0 0 6px;padding-bottom:4px;font-size:13px;font-weight:800;
+  border-bottom:1px solid var(--bd);
 }
-[data-theme^="github-"] .sr-item{border-width:1px;border-radius:var(--r-lg)}
-.sr-item:hover{border-color:var(--ac);transform:translateX(2px)}
-.sr-title{font-size:14px;font-weight:800;margin-bottom:2px}
-.sr-path{font-size:11px;color:var(--faint);margin-bottom:4px}
-.sr-snip{font-size:12.5px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.portal ul{margin:0;padding-left:1.3em;font-size:13px;line-height:1.9}
+.portal a{color:var(--ac);text-decoration:none}
+.portal a:hover{text-decoration:underline}
+.portal .num{color:var(--faint);font-size:11px}
+
+/* 搜索结果 */
+.sr-item{display:block;padding:9px 0;border-bottom:1px solid var(--bd-soft);text-decoration:none;color:inherit}
+.sr-item:hover .sr-title{text-decoration:underline}
+.sr-title{font-size:14.5px;font-weight:700;color:var(--ac)}
+.sr-path{font-size:11.5px;color:var(--faint);margin:1px 0 3px}
+.sr-snip{font-size:13px;color:var(--muted);line-height:1.65;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .sr-snip mark{background:var(--acs);color:var(--ac);font-weight:700;padding:0 1px}
 
-/* 字号 */
-body[data-fs="s"] .prose{font-size:14px}
-body[data-fs="l"] .prose{font-size:16.5px}
-
-/* 移动端抽屉 */
-@media(max-width:1000px){
-  .layout{grid-template-columns:1fr;padding:0 14px 50px}
-  .side{
-    position:fixed;top:var(--topbar-h,52px);left:0;bottom:0;width:280px;margin:0;
-    z-index:70;border-radius:0;max-height:none;border-left:none;border-top:none;border-bottom:none;
-    transform:translateX(-102%);transition:transform .28s cubic-bezier(.22,1,.36,1);
-  }
-  body.sb-open .side{transform:none;box-shadow:6px 0 30px rgba(0,0,0,.3)}
-  .main{padding:16px 0 0}
-  .art-layout{grid-template-columns:1fr}
-  .toc{display:none}
-  .scrim{position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:.2s}
-  body.sb-open .scrim{opacity:1;visibility:visible}
+/* 页脚 */
+.mw-foot{
+  max-width:var(--mw-max);margin:0 auto;padding:14px 20px 40px;
+  border-top:1px solid var(--bd);font-size:12px;color:var(--faint);
+  display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;
 }
-@media(min-width:1001px){#menuBtn{display:none}.scrim{display:none}}
+.mw-foot a{color:var(--muted);text-decoration:none}
+.mw-foot a:hover{color:var(--ac);text-decoration:underline}
+.mw-foot .r{margin-left:auto;font-family:var(--mono);font-size:11px}
+
+/* 字号档位 */
+body[data-fs="s"] .prose{font-size:13.5px}
+body[data-fs="l"] .prose{font-size:16px}
+
+/* 遮罩与移动端 */
+.scrim{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:.2s}
+@media(max-width:980px){
+  .mw-body{grid-template-columns:1fr;padding:0 14px 30px}
+  .mw-side{
+    position:fixed;top:56px;left:0;bottom:0;width:272px;max-height:none;z-index:58;
+    padding:14px;background:var(--bg2);border-right:1px solid var(--bd);
+    transform:translateX(-102%);transition:transform .26s cubic-bezier(.22,1,.36,1);overflow-y:auto;
+  }
+  body.sb-open .mw-side{transform:none;box-shadow:6px 0 26px rgba(0,0,0,.3)}
+  body.sb-open .scrim{opacity:1;visibility:visible}
+  .mw-content{padding-top:12px}
+  .infobox{float:none;width:100%;margin:0 0 16px}
+  .portal{grid-template-columns:1fr}
+  #menuBtn{display:inline-flex}
+}
+@media(min-width:981px){#menuBtn{display:none}}
 @media(max-width:640px){
+  .mw-head{padding:0 8px;gap:6px}
+  .mw-logo .txt{display:none}          /* 窄屏只留图标，把宽度让给搜索框 */
+  .mw-search{flex:1 1 auto;max-width:none}
+  .mw-tools .tbtn .lbl{display:none}
+  #fsBtn{display:none}
+  .mw-tools .tbtn{min-width:28px;padding:0 5px}
+  .mw-title{font-size:1.55rem}
   .pager{grid-template-columns:1fr}
   .pg.next{grid-column:1;text-align:left}
-  .wiki-stats .wstat{min-width:70px;padding:7px 10px}
 }
 </style>
 </head>
 <body>
 <div id="progress"></div>
-<a class="skip" href="#main">跳到主要内容</a>
 
-<header class="topbar" id="topbar">
-  <button class="iconbtn" id="menuBtn" title="目录 (Ctrl+B)" aria-label="展开目录">☰</button>
-  <a class="brand" href="./wiki.html" aria-label="Wiki 首页">
-    <span class="ico">📚</span><span class="txt">红石的答辩 Wiki</span>
+<header class="mw-head" id="topbar">
+  <button class="tbtn" id="menuBtn" title="目录" aria-label="展开导航"
+    style="background:transparent;border:1px solid transparent;color:inherit;width:34px;justify-content:center">☰</button>
+  <a class="mw-logo" href="./wiki.html" aria-label="红石Wiki 首页">
+    <span class="mark">🧱</span>
+    <span class="txt"><b>红石Wiki</b><i>红石的小站</i></span>
   </a>
-  <span class="spacer"></span>
-  <div class="searchbox">
+  <div class="mw-search">
     <span class="sico">⌕</span>
-    <input id="q" type="search" placeholder="全文搜索…（按 / 聚焦）" autocomplete="off" aria-label="搜索条目">
-    <span class="kbd-hint"><span class="kbd">Ctrl</span><span class="kbd">K</span></span>
+    <input id="q" type="search" placeholder="搜索条目…" autocomplete="off" aria-label="搜索条目">
   </div>
-  <button class="iconbtn" id="fsBtn" title="调整字号" aria-label="调整字号">A</button>
-  <button class="iconbtn" id="btnHome" title="回首页" aria-label="回首页">🧰</button>
-  <button class="iconbtn" id="btnAdmin" title="编辑数据（管理后台）" aria-label="编辑数据">✏️</button>
-  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+  <div class="mw-tools">
+    <button class="tbtn" id="fsBtn" title="字号"><span class="lbl">字号</span> Aa</button>
+    <button class="tbtn" data-act="theme" title="切换风格">🎨</button>
+    <a class="tbtn" href="./admin.html" title="编辑数据">✏️</a>
+    <a class="tbtn" href="../index.html" title="回工具箱">🧰</a>
+  </div>
 </header>
 
-<div class="decor" aria-hidden="true"></div>
 <div class="scrim" id="scrim"></div>
 
-<div class="layout">
-  <aside class="side" id="side" aria-label="条目目录">
-    <div class="side-head">
-      <span class="t">目录</span>
-      <button class="iconbtn" id="btnRandom" title="随便看一条" style="width:24px;height:24px;font-size:12px;color:var(--muted)">🎲</button>
-      <button class="iconbtn" id="sideClose" title="收起" style="width:24px;height:24px;font-size:11px;color:var(--muted)">◀</button>
+<div class="mw-body">
+  <aside class="mw-side" id="side" aria-label="站点导航">
+    <div class="side-block">
+      <h3>导航</h3>
+      <nav class="tree" id="tree"></nav>
     </div>
-    <div class="side-body"><nav class="tree" id="tree"></nav></div>
-    <div class="side-foot">
-      <button class="btn" id="btnExpand">全部展开</button>
-      <button class="btn" id="btnCollapse">全部收起</button>
+    <div class="side-block" id="tocBlock" hidden>
+      <h3>本页目录</h3>
+      <div id="toc"></div>
+    </div>
+    <div class="side-block">
+      <h3>工具</h3>
+      <div class="side-acts">
+        <button type="button" id="btnRandom">🎲 随机条目</button>
+        <button type="button" id="btnCollapse">⇤ 全部收起</button>
+        <a href="../index.html">🧰 回工具箱</a>
+        <a href="./admin.html">✏️ 编辑</a>
+      </div>
     </div>
   </aside>
 
-  <main class="main" id="main">
-    <div id="viewHome">
-      <section class="wiki-hero">
-        <h1>红石的答辩 Wiki</h1>
-        <p>把零散的笔记塞进大板块 → 板块 → 分类里，需要的时候随手翻。</p>
-        <div class="wiki-stats">
-          <div class="wstat"><b id="nArt">–</b><span>条目</span></div>
-          <div class="wstat"><b id="nCh">–</b><span>大板块</span></div>
-          <div class="wstat"><b id="nSe">–</b><span>板块</span></div>
-          <div class="wstat"><b id="nCa">–</b><span>分类</span></div>
-        </div>
-        <div class="row" style="justify-content:center;margin-top:16px">
-          <button class="btn primary" id="btnRandom2">🎲 随便看一条</button>
-          <button class="btn" id="btnAdmin2">✏️ 去管理数据</button>
-        </div>
-      </section>
-      <div class="sec-title">按大板块浏览</div>
-      <div class="chapter-grid" id="chapterGrid"></div>
-    </div>
+  <main class="mw-content" id="main">
 
-    <div id="viewArticle" hidden>
-      <div class="crumb" id="crumb"></div>
-      <h1 class="art-title" id="artTitle"></h1>
-      <div class="art-meta" id="artMeta"></div>
-      <div class="art-layout">
-        <article class="art-body">
-          <div class="prose" id="artBody"></div>
-          <nav class="pager" id="pager"></nav>
-        </article>
-        <aside class="toc" id="toc" hidden></aside>
+    <!-- 首页 -->
+    <section id="viewHome">
+      <h1 class="mw-title">红石Wiki</h1>
+      <div class="mw-subline">
+        <span>来自红石的小站</span><span class="sep">·</span>
+        <span>条目式个人知识库</span>
       </div>
-    </div>
+      <p class="lead">这里把零散的笔记按 <b>大板块 → 板块 → 分类</b> 三层归置。左侧是完整目录，右侧搜索框可以全文检索，条目内还有目录跳转。</p>
+      <p class="stat-inline">
+        现有 <b id="nArt">–</b> 个条目，<b id="nCh">–</b> 个大板块，<b id="nSe">–</b> 个板块，<b id="nCa">–</b> 个分类。
+      </p>
+      <h2 style="margin:1.2em 0 .5em;padding-bottom:.25em;font-size:1.3em;font-weight:700;border-bottom:1px solid var(--bd)">按大板块浏览</h2>
+      <div class="portal" id="portal"></div>
+    </section>
 
-    <div id="viewSearch" hidden>
-      <div class="page-head">
-        <div>
-          <h1 style="font-size:1.5rem">搜索结果</h1>
-          <p class="sub" id="searchInfo">—</p>
-        </div>
+    <!-- 条目 -->
+    <section id="viewArticle" hidden>
+      <div class="mw-tabs">
+        <span class="on">条目</span>
+        <a href="./admin.html" title="在管理后台编辑">编辑</a>
       </div>
-      <div class="search-res" id="searchRes"></div>
-    </div>
+      <h1 class="mw-title" id="artTitle"></h1>
+      <div class="mw-subline" id="artMeta"></div>
+      <article class="prose" id="artBody"></article>
+      <div class="mw-cats" id="artCats"></div>
+      <nav class="pager" id="pager"></nav>
+    </section>
 
-    <div id="viewLoading">
-      <div class="skel" style="height:44px;max-width:320px;margin:10px auto 18px"></div>
-      <div class="skel" style="height:16px;max-width:420px;margin:0 auto 26px"></div>
-      <div class="grid">
-        <div class="skel skel-card"></div><div class="skel skel-card"></div>
-        <div class="skel skel-card"></div><div class="skel skel-card"></div>
-      </div>
-    </div>
+    <!-- 搜索 -->
+    <section id="viewSearch" hidden>
+      <h1 class="mw-title">搜索结果</h1>
+      <div class="mw-subline" id="searchInfo"></div>
+      <div id="searchRes"></div>
+    </section>
+
+    <!-- 加载占位 -->
+    <section id="viewLoading">
+      <div class="skel" style="height:38px;max-width:260px;margin-bottom:10px"></div>
+      <div class="skel" style="height:14px;max-width:420px;margin-bottom:22px"></div>
+      <div class="skel" style="height:120px"></div>
+    </section>
   </main>
 </div>
 
-<footer class="foot">
-  <div class="fl">
-    <span>📚 红石的答辩 Wiki</span>
-    <a href="../index.html">回首页</a>
-    <a href="./download.html">下载站</a>
-    <a href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">数据仓库</a>
-  </div>
-  <div class="fr"><span>数据 <span id="dataState">加载中</span></span></div>
+<footer class="mw-foot">
+  <span>本页内容由「红石的小站」整理，数据存放于 GitHub 仓库。</span>
+  <a href="./admin.html">编辑</a>
+  <a href="../index.html">首页</a>
+  <a href="./download.html">下载站</a>
+  <span class="r">数据 <span id="dataState">加载中</span></span>
 </footer>
 
 <script src="../assets/js/core.js"></script>
@@ -278,10 +386,9 @@ body[data-fs="l"] .prose{font-size:16.5px}
   var treeOpen = HS.store.json(K_TREE, {});
   var curId = null;
   var query = '';
-
   var $ = HS.$;
 
-  /* ── 数据规范化 ── */
+  /* ── 规范化 ── */
   function norm(raw) {
     var out = [], used = {};
     (raw || []).forEach(function (r, i) {
@@ -327,40 +434,29 @@ body[data-fs="l"] .prose{font-size:16.5px}
     });
   }
 
-  function isOpen(key, dflt) {
-    return treeOpen.hasOwnProperty(key) ? !!treeOpen[key] : !!dflt;
-  }
-  function setOpen(key, v) {
-    treeOpen[key] = v;
-    HS.store.setJson(K_TREE, treeOpen);
-  }
+  function isOpen(key, dflt) { return treeOpen.hasOwnProperty(key) ? !!treeOpen[key] : !!dflt; }
+  function setOpen(key, v) { treeOpen[key] = v; HS.store.setJson(K_TREE, treeOpen); }
 
   function renderTree() {
     var html = '';
     TREE.chapters.forEach(function (ch) {
-      var kc = 'ch:' + ch.name;
-      var openC = isOpen(kc, true);
+      var kc = 'ch:' + ch.name, openC = isOpen(kc, true);
       html += '<div class="node lv-ch' + (openC ? ' open' : '') + '" data-key="' + HS.esc(kc) + '">' +
-        '<div class="th" data-toggle="' + HS.esc(kc) + '">' +
-        '<span class="arw">▸</span><span class="lb">' + HS.esc(ch.name) + '</span>' +
-        '<span class="ct">' + ch.count + '</span></div><div class="tb">';
+        '<div class="th" data-toggle="' + HS.esc(kc) + '"><span class="arw">▸</span>' +
+        '<span class="lb">' + HS.esc(ch.name) + '</span><span class="ct">' + ch.count + '</span></div><div class="tb">';
       ch.sectionsArr.forEach(function (se) {
-        var ks = 'se:' + ch.name + '/' + se.name;
-        var openS = isOpen(ks, true);
+        var ks = 'se:' + ch.name + '/' + se.name, openS = isOpen(ks, true);
         html += '<div class="node lv-se' + (openS ? ' open' : '') + '" data-key="' + HS.esc(ks) + '">' +
-          '<div class="th" data-toggle="' + HS.esc(ks) + '">' +
-          '<span class="arw">▸</span><span class="lb">' + HS.esc(se.name) + '</span>' +
-          '<span class="ct">' + se.count + '</span></div><div class="tb">';
+          '<div class="th" data-toggle="' + HS.esc(ks) + '"><span class="arw">▸</span>' +
+          '<span class="lb">' + HS.esc(se.name) + '</span><span class="ct">' + se.count + '</span></div><div class="tb">';
         se.catsArr.forEach(function (ca) {
-          var ka = 'ca:' + ch.name + '/' + se.name + '/' + ca.name;
-          var openA = isOpen(ka, true);
+          var ka = 'ca:' + ch.name + '/' + se.name + '/' + ca.name, openA = isOpen(ka, true);
           html += '<div class="node lv-ca' + (openA ? ' open' : '') + '" data-key="' + HS.esc(ka) + '">' +
-            '<div class="th" data-toggle="' + HS.esc(ka) + '">' +
-            '<span class="arw">▸</span><span class="lb">' + HS.esc(ca.name) + '</span>' +
-            '<span class="ct">' + ca.items.length + '</span></div><div class="tb">';
+            '<div class="th" data-toggle="' + HS.esc(ka) + '"><span class="arw">▸</span>' +
+            '<span class="lb">' + HS.esc(ca.name) + '</span><span class="ct">' + ca.items.length + '</span></div><div class="tb">';
           ca.items.forEach(function (a) {
-            html += '<a class="art-link' + (a.id === curId ? ' on' : '') + '" href="#/' + encodeURIComponent(a.id) + '"' +
-              ' title="' + HS.esc(a.title) + '">' + HS.esc(a.title) + '</a>';
+            html += '<a class="art-link' + (a.id === curId ? ' on' : '') + '" href="#/' + encodeURIComponent(a.id) + '">' +
+              HS.esc(a.title) + '</a>';
           });
           html += '</div></div>';
         });
@@ -368,12 +464,11 @@ body[data-fs="l"] .prose{font-size:16.5px}
       });
       html += '</div></div>';
     });
-    if (!HTMLHasContent(html)) {
-      html = '<div class="empty" style="padding:26px 12px"><span class="ic">📭</span><div class="t">还没有条目</div><div class="s">去管理后台新建第一条</div></div>';
+    if (!html) {
+      html = '<div class="empty" style="padding:18px 10px"><span class="ic">📭</span><div class="t">还没有条目</div></div>';
     }
     $('#tree').innerHTML = html;
   }
-  function HTMLHasContent(h) { return h && h.indexOf('art-link') > -1; }
 
   /* ── 首页 ── */
   function renderHome() {
@@ -381,36 +476,45 @@ body[data-fs="l"] .prose{font-size:16.5px}
     $('#viewArticle').hidden = true;
     $('#viewSearch').hidden = true;
     $('#viewHome').hidden = false;
+    $('#tocBlock').hidden = true;
     $('#progress').style.width = '0';
-    var chCount = TREE.chapters.length;
     var seCount = 0, caCount = 0;
     TREE.chapters.forEach(function (c) {
       seCount += c.sectionsArr.length;
       c.sectionsArr.forEach(function (s) { caCount += s.catsArr.length; });
     });
     $('#nArt').textContent = ARTICLES.length;
-    $('#nCh').textContent = chCount;
+    $('#nCh').textContent = TREE.chapters.length;
     $('#nSe').textContent = seCount;
     $('#nCa').textContent = caCount;
 
-    var icons = ['🧱', '📦', '🌿', '⚙️', '🔮', '🍀', '🗺️', '🎒', '🏗️', '🪓'];
-    $('#chapterGrid').innerHTML = TREE.chapters.map(function (ch, i) {
-      var first = ch.sectionsArr[0] && ch.sectionsArr[0].catsArr[0] && ch.sectionsArr[0].catsArr[0].items[0];
-      return '<button class="ch-card" data-go="' + HS.esc(first ? first.id : '') + '">' +
-        '<span class="ch-ico">' + icons[i % icons.length] + '</span>' +
-        '<span class="ch-info"><span class="ch-name">' + HS.esc(ch.name) + '</span>' +
-        '<span class="ch-sub">' + ch.sectionsArr.length + ' 个板块 · ' + ch.count + ' 条</span></span>' +
-        '<span class="carrow">→</span></button>';
-    }).join('') || '<div class="empty" style="grid-column:1/-1"><span class="ic">📭</span><div class="t">还没有内容</div><div class="s">去管理后台添加第一条 Wiki 数据</div></div>';
+    /* 两栏门户列表，学 MC Wiki 首页的链接列表 */
+    var cols = ['', ''];
+    TREE.chapters.forEach(function (ch, i) {
+      var items = '';
+      ch.sectionsArr.forEach(function (se) {
+        se.catsArr.forEach(function (ca) {
+          ca.items.forEach(function (a) {
+            items += '<li><a href="#/' + encodeURIComponent(a.id) + '">' + HS.esc(a.title) + '</a>' +
+              ' <span class="num">· ' + HS.esc(se.name) + '</span></li>';
+          });
+        });
+      });
+      cols[i % 2] += '<div class="col"><h4>' + HS.esc(ch.name) + ' <span class="num">（' + ch.count + '）</span></h4>' +
+        '<ul>' + (items || '<li class="num">暂无条目</li>') + '</ul></div>';
+    });
+    $('#portal').innerHTML = cols[0] || cols[1] ? cols[0] + cols[1] :
+      '<div class="empty" style="grid-column:1/-1"><span class="ic">📭</span><div class="t">还没有内容</div><div class="s">去管理后台添加第一条 Wiki 数据</div></div>';
     renderTree();
+    document.title = '红石Wiki · 红石的小站';
   }
 
-  /* ── 文章 ── */
   function findArticle(id) {
     for (var i = 0; i < ARTICLES.length; i++) if (ARTICLES[i].id === id) return ARTICLES[i];
     return null;
   }
 
+  /* ── 条目 ── */
   function renderArticle(id) {
     var a = findArticle(id);
     if (!a) { location.hash = '#/'; return; }
@@ -419,29 +523,23 @@ body[data-fs="l"] .prose{font-size:16.5px}
     $('#viewSearch').hidden = true;
     $('#viewArticle').hidden = false;
 
-    $('#crumb').innerHTML =
-      '<a href="#/">首页</a><span class="sep">/</span>' +
-      '<span>' + HS.esc(a.chapter) + '</span><span class="sep">/</span>' +
-      '<span>' + HS.esc(a.section) + '</span><span class="sep">/</span>' +
-      '<b>' + HS.esc(a.category) + '</b>';
     $('#artTitle').textContent = a.title;
 
     var words = a.content.replace(/<[^>]+>/g, '').trim().length;
     var readMin = Math.max(1, Math.round(words / 320));
     $('#artMeta').innerHTML =
-      '<span class="badge">' + HS.esc(a.chapter) + '</span>' +
-      '<span class="badge muted">§ ' + HS.esc(a.section) + '</span>' +
-      '<span class="badge muted"># ' + HS.esc(a.category) + '</span>' +
-      '<span class="faint" style="font-size:11.5px">约 ' + readMin + ' 分钟读完 · ' + words + ' 字</span>' +
-      '<span class="art-tools">' +
-      '<button class="btn" id="btnCopyLink" title="复制本条链接">🔗 链接</button>' +
-      '<button class="btn" id="btnEditThis" title="在管理后台编辑">✏️ 编辑</button>' +
-      '</span>';
+      '<span>' + HS.esc(a.chapter) + '</span><span class="sep">›</span>' +
+      '<span>' + HS.esc(a.section) + '</span><span class="sep">›</span>' +
+      '<span>' + HS.esc(a.category) + '</span><span class="sep">·</span>' +
+      '<span>' + words + ' 字 · 约 ' + readMin + ' 分钟</span>' +
+      '<span style="margin-left:auto;display:flex;gap:10px">' +
+      '<a href="javascript:void 0" id="btnCopyLink" style="color:var(--ac);text-decoration:none">复制链接</a>' +
+      '<a href="./admin.html" style="color:var(--ac);text-decoration:none">编辑</a></span>';
 
     var body = $('#artBody');
     body.innerHTML = a.content || '<p class="muted">（这条还没有内容）</p>';
 
-    // 标题锚点 + 目录
+    /* 信息框 */
     var heads = body.querySelectorAll('h1,h2,h3');
     var tocHtml = '';
     Array.prototype.forEach.call(heads, function (h, i) {
@@ -450,41 +548,61 @@ body[data-fs="l"] .prose{font-size:16.5px}
       if (h.tagName === 'H3') tocHtml += '<a class="lv3" href="#' + hid + '" data-toc="' + hid + '">' + HS.esc(h.textContent) + '</a>';
       else if (h.tagName === 'H2') tocHtml += '<a href="#' + hid + '" data-toc="' + hid + '">' + HS.esc(h.textContent) + '</a>';
     });
-    var toc = $('#toc');
-    if (tocHtml) { toc.innerHTML = '<div class="th">本页目录</div>' + tocHtml; toc.hidden = false; }
-    else { toc.hidden = true; }
 
-    // 上/下篇
+    var ib = document.createElement('div');
+    ib.className = 'infobox';
+    ib.innerHTML =
+      '<div class="ib-head">' + HS.esc(a.title) + '</div>' +
+      '<div class="ib-body">' +
+      '<div class="row"><span class="k">大板块</span><span class="v">' + HS.esc(a.chapter) + '</span></div>' +
+      '<div class="row"><span class="k">板块</span><span class="v">' + HS.esc(a.section) + '</span></div>' +
+      '<div class="row"><span class="k">分类</span><span class="v">' + HS.esc(a.category) + '</span></div>' +
+      '<div class="row"><span class="k">字数</span><span class="v">' + words + ' 字</span></div>' +
+      '<div class="row"><span class="k">阅读</span><span class="v">约 ' + readMin + ' 分钟</span></div>' +
+      '</div>';
+    body.insertBefore(ib, body.firstChild);
+
+    /* 侧栏目录 */
+    var toc = $('#toc');
+    if (tocHtml) {
+      toc.innerHTML = tocHtml;
+      $('#tocBlock').hidden = false;
+    } else {
+      $('#tocBlock').hidden = true;
+    }
+
+    /* 分类栏 */
     var idx = ARTICLES.indexOf(a);
+    $('#artCats').innerHTML = '<span class="lb">分类：</span>' +
+      '<a href="#/">' + HS.esc(a.category) + '</a><span class="sep">|</span>' +
+      '<a href="#/">' + HS.esc(a.chapter) + '</a><span class="sep">|</span>' +
+      '<a href="#/">' + HS.esc(a.section) + '</a>';
+
+    /* 上一篇 / 下一篇 */
     var prev = ARTICLES[idx - 1], next = ARTICLES[idx + 1];
     $('#pager').innerHTML =
       (prev ? '<a class="pg prev" href="#/' + encodeURIComponent(prev.id) + '"><span class="lbl">← 上一篇</span><span class="tt">' + HS.esc(prev.title) + '</span></a>' : '<span class="pg empty"></span>') +
       (next ? '<a class="pg next" href="#/' + encodeURIComponent(next.id) + '"><span class="lbl">下一篇 →</span><span class="tt">' + HS.esc(next.title) + '</span></a>' : '<span class="pg empty"></span>');
 
-    $('#btnCopyLink').addEventListener('click', function () {
-      var url = location.origin + location.pathname + '#/' + encodeURIComponent(id);
-      copy(url).then(function () { HS.toast('链接已复制', { icon: '🔗' }); })
+    var cl = $('#btnCopyLink');
+    if (cl) cl.addEventListener('click', function (e) {
+      e.preventDefault();
+      HS.copy(location.origin + location.pathname + '#/' + encodeURIComponent(id))
+        .then(function () { HS.toast('链接已复制', { icon: '🔗' }); })
         .catch(function () { HS.toast('复制失败', { icon: '⚠️' }); });
-    });
-    $('#btnEditThis').addEventListener('click', function () {
-      HS.toast('在管理后台的「Wiki」标签页编辑：' + a.title, { icon: '✏️', duration: 3000 });
-      setTimeout(function () { location.href = './admin.html'; }, 900);
     });
 
     renderTree();
     window.scrollTo({ top: 0, behavior: HS.reduced ? 'auto' : 'smooth' });
     setupTocSpy();
-    document.title = a.title + ' · 红石答辩 Wiki';
+    document.title = a.title + ' · 红石Wiki';
   }
-
-  var copy = HS.copy;
 
   /* ── 目录高亮 ── */
   var spyIO = null;
   function setupTocSpy() {
     if (spyIO) spyIO.disconnect();
-    var body = $('#artBody');
-    var links = HS.$$('.toc a');
+    var links = HS.$$('#toc a');
     if (!links.length || !('IntersectionObserver' in window)) return;
     spyIO = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
@@ -492,23 +610,25 @@ body[data-fs="l"] .prose{font-size:16.5px}
         links.forEach(function (l) { l.classList.toggle('on', l.getAttribute('data-toc') === en.target.id); });
       });
     }, { rootMargin: '-15% 0px -70% 0px' });
-    HS.$$('h2[id],h3[id]', body).forEach(function (h) { spyIO.observe(h); });
+    HS.$$('#artBody h2[id],#artBody h3[id]').forEach(function (h) { spyIO.observe(h); });
   }
 
   /* ── 搜索 ── */
   function plain(html) { return String(html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(); }
   function snippet(text, q) {
     var i = text.toLowerCase().indexOf(q.toLowerCase());
-    if (i === -1) return HS.esc(text.slice(0, 110)) + (text.length > 110 ? '…' : '');
-    var start = Math.max(0, i - 40);
-    var seg = HS.esc(text.slice(start, start + 140));
-    return (start > 0 ? '…' : '') + seg.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>') + '…';
+    if (i === -1) return HS.esc(text.slice(0, 120)) + (text.length > 120 ? '…' : '');
+    var start = Math.max(0, i - 45);
+    var seg = HS.esc(text.slice(start, start + 150));
+    return (start > 0 ? '…' : '') +
+      seg.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>') + '…';
   }
   function renderSearch(q) {
     query = q;
     $('#viewHome').hidden = true;
     $('#viewArticle').hidden = true;
     $('#viewSearch').hidden = false;
+    $('#tocBlock').hidden = true;
     var res = ARTICLES.map(function (a) {
       var text = plain(a.content);
       var inTitle = a.title.toLowerCase().indexOf(q.toLowerCase()) > -1;
@@ -531,12 +651,12 @@ body[data-fs="l"] .prose{font-size:16.5px}
   /* ── 路由 ── */
   function route() {
     var h = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-    if (!h) { renderHome(); document.title = '红石答辩 Wiki · 红石的小站'; return; }
-    if (h.indexOf('h-') === 0) return; // 目录锚点
+    if (!h) { renderHome(); return; }
+    if (/^h-\d+$/.test(h)) return;   // 目录锚点
     renderArticle(h);
   }
 
-  /* ── 进度条 ── */
+  /* ── 阅读进度 ── */
   function updateProgress() {
     if ($('#viewArticle').hidden) { $('#progress').style.width = '0'; return; }
     var doc = document.documentElement;
@@ -548,30 +668,32 @@ body[data-fs="l"] .prose{font-size:16.5px}
   window.addEventListener('scroll', function () {
     if (rafPend) return;
     rafPend = true;
-    requestAnimationFrame(function () { rafPend = false; updateProgress(); });
+    requestAnimationFrame(function () {
+      rafPend = false;
+      updateProgress();
+      var top = document.getElementById('topbar');
+      if (top) top.classList.toggle('scrolled', window.scrollY > 4);
+    });
   }, { passive: true });
 
-  /* ── 侧栏交互 ── */
+  /* ── 交互 ── */
   $('#tree').addEventListener('click', function (e) {
     var th = e.target.closest('[data-toggle]');
     if (th) {
       var key = th.getAttribute('data-toggle');
       var node = th.parentNode;
-      var open = node.classList.toggle('open');
-      setOpen(key, open);
+      setOpen(key, node.classList.toggle('open'));
       return;
     }
-    var link = e.target.closest('.art-link');
-    if (link && window.innerWidth <= 1000) document.body.classList.remove('sb-open');
+    if (e.target.closest('.art-link') && window.innerWidth <= 980) document.body.classList.remove('sb-open');
   });
-  $('#btnExpand').addEventListener('click', function () {
-    HS.$$('#tree .node').forEach(function (n) { n.classList.add('open'); setOpen(n.getAttribute('data-key'), true); });
+  $('#toc').addEventListener('click', function (e) {
+    if (e.target.closest('a') && window.innerWidth <= 980) document.body.classList.remove('sb-open');
   });
   $('#btnCollapse').addEventListener('click', function () {
     HS.$$('#tree .node').forEach(function (n) { n.classList.remove('open'); setOpen(n.getAttribute('data-key'), false); });
   });
   $('#menuBtn').addEventListener('click', function () { document.body.classList.toggle('sb-open'); });
-  $('#sideClose').addEventListener('click', function () { document.body.classList.remove('sb-open'); });
   $('#scrim').addEventListener('click', function () { document.body.classList.remove('sb-open'); });
 
   function randomArticle() {
@@ -580,23 +702,15 @@ body[data-fs="l"] .prose{font-size:16.5px}
     location.hash = '#/' + encodeURIComponent(a.id);
   }
   $('#btnRandom').addEventListener('click', randomArticle);
-  $('#btnRandom2').addEventListener('click', randomArticle);
-  $('#chapterGrid').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-go]');
-    if (b && b.getAttribute('data-go')) location.hash = '#/' + encodeURIComponent(b.getAttribute('data-go'));
-  });
-  $('#btnHome').addEventListener('click', function () { location.href = '../index.html'; });
-  $('#btnAdmin').addEventListener('click', function () { location.href = './admin.html'; });
-  $('#btnAdmin2').addEventListener('click', function () { location.href = './admin.html'; });
 
   /* 字号 */
   var fsList = ['s', 'm', 'l'];
   var fs = HS.store.get(K_FS, 'm');
   function applyFs(v) {
-    fs = v; HS.store.set(K_FS, v);
+    fs = v;
+    HS.store.set(K_FS, v);
     document.body.setAttribute('data-fs', v);
-    $('#fsBtn').textContent = ({ s: 'A', m: 'A', l: 'A' })[v];
-    $('#fsBtn').style.fontSize = ({ s: '11px', m: '13px', l: '15px' })[v];
+    $('#fsBtn').style.opacity = v === 'm' ? '' : '1';
   }
   $('#fsBtn').addEventListener('click', function () {
     var i = fsList.indexOf(fs);
@@ -638,9 +752,7 @@ body[data-fs="l"] .prose{font-size:16.5px}
       $('#dataState').textContent = '已同步';
       route();
       HS.palette.init({
-        actions: [
-          { icon: '🎲', title: '随机条目', desc: '随便翻一条看看', run: randomArticle }
-        ],
+        actions: [{ icon: '🎲', title: '随机条目', desc: '随便翻一条看看', run: randomArticle }],
         source: function () {
           return ARTICLES.map(function (a) {
             return { icon: '📄', title: a.title, desc: a.chapter + ' › ' + a.section, group: 'Wiki 条目', href: '#/' + encodeURIComponent(a.id) };
