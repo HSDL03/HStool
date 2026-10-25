@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>我的世界 · 3D 体素沙盒</title>
+<meta name="description" content="浏览器里的 3D 体素沙盒：无限地形、挖掘建造、生存/创造模式与多人房间。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧱</text></svg>">
 <script>try{document.documentElement.setAttribute('data-theme','mc-wiki')}catch(e){}</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/vendor/supabase.js"></script>
+<script>if(typeof supabase==='undefined')document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>')</script>
 <style>
 :root{--bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;--bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;--dgr:#a02020;--sh:2px 2px 0 rgba(0,0,0,.2);--bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);--bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#56682c,#3d521f);--topbar-fg:#fff;--topbar-bd:#2a3a1a}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -471,10 +474,29 @@ canvas#game3d{display:block}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="../assets/vendor/three.min.js"></script>
+<script>if(typeof THREE==='undefined')document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
 <script>
 (function () {
   "use strict";
+
+  /* 引擎缺失时给出明确提示，而不是留一块空白画布 + 一串控制台报错 */
+  if (typeof THREE === 'undefined') {
+    document.addEventListener('DOMContentLoaded', function () {
+      var box = document.createElement('div');
+      box.style.cssText = 'position:fixed;inset:0;z-index:9999;display:grid;place-items:center;' +
+        'background:rgba(20,20,12,.9);color:#e8ffd0;text-align:center;padding:24px;' +
+        'font:14px/1.8 "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+      box.innerHTML = '<div><div style="font-size:44px;margin-bottom:10px">🧱</div>' +
+        '<div style="font-size:16px;font-weight:700;margin-bottom:8px">3D 引擎没能加载</div>' +
+        '<div style="opacity:.8;max-width:420px">three.js 加载失败：本地文件缺失或网络被拦截。<br>' +
+        '刷新页面试试，或检查 <code>assets/vendor/three.min.js</code> 是否存在。</div>' +
+        '<div style="margin-top:16px"><a href="../index.html" style="color:#8ec44a;font-weight:700">← 回工具箱</a></div></div>';
+      document.body.appendChild(box);
+    });
+    return;
+  }
+
   function $(id) { return document.getElementById(id); }
   var storage = {
     get:function(k,d){try{var v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},
