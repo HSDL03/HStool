@@ -238,7 +238,7 @@
     return out;
   }
   function mergeReleases(auto, manual) {
-    var overrides = {}, standalone = [];
+    var overrides = {}, standalone = [], used = {};
     (manual || []).forEach(function (m) {
       if (!m || typeof m !== 'object') return;
       if (m.releaseTag && m.fileName) overrides[m.releaseTag + '|' + m.fileName] = m;
@@ -246,8 +246,10 @@
     });
     var merged = [];
     auto.forEach(function (a) {
-      var ov = overrides[a.releaseTag + '|' + a.fileName];
+      var key = a.releaseTag + '|' + a.fileName;
+      var ov = overrides[key];
       if (!ov) { merged.push(a); return; }
+      used[key] = 1;
       if (ov.hidden) return;
       merged.push({
         releaseTag: a.releaseTag, releaseName: a.releaseName, fileName: a.fileName,
@@ -256,6 +258,23 @@
         tag: ov.tag || a.tag, version: ov.version || a.version, icon: ov.icon || a.icon,
         url: a.url, size: a.size, date: a.date,
         offline: !!ov.offline, hidden: false, downloadCount: a.downloadCount, auto: true
+      });
+    });
+    /* 补录条目没匹配到任何发布附件时（比如 Releases 接口被墙/失败），照样列出来，
+       只是没有直链，标成「暂不可用」—— 总比整站显示 0 个资源好 */
+    Object.keys(overrides).forEach(function (key) {
+      if (used[key]) return;
+      var m = overrides[key];
+      if (!m || m.hidden) return;
+      merged.push({
+        releaseTag: m.releaseTag || '', releaseName: '', fileName: m.fileName || '',
+        name: m.name || m.fileName || '未命名',
+        desc: m.desc || '', tag: m.tag || '未分类',
+        version: m.version || m.releaseTag || '',
+        icon: m.icon || guessIcon(m.fileName || m.name || ''),
+        url: m.url || '', size: parseSize(m.size) || 0, date: HS.fmt.date(m.date),
+        offline: m.url ? !!m.offline : true,
+        hidden: false, downloadCount: 0, auto: false
       });
     });
     standalone.forEach(function (m) {
