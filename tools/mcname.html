@@ -41,6 +41,30 @@
 #qrCanvas{max-width:100%;height:auto;image-rendering:pixelated}
 .qr-empty{color:#888;font-size:13px;text-align:center}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+/* ── 名称随机器专属：选项 / 数量 / 结果行 ── */
+.opt-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.opt{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:2px 2px 0 rgba(0,0,0,.16),var(--bevel);cursor:pointer;user-select:none;transition:all .15s cubic-bezier(.34,1.56,.64,1)}
+.opt:hover{border-color:var(--ac);color:var(--text)}
+.opt.active{background:var(--ac);color:var(--on-ac);border-color:var(--ac);box-shadow:var(--bevel);transform:translate(1px,1px)}
+.opt.static{cursor:default}
+.count-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.count-row label{font-size:12.5px;font-weight:700;letter-spacing:.03em;color:var(--muted)}
+.count-input{width:120px;height:36px;padding:0 10px;font-family:inherit;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;text-align:center;color:var(--text);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);outline:none;transition:border-color .15s,box-shadow .15s}
+.count-input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.quick-btns{display:flex;gap:4px}
+.quick-btns button{padding:5px 9px;font-family:inherit;font-size:11.5px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:all .15s}
+.quick-btns button:hover{color:var(--text);border-color:var(--ac);background:var(--acs)}
+.name-row{display:flex;align-items:center;gap:10px;padding:10px 14px;flex:none;cursor:pointer;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:2px 2px 0 rgba(0,0,0,.16);transition:all .15s cubic-bezier(.34,1.56,.64,1)}
+.name-row:hover{border-color:var(--ac);transform:translateX(3px)}
+.name-row:active{box-shadow:var(--bevel);transform:translate(2px,2px)}
+.name-idx{flex:none;min-width:34px;height:24px;padding:0 6px;display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--muted);background:var(--bg2);border-radius:4px;font-variant-numeric:tabular-nums}
+.name-text{flex:1;min-width:0;font-size:16px;font-weight:800;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.name-len{flex:none;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.name-copy{flex:none;font-size:12px;font-weight:700;color:var(--ac);opacity:0;transition:opacity .15s}
+.name-row:hover .name-copy{opacity:1}
+.summary{font-size:12.5px;color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums}
+@media(max-width:640px){.name-text{font-size:14px}.count-input{width:90px}}
 </style>
 </head>
 <body>

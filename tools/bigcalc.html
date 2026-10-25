@@ -41,6 +41,26 @@
 #qrCanvas{max-width:100%;height:auto;image-rendering:pixelated}
 .qr-empty{color:#888;font-size:13px;text-align:center}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+/* ── 计算器专属：类型标签 / 配色预设 / 两栏布局 ── */
+.layout{display:grid;grid-template-columns:1fr 400px;gap:20px;align-items:start}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab{padding:6px 14px;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);cursor:pointer;user-select:none;transition:all .15s cubic-bezier(.34,1.56,.64,1)}
+.tab:hover{border-color:var(--ac);color:var(--text)}
+.tab.active{background:var(--ac);color:var(--on-ac);border-color:var(--ac);box-shadow:var(--bevel);transform:translate(1px,1px)}
+.panel{display:none}
+.panel.active{display:block}
+.color-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.color-row label{font-size:12px;font-weight:700;color:var(--muted);min-width:56px}
+.color-row input[type=color]{width:44px;height:32px;padding:2px;border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg);cursor:pointer}
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.preset{width:34px;height:34px;border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer;flex:none;position:relative;overflow:hidden;transition:transform .15s cubic-bezier(.34,1.56,.64,1)}
+.preset:hover{transform:scale(1.08)}
+.preset.active{outline:2px solid var(--ac);outline-offset:2px}
+.logo-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.logo-preview{width:40px;height:40px;flex:none;display:grid;place-items:center;font-size:18px;color:var(--muted);background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);overflow:hidden}
+.logo-preview img{width:100%;height:100%;object-fit:cover}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -54,7 +74,7 @@
 <div class="decor" aria-hidden="true"></div>
 
 <div class="wrap">
-  <div class="page-head"><div><h1>🧮 计算器</h1><p class="sub">三种类型 · 彩色渐变 · 可放 Logo · 纯前端离线可用</p></div></div>
+  <div class="page-head"><div><h1>📱 二维码生成器</h1><p class="sub">进阶版：文本 / WiFi / 名片 · 彩色渐变 · 可放 Logo</p></div></div>
 
   <div class="layout">
     <div>
