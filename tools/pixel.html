@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>像素画板 · 红石的小站</title>
+<meta name="description" content="16×16 像素画板：MC 色板、画笔/填充/取色、撤销重做，一键导出 PNG。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖌️</text></svg>">
+<script>
+(function(){try{
+  var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');
+  var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
+  if(t==='auto'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'mc-night':'mc-wiki';}
+  if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
+}catch(e){}})();
+</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.app{max-width:480px;margin:0 auto}
+.board-wrap{
+  padding:12px;background:var(--bg2);
+  border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);margin-bottom:12px;
+}
+[data-theme^="github-"] .board-wrap{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
+#board{
+  display:block;width:100%;height:auto;aspect-ratio:1/1;
+  image-rendering:pixelated;image-rendering:crisp-edges;
+  background:#fff;cursor:crosshair;touch-action:none;
+  border:1px solid var(--bd);
+}
+.bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar .sp{flex:1;min-width:6px}
+.bar .label{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.tool{
+  display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:30px;padding:0 7px;
+  font-size:12.5px;font-weight:700;color:var(--muted);
+  background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);cursor:pointer;transition:all .15s;
+}
+[data-theme^="github-"] .tool{border-width:1px;box-shadow:none}
+.tool:hover{color:var(--text);border-color:var(--ac)}
+.tool[aria-pressed="true"]{color:var(--on-ac);background:var(--ac);border-color:var(--ac)}
+
+.palette{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin:0 0 12px}
+.sw{aspect-ratio:1/1;border:2px solid var(--bd);border-radius:2px;cursor:pointer;transition:transform .14s cubic-bezier(.34,1.56,.64,1)}
+.sw:hover{transform:scale(1.12)}
+.sw[aria-pressed="true"]{outline:2px solid var(--ac);outline-offset:1px}
+.pickrow{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.pickrow input[type="color"]{width:40px;height:30px;padding:2px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);cursor:pointer}
+.pickrow .cur{display:inline-flex;align-items:center;gap:6px}
+.pickrow .chipv{width:18px;height:18px;border:1px solid var(--bd2);border-radius:2px;display:inline-block}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" id="btnBack" title="返回工具箱" aria-label="返回工具箱">↩</button>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<main class="wrap">
+  <div class="app">
+    <div class="page-head">
+      <div>
+        <h1>🖌️ 像素画板</h1>
+        <p class="sub">选颜色、点格子，画完直接导出 PNG。</p>
+      </div>
+    </div>
+
+    <div class="bar">
+      <span class="label">尺寸</span>
+      <div class="segmented" id="sizeSeg">
+        <button type="button" data-size="16" aria-pressed="true">16</button>
+        <button type="button" data-size="32" aria-pressed="false">32</button>
+      </div>
+      <span class="label" style="margin-left:6px">工具</span>
+      <button class="tool" data-tool="pen" aria-pressed="true" title="画笔">笔</button>
+      <button class="tool" data-tool="erase" aria-pressed="false" title="橡皮">擦</button>
+      <button class="tool" data-tool="fill" aria-pressed="false" title="填充">填</button>
+      <button class="tool" data-tool="pick" aria-pressed="false" title="取色">吸</button>
+      <span class="sp"></span>
+      <button class="tool" id="btnUndo" title="撤销 (Ctrl+Z)">↶</button>
+      <button class="tool" id="btnRedo" title="重做 (Ctrl+Y)">↷</button>
+      <button class="tool" id="btnGrid" aria-pressed="true" title="网格">格</button>
+    </div>
+
+    <div class="board-wrap">
+      <canvas id="board" width="16" height="16"></canvas>
+    </div>
+
+    <div class="palette" id="palette"></div>
+
+    <div class="pickrow">
+      <span class="cur">当前 <span class="chipv" id="curChip"></span></span>
+      <input type="color" id="custom" value="#1d1d21" aria-label="自定义颜色">
+      <span style="flex:1"></span>
+      <button class="btn sm" id="btnClear">清空</button>
+      <button class="btn sm primary" id="btnSave">导出 PNG</button>
+    </div>
+  </div>
+</main>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function () {
+  'use strict';
+  var COLORS = ['#f9fffe', '#f9801d', '#c74ebd', '#3ab3da', '#fed83d', '#80c71f', '#f38ba8', '#474f52',
+    '#9d9d97', '#169c9c', '#8932b8', '#3c44aa', '#835432', '#5e7c16', '#b02e26', '#1d1d21'];
+  var K_ART = 'hs-pixel-art-', K_PREFS = 'hs-pixel-prefs';
+
+  var canvas = document.getElementById('board');
+  var ctx = canvas.getContext('2d');
+
+  /* 真正的画布：网格只画在显示层，不影响导出与存档 */
+  var art = document.createElement('canvas');
+  var ax = art.getContext('2d');
+
+  var size = 16;
+  var color = COLORS[15];
+  var tool = 'pen';
+  var showGrid = true;
+  var undoStack = [], redoStack = [];
+  var drawing = false;
+
+  var prefs = HS.store.json(K_PREFS, { size: 16, color: COLORS[15], tool: 'pen', grid: true });
+
+  /* ── 渲染 ── */
+  function render() {
+    ctx.clearRect(0, 0, size, size);
+    ctx.drawImage(art, 0, 0);
+    if (showGrid && size <= 32) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0,0,0,.22)';
+      ctx.lineWidth = 0.04;
+      for (var i = 1; i < size; i++) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, size); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(size, i); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+  function blank() {
+    ax.fillStyle = '#ffffff';
+    ax.fillRect(0, 0, size, size);
+    render();
+  }
+  function snapshot() { return ax.getImageData(0, 0, size, size); }
+  function restore(img) { ax.putImageData(img, 0, 0); render(); }
+  function pushUndo() {
+    undoStack.push(snapshot());
+    if (undoStack.length > 40) undoStack.shift();
+    redoStack.length = 0;
+  }
+
+  /* ── 坐标与涂色 ── */
+  function pos(e) {
+    var r = canvas.getBoundingClientRect();
+    var x = Math.floor((e.clientX - r.left) / r.width * size);
+    var y = Math.floor((e.clientY - r.top) / r.height * size);
+    return { x: Math.max(0, Math.min(size - 1, x)), y: Math.max(0, Math.min(size - 1, y)) };
+  }
+  function setPx(p, c) {
+    ax.fillStyle = c;
+    ax.fillRect(p.x, p.y, 1, 1);
+    render();
+  }
+  function hex2rgb(h) {
+    h = h.replace('#', '');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  function rgb2hex(r, g, b) {
+    return '#' + [r, g, b].map(function (v) { return ('0' + v.toString(16)).slice(-2); }).join('');
+  }
+  function floodFill(start, newColor) {
+    var img = ax.getImageData(0, 0, size, size);
+    var d = img.data;
+    var idx = function (x, y) { return (y * size + x) * 4; };
+    var s = idx(start.x, start.y);
+    var t = [d[s], d[s + 1], d[s + 2], d[s + 3]];
+    var nc = hex2rgb(newColor);
+    if (t[0] === nc[0] && t[1] === nc[1] && t[2] === nc[2]) return;
+    var stack = [[start.x, start.y]];
+    while (stack.length) {
+      var cur = stack.pop(), x = cur[0], y = cur[1];
+      if (x < 0 || y < 0 || x >= size || y >= size) continue;
+      var i = idx(x, y);
+      if (d[i] !== t[0] || d[i + 1] !== t[1] || d[i + 2] !== t[2] || d[i + 3] !== t[3]) continue;
+      d[i] = nc[0]; d[i + 1] = nc[1]; d[i + 2] = nc[2]; d[i + 3] = 255;
+      stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+    }
+    ax.putImageData(img, 0, 0);
+    render();
+  }
+
+  /* ── 指针事件 ── */
+  canvas.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    var p = pos(e);
+    if (tool === 'pick') {
+      var d = ax.getImageData(p.x, p.y, 1, 1).data;
+      setColor(rgb2hex(d[0], d[1], d[2]));
+      setTool('pen');
+      return;
+    }
+    pushUndo();
+    if (tool === 'fill') { floodFill(p, color); save(); return; }
+    drawing = true;
+    setPx(p, tool === 'erase' ? '#ffffff' : color);
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    if (!drawing) return;
+    setPx(pos(e), tool === 'erase' ? '#ffffff' : color);
+  });
+  function endStroke() { if (drawing) { drawing = false; save(); } }
+  canvas.addEventListener('pointerup', endStroke);
+  canvas.addEventListener('pointercancel', endStroke);
+
+  /* ── 调色板 ── */
+  var paletteEl = document.getElementById('palette');
+  function renderPalette() {
+    paletteEl.innerHTML = COLORS.map(function (c) {
+      return '<button type="button" class="sw" data-c="' + c + '" style="background:' + c + '"' +
+        ' aria-pressed="' + (c.toLowerCase() === color.toLowerCase() ? 'true' : 'false') + '" title="' + c + '"></button>';
+    }).join('');
+    document.getElementById('curChip').style.background = color;
+    document.getElementById('custom').value = color;
+  }
+  paletteEl.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-c]');
+    if (b) setColor(b.getAttribute('data-c'));
+  });
+  function setColor(c) {
+    color = c;
+    renderPalette();
+    prefs.color = c; savePrefs();
+  }
+  document.getElementById('custom').addEventListener('input', function () { setColor(this.value); });
+
+  /* ── 工具 ── */
+  function setTool(t) {
+    tool = t;
+    document.querySelectorAll('[data-tool]').forEach(function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-tool') === t ? 'true' : 'false');
+    });
+    prefs.tool = t; savePrefs();
+  }
+  document.querySelectorAll('[data-tool]').forEach(function (b) {
+    b.addEventListener('click', function () { setTool(b.getAttribute('data-tool')); });
+  });
+
+  /* ── 撤销 / 重做 ── */
+  document.getElementById('btnUndo').addEventListener('click', function () {
+    if (!undoStack.length) { HS.toast('没有可撤销的步骤', { icon: '↶' }); return; }
+    redoStack.push(snapshot());
+    restore(undoStack.pop());
+    save();
+  });
+  document.getElementById('btnRedo').addEventListener('click', function () {
+    if (!redoStack.length) { HS.toast('没有可重做的步骤', { icon: '↷' }); return; }
+    undoStack.push(snapshot());
+    restore(redoStack.pop());
+    save();
+  });
+
+  /* ── 网格 ── */
+  document.getElementById('btnGrid').addEventListener('click', function () {
+    showGrid = !showGrid;
+    this.setAttribute('aria-pressed', showGrid ? 'true' : 'false');
+    prefs.grid = showGrid; savePrefs();
+    render();
+  });
+
+  /* ── 尺寸 / 清空 / 导出 ── */
+  function resizeTo(n, keep) {
+    var old = keep ? snapshot() : null;
+    size = n;
+    canvas.width = n; canvas.height = n;
+    art.width = n; art.height = n;
+    blank();
+    if (old) { ax.putImageData(old, 0, 0); render(); }
+    undoStack.length = 0; redoStack.length = 0;
+    prefs.size = n; savePrefs();
+    save();
+  }
+  document.getElementById('sizeSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-size]');
+    if (!b) return;
+    var n = Number(b.getAttribute('data-size'));
+    if (n === size) return;
+    if (!confirm('切换为 ' + n + '×' + n + ' 会重开画布（比当前大时保留内容）。继续？')) return;
+    document.querySelectorAll('#sizeSeg button').forEach(function (x) {
+      x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+    });
+    resizeTo(n, n > size);
+    HS.toast('已切换到 ' + n + '×' + n);
+  });
+  document.getElementById('btnClear').addEventListener('click', function () {
+    if (!confirm('清空画布？')) return;
+    pushUndo();
+    blank();
+    save();
+  });
+  document.getElementById('btnSave').addEventListener('click', function () {
+    var scale = 32, out = document.createElement('canvas');
+    out.width = size * scale; out.height = size * scale;
+    var o = out.getContext('2d');
+    o.imageSmoothingEnabled = false;
+    o.drawImage(art, 0, 0, out.width, out.height);
+    var a = document.createElement('a');
+    a.download = 'pixel-' + size + 'x' + size + '.png';
+    a.href = out.toDataURL('image/png');
+    a.click();
+    HS.toast('已导出 ' + (size * scale) + '×' + (size * scale) + ' PNG', { icon: '💾' });
+  });
+  document.getElementById('btnBack').addEventListener('click', function () { location.href = '../index.html'; });
+
+  /* ── 存档 ── */
+  function save() {
+    try { localStorage.setItem(K_ART + size, art.toDataURL('image/png')); } catch (e) { }
+  }
+  function savePrefs() { HS.store.setJson(K_PREFS, prefs); }
+  function loadSaved() {
+    var raw = null;
+    try { raw = localStorage.getItem(K_ART + size); } catch (e) { }
+    if (!raw) { blank(); return; }
+    var img = new Image();
+    img.onload = function () {
+      ax.clearRect(0, 0, size, size);
+      ax.drawImage(img, 0, 0);
+      render();
+    };
+    img.onerror = blank;
+    img.src = raw;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); document.getElementById('btnUndo').click(); }
+    else if (mod && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) { e.preventDefault(); document.getElementById('btnRedo').click(); }
+  });
+
+  /* ── 启动 ── */
+  size = prefs.size || 16;
+  showGrid = prefs.grid !== false;
+  canvas.width = size; canvas.height = size;
+  art.width = size; art.height = size;
+  document.querySelectorAll('#sizeSeg button').forEach(function (x) {
+    x.setAttribute('aria-pressed', Number(x.getAttribute('data-size')) === size ? 'true' : 'false');
+  });
+  document.getElementById('btnGrid').setAttribute('aria-pressed', showGrid ? 'true' : 'false');
+  if (prefs.color) color = prefs.color;
+  renderPalette();
+  setTool(prefs.tool || 'pen');
+  loadSaved();
+})();
+</script>
+</body>
+</html>

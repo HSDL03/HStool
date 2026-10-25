@@ -118,5 +118,29 @@
     "deprecated": true,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-gacha",
+    "icon": "🎴",
+    "name": "挖矿抽卡",
+    "desc": "单抽十连 · 保底与图鉴",
+    "tag": "游戏",
+    "url": "./tools/gacha.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-pixel",
+    "icon": "🖌️",
+    "name": "像素画板",
+    "desc": "16×16 手绘 · 导出 PNG",
+    "tag": "工具",
+    "url": "./tools/pixel.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

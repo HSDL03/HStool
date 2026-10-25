@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>挖矿抽卡 · 红石的小站</title>
+<meta name="description" content="挖矿抽卡模拟器：单抽、十连、保底机制与图鉴收集，纯前端运行。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎴</text></svg>">
+<script>
+(function(){try{
+  var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');
+  var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
+  if(t==='auto'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'mc-night':'mc-wiki';}
+  if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
+}catch(e){}})();
+</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.app{max-width:900px;margin:0 auto}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.ctrl .sp{flex:1}
+.pity{
+  display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:11.5px;color:var(--muted);
+  background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel);
+}
+[data-theme^="github-"] .pity{border-width:1px;box-shadow:none;border-radius:999px}
+.pity b{color:var(--ac);font-variant-numeric:tabular-nums}
+.bar{width:88px;height:6px;background:var(--bg3);border:1px solid var(--bd);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--ac);transition:width .3s}
+
+.stage{min-height:150px;display:flex;flex-wrap:wrap;gap:9px;align-content:flex-start;
+  padding:14px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
+[data-theme^="github-"] .stage{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
+.stage .hint{width:100%;text-align:center;color:var(--faint);font-size:12.5px;align-self:center;padding:34px 0}
+
+.draw{
+  width:76px;padding:9px 4px;text-align:center;background:var(--bg);
+  border:2px solid var(--bd2);border-radius:var(--r);
+  opacity:0;transform:translateY(10px) scale(.9);
+  animation:pop .4s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+[data-theme^="github-"] .draw{border-width:1px;border-radius:10px}
+@keyframes pop{to{opacity:1;transform:none}}
+.draw .i{font-size:24px;line-height:1.2;display:block}
+.draw .n{display:block;font-size:10.5px;font-weight:700;margin-top:3px;line-height:1.3;word-break:keep-all}
+.draw .rt{display:block;font-size:9px;letter-spacing:.06em;font-weight:800;margin-top:2px;opacity:.85}
+
+/* 稀有度 */
+[data-r="0"]{border-color:var(--bd)}
+[data-r="1"]{border-color:#2d7a2d}
+[data-r="2"]{border-color:#0969da}
+[data-r="3"]{border-color:#8932b8}
+[data-r="4"]{border-color:#d4900a;box-shadow:0 0 0 1px #d4900a,0 0 14px rgba(212,144,10,.5)}
+.draw[data-r="1"] .rt{color:#2d7a2d}
+.draw[data-r="2"] .rt{color:#0969da}
+.draw[data-r="3"] .rt{color:#8932b8}
+.draw[data-r="4"] .rt{color:#d4900a}
+.draw[data-r="4"]{animation:pop .4s cubic-bezier(.34,1.56,.64,1) forwards,glow 1.4s ease-in-out infinite alternate}
+@keyframes glow{to{box-shadow:0 0 0 1px #d4900a,0 0 24px rgba(212,144,10,.85)}}
+
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.panel{padding:12px 14px;background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel)}
+[data-theme^="github-"] .panel{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
+.panel h3{margin:0 0 8px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:800}
+.rows{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.rows .r{display:flex;align-items:center;gap:7px}
+.rows .r .k{flex:1;color:var(--muted)}
+.rows .r .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+.dex{display:flex;flex-wrap:wrap;gap:5px}
+.dex .d{
+  display:inline-flex;align-items:center;gap:4px;padding:2px 7px;font-size:11px;
+  background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);color:var(--muted);
+}
+.dex .d.own{color:var(--text);border-color:var(--ac);background:var(--acs)}
+.dex .d .c{font-family:var(--mono);font-size:9.5px;opacity:.7}
+@media(max-width:640px){
+  .panels{grid-template-columns:1fr}
+  .draw{width:calc(33.33% - 6px)}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" id="btnBack" title="返回工具箱" aria-label="返回工具箱">↩</button>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<main class="wrap">
+  <div class="app">
+    <div class="page-head">
+      <div>
+        <h1>🎴 挖矿抽卡</h1>
+        <p class="sub">单抽、十连、保底与图鉴 —— 看看今天能挖出什么。</p>
+      </div>
+    </div>
+
+    <div class="ctrl">
+      <button class="btn primary" id="btnOne">单抽</button>
+      <button class="btn" id="btnTen">十连抽</button>
+      <button class="btn ghost" id="btnReset">重置</button>
+      <span class="sp"></span>
+      <div class="pity" title="十连内必出史诗以上">
+        <span>保底 <b id="pityN">0</b>/10</span>
+        <span class="bar"><span id="pityBar" style="width:0%"></span></span>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="hint">点「单抽」或「十连抽」开始</div>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <h3>统计</h3>
+        <div class="rows" id="stats"></div>
+      </div>
+      <div class="panel">
+        <h3>图鉴 <span id="dexCount" class="muted" style="font-weight:600"></span></h3>
+        <div class="dex" id="dex"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = 'hs-gacha-v1';
+  var RARITY = ['普通', '稀有', '史诗', '传说', '神话'];
+  var WEIGHT = [62, 24, 9, 4, 1];
+
+  var POOL = [
+    { n: '石头', i: '🗿', r: 0 }, { n: '圆石', i: '🧱', r: 0 }, { n: '泥土', i: '🟫', r: 0 },
+    { n: '树苗', i: '🌱', r: 0 }, { n: '鸡蛋', i: '🥚', r: 0 }, { n: '苹果', i: '🍎', r: 0 },
+    { n: '煤炭', i: '⚫', r: 1 }, { n: '铁锭', i: '⛓', r: 1 }, { n: '红石', i: '🔴', r: 1 },
+    { n: '青金石', i: '🔵', r: 1 }, { n: '骨头', i: '🦴', r: 1 },
+    { n: '金锭', i: '🟡', r: 2 }, { n: '绿宝石', i: '💚', r: 2 }, { n: '紫水晶', i: '🟣', r: 2 },
+    { n: '钻石', i: '💎', r: 3 }, { n: '附魔书', i: '📕', r: 3 },
+    { n: '下界合金锭', i: '🟠', r: 4 }, { n: '附魔金苹果', i: '🍏', r: 4 },
+    { n: '鞘翅', i: '🦅', r: 4 }, { n: '信标', i: '🔆', r: 4 }
+  ];
+
+  var S = HS.store.json(K, null) || { total: 0, pity: 0, counts: [0, 0, 0, 0, 0], dex: {} };
+
+  function pickRarity() {
+    if (S.pity >= 9) return 2 + (Math.random() < 0.12 ? 1 : 0); // 第 10 抽保底史诗+
+    var roll = Math.random() * 100, acc = 0;
+    for (var i = 0; i < WEIGHT.length; i++) {
+      acc += WEIGHT[i];
+      if (roll < acc) return i;
+    }
+    return 0;
+  }
+  function pickItem(r) {
+    var pool = POOL.filter(function (p) { return p.r === r; });
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function drawOne() {
+    var r = pickRarity();
+    var item = pickItem(r);
+    S.total++;
+    S.counts[r]++;
+    S.dex[item.n] = (S.dex[item.n] || 0) + 1;
+    S.pity = r >= 2 ? 0 : S.pity + 1;
+    return { item: item, r: r };
+  }
+  function save() { HS.store.setJson(K, S); }
+
+  function cardHTML(d, idx) {
+    return '<div class="draw" data-r="' + d.r + '" style="animation-delay:' + (idx * 70) + 'ms">' +
+      '<span class="i">' + d.item.i + '</span>' +
+      '<span class="n">' + HS.esc(d.item.n) + '</span>' +
+      '<span class="rt">' + RARITY[d.r] + '</span></div>';
+  }
+
+  function draw(times) {
+    var stage = document.getElementById('stage');
+    stage.innerHTML = '';
+    var results = [];
+    for (var i = 0; i < times; i++) results.push(drawOne());
+    save();
+    stage.innerHTML = results.map(cardHTML).join('');
+    var best = Math.max.apply(null, results.map(function (r) { return r.r; }));
+    if (best >= 3) HS.toast('出货了：' + RARITY[best] + '！', { icon: '✨' });
+    renderPanels();
+  }
+
+  function renderPanels() {
+    document.getElementById('pityN').textContent = S.pity;
+    document.getElementById('pityBar').style.width = Math.min(100, S.pity / 10 * 100) + '%';
+
+    var rows = '<div class="r"><span class="k">累计抽数</span><span class="v">' + S.total + '</span></div>';
+    for (var i = 4; i >= 0; i--) {
+      var pct = S.total ? (S.counts[i] / S.total * 100).toFixed(1) : '0.0';
+      rows += '<div class="r"><span class="k">' + RARITY[i] + '</span><span class="v">' + S.counts[i] + ' <span style="opacity:.55">(' + pct + '%)</span></span></div>';
+    }
+    document.getElementById('stats').innerHTML = rows;
+
+    var owned = Object.keys(S.dex).length;
+    document.getElementById('dexCount').textContent = owned + ' / ' + POOL.length;
+    document.getElementById('dex').innerHTML = POOL.map(function (p) {
+      var c = S.dex[p.n] || 0;
+      return '<span class="d' + (c ? ' own' : '') + '" title="' + RARITY[p.r] + '">' +
+        p.i + ' ' + HS.esc(p.n) + (c ? '<span class="c">×' + c + '</span>' : '') + '</span>';
+    }).join('');
+  }
+
+  document.getElementById('btnOne').addEventListener('click', function () { draw(1); });
+  document.getElementById('btnTen').addEventListener('click', function () { draw(10); });
+  document.getElementById('btnReset').addEventListener('click', function () {
+    if (!confirm('清空抽卡记录与图鉴？')) return;
+    S = { total: 0, pity: 0, counts: [0, 0, 0, 0, 0], dex: {} };
+    save();
+    document.getElementById('stage').innerHTML = '<div class="hint">已重置，重新开始挖吧</div>';
+    renderPanels();
+  });
+  document.getElementById('btnBack').addEventListener('click', function () { location.href = '../index.html'; });
+
+  renderPanels();
+})();
+</script>
+</body>
+</html>
