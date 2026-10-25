@@ -952,6 +952,42 @@ canvas#game3d{display:block}
   atlasTexture.wrapS=THREE.ClampToEdgeWrapping;atlasTexture.wrapT=THREE.ClampToEdgeWrapping;
   var blockMaterial=new THREE.MeshLambertMaterial({map:atlasTexture,side:THREE.FrontSide,vertexColors:true});
 
+  /* ═══ 原版材质贴图 ═══
+     从 26.3 客户端资源包里抽出的 16×16 方块贴图（assets/mc-textures/），
+     按图集格号覆盖上面的程序化纹理。加载失败就保留程序化纹理，不影响进游戏。 */
+  var TEX_FILES={
+    0:'grass_block_top',1:'grass_block_side',2:'dirt',3:'stone',4:'oak_log',5:'oak_log_top',
+    6:'oak_leaves',7:'sand',8:'bedrock',9:'oak_planks',10:'bricks',11:'snow',
+    12:'grass_block_snow',13:'sandstone_top',14:'sandstone',15:'cactus_side',16:'cactus_top',
+    17:'spruce_log',18:'spruce_log_top',19:'spruce_leaves',20:'ice',21:'deepslate',
+    22:'coal_ore',23:'iron_ore',24:'gold_ore',25:'diamond_ore',26:'lapis_ore'
+  };
+  (function loadVanillaTextures(){
+    /* 这三张在原版里是灰度图，靠运行时按生物群系染色；
+       这里直接乘上平原的草色/树叶色，否则地面会渲成灰白 */
+    var TINTS={0:'#91bd59',6:'#77ab2f',19:'#619961'};
+    Object.keys(TEX_FILES).forEach(function(ti){
+      var img=new Image();
+      img.onload=function(){
+        dt(Number(ti),function(g){
+          g.imageSmoothingEnabled=false;
+          g.clearRect(0,0,TILE_PX,TILE_PX);
+          g.drawImage(img,0,0,TILE_PX,TILE_PX);
+          var tint=TINTS[ti];
+          if(tint){
+            g.globalCompositeOperation='multiply';
+            g.fillStyle=tint;
+            g.fillRect(0,0,TILE_PX,TILE_PX);
+            g.globalCompositeOperation='source-over';
+          }
+        });
+        atlasTexture.needsUpdate=true;
+      };
+      img.onerror=function(){ /* 缺图就用程序化纹理兜底 */ };
+      img.src='../assets/mc-textures/'+TEX_FILES[ti]+'.png';
+    });
+  })();
+
   function buildChunkGeo(cx,cz){
     var data=chunkData.get(ck(cx,cz));
     if(!data)return null;
@@ -1624,6 +1660,17 @@ canvas#game3d{display:block}
   }
 
   var roomsChannel=null;
+  /* 房间列表出错/超时的统一收尾：给出原因 + 重试按钮，而不是一直卡在「正在加载…」 */
+  function roomsFail(msg){
+    var list=$('roomList');
+    var st=$('roomServerStatus'); if(st)st.textContent='⚠ '+msg;
+    list.innerHTML='<div class="room-empty"><div class="cloud-icon">⚠</div><div>'+msg+'</div>'+
+      '<div class="hint">检查网络连接后重试</div></div>';
+    var btn=document.createElement('button');
+    btn.className='mc-btn small';btn.style.marginTop='12px';btn.textContent='重试';
+    btn.addEventListener('click',function(){refreshRooms();});
+    list.appendChild(btn);
+  }
   function refreshRooms(){
     var list=$('roomList');
     list.innerHTML='<div class="room-empty"><div class="cloud-icon">☁</div><div>正在加载…</div></div>';
@@ -1632,11 +1679,21 @@ canvas#game3d{display:block}
       list.innerHTML='<div class="room-empty"><div class="cloud-icon">⚠</div><div>Supabase 未连接</div></div>';return;
     }
     $('roomServerStatus').textContent='☁ 已连接';
+
+    var settled=false;
+    function settle(){ if(settled)return false; settled=true; clearTimeout(timer); return true; }
+    /* Supabase 请求在网络不通时会一直挂着，这里 8 秒兜底 */
+    var timer=setTimeout(function(){ if(settle())roomsFail('连接超时'); },8000);
+
     var five=Date.now()-5*60*1000;
-    sbClient.from('rooms').delete().lt('last_active',five).then(function(){});
+    sbClient.from('rooms').delete().lt('last_active',five).then(function(){}).catch(function(){});
     sbClient.from('rooms').select('*').eq('status','waiting').order('created_at',{ascending:false}).limit(50).then(function(res){
-      if(res.error){list.innerHTML='<div class="room-empty"><div class="cloud-icon">⚠</div><div>加载失败</div></div>';return;}
+      if(!settle())return;
+      if(res.error){roomsFail('加载失败：'+(res.error.message||'未知错误'));return;}
       renderRooms(res.data||[]);subscribeRooms();
+    }).catch(function(err){
+      if(!settle())return;
+      roomsFail('加载失败：'+((err&&err.message)||'网络不可达'));
     });
   }
   function renderRooms(rooms){
