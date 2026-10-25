@@ -46,18 +46,6 @@
 }
 @keyframes chIn{60%{opacity:1}to{opacity:1;transform:none}}
 .hero .sub{margin:0 auto;max-width:560px;font-size:14.5px;color:var(--muted);line-height:1.75}
-.hero .actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:20px}
-
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:680px;margin:26px auto 0}
-.stat{
-  padding:11px 8px;text-align:center;background:var(--bg2);
-  border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
-  transition:transform .22s cubic-bezier(.34,1.56,.64,1),border-color .22s;
-}
-[data-theme^="github-"] .stat{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
-.stat:hover{transform:translateY(-3px);border-color:var(--ac)}
-.stat b{display:block;font-size:20px;font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--ac);letter-spacing:-.02em}
-.stat span{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
 
 /* 公告 */
 .ann{max-width:780px;margin:0 auto 20px;display:flex;flex-direction:column;gap:8px}
@@ -120,7 +108,6 @@
 .dep-wrap.closed .dep-body{max-height:0;opacity:0}
 .dep-wrap.closed{margin-top:22px}
 @media(max-width:640px){
-  .stats{grid-template-columns:repeat(2,1fr)}
   .hero{padding:14px 0 18px}
 }
 </style>
@@ -132,11 +119,6 @@
   <a class="brand" href="./index.html" aria-label="红石的小站 首页">
     <span class="ico">🧰</span><span class="txt">红石的小站</span>
   </a>
-  <nav class="tnav" aria-label="主站导航">
-    <a href="./index.html" aria-current="page">🏠 <span>首页</span></a>
-    <a href="./wiki.html">📚 <span>Wiki</span></a>
-    <a href="./download.html">📥 <span>下载</span></a>
-  </nav>
   <span class="spacer"></span>
   <div class="searchbox">
     <span class="sico">⌕</span>
@@ -156,17 +138,6 @@
     <div class="hero-badge"><span class="dot"></span>STATION · 在线 · <span id="stamp">2026</span></div>
     <h1 id="heroTitle">红石的小站</h1>
     <p class="sub">一堆轻量、无依赖、点开即用的小工具 —— 顺手再放点资源和笔记。</p>
-    <div class="actions">
-      <a class="btn primary" href="#tools">🔧 开始使用</a>
-      <a class="btn" href="./wiki.html">📚 翻开 Wiki</a>
-      <button class="btn" data-act="theme">🎨 换个风格</button>
-    </div>
-    <div class="stats">
-      <div class="stat"><b id="nTools">–</b><span>工具</span></div>
-      <div class="stat"><b id="nWiki">–</b><span>Wiki 条目</span></div>
-      <div class="stat"><b id="nFiles">–</b><span>资源</span></div>
-      <div class="stat"><b id="nTags">–</b><span>分类</span></div>
-    </div>
   </section>
 
   <div class="ann" id="annWrap" hidden></div>
@@ -622,28 +593,6 @@
       });
   }
 
-  function countUp(el, to) {
-    if (HS.reduced) { el.textContent = to; return; }
-    var t0 = performance.now(), dur = 700;
-    function step(t) {
-      var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(to * e);
-      if (p < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-  function loadStats() {
-    HS.fetchJSON('wiki-data.json', { remote: GH })
-      .then(function (d) { countUp(document.getElementById('nWiki'), Array.isArray(d) ? d.length : 0); })
-      .catch(function () { document.getElementById('nWiki').textContent = '0'; });
-    HS.fetchJSON('download-data.json', { remote: GH })
-      .then(function (d) {
-        var n = Array.isArray(d) ? d.filter(function (x) { return x && !x.hidden; }).length : 0;
-        countUp(document.getElementById('nFiles'), n);
-      })
-      .catch(function () { document.getElementById('nFiles').textContent = '0'; });
-  }
-
   /* ── 命令面板 ── */
   HS.palette.init({
     actions: [
@@ -674,18 +623,7 @@
   });
   loadTools(false);
   loadAnnounce();
-  loadStats();
   HS.status.mount('tools-data.json');
-
-  var statTimer = setInterval(function () {
-    if (!TOOLS.length) return;
-    clearInterval(statTimer);
-    var tags = {};
-    TOOLS.forEach(function (x) { if (!x.hidden) tags[x.tag || ''] = 1; });
-    countUp(document.getElementById('nTools'),
-      TOOLS.filter(function (x) { return !x.hidden && !x.deprecated; }).length);
-    countUp(document.getElementById('nTags'), Object.keys(tags).length);
-  }, 100);
 })();
 </script>
 </body>
