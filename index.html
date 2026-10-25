@@ -325,7 +325,11 @@
     if (closeBtn) {
       e.stopPropagation();
       var id = closeBtn.getAttribute('data-close');
-      if (id && dismissed.indexOf(id) === -1) dismissed.push(id);
+      if (id && dismissed.indexOf(id) === -1) {
+        dismissed.push(id);
+        /* 纠正：关闭记录只留最近 60 条，防止 localStorage 无限增长 */
+        if (dismissed.length > 60) dismissed = dismissed.slice(-60);
+      }
       HS.store.setJson('hs-ann-dismissed', dismissed);
       var card = closeBtn.closest('.ann-item');
       if (card) {
@@ -532,10 +536,7 @@
     document.getElementById('depWrap').classList.toggle('closed');
   });
   document.getElementById('btnReload').addEventListener('click', function () {
-    var btn = this;
-    btn.classList.add('spinning');
     loadTools(true);
-    setTimeout(function () { btn.classList.remove('spinning'); }, 900);
   });
   document.getElementById('btnPalette').addEventListener('click', function () { HS.palette.open(); });
 
@@ -555,28 +556,45 @@
   });
 
   /* ── 数据 ── */
+  /* 纠正：localStorage 缓存只存远程数据（以前把 FALLBACK 混着存，
+     后台新增同名工具时浏览器端 5 分钟内会被旧缓存挡住）。换 v2 键避开旧格式 */
+  function cacheKey() { return 'hs-tools-cache-v2'; }
+
   function loadTools(force) {
-    var cache = HS.store.json('hs-tools-cache', null);
+    var cache = HS.store.json(cacheKey(), null);
     if (!force && cache && (Date.now() - cache.t) < 5 * 60 * 1000 && Array.isArray(cache.data) && cache.data.length) {
       TOOLS = merge(normAll(cache.data), normAll(FALLBACK));
       render();
       document.getElementById('dataState').textContent = '本地缓存';
       return;
     }
+    /* 刷新中禁用按钮，完成后由回调恢复（以前是固定 900ms 假动画） */
+    var btn = document.getElementById('btnReload');
+    btn.disabled = true;
+    var done = function () { btn.disabled = false; };
     HS.data('tools-data')
       .then(function (data) {
-        TOOLS = merge(normAll(data), normAll(FALLBACK));
-        HS.store.setJson('hs-tools-cache', { t: Date.now(), data: TOOLS });
+        var remote = normAll(data);
+        if (!remote.length) throw new Error('空数据');
+        TOOLS = merge(remote, normAll(FALLBACK));
+        HS.store.setJson(cacheKey(), { t: Date.now(), data: remote });
         document.getElementById('dataState').textContent = '已同步';
         render();
         if (force) HS.toast('工具列表已刷新', { icon: '✓' });
       })
       .catch(function () {
-        TOOLS = normAll(FALLBACK);
-        document.getElementById('dataState').textContent = '离线模式';
-        render();
-        if (force) HS.toast('刷新失败，已使用内置列表', { icon: '⚠️' });
-      });
+        /* 纠正：强刷失败时保留已加载的列表，不再退回 3 条兜底 */
+        if (TOOLS.length) {
+          document.getElementById('dataState').textContent = '保留当前列表';
+          if (force) HS.toast('刷新失败，保留了当前列表', { icon: '⚠️' });
+        } else {
+          TOOLS = normAll(FALLBACK);
+          document.getElementById('dataState').textContent = '离线模式';
+          render();
+          if (force) HS.toast('刷新失败，已使用内置列表', { icon: '⚠️' });
+        }
+      })
+      .finally(done);
   }
 
   /* ── 命令面板 ── */
