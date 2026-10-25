@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>404 · 走丢了 · 红石的小站</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<script>
+(function(){try{
+  var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');
+  var ok=['mc-wiki','mc-night','mc-nether','mc-end','sakura','ocean','github-light','github-dark'];
+  if(t==='auto'){t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'mc-night':'mc-wiki';}
+  if(t&&ok.indexOf(t)>-1)document.documentElement.setAttribute('data-theme',t);
+}catch(e){}})();
+</script>
+<link rel="stylesheet" href="/HStool/assets/css/core.css">
+<style>
+.nf{max-width:560px;margin:0 auto;padding:12vh 0 0;text-align:center}
+.nf .code{
+  font-size:clamp(4rem,15vw,7rem);font-weight:900;line-height:1;letter-spacing:-.05em;
+  background:var(--hero-grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+.nf h1{margin:6px 0 8px;font-size:1.35rem;font-weight:800;letter-spacing:-.02em}
+.nf p{margin:0 0 22px;font-size:13.5px;color:var(--muted);line-height:1.75}
+.nf .acts{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+.nf .hint{margin-top:26px;font-size:11.5px;color:var(--faint);font-family:var(--mono)}
+.nf .hint code{padding:1px 5px;background:var(--bg3);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="decor" aria-hidden="true"></div>
+<main class="wrap">
+  <div class="nf">
+    <div class="code">404</div>
+    <h1>这块区块没被生成</h1>
+    <p>你要找的页面不存在，可能是链接拼错了，也可能它已经被挪走或者删掉了。</p>
+    <div class="acts">
+      <a class="btn primary" href="/HStool/index.html">🧰 回工具台</a>
+      <a class="btn" href="/HStool/wiki.html">📚 翻 Wiki</a>
+      <a class="btn" href="/HStool/download.html">📥 去下载</a>
+    </div>
+    <div class="hint">路径：<code id="p">/</code></div>
+  </div>
+</main>
+<script src="/HStool/assets/js/core.js"></script>
+<script>
+  document.getElementById('p').textContent = location.pathname;
+  HS.status.mount("/HStool/index.html");
+</script>
+</body>
+</html>
