@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>颜色工具 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.swatch{
+  height:132px;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  font-size:15px;font-weight:800;letter-spacing:.04em;transition:background .2s,color .2s;
+}
+.contrast{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.ccell{padding:12px;text-align:center;border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg)}
+.ccell b{display:block;font-size:21px;font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums}
+.ccell em{display:block;margin-top:3px;font-size:11px;font-style:normal;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.ccell.pass{border-color:#3f8f4a}
+.ccell.fail{border-color:#b04a3a;opacity:.9}
+.copyrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+@media(max-width:640px){.contrast{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🎨 颜色工具</h1><p class="sub">HEX / RGB / HSL 互转 · 实时预览 · 对比度自检</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">预览</h2>
+      <div class="swatch" id="swatch">#3D521F</div>
+      <div class="copyrow">
+        <button class="btn" id="btnPick" type="button">🖱 用取色器挑一个</button>
+        <input id="picker" type="color" value="#3d521f" style="width:46px;height:34px;padding:2px;border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg2);cursor:pointer">
+        <button class="btn" id="btnRandom" type="button">🎲 随机</button>
+        <button class="btn" id="btnReset" type="button">↺ 还原</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">格式互转</h2>
+      <div class="fld">
+        <label for="inHex">HEX</label>
+        <input id="inHex" class="mono" value="#3d521f" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="fld">
+        <label for="inRgb">RGB（0–255）</label>
+        <input id="inRgb" class="mono" value="61, 82, 31" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="fld">
+        <label for="inHsl">HSL（色相 0–360 · 饱和/亮度 0–100%）</label>
+        <input id="inHsl" class="mono" value="85, 45%, 22%" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="tip">改任意一行，另外两行会跟着算。支持 <code>#abc</code> 三位简写，HSL 里的 <code>%</code> 可省略。</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">对比度（WCAG）</h2>
+      <p class="muted" style="margin:-4px 0 12px;font-size:12.5px">白字 / 黑字压在这个颜色上的对比度，正文建议 ≥ 4.5，大字 ≥ 3。</p>
+      <div class="contrast">
+        <div class="ccell" id="cWhite"><b>—</b><em>白字</em></div>
+        <div class="ccell" id="cBlack"><b>—</b><em>黑字</em></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var inHex=$('inHex'),inRgb=$('inRgb'),inHsl=$('inHsl');
+var swatch=$('swatch'),picker=$('picker');
+var cWhite=$('cWhite'),cBlack=$('cBlack');
+var DEFAULT=[61,82,31];
+var busy=false;
+
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+function pad(n){return (n<16?'0':'')+n.toString(16);}
+function toHex(rgb){return '#'+pad(rgb[0])+pad(rgb[1])+pad(rgb[2]);}
+
+function parseHex(s){
+  var v=String(s).trim().replace(/^#/,'');
+  if(/^[0-9a-f]{3}$/i.test(v)) v=v.split('').map(function(c){return c+c;}).join('');
+  if(!/^[0-9a-f]{6}$/i.test(v)) return null;
+  return [parseInt(v.slice(0,2),16),parseInt(v.slice(2,4),16),parseInt(v.slice(4,6),16)];
+}
+function parseRgb(s){
+  var m=String(s).match(/-?\d+(\.\d+)?/g);
+  if(!m||m.length<3) return null;
+  return [clamp(Math.round(+m[0]),0,255),clamp(Math.round(+m[1]),0,255),clamp(Math.round(+m[2]),0,255)];
+}
+function parseHsl(s){
+  var m=String(s).match(/-?\d+(\.\d+)?/g);
+  if(!m||m.length<3) return null;
+  var h=((+m[0])%360+360)%360, sat=clamp(+m[1],0,100)/100, lig=clamp(+m[2],0,100)/100;
+  return hslToRgb(h,sat,lig);
+}
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  var mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn,l=(mx+mn)/2,h=0,s=0;
+  if(d){
+    s=l>.5?d/(2-mx-mn):d/(mx+mn);
+    if(mx===r) h=((g-b)/d+(g<b?6:0));
+    else if(mx===g) h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h*=60;
+  }
+  return [Math.round(h),Math.round(s*100),Math.round(l*100)];
+}
+function hslToRgb(h,s,l){
+  function f(n){
+    var k=(n+h/30)%12, a=s*Math.min(l,1-l);
+    return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,Math.min(9-k,1)))));
+  }
+  return [f(0),f(8),f(4)];
+}
+function luminance(rgb){
+  var c=rgb.map(function(v){
+    v/=255;
+    return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);
+  });
+  return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];
+}
+function ratio(a,b){
+  var l1=luminance(a),l2=luminance(b);
+  if(l1<l2){var t=l1;l1=l2;l2=t;}
+  return (l1+0.05)/(l2+0.05);
+}
+
+function render(rgb,origin){
+  if(busy) return;
+  busy=true;
+  var hex=toHex(rgb), hsl=rgbToHsl(rgb[0],rgb[1],rgb[2]);
+  if(origin!=='hex') inHex.value=hex;
+  if(origin!=='rgb') inRgb.value=rgb.join(', ');
+  if(origin!=='hsl') inHsl.value=hsl[0]+', '+hsl[1]+'%, '+hsl[2]+'%';
+  picker.value=hex;
+  swatch.style.background=hex;
+  swatch.textContent=hex.toUpperCase()+' · '+rgb.join(', ');
+  /* 预览块文字自动选对比度高的一方 */
+  var whiteC=ratio(rgb,[255,255,255]), blackC=ratio(rgb,[0,0,0]);
+  swatch.style.color=whiteC>=blackC?'#fff':'#111';
+  swatch.style.borderColor=whiteC>=blackC?'rgba(255,255,255,.28)':'rgba(0,0,0,.28)';
+
+  fillCell(cWhite,whiteC,4.5);
+  fillCell(cBlack,blackC,4.5);
+  busy=false;
+}
+function fillCell(el,val,need){
+  el.querySelector('b').textContent=val.toFixed(2);
+  el.classList.toggle('pass',val>=need);
+  el.classList.toggle('fail',val<need);
+  el.querySelector('em').textContent=(el===cWhite?'白字':'黑字')+(val>=7?' · AAA':val>=need?' · AA':' · 不达标');
+}
+
+function invalid(el,on){el.style.borderColor=on?'#b04a3a':'';}
+
+inHex.addEventListener('input',function(){
+  var rgb=parseHex(inHex.value);
+  invalid(inHex,!rgb);
+  if(rgb) render(rgb,'hex');
+});
+inRgb.addEventListener('input',function(){
+  var rgb=parseRgb(inRgb.value);
+  invalid(inRgb,!rgb);
+  if(rgb) render(rgb,'rgb');
+});
+inHsl.addEventListener('input',function(){
+  var rgb=parseHsl(inHsl.value);
+  invalid(inHsl,!rgb);
+  if(rgb) render(rgb,'hsl');
+});
+
+picker.addEventListener('input',function(){
+  var rgb=parseHex(picker.value);
+  if(rgb) render(rgb,'');
+});
+$('btnPick').addEventListener('click',function(){picker.click();});
+$('btnRandom').addEventListener('click',function(){
+  var rgb=[0,0,0].map(function(){return Math.floor(Math.random()*256);});
+  render(rgb,'');
+  toast('随机颜色 '+toHex(rgb));
+});
+$('btnReset').addEventListener('click',function(){
+  render(DEFAULT.slice(),'');
+  toast('已还原默认色');
+});
+
+swatch.addEventListener('click',function(){
+  HS.copy(toHex(parseHex(inHex.value)||DEFAULT));
+  toast('HEX 已复制');
+});
+
+render(DEFAULT,'');
+})();
+</script>
+</body>
+</html>

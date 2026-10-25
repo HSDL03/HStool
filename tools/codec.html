@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>编解码工具 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.fld textarea{min-height:150px}
+.status{
+  display:flex;align-items:center;gap:8px;margin-top:12px;padding:9px 12px;
+  font-size:12.5px;line-height:1.6;border-radius:var(--r);background:var(--bg3);
+  border-left:3px solid var(--bd2);color:var(--muted);
+}
+.status.ok{border-left-color:#3f8f4a;color:var(--text)}
+.status.err{border-left-color:#b04a3a;color:var(--text)}
+.status .mark{flex:none}
+.status code{font-family:var(--mono);font-size:12px;padding:1px 5px;background:var(--bg);border:1px solid var(--bd);border-radius:4px}
+.seg{margin-bottom:13px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔐 编解码工具</h1><p class="sub">Base64 / URL / HTML 实体 / 十六进制 · 中文安全</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">选择编码</h2>
+      <div class="seg" id="seg" role="group" aria-label="编码方式">
+        <button type="button" data-mode="base64" aria-pressed="true">Base64</button>
+        <button type="button" data-mode="url" aria-pressed="false">URL 编码</button>
+        <button type="button" data-mode="html" aria-pressed="false">HTML 实体</button>
+        <button type="button" data-mode="hex" aria-pressed="false">十六进制</button>
+      </div>
+
+      <div class="fld">
+        <label for="in">原始文本</label>
+        <textarea id="in" class="mono" spellcheck="false" placeholder="在这里粘贴要处理的内容…">红石的小站</textarea>
+      </div>
+      <div class="fld">
+        <label for="out">结果</label>
+        <textarea id="out" class="mono" spellcheck="false" placeholder="点「编码」或「解码」"></textarea>
+      </div>
+
+      <div class="row">
+        <button class="btn primary" id="btnEnc" type="button">→ 编码</button>
+        <button class="btn primary" id="btnDec" type="button">← 解码</button>
+        <button class="btn" id="btnSwap" type="button" title="把结果拿回去继续处理">⇄ 回填</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制</button>
+        <button class="btn ghost" id="btnClear" type="button">🗑 清空</button>
+      </div>
+
+      <div class="status" id="status"><span class="mark">◦</span><span id="statusText">选择一种编码，然后处理左侧内容</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 Base64 走 UTF-8 → 二进制，中文和 emoji 都不会乱码；解码时 <code>-</code> / <code>_</code> 这类 URL 安全字符也认。
+        URL 用的是 <code>encodeURIComponent</code> 语义（斜杠也会被编码）。全部本地计算，不上传。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var inp=$('in'),out=$('out'),status=$('status'),statusText=$('statusText'),seg=$('seg');
+var mode='base64';
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function say(kind,text){
+  status.className='status'+(kind?' '+kind:'');
+  status.querySelector('.mark').textContent=kind==='ok'?'✔':kind==='err'?'✖':'◦';
+  statusText.innerHTML=text;
+}
+function bytesOf(s){return new TextEncoder().encode(s);}
+
+var CODECS={
+  base64:{
+    name:'Base64',
+    enc:function(s){
+      var b=bytesOf(s),bin='',CH=8192;
+      for(var i=0;i<b.length;i+=CH) bin+=String.fromCharCode.apply(null,b.subarray(i,i+CH));
+      return btoa(bin);
+    },
+    dec:function(s){
+      var clean=s.replace(/\s+/g,'').replace(/-/g,'+').replace(/_/g,'/');
+      if(!/^[A-Za-z0-9+/]*=*$/.test(clean)) throw new Error('含非 Base64 字符，检查是否混进了别的文本');
+      var bin=atob(clean),arr=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+      return new TextDecoder().decode(arr);
+    }
+  },
+  url:{
+    name:'URL 编码',
+    enc:function(s){return encodeURIComponent(s);},
+    dec:function(s){
+      if(!/%[0-9a-f]{2}/i.test(s)) throw new Error('没找到 %XX 形式的转义，这段文本可能本来就没被编码');
+      return decodeURIComponent(s);
+    }
+  },
+  html:{
+    name:'HTML 实体',
+    enc:function(s){
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+              .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    },
+    dec:function(s){
+      if(!/&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(s)) throw new Error('没找到 HTML 实体，这段文本可能本来就没被转义');
+      var doc=new DOMParser().parseFromString(s,'text/html');
+      return doc.documentElement.textContent;
+    }
+  },
+  hex:{
+    name:'十六进制',
+    enc:function(s){
+      var b=bytesOf(s),parts=[];
+      for(var i=0;i<b.length;i++) parts.push((b[i]<16?'0':'')+b[i].toString(16));
+      return parts.join(' ');
+    },
+    dec:function(s){
+      var t=s.replace(/0x/gi,'').replace(/[^0-9a-f]/gi,'');
+      if(!t) throw new Error('没找到十六进制字符');
+      if(t.length%2) t='0'+t;
+      var arr=new Uint8Array(t.length/2);
+      for(var i=0;i<arr.length;i++) arr[i]=parseInt(t.substr(i*2,2),16);
+      return new TextDecoder().decode(arr);
+    }
+  }
+};
+
+function run(dir){
+  var text=inp.value;
+  if(!text){say('err','左侧是空的');inp.focus();return;}
+  var codec=CODECS[mode];
+  try{
+    var res=codec[dir](text);
+    out.value=res;
+    var from=new Blob([text]).size,to=new Blob([res]).size;
+    say('ok',codec.name+(dir==='enc'?' 编码':' 解码')+'完成 · '+text.length+' 字符 → '+res.length+' 字符 · '+from+' B → '+to+' B');
+  }catch(e){
+    out.value='';
+    say('err',codec.name+(dir==='enc'?' 编码':' 解码')+'失败：'+esc(e&&e.message||e));
+  }
+}
+
+seg.addEventListener('click',function(e){
+  var b=e.target.closest('button[data-mode]');
+  if(!b) return;
+  mode=b.getAttribute('data-mode');
+  Array.prototype.forEach.call(seg.querySelectorAll('button'),function(x){
+    x.setAttribute('aria-pressed',x===b?'true':'false');
+  });
+  out.value='';
+  say('','已切到 '+CODECS[mode].name+'，可以编码或解码了');
+});
+
+$('btnEnc').addEventListener('click',function(){run('enc');});
+$('btnDec').addEventListener('click',function(){run('dec');});
+$('btnSwap').addEventListener('click',function(){
+  if(!out.value){toast('结果是空的');return;}
+  inp.value=out.value;out.value='';
+  say('','已把结果填回左侧，可以接着处理');
+});
+$('btnCopy').addEventListener('click',function(){
+  if(!out.value){toast('结果是空的');return;}
+  HS.copy(out.value);toast('已复制');
+});
+$('btnClear').addEventListener('click',function(){
+  inp.value='';out.value='';say('','已清空');inp.focus();
+});
+inp.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();run('enc');}
+});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON 格式化 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.editors{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.editors .fld textarea{min-height:340px}
+.status{
+  display:flex;align-items:center;gap:8px;margin-top:12px;padding:9px 12px;
+  font-size:12.5px;line-height:1.6;border-radius:var(--r);
+  background:var(--bg3);border-left:3px solid var(--bd2);color:var(--muted);
+}
+.status.ok{border-left-color:#3f8f4a;color:var(--text)}
+.status.err{border-left-color:#b04a3a;color:var(--text)}
+.status .mark{flex:none;font-size:13px}
+.status code{font-family:var(--mono);font-size:12px;padding:1px 5px;background:var(--bg);border:1px solid var(--bd);border-radius:4px}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.chk input{width:15px;height:15px;accent-color:var(--ac);cursor:pointer}
+.meta{font-size:12px;color:var(--faint);margin-left:auto;font-variant-numeric:tabular-nums}
+@media(max-width:760px){.editors{grid-template-columns:1fr}.editors .fld textarea{min-height:200px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧾 JSON 格式化</h1><p class="sub">格式化 / 压缩 / 校验，报错精确到行列</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">编辑</h2>
+      <div class="editors">
+        <div class="fld">
+          <label for="in">输入</label>
+          <textarea id="in" class="mono" spellcheck="false" placeholder='{"name":"红石","tags":["mc","web"],"ok":true}'></textarea>
+        </div>
+        <div class="fld">
+          <label for="out">输出</label>
+          <textarea id="out" class="mono" spellcheck="false" placeholder="处理结果会出现在这里"></textarea>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <div class="fld" style="margin:0;width:132px">
+          <select id="indent" aria-label="缩进">
+            <option value="2">缩进 2 空格</option>
+            <option value="4">缩进 4 空格</option>
+            <option value="tab">缩进 Tab</option>
+          </select>
+        </div>
+        <label class="chk"><input type="checkbox" id="sortKeys">按键名排序</label>
+        <span class="meta" id="meta"></span>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnFormat" type="button">✨ 格式化</button>
+        <button class="btn" id="btnMinify" type="button">📦 压缩</button>
+        <button class="btn" id="btnCheck" type="button">✅ 校验</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制输出</button>
+        <button class="btn" id="btnDownload" type="button">💾 下载</button>
+        <button class="btn ghost" id="btnClear" type="button">🗑 清空</button>
+      </div>
+
+      <div class="status" id="status"><span class="mark">◦</span><span id="statusText">等待输入</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 全部在本地解析，内容不会上传。报错会指出第几行第几列，方便定位漏掉的逗号或引号。
+        快捷键：<code>Ctrl / ⌘ + Enter</code> 格式化。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var inp=$('in'),out=$('out'),status=$('status'),statusText=$('statusText'),meta=$('meta');
+
+function say(kind,text){
+  status.className='status'+(kind?' '+kind:'');
+  status.querySelector('.mark').textContent=kind==='ok'?'✔':kind==='err'?'✖':'◦';
+  statusText.innerHTML=text;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* 把 parse 报错里的 position 换算成行列 */
+function locate(text,pos){
+  var pre=text.slice(0,pos);
+  var line=pre.split('\n').length;
+  var col=pos-(pre.lastIndexOf('\n')+1)+1;
+  return {line:line,col:col};
+}
+function reportError(err,raw){
+  var msg=String(err&&err.message||err);
+  var m=msg.match(/position\s+(\d+)/i);
+  if(m){
+    var p=locate(raw,+m[1]);
+    var near=raw.slice(Math.max(0,+m[1]-18),+m[1]+18).replace(/\n/g,'⏎');
+    say('err','解析失败 · 第 <code>'+p.line+'</code> 行第 <code>'+p.col+'</code> 列<br>'
+      +esc(msg)+'<br>附近内容：<code>'+esc(near)+'</code>');
+  }else{
+    say('err','解析失败 · '+esc(msg));
+  }
+}
+function sortKeys(v){
+  if(Array.isArray(v)) return v.map(sortKeys);
+  if(v&&typeof v==='object'){
+    var o={};
+    Object.keys(v).sort().forEach(function(k){o[k]=sortKeys(v[k]);});
+    return o;
+  }
+  return v;
+}
+function parseInput(){
+  var raw=inp.value;
+  if(!raw.trim()){ say('','先把 JSON 粘贴到左边'); return null; }
+  var obj;
+  try{ obj=JSON.parse(raw); }
+  catch(e){ reportError(e,raw); return null; }
+  return {raw:raw,obj:obj};
+}
+function describe(obj){
+  if(Array.isArray(obj)) return '数组 · '+obj.length+' 项';
+  if(obj&&typeof obj==='object'){
+    var n=Object.keys(obj).length;
+    return '对象 · '+n+' 个键';
+  }
+  return '值 · '+typeof obj;
+}
+function doFormat(){
+  var r=parseInput(); if(!r) return;
+  var obj=$('sortKeys').checked?sortKeys(r.obj):r.obj;
+  var ind=$('indent').value;
+  out.value=JSON.stringify(obj,null,ind==='tab'?'\t':Number(ind));
+  var before=new Blob([r.raw]).size, after=new Blob([out.value]).size;
+  meta.textContent=before+' B → '+after+' B';
+  say('ok','格式化完成 · '+describe(r.obj)+' · '+out.value.length+' 字符');
+  toast('已格式化');
+}
+function doMinify(){
+  var r=parseInput(); if(!r) return;
+  var obj=$('sortKeys').checked?sortKeys(r.obj):r.obj;
+  out.value=JSON.stringify(obj);
+  var before=new Blob([r.raw]).size, after=new Blob([out.value]).size;
+  var saved=before>0?Math.round((1-after/before)*100):0;
+  meta.textContent=before+' B → '+after+' B';
+  say('ok','压缩完成 · '+describe(r.obj)+' · 体积减小 '+(saved>0?saved:0)+'%');
+  toast('已压缩');
+}
+function doCheck(){
+  var r=parseInput(); if(!r) return;
+  say('ok','JSON 合法 · '+describe(r.obj)+' · 共 '+r.raw.length+' 字符');
+  toast('校验通过');
+}
+$('btnFormat').addEventListener('click',doFormat);
+$('btnMinify').addEventListener('click',doMinify);
+$('btnCheck').addEventListener('click',doCheck);
+$('btnCopy').addEventListener('click',function(){
+  if(!out.value){toast('输出为空');return;}
+  HS.copy(out.value); toast('已复制');
+});
+$('btnDownload').addEventListener('click',function(){
+  if(!out.value){toast('输出为空');return;}
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([out.value],{type:'application/json'}));
+  a.download='data-'+Date.now()+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+  toast('已下载');
+});
+$('btnClear').addEventListener('click',function(){
+  inp.value='';out.value='';meta.textContent='';say('','等待输入');inp.focus();
+});
+inp.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();doFormat();}
+});
+inp.addEventListener('input',function(){meta.textContent='';});
+})();
+</script>
+</body>
+</html>

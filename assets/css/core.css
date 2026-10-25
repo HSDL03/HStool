@@ -625,5 +625,50 @@ select.select{
 @media print{
   .topbar,.decor,.statuspill,.overlay,.toast,.cmdk,.foot .fr,.toolbar,.iconbtn{display:none!important}
   body{padding-top:0;background:#fff;color:#000}
-  .card{break-inside:avoid}
+  .card,.panel{break-inside:avoid}
 }
+
+/* ── 工具页通用排版（tools/*.html 共用）──────────────────────────────────
+   .panel 是静态卡片，和首页可点击的 .card 分开，避免继承 hover 位移。 */
+.tool{max-width:920px;margin:0 auto;padding-top:26px}
+.panel{
+  position:static;display:block;overflow:visible;transform:none;
+  padding:18px;margin-bottom:16px;
+  background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+}
+.panel::before{display:none}
+.panel:hover{transform:none;border-color:var(--bd2);box-shadow:var(--bevel)}
+[data-theme^="github-"] .panel{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
+.panel-title{
+  display:flex;align-items:center;gap:8px;margin:0 0 13px;
+  font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+}
+.panel-title::before{content:"";width:8px;height:8px;background:var(--ac);box-shadow:var(--bevel);flex:none}
+[data-theme^="github-"] .panel-title::before{border-radius:50%;box-shadow:none}
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;min-width:0}
+.fld:last-child{margin-bottom:0}
+.fld label{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.fld textarea,.fld input,.fld select{
+  font-family:inherit;font-size:14px;color:var(--text);background:var(--bg);width:100%;
+  border:2px solid var(--bd2);border-radius:var(--r);outline:none;padding:8px 11px;
+  box-shadow:var(--bevel);transition:border-color .15s,box-shadow .15s;
+}
+[data-theme^="github-"] .fld textarea,[data-theme^="github-"] .fld input,[data-theme^="github-"] .fld select{
+  border-width:1px;box-shadow:none;
+}
+.fld textarea{resize:vertical;min-height:96px;line-height:1.65}
+.fld textarea:focus,.fld input:focus,.fld select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.fld .mono,.fld textarea.mono,input.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.tip{font-size:12.5px;color:var(--muted);line-height:1.7;padding:10px 12px;background:var(--bg3);border-left:3px solid var(--ac);border-radius:var(--r)}
+.tip code{font-family:var(--mono);font-size:12px;padding:1px 5px;background:var(--bg);border:1px solid var(--bd);border-radius:4px}
+/* 分段切换 */
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--bg3);border:2px solid var(--bd2);border-radius:var(--r)}
+[data-theme^="github-"] .seg{border-width:1px}
+.seg button{
+  font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;
+  padding:5px 12px;background:transparent;border:0;border-radius:calc(var(--r) - 2px);transition:.15s;
+}
+.seg button:hover{color:var(--text);background:var(--bg2)}
+.seg button[aria-pressed="true"]{background:var(--ac);color:var(--on-ac)}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}

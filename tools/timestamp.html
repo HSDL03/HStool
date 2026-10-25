@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时间戳转换 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.now{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.big{
+  padding:14px 16px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);cursor:pointer;transition:border-color .15s,transform .1s;
+}
+.big:hover{border-color:var(--ac)}
+.big:active{transform:translateY(1px)}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.15rem,3.6vw,1.6rem);font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:76px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+@media(max-width:640px){.now{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>⏱ 时间戳转换</h1><p class="sub">Unix 时间戳 ↔ 本地时间 · 秒 / 毫秒都能认</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">现在</h2>
+      <div class="now">
+        <div class="big" id="nowSec" role="button" tabindex="0" title="点击复制">
+          <em>秒级时间戳</em><b>—</b><small>点击复制</small>
+        </div>
+        <div class="big" id="nowMs" role="button" tabindex="0" title="点击复制">
+          <em>毫秒时间戳</em><b>—</b><small>点击复制</small>
+        </div>
+      </div>
+      <div class="hint" id="zone">本地时区 —</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">时间戳 → 时间</h2>
+      <div class="fld">
+        <label for="tsIn">时间戳（10 位按秒，12 位以上按毫秒）</label>
+        <input id="tsIn" class="mono" spellcheck="false" autocomplete="off" placeholder="1761350400">
+      </div>
+      <div id="tsResult">
+        <div class="kv"><span>本地</span><b id="rLocal">—</b></div>
+        <div class="kv"><span>UTC</span><b id="rUtc">—</b></div>
+        <div class="kv"><span>相对</span><b id="rRel">—</b></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnFillNow" type="button">用当前时间戳</button>
+        <button class="btn" id="btnCopyLocal" type="button">📋 复制本地时间</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">时间 → 时间戳</h2>
+      <div class="fld">
+        <label for="dtIn">本地日期时间</label>
+        <input id="dtIn" type="datetime-local" step="1">
+      </div>
+      <div class="kv"><span>秒</span><b id="rSec">—</b></div>
+      <div class="kv"><span>毫秒</span><b id="rMs">—</b></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnConv" type="button">换算</button>
+        <button class="btn" id="btnCopyMs" type="button">📋 复制毫秒</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 时间戳按 UTC 计，和时区无关；显示时换算成本机时区。11 位数字（2286 年以后）按毫秒处理，
+        避免和秒混淆。<code>秒 → 毫秒</code> 就是末尾补三个 0。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var nowSecEl=$('nowSec'),nowMsEl=$('nowMs'),zoneEl=$('zone');
+var tsIn=$('tsIn'),rLocal=$('rLocal'),rUtc=$('rUtc'),rRel=$('rRel');
+var dtIn=$('dtIn'),rSec=$('rSec'),rMs=$('rMs');
+
+function p2(n){return (n<10?'0':'')+n;}
+function fmtLocal(d){
+  var w=['日','一','二','三','四','五','六'][d.getDay()];
+  return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '
+        +p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())+' 周'+w;
+}
+function fmtUtc(d){
+  return d.getUTCFullYear()+'-'+p2(d.getUTCMonth()+1)+'-'+p2(d.getUTCDate())+' '
+        +p2(d.getUTCHours())+':'+p2(d.getUTCMinutes())+':'+p2(d.getUTCSeconds())+' UTC';
+}
+function rel(d){
+  var diff=Date.now()-d.getTime();
+  var abs=Math.abs(diff),unit,val;
+  if(abs<60000){val=Math.round(abs/1000);unit='秒';}
+  else if(abs<3600000){val=Math.round(abs/60000);unit='分钟';}
+  else if(abs<86400000){val=Math.round(abs/3600000);unit='小时';}
+  else if(abs<2592000000){val=Math.round(abs/86400000);unit='天';}
+  else{val=Math.round(abs/2592000000);unit='个月';}
+  if(abs<1000) return '就是现在';
+  return val+' '+unit+(diff>0?'前':'后');
+}
+
+function tick(){
+  var now=Date.now();
+  nowSecEl.querySelector('b').textContent=String(Math.floor(now/1000));
+  nowMsEl.querySelector('b').textContent=String(now);
+  nowSecEl.querySelector('small').textContent=fmtLocal(new Date(now));
+  nowMsEl.querySelector('small').textContent=fmtUtc(new Date(now));
+}
+tick();
+var timer=setInterval(tick,200);
+window.addEventListener('beforeunload',function(){clearInterval(timer);});
+
+/* 时区说明 */
+(function(){
+  var off=-new Date().getTimezoneOffset();
+  var sign=off>=0?'+':'-';
+  var h=Math.floor(Math.abs(off)/60),m=Math.abs(off)%60;
+  var name='UTC'+sign+h+(m?':'+p2(m):'');
+  try{ name=name+' · '+(Intl.DateTimeFormat().resolvedOptions().timeZone||''); }catch(e){}
+  zoneEl.textContent='本地时区 '+name;
+})();
+
+function parseTs(str){
+  var t=String(str).trim();
+  if(!/^-?\d{1,16}$/.test(t)) return null;
+  var digits=t.replace('-','').length;
+  var ms=digits>=12?Number(t):Number(t)*1000;
+  var d=new Date(ms);
+  if(isNaN(d.getTime())) return null;
+  return {date:d,unit:digits>=12?'毫秒':'秒'};
+}
+function renderTs(){
+  var raw=tsIn.value;
+  if(!raw.trim()){
+    rLocal.textContent='—';rUtc.textContent='—';rRel.textContent='—';
+    return;
+  }
+  var r=parseTs(raw);
+  if(!r){
+    rLocal.textContent='格式不对，只接受数字时间戳';
+    rUtc.textContent='—';rRel.textContent='—';
+    return;
+  }
+  rLocal.textContent=fmtLocal(r.date)+'（按'+r.unit+'解析）';
+  rUtc.textContent=fmtUtc(r.date);
+  rRel.textContent=rel(r.date);
+}
+tsIn.addEventListener('input',renderTs);
+
+function localInputValue(d){
+  return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())
+    +'T'+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds());
+}
+dtIn.value=localInputValue(new Date());
+
+function convert(silent){
+  if(!dtIn.value){ if(!silent) toast('先选一个日期时间'); return; }
+  var d=new Date(dtIn.value);
+  if(isNaN(d.getTime())){ if(!silent) toast('这个时间解析不了'); return; }
+  var ms=d.getTime();
+  rSec.textContent=String(Math.floor(ms/1000));
+  rMs.textContent=String(ms);
+  if(!silent) toast('已换算');
+}
+$('btnConv').addEventListener('click',function(){convert();});
+dtIn.addEventListener('change',function(){convert();});
+
+$('btnFillNow').addEventListener('click',function(){
+  tsIn.value=String(Math.floor(Date.now()/1000));
+  renderTs();
+});
+$('btnCopyLocal').addEventListener('click',function(){
+  var r=parseTs(tsIn.value);
+  if(!r){toast('先填一个有效时间戳');return;}
+  HS.copy(fmtLocal(r.date));toast('已复制本地时间');
+});
+$('btnCopyMs').addEventListener('click',function(){
+  if(!rMs.textContent||rMs.textContent==='—'){toast('先换算一次');return;}
+  HS.copy(rMs.textContent);toast('已复制毫秒时间戳');
+});
+
+function copyNow(el,val){
+  HS.copy(val);
+  toast('已复制 '+val);
+}
+nowSecEl.addEventListener('click',function(){copyNow(nowSecEl,String(Math.floor(Date.now()/1000)));});
+nowMsEl.addEventListener('click',function(){copyNow(nowMsEl,String(Date.now()));});
+[nowSecEl,nowMsEl].forEach(function(el){
+  el.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click();}
+  });
+});
+
+/* 打开就把两侧填成「现在」，省得看到一排占位破折号 */
+tsIn.value=String(Math.floor(Date.now()/1000));
+renderTs();
+convert(true);
+})();
+</script>
+</body>
+</html>

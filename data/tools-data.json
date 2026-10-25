@@ -142,5 +142,53 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-color",
+    "icon": "🎨",
+    "name": "颜色工具",
+    "desc": "HEX · RGB · HSL 互转与对比度",
+    "tag": "工具",
+    "url": "./tools/color.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-json",
+    "icon": "🧾",
+    "name": "JSON 格式化",
+    "desc": "格式化 · 压缩 · 报错定位行列",
+    "tag": "工具",
+    "url": "./tools/json.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-codec",
+    "icon": "🔐",
+    "name": "编解码工具",
+    "desc": "Base64 / URL / HTML 实体 / 十六进制",
+    "tag": "工具",
+    "url": "./tools/codec.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-timestamp",
+    "icon": "⏱",
+    "name": "时间戳转换",
+    "desc": "Unix 时间戳 ↔ 本地时间",
+    "tag": "工具",
+    "url": "./tools/timestamp.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]
