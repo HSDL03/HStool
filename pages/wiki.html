@@ -245,6 +245,91 @@ body{padding-top:56px;background:var(--bg)}
 body[data-fs="s"] .prose{font-size:13.5px}
 body[data-fs="l"] .prose{font-size:16px}
 
+/* ═══════════════════════════════════════════════════════════
+   编辑器：参考 zh.minecraft.wiki 的 MediaWiki 编辑页
+   （页签 编辑 / 工具栏 / 编辑摘要 / 保存页面·显示预览·取消 / 预览提示条）
+   ═══════════════════════════════════════════════════════════ */
+.edit-notice{
+  margin:0 0 16px;padding:9px 14px;font-size:13px;color:var(--muted);
+  background:var(--bg2);border-left:4px solid var(--bd);border-radius:0 var(--r) var(--r) 0;
+}
+.edit-notice b{color:var(--text)}
+.edit-meta{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.edit-meta .fld{
+  display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);min-width:0;
+}
+.edit-meta input{
+  width:170px;height:30px;padding:0 9px;font-family:inherit;font-size:13px;color:var(--text);
+  background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.edit-meta input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+/* 工具栏：仿 WikiEditor 的分组按钮条 */
+.ed-toolbar{
+  display:flex;align-items:center;flex-wrap:wrap;gap:2px;padding:4px 6px;
+  background:var(--bg2);border:1px solid var(--bd);border-bottom:none;
+  border-radius:var(--r) var(--r) 0 0;overflow-x:auto;
+}
+.ed-toolbar .grp{display:flex;align-items:center;gap:2px;padding:0 7px 0 5px}
+.ed-toolbar .grp+.grp{border-left:1px solid var(--bd);margin-left:4px}
+.ed-toolbar button{
+  height:27px;min-width:27px;padding:0 7px;font-family:inherit;font-size:12.5px;font-weight:700;
+  color:var(--muted);background:transparent;border:1px solid transparent;border-radius:4px;
+  cursor:pointer;transition:all .12s;white-space:nowrap;
+}
+.ed-toolbar button:hover{background:var(--bg);color:var(--ac);border-color:var(--bd)}
+.ed-toolbar button:active{transform:translateY(1px)}
+.ed-toolbar button b{font-weight:900}
+.ed-toolbar button i{font-family:Georgia,serif;font-style:italic}
+.ed-toolbar button .ic{font-size:13px}
+#edText{
+  display:block;width:100%;min-height:440px;padding:12px 14px;resize:vertical;
+  font-family:var(--mono,Consolas,monospace);font-size:13px;line-height:1.7;color:var(--text);
+  background:var(--bg);border:1px solid var(--bd);border-radius:0 0 var(--r) var(--r);
+  outline:none;transition:border-color .15s,box-shadow .15s;tab-size:2;
+}
+#edText:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+/* 编辑摘要 + 小编辑（MediaWiki 布局：摘要占主体，小编辑在右侧） */
+.edit-summary{
+  display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin:14px 0 12px;
+}
+.edit-summary .sum{flex:1;min-width:240px}
+.edit-summary label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:700}
+.edit-summary .sum label b{color:var(--text)}
+.edit-summary input[type="text"]{
+  width:100%;height:34px;padding:0 11px;font-family:inherit;font-size:13.5px;color:var(--text);
+  background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.edit-summary input[type="text"]:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.edit-summary .minor{
+  display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);
+  cursor:pointer;user-select:none;padding-bottom:7px;font-weight:700;
+}
+.edit-summary .minor input{accent-color:var(--ac);width:15px;height:15px;cursor:pointer}
+/* 按钮行：保存页面 / 显示预览 / 还原 / 取消 */
+.edit-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:0 0 18px}
+.edit-actions .hint{font-size:11.5px;color:var(--faint)}
+/* 预览区：MediaWiki 用橙色顶线 + 「这是预览」提示 */
+#previewBlock{margin:4px 0 30px;border-top:3px solid #d99a2b;padding-top:10px}
+.pv-note{
+  margin:0 0 10px;padding:7px 12px;font-size:12.5px;font-weight:700;color:var(--muted);
+  background:var(--bg2);border-radius:var(--r);
+}
+.pv-note b{color:var(--text)}
+#previewBlock h2.pv-title{
+  margin:0 0 8px;padding-bottom:.25em;font-size:1.3em;font-weight:700;border-bottom:1px solid var(--bd);
+}
+#previewBody{padding-top:4px}
+/* 编辑帮助（textarea 下的标签对照，仿 MediaWiki 的说明表） */
+details.ed-help{margin:0 0 18px;font-size:13px}
+details.ed-help summary{cursor:pointer;font-weight:700;color:var(--muted);padding:4px 0}
+details.ed-help summary:hover{color:var(--ac)}
+.ed-help table{width:100%;border-collapse:collapse;margin:8px 0 0;font-size:12.5px}
+.ed-help th,.ed-help td{padding:5px 10px;border:1px solid var(--bd);text-align:left;vertical-align:top}
+.ed-help th{background:var(--bg2);font-weight:700}
+.ed-help td:first-child{font-family:var(--mono,Consolas,monospace);white-space:nowrap;color:var(--muted)}
+
 /* 遮罩与移动端 */
 .scrim{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:.2s}
 @media(max-width:980px){
@@ -313,9 +398,10 @@ body[data-fs="l"] .prose{font-size:16px}
       <h3>工具</h3>
       <div class="side-acts">
         <button type="button" id="btnRandom">🎲 随机条目</button>
+        <a href="#/edit/new" id="btnNew">➕ 新建条目</a>
         <button type="button" id="btnCollapse">⇤ 全部收起</button>
         <a href="../index.html">🧰 回工具箱</a>
-        <a href="./admin.html">✏️ 编辑</a>
+        <a href="./admin.html">🗂 管理后台</a>
       </div>
     </div>
   </aside>
@@ -341,7 +427,7 @@ body[data-fs="l"] .prose{font-size:16px}
     <section id="viewArticle" hidden>
       <div class="mw-tabs">
         <span class="on">条目</span>
-        <a href="./admin.html" title="在管理后台编辑">编辑</a>
+        <a href="javascript:void 0" id="tabEdit" title="编辑本条目">编辑</a>
       </div>
       <h1 class="mw-title" id="artTitle"></h1>
       <div class="mw-subline" id="artMeta"></div>
@@ -355,6 +441,86 @@ body[data-fs="l"] .prose{font-size:16px}
       <h1 class="mw-title">搜索结果</h1>
       <div class="mw-subline" id="searchInfo"></div>
       <div id="searchRes"></div>
+    </section>
+
+    <!-- 编辑器（仿 zh.minecraft.wiki 的 MediaWiki 编辑页） -->
+    <section id="viewEdit" hidden>
+      <div class="mw-tabs">
+        <a href="javascript:void 0" id="edBackLink">条目</a>
+        <span class="on">编辑</span>
+      </div>
+      <h1 class="mw-title" id="edTitle">编辑</h1>
+      <div class="edit-notice">
+        <b>在保存之前</b>——请确认改动符合本站约定；保存后会写入 GitHub 仓库的
+        <code>data/wiki-data.json</code>，约 1 分钟后全站生效。
+      </div>
+      <div class="edit-meta">
+        <span class="fld"><span>标题</span><input id="edName" maxlength="40" placeholder="条目标题"></span>
+        <span class="fld"><span>大板块</span><input id="edChapter" maxlength="24" placeholder="如：我的世界"></span>
+        <span class="fld"><span>板块</span><input id="edSection" maxlength="24" placeholder="如：生存指南"></span>
+        <span class="fld"><span>分类</span><input id="edCategory" maxlength="24" placeholder="如：生物"></span>
+      </div>
+      <div class="ed-toolbar" id="edToolbar">
+        <span class="grp">
+          <button type="button" data-tag="strong" title="加粗"><b>B</b></button>
+          <button type="button" data-tag="em" title="斜体"><i>I</i></button>
+          <button type="button" data-tag="s" title="删除线"><span class="ic" style="text-decoration:line-through">S</span></button>
+          <button type="button" data-tag="code" title="代码"><span class="ic">&lt;/&gt;</span></button>
+        </span>
+        <span class="grp">
+          <button type="button" data-tag="h2" title="章节标题（H2）">H2</button>
+          <button type="button" data-tag="h3" title="小标题（H3）">H3</button>
+        </span>
+        <span class="grp">
+          <button type="button" data-tag="ul" title="无序列表"><span class="ic">•≡</span></button>
+          <button type="button" data-tag="ol" title="有序列表"><span class="ic">1≡</span></button>
+        </span>
+        <span class="grp">
+          <button type="button" data-tag="a" title="链接"><span class="ic">🔗</span></button>
+          <button type="button" data-tag="callout" title="提示框"><span class="ic">💡</span></button>
+        </span>
+        <span class="grp">
+          <button type="button" data-tag="clean" title="清除选中格式">清除格式</button>
+        </span>
+        <span class="grp">
+          <button type="button" data-tag="undo" title="撤销"><span class="ic">↶</span></button>
+          <button type="button" data-tag="redo" title="重做"><span class="ic">↷</span></button>
+        </span>
+      </div>
+      <textarea id="edText" spellcheck="false" placeholder="在这里输入条目内容（HTML 源码）…"></textarea>
+      <div class="edit-summary">
+        <div class="sum">
+          <label for="edSummary">编辑摘要<b>（简述本次更改）</b>：</label>
+          <input id="edSummary" type="text" maxlength="120" placeholder="例：补充掉落物说明">
+        </div>
+        <label class="minor"><input type="checkbox" id="edMinor">小编辑</label>
+      </div>
+      <div class="edit-actions">
+        <button type="button" class="btn primary" id="edSave">保存页面</button>
+        <button type="button" class="btn" id="edPreview">显示预览</button>
+        <button type="button" class="btn" id="edRevert">还原</button>
+        <button type="button" class="btn" id="edCancel">取消</button>
+        <span class="hint" id="edState"></span>
+      </div>
+      <details class="ed-help">
+        <summary>编辑帮助：常用标签对照</summary>
+        <table>
+          <tr><th>输入</th><th>输出</th></tr>
+          <tr><td>&lt;strong&gt;文字&lt;/strong&gt;</td><td><strong>粗体文字</strong></td></tr>
+          <tr><td>&lt;em&gt;文字&lt;/em&gt;</td><td><em>斜体文字</em></td></tr>
+          <tr><td>&lt;s&gt;文字&lt;/s&gt;</td><td><s>划掉的文字</s></td></tr>
+          <tr><td>&lt;h2&gt;章节&lt;/h2&gt; / &lt;h3&gt;小节&lt;/h3&gt;</td><td>章节标题（会进目录）</td></tr>
+          <tr><td>&lt;ul&gt;&lt;li&gt;项&lt;/li&gt;&lt;/ul&gt;</td><td>无序列表</td></tr>
+          <tr><td>&lt;a href="https://…"&gt;文字&lt;/a&gt;</td><td><a href="javascript:void 0">链接文字</a></td></tr>
+          <tr><td>&lt;code&gt;代码&lt;/code&gt;</td><td><code>等宽代码</code></td></tr>
+          <tr><td>&lt;div class="callout"&gt;&lt;div&gt;提示&lt;/div&gt;&lt;/div&gt;</td><td>站内提示框</td></tr>
+        </table>
+      </details>
+      <div id="previewBlock" hidden>
+        <div class="pv-note"><b>这是预览！</b>下面的内容还没有保存，点「保存页面」才会写入。</div>
+        <h2 class="pv-title">预览</h2>
+        <div class="prose" id="previewBody"></div>
+      </div>
     </section>
 
     <!-- 加载占位 -->
@@ -475,6 +641,7 @@ body[data-fs="l"] .prose{font-size:16px}
     curId = null;
     $('#viewArticle').hidden = true;
     $('#viewSearch').hidden = true;
+    $('#viewEdit').hidden = true;
     $('#viewHome').hidden = false;
     $('#tocBlock').hidden = true;
     $('#progress').style.width = '0';
@@ -521,7 +688,9 @@ body[data-fs="l"] .prose{font-size:16px}
     curId = id;
     $('#viewHome').hidden = true;
     $('#viewSearch').hidden = true;
+    $('#viewEdit').hidden = true;
     $('#viewArticle').hidden = false;
+    $('#tabEdit').href = '#/edit/' + encodeURIComponent(id);
 
     $('#artTitle').textContent = a.title;
 
@@ -534,7 +703,7 @@ body[data-fs="l"] .prose{font-size:16px}
       '<span>' + words + ' 字 · 约 ' + readMin + ' 分钟</span>' +
       '<span style="margin-left:auto;display:flex;gap:10px">' +
       '<a href="javascript:void 0" id="btnCopyLink" style="color:var(--ac);text-decoration:none">复制链接</a>' +
-      '<a href="./admin.html" style="color:var(--ac);text-decoration:none">编辑</a></span>';
+      '<a href="#/edit/' + encodeURIComponent(id) + '" style="color:var(--ac);text-decoration:none">编辑</a></span>';
 
     var body = $('#artBody');
     body.innerHTML = a.content || '<p class="muted">（这条还没有内容）</p>';
@@ -627,6 +796,7 @@ body[data-fs="l"] .prose{font-size:16px}
     query = q;
     $('#viewHome').hidden = true;
     $('#viewArticle').hidden = true;
+    $('#viewEdit').hidden = true;
     $('#viewSearch').hidden = false;
     $('#tocBlock').hidden = true;
     var res = ARTICLES.map(function (a) {
@@ -648,13 +818,305 @@ body[data-fs="l"] .prose{font-size:16px}
     renderTree();
   }
 
+  /* ═══════════════════════════════════════════════════════════
+     编辑器（仿 zh.minecraft.wiki 的 MediaWiki 编辑页）
+     页签「条目 | 编辑」+ WikiEditor 工具栏 + 编辑摘要 + 保存页面/显示预览/取消
+     ═══════════════════════════════════════════════════════════ */
+  var edId = null, edOriginal = '', edDirty = false;
+  var edUndo = [], edRedo = [];
+
+  function edEls() {
+    return {
+      view: $('#viewEdit'), name: $('#edName'), chapter: $('#edChapter'),
+      section: $('#edSection'), category: $('#edCategory'), text: $('#edText'),
+      title: $('#edTitle'), back: $('#edBackLink'), state: $('#edState'),
+      preview: $('#previewBlock')
+    };
+  }
+  function hideAllViews() {
+    $('#viewHome').hidden = true;
+    $('#viewArticle').hidden = true;
+    $('#viewSearch').hidden = true;
+    $('#viewEdit').hidden = true;
+  }
+  function openEdit(id) {
+    var e = edEls();
+    var a = id ? findArticle(id) : null;
+    if (id && !a) { location.hash = '#/'; return; }
+    hideAllViews();
+    $('#tocBlock').hidden = true;
+    e.view.hidden = false;
+    edId = id || null;
+    var src = a || { title: '', chapter: '', section: '', category: '', content: '' };
+    e.name.value = src.title;
+    e.chapter.value = src.chapter === '未分类大板块' ? '' : src.chapter;
+    e.section.value = src.section === '未分类板块' ? '' : src.section;
+    e.category.value = src.category === '未分类' ? '' : src.category;
+    e.text.value = src.content;
+    e.title.textContent = a ? '编辑“' + a.title + '”' : '创建新条目';
+    e.back.href = a ? '#/' + encodeURIComponent(a.id) : '#/';
+    e.back.textContent = a ? '条目' : '返回';
+    edOriginal = e.text.value;
+    edDirty = false;
+    edUndo = []; edRedo = [];
+    e.preview.hidden = true;
+    $('#edSummary').value = '';
+    $('#edMinor').checked = false;
+    $('#edState').textContent = '';
+    $('#edSave').disabled = false;
+    renderTree();
+    document.title = (a ? '编辑“' + a.title + '”' : '创建新条目') + ' · 红石Wiki';
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+  function closeEditSilent() { edDirty = false; }
+  function edCancel() {
+    if (!edGuard()) return;
+    location.hash = edId ? '#/' + encodeURIComponent(edId) : '#/';
+  }
+  function edMarkDirty() {
+    edDirty = (edEls().text.value !== edOriginal);
+    $('#edState').textContent = edDirty ? '有未保存的更改' : '';
+  }
+
+  /* ── 工具栏：包标签 / 撤销重做 ── */
+  function edWrap(before, after, ph) {
+    var t = edEls().text;
+    var s = t.selectionStart, e = t.selectionEnd;
+    var sel = t.value.slice(s, e) || ph || '';
+    edUndo.push(t.value); if (edUndo.length > 80) edUndo.shift(); edRedo = [];
+    t.value = t.value.slice(0, s) + before + sel + after + t.value.slice(e);
+    var cursor = s + before.length + sel.length;
+    t.focus();
+    t.setSelectionRange(cursor, cursor);
+    edMarkDirty();
+  }
+  function edList(tag) {
+    var t = edEls().text;
+    var s = t.selectionStart, e = t.selectionEnd;
+    var seg = t.value.slice(s, e) || '列表项';
+    edUndo.push(t.value); if (edUndo.length > 80) edUndo.shift(); edRedo = [];
+    var lines = seg.split('\n').map(function (l) { return '  <li>' + l.replace(/^\s+|\s+$/g, '') + '</li>'; }).join('\n');
+    var out = '<' + tag + '>\n' + lines + '\n</' + tag + '>';
+    t.value = t.value.slice(0, s) + out + t.value.slice(e);
+    t.focus();
+    edMarkDirty();
+  }
+  function edClean() {
+    var t = edEls().text;
+    var s = t.selectionStart, e = t.selectionEnd;
+    if (s === e) return;
+    edUndo.push(t.value); if (edUndo.length > 80) edUndo.shift(); edRedo = [];
+    t.value = t.value.slice(0, s) + t.value.slice(s, e).replace(/<[^>]+>/g, '') + t.value.slice(e);
+    t.focus();
+    edMarkDirty();
+  }
+  function edUndoFn() {
+    var t = edEls().text;
+    if (!edUndo.length) return;
+    edRedo.push(t.value);
+    t.value = edUndo.pop();
+    t.focus();
+    edMarkDirty();
+  }
+  function edRedoFn() {
+    var t = edEls().text;
+    if (!edRedo.length) return;
+    edUndo.push(t.value);
+    t.value = edRedo.pop();
+    t.focus();
+    edMarkDirty();
+  }
+  $('#edToolbar').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-tag]');
+    if (!b) return;
+    var tag = b.getAttribute('data-tag');
+    if (tag === 'strong') edWrap('<strong>', '</strong>', '粗体文字');
+    else if (tag === 'em') edWrap('<em>', '</em>', '斜体文字');
+    else if (tag === 's') edWrap('<s>', '</s>', '划掉的文字');
+    else if (tag === 'code') edWrap('<code>', '</code>', '代码');
+    else if (tag === 'h2') edWrap('<h2>', '</h2>', '章节标题');
+    else if (tag === 'h3') edWrap('<h3>', '</h3>', '小标题');
+    else if (tag === 'ul') edList('ul');
+    else if (tag === 'ol') edList('ol');
+    else if (tag === 'a') edWrap('<a href="https://">', '</a>', '链接文字');
+    else if (tag === 'callout') edWrap('<div class="callout">\n  <div>', '</div>\n</div>', '提示内容');
+    else if (tag === 'clean') edClean();
+    else if (tag === 'undo') edUndoFn();
+    else if (tag === 'redo') edRedoFn();
+  });
+  document.addEventListener('keydown', function (e) {
+    if ($('#viewEdit').hidden) return;
+    if (document.activeElement !== $('#edText')) return;
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); edSave(); }
+  });
+  $('#edText').addEventListener('input', edMarkDirty);
+
+  /* ── 预览 ── */
+  function edShowPreview() {
+    var e = edEls();
+    var html = e.text.value;
+    e.preview.hidden = false;
+    var body = $('#previewBody');
+    body.innerHTML = html || '<p class="muted">（空内容）</p>';
+    body.querySelectorAll('script,style,iframe,object,embed').forEach(function (n) { n.remove(); });
+    e.preview.scrollIntoView({ behavior: HS.reduced ? 'auto' : 'smooth', block: 'start' });
+  }
+  $('#edPreview').addEventListener('click', edShowPreview);
+  $('#edCancel').addEventListener('click', edCancel);
+  $('#edRevert').addEventListener('click', function () {
+    if (!edOriginal && !edEls().text.value) return;
+    if (!confirm('放弃全部改动，还原到打开时的内容？')) return;
+    edUndo.push($('#edText').value);
+    $('#edText').value = edOriginal;
+    edMarkDirty();
+    $('#previewBlock').hidden = true;
+  });
+
+  /* ── GitHub 保存 ── */
+  function ghCfg() {
+    try {
+      var v = localStorage.getItem('hs-admin-gh');
+      if (!v) return null;
+      var g = JSON.parse(v);
+      return (g && g.token && g.owner && g.repo) ? g : null;
+    } catch (err) { return null; }
+  }
+  function b64enc(str) {
+    var b = new TextEncoder().encode(str), o = '';
+    for (var i = 0; i < b.length; i++) o += String.fromCharCode(b[i]);
+    return btoa(o);
+  }
+  function b64dec(t) {
+    var bin = atob(String(t).replace(/\s/g, '')), u = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(u);
+  }
+  function ghUrl(g, path) {
+    return 'https://api.github.com/repos/' + encodeURIComponent(g.owner) + '/' +
+      encodeURIComponent(g.repo) + '/contents/' + path.split('/').map(encodeURIComponent).join('/');
+  }
+  function ghHeaders(g) {
+    return {
+      'Authorization': 'Bearer ' + g.token,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    };
+  }
+  function friendlyGh(m) {
+    m = m || '';
+    if (/Bad credentials|Requires authentication|401/i.test(m)) return 'Token 无效或已过期，请到管理后台重新连接';
+    if (/rate limit/i.test(m)) return 'GitHub 接口限流，等一会儿再试';
+    if (/not accessible|Resource not accessible/i.test(m)) return 'Token 权限不足：需要仓库的 Contents 读写权限';
+    if (/does not match|sha/i.test(m)) return '数据刚被别处修改过（sha 冲突），刷新页面后再保存';
+    if (/Not Found|404/i.test(m)) return '仓库或数据文件不存在，请到管理后台检查配置';
+    if (/(Failed to fetch|NetworkError|network)/i.test(m)) return '网络不通：无法连上 GitHub';
+    return m;
+  }
+  function slugId(title, used) {
+    var base = String(title).toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-').replace(/^-+|-+$/g, '') || 'entry';
+    var id = base, n = 2;
+    while (used[id]) { id = base + '-' + n; n++; }
+    return id;
+  }
+  function edSave() {
+    var e = edEls();
+    var title = e.name.value.trim();
+    if (!title) { HS.toast('请先填写条目标题', { icon: '⚠️' }); e.name.focus(); return; }
+    var g = ghCfg();
+    if (!g) {
+      if (confirm('还没有连接 GitHub，无法直接保存。\n现在去管理后台配置 Token？')) location.href = './admin.html';
+      return;
+    }
+    var path = (typeof g.wikiPath === 'string' && g.wikiPath.trim()) ? g.wikiPath.trim() : 'data/wiki-data.json';
+    var summary = $('#edSummary').value.trim();
+    var minor = $('#edMinor').checked;
+    var commit = 'wiki: ' + (edId ? '编辑 ' : '创建 ') + title + (summary ? '（' + summary + '）' : '') + (minor ? ' [小编辑]' : '');
+    var btn = $('#edSave');
+    btn.disabled = true;
+    $('#edState').textContent = '正在保存…';
+    var headers = ghHeaders(g);
+    /* 先拿当前文件的 sha（不存在则新建文件） */
+    fetch(ghUrl(g, path) + '?ref=' + encodeURIComponent(g.branch || 'main'), { headers: headers })
+      .then(function (r) {
+        if (r.status === 404) return null;
+        if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.message || ('HTTP ' + r.status)); });
+        return r.json();
+      })
+      .then(function (info) {
+        var arr = info ? (function () {
+          try {
+            var parsed = JSON.parse(b64dec(info.content || ''));
+            return Array.isArray(parsed) ? parsed : [];
+          } catch (err) { throw new Error('仓库里的 wiki-data.json 不是合法数组，请到管理后台检查'); }
+        })() : [];
+        /* 写入本条 */
+        var newEntry = {
+          id: edId || slugId(title, arr.reduce(function (m, it) { m[it.id] = 1; return m; }, {})),
+          title: title,
+          chapter: e.chapter.value.trim() || '未分类大板块',
+          section: e.section.value.trim() || '未分类板块',
+          category: e.category.value.trim() || '未分类',
+          content: e.text.value
+        };
+        var replaced = false;
+        for (var i = 0; i < arr.length; i++) {
+          if (arr[i].id === newEntry.id) { arr[i] = newEntry; replaced = true; break; }
+        }
+        if (!replaced) arr.push(newEntry);
+        var body = {
+          message: commit,
+          content: b64enc(JSON.stringify(arr, null, 2)),
+          branch: g.branch || 'main'
+        };
+        if (info && info.sha) body.sha = info.sha;
+        var h2 = ghHeaders(g); h2['Content-Type'] = 'application/json';
+        return fetch(ghUrl(g, path), { method: 'PUT', headers: h2, body: JSON.stringify(body) })
+          .then(function (r) {
+            if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.message || ('HTTP ' + r.status)); });
+            return newEntry;
+          });
+      })
+      .then(function (entry) {
+        /* 更新内存数据并跳回阅读 */
+        var a = findArticle(entry.id);
+        if (a) {
+          a.title = entry.title; a.chapter = entry.chapter;
+          a.section = entry.section; a.category = entry.category; a.content = entry.content;
+        } else {
+          ARTICLES.push(entry);
+        }
+        buildTree();
+        edDirty = false;
+        HS.toast('已保存，约 1 分钟后全站生效', { icon: '✅' });
+        location.hash = '#/' + encodeURIComponent(entry.id);
+      })
+      .catch(function (err) {
+        $('#edState').textContent = '';
+        HS.toast(friendlyGh(err && err.message), { icon: '⚠️' });
+      })
+      .finally(function () { btn.disabled = false; });
+  }
+  $('#edSave').addEventListener('click', edSave);
+
   /* ── 路由 ── */
   function route() {
     var h = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
     if (!h) { renderHome(); return; }
     if (/^h-\d+$/.test(h)) return;   // 目录锚点
+    var m = h.match(/^edit\/(.+)$/);
+    if (m) { openEdit(m[1] === 'new' ? null : m[1]); return; }
+    closeEditSilent();
     renderArticle(h);
   }
+
+  /* 未保存离开守卫 */
+  function edGuard() {
+    if (!edDirty) return true;
+    return confirm('编辑内容还没有保存，确定离开吗？');
+  }
+  window.addEventListener('beforeunload', function (e) {
+    if (edDirty) { e.preventDefault(); e.returnValue = ''; }
+  });
 
   /* ── 阅读进度 ── */
   function updateProgress() {
@@ -742,7 +1204,16 @@ body[data-fs="l"] .prose{font-size:16px}
 
   /* ── 启动 ── */
   applyFs(fs);
-  window.addEventListener('hashchange', route);
+  window.addEventListener('hashchange', function () {
+    var h = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+    var goingEdit = /^edit\//.test(h);
+    /* 正在编辑且有未保存改动时，离开前确认 */
+    if (!goingEdit && !$('#viewEdit').hidden && edDirty && !edGuard()) {
+      location.hash = '#/edit/' + (edId ? encodeURIComponent(edId) : 'new');
+      return;
+    }
+    route();
+  });
 
   HS.data('wiki-data')
     .then(function (data) {
