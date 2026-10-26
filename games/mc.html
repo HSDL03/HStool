@@ -30,21 +30,23 @@ canvas#game3d{display:block}
 }
 /* 水下滤镜：压住画面，配合蓝色雾 */
 #waterOverlay{position:fixed;inset:0;z-index:14;display:none;pointer-events:none;background:rgba(26,86,148,.28)}
-#hudTop{position:fixed;top:calc(8px + env(safe-area-inset-top));left:10px;z-index:15;pointer-events:none;display:none;flex-direction:column;gap:2px}
-/* 原版 HUD 文字：白字 + 硬黑描边，没有底板 */
+/* 调试信息（F3）：原版左上角等宽字体 + 半透明黑底，默认不显示 */
+#hudTop{position:fixed;top:2px;left:2px;z-index:19;pointer-events:none;display:none;flex-direction:column;gap:0;font-family:Consolas,"Courier New",monospace}
+#hudTop.show{display:flex}
 .hud-card{
-  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;font-weight:600;
-  color:#fff;padding:0 2px;white-space:nowrap;text-shadow:2px 2px 0 #3f3f3f;
+  font-size:12px;line-height:15px;font-weight:400;white-space:nowrap;
+  color:#e6e6e6;background:rgba(0,0,0,.42);padding:0 4px;
+  text-shadow:1px 1px 0 rgba(0,0,0,.75);
 }
-.hud-card .dot{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:middle;box-shadow:1px 1px 0 rgba(0,0,0,.6)}
+.hud-card .dot{display:inline-block;width:8px;height:8px;margin-right:4px;vertical-align:middle}
 .hud-card.mode{color:#ffe985}
 .hud-card.online{color:#a8e2ff}
 #playerList{position:fixed;top:calc(14px + env(safe-area-inset-top));right:18px;z-index:15;pointer-events:none;display:none;flex-direction:column;gap:3px;max-height:40vh;overflow:hidden}
 .player-tag{font-family:monospace;font-size:12px;color:#fff;background:rgba(30,30,20,.65);padding:3px 10px;text-shadow:1px 1px 0 rgba(0,0,0,.8);white-space:nowrap}
 .player-tag.me{color:#8fd94f}
-/* 原版热键栏：贴图 182×22 逻辑像素，这里 2 倍渲染 */
+/* 原版热键栏：贴图 182×22 逻辑像素，2 倍渲染，底边贴屏幕底 */
 #hotbar{
-  position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  position:fixed;bottom:env(safe-area-inset-bottom,0px);left:50%;transform:translateX(-50%);
   width:364px;height:44px;padding:2px;display:none;gap:0;z-index:15;
   background:url(../assets/mc-gui/hotbar.png) center/100% 100% no-repeat;
   image-rendering:pixelated;
@@ -54,16 +56,24 @@ canvas#game3d{display:block}
   background:none;border:0;box-shadow:none;cursor:pointer;overflow:visible;flex-shrink:0;
 }
 .slot canvas{width:32px;height:32px;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(1px 1px 0 rgba(0,0,0,.45))}
-.slot .count{position:absolute;bottom:-1px;right:1px;font-family:monospace;font-size:13px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #3f3f3f}
+.slot .count{position:absolute;bottom:0;right:2px;font-family:monospace;font-size:13px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #3f3f3f}
+/* 选中框：原版 24×24 贴图罩住 20×20 槽位，2 倍后 48×48、左上各外扩 4px */
 .slot.active::after{
-  content:'';position:absolute;left:-3px;top:-3px;width:46px;height:46px;pointer-events:none;
+  content:'';position:absolute;left:-4px;top:-4px;width:48px;height:46px;pointer-events:none;
   background:url(../assets/mc-gui/hotbar_selection.png) center/100% 100% no-repeat;
   image-rendering:pixelated;
 }
-/* 原版 HUD 对齐：血条在热键栏左上、饥饿条在右上，都贴着经验条上方 */
-#healthBar,#hungerBar{position:fixed;height:18px;z-index:15;pointer-events:none;display:none;image-rendering:pixelated}
-#healthBar{left:calc(50% - 180px);bottom:calc(62px + env(safe-area-inset-bottom))}
-#hungerBar{right:calc(50% - 180px);bottom:calc(62px + env(safe-area-inset-bottom))}
+/* 经验条：原版 182×5，2 倍后 364×10，紧贴热键栏上沿 */
+#xpBar{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(46px + env(safe-area-inset-bottom,0px));
+  width:364px;height:10px;z-index:15;pointer-events:none;display:none;image-rendering:pixelated;
+}
+#xpBar canvas{display:block;width:364px;height:10px;image-rendering:pixelated}
+/* 生命/饥饿：原版 81×9 一排（10 个图标、每格 8px），2 倍后 162×18，与热键栏左右边缘对齐 */
+#healthBar,#hungerBar{position:fixed;height:18px;width:162px;z-index:15;pointer-events:none;display:none;image-rendering:pixelated}
+#healthBar{left:calc(50% - 182px);bottom:calc(58px + env(safe-area-inset-bottom,0px))}
+#hungerBar{right:calc(50% - 182px);bottom:calc(58px + env(safe-area-inset-bottom,0px))}
 #healthBar canvas,#hungerBar canvas{display:block;height:18px;image-rendering:pixelated}
 /* ═══ 原版物品栏窗口：左侧 2×2 合成 + 结果，右侧护甲列 + 玩家立绘 ═══ */
 .vanilla-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:10px 12px 4px}
@@ -95,20 +105,23 @@ canvas#game3d{display:block}
 #mapCanvas{display:block;image-rendering:pixelated;border:2px solid #565656;background:#8b8b8b}
 .map-foot{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:12px}
 .map-foot .sp{flex:1}
-#tips{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));color:#fff;font-size:12.5px;line-height:1.8;background:rgba(0,0,0,.42);padding:6px 10px;border:0;pointer-events:none;z-index:15;display:none;text-shadow:1px 1px 0 rgba(0,0,0,.85);max-width:46vw}
+#tips{position:fixed;right:16px;bottom:calc(96px + env(safe-area-inset-bottom));color:#fff;font-size:12.5px;line-height:1.8;background:rgba(0,0,0,.42);padding:6px 10px;border:0;pointer-events:none;z-index:15;display:none;text-shadow:1px 1px 0 rgba(0,0,0,.85);max-width:46vw;transition:opacity .8s}
+#tips.fade{opacity:0}
 #tips b{color:#ffe12b}
-#chatBox{position:fixed;left:12px;bottom:calc(112px + env(safe-area-inset-bottom));width:460px;max-width:60vw;z-index:22;pointer-events:none;display:none;flex-direction:column;gap:3px;max-height:220px;overflow:hidden;font-size:13px}
+/* 聊天：原版左下角，贴着热键栏上方，每行独立半透明黑底 */
+#chatBox{position:fixed;left:2px;bottom:calc(78px + env(safe-area-inset-bottom));width:640px;max-width:62vw;z-index:22;pointer-events:none;display:none;flex-direction:column;align-items:flex-start;gap:1px;max-height:240px;overflow:hidden;font-size:14px}
 #chatBox.visible{display:flex}
-.chat-msg{background:rgba(30,30,20,.65);color:#fff;padding:4px 10px;text-shadow:1px 1px 0 rgba(0,0,0,.8);font-size:13px;line-height:1.35;word-wrap:break-word;pointer-events:auto}
+.chat-msg{display:inline-block;max-width:100%;background:rgba(0,0,0,.5);color:#fff;padding:1px 4px;text-shadow:1px 1px 0 rgba(0,0,0,.9);font-size:14px;line-height:17px;word-wrap:break-word;pointer-events:auto}
 .chat-msg.system{color:#ffe9a0}.chat-msg.error{color:#ff8080}.chat-msg.success{color:#a0ffa0}
 .chat-msg .sender{color:#8fd94f;font-weight:bold}
-#chatInput{position:fixed;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));width:460px;max-width:60vw;z-index:23;display:none;background:rgba(0,0,0,.7);border:2px solid var(--bd2);padding:6px 10px}
+#chatInput{position:fixed;left:2px;bottom:calc(78px + env(safe-area-inset-bottom));width:640px;max-width:62vw;z-index:23;display:none;background:rgba(0,0,0,.55);border:0;padding:2px 4px}
 #chatInput.visible{display:block}
-#chatInput .prefix{color:#8fd94f;font-family:monospace;font-weight:bold;margin-right:6px;font-size:14px}
-#chatInput input{background:transparent;border:none;outline:none;color:#fff;font-family:inherit;font-size:13.5px;width:calc(100% - 20px)}
-#toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:50;padding:5px 14px;background:rgba(0,0,0,.45);border:0;color:#fff;font-size:13.5px;letter-spacing:1px;text-shadow:2px 2px 0 #3f3f3f;pointer-events:none;opacity:0;transition:opacity .2s}
+#chatInput .prefix{color:#aaa;font-family:monospace;font-weight:bold;margin-right:4px;font-size:14px}
+#chatInput input{background:transparent;border:none;outline:none;color:#fff;font-family:inherit;font-size:14px;width:calc(100% - 16px)}
+/* 动作栏（原版 actionbar）：热键栏正上方居中，纯白字描边，没有底板 */
+#toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:50;padding:0;background:none;border:0;color:#fff;font-size:14px;letter-spacing:0;text-align:center;text-shadow:2px 2px 0 #3f3f3f;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap}
 #toast.show{opacity:1}
-#chunkLoading{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:18;pointer-events:none;display:none;align-items:center;gap:12px;padding:8px 18px;background:rgba(30,30,20,.75);border:2px solid #8fd94f;color:#fff;font-size:12px;font-family:monospace}
+#chunkLoading{position:fixed;top:calc(6px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:18;pointer-events:none;display:none;align-items:center;gap:10px;padding:5px 14px;background:rgba(0,0,0,.5);border:0;color:#fff;font-size:12px;font-family:monospace}
 #chunkLoading.show{display:flex}
 #chunkLoading .spinner{width:16px;height:16px;border:2px solid rgba(143,217,79,.3);border-top-color:#8fd94f;border-radius:50%;animation:cs .8s linear infinite}
 @keyframes cs{to{transform:rotate(360deg)}}
@@ -325,6 +338,7 @@ canvas#game3d{display:block}
 <div id="crosshair"></div>
 <div id="healthBar"></div>
 <div id="hungerBar"></div>
+<div id="xpBar"></div>
 <div id="hotbar"></div>
 
 <div id="chunkLoading">
@@ -336,7 +350,7 @@ canvas#game3d{display:block}
 <div id="tips">
   <b>WASD</b> 移动 · <b>空格</b> 跳跃 · <b>双击W</b> 疾跑<br>
   <b>左键</b> 挖掘 · <b>右键</b> 放置 · <b>E</b> 物品栏 · <b>Q</b> 丢弃<br>
-  <b>M</b> 切换模式 · <b>双击空格</b> 飞行 · <b>T</b> 聊天 · <b>/</b> 指令 · <b>ESC</b> 菜单
+  <b>M</b> 切换模式 · <b>双击空格</b> 飞行 · <b>T</b> 聊天 · <b>/</b> 指令 · <b>F3</b> 坐标 · <b>ESC</b> 菜单
 </div>
 
 <div id="chatBox"></div>
@@ -655,6 +669,21 @@ canvas#game3d{display:block}
   };
   /* 22 = 水源；23~29 = 流动水（level 1~7，越远越稀） */
   function isWaterId(b){return b>=22&&b<=29;}
+  /* ═══ 红石系统方块 ═══
+     30 红石线（信号强度存 wirePower，0~15）
+     31 红石火把（常亮，输出 15）
+     32 拉杆·关 / 33 拉杆·开
+     34 仅作图标占位；红石灯本体是 318，亮灭在渲染时按供电即时判定 */
+  function isDecorId(b){return b>=30&&b<=33;}
+  function isRsSource(b){return b===33||b===31||b===317||b===186;}
+  /* 掉落映射：装饰方块破坏后还原成对应物品；红石矿石掉红石粉 */
+  var RS_DROPS={30:1011,31:327,32:326,33:326,34:318,167:1011,178:1011};
+  function rsDropCount(b){return (b===167||b===178)?4:1;}
+  BLOCKS[30]={name:'红石粉',top:294,side:294,bottom:294,cat:'redstone'};
+  BLOCKS[31]={name:'红石火把',top:242,side:242,bottom:242,cat:'redstone'};
+  BLOCKS[32]={name:'拉杆',top:241,side:241,bottom:241,cat:'redstone'};
+  BLOCKS[33]={name:'拉杆',top:241,side:241,bottom:241,cat:'redstone'};
+  BLOCKS[34]={name:'红石灯',top:446,side:446,bottom:446,cat:'redstone'};
   var ITEMS={};
   if(window.MC_ITEMS){
     for(var _ik in MC_ITEMS){
@@ -774,7 +803,8 @@ canvas#game3d{display:block}
   var BLOCK_HARDNESS={
     1:0.6,2:0.5,3:1.5,4:2.0,5:0.2,6:0.5,7:-1,8:2.0,
     9:2.0,10:0.5,11:0.8,12:0.4,13:2.0,14:0.2,15:0.5,
-    16:3.0,17:3.0,18:3.0,19:3.0,20:3.0,21:3.0
+    16:3.0,17:3.0,18:3.0,19:3.0,20:3.0,21:3.0,
+    30:0.05,31:0.05,32:0.1,33:0.1,34:3.0
   };
   function blockHardness(id){
     if(BLOCK_HARDNESS[id]!==undefined)return BLOCK_HARDNESS[id];
@@ -900,6 +930,9 @@ canvas#game3d{display:block}
       for(var i=0;i<20;i++)pxf(g,(Math.random()*15)|0,(Math.random()*16)|0,2,1,'rgba(126,184,242,0.34)');
       for(var j=0;j<12;j++)pxf(g,(Math.random()*16)|0,(Math.random()*15)|0,1,2,'rgba(26,66,146,0.32)');
     });
+    /* 红石灯·亮 用原版 redstone_lamp_on 贴图（MC_TEX 里单独占一格），
+       以前是在 446 号格上手工叠暖光，但 446 已被 item_name_tag 占用，
+       会把命名牌图标画成橙块——已移除。 */
   })();
 
   /* ═══ 噪声 ═══ */
@@ -1005,7 +1038,7 @@ canvas#game3d{display:block}
     return false;
   }
 
-  var chunkData=new Map(),chunkMeshes=new Map(),waterMeshes=new Map(),dirtyChunks=new Set(),loadingIndicators=new Map();
+  var chunkData=new Map(),chunkMeshes=new Map(),waterMeshes=new Map(),decorMeshes=new Map(),dirtyChunks=new Set(),loadingIndicators=new Map();
   var worldMods=new Map();
   function ck(cx,cz){return cx+','+cz;}
   function yIdx(wy){return wy-WORLD_MIN_Y;}
@@ -1023,6 +1056,8 @@ canvas#game3d{display:block}
     var d=chunkData.get(ck(cx,cz));if(!d)return;
     var lx=wx-cx*CHUNK_SIZE,lz=wz-cz*CHUNK_SIZE;
     d[(yIdx(wy)*CHUNK_SIZE+lz)*CHUNK_SIZE+lx]=v;
+    /* 红石：任何方块变化都可能影响附近信号 */
+    rsTouch(wx,wy,wz);
     if(record!==false){
       var key=ck(cx,cz);
       if(!worldMods.has(key)) worldMods.set(key,{});
@@ -1033,11 +1068,15 @@ canvas#game3d{display:block}
     if(wy<WORLD_MIN_Y)return true;
     if(wy>=WORLD_MAX_Y)return false;
     var b=getBlock(wx,wy,wz);
-    return b!==0&&!isWaterId(b);   /* 水不实心：能穿过、能游泳 */
+    /* 水不实心：能穿过、能游泳；红石线/火把/拉杆也不实心 */
+    return b!==0&&!isWaterId(b)&&!isDecorId(b);
   }
   function isOcc(wx,wy,wz){
     if(wy<WORLD_MIN_Y||wy>=WORLD_MAX_Y)return false;
-    return getBlock(wx,wy,wz)!==0;
+    var b=getBlock(wx,wy,wz);
+    /* 红石装饰件不产生遮挡与环境光遮蔽 */
+    if(isDecorId(b))return false;
+    return b!==0;
   }
 
   function growVein(d,cx,cz,x,y,z,oreId,size,seed){
@@ -1074,7 +1113,8 @@ canvas#game3d{display:block}
   }
 
   function genChunk(cx,cz){
-    var d=new Uint8Array(CHUNK_SIZE*WORLD_HEIGHT*CHUNK_SIZE);
+    /* Uint16：1.18 前方块 id 已排到 900+，用 Uint8 会截断成 8 位（318→62） */
+    var d=new Uint16Array(CHUNK_SIZE*WORLD_HEIGHT*CHUNK_SIZE);
     var bx=cx*CHUNK_SIZE,bz=cz*CHUNK_SIZE;
     if(worldType==='flat'){
       for(var lz=0;lz<CHUNK_SIZE;lz++)for(var lx=0;lx<CHUNK_SIZE;lx++){
@@ -1294,6 +1334,11 @@ canvas#game3d{display:block}
   atlasTexture.generateMipmaps=false;
   atlasTexture.wrapS=THREE.ClampToEdgeWrapping;atlasTexture.wrapT=THREE.ClampToEdgeWrapping;
   var blockMaterial=new THREE.MeshLambertMaterial({map:atlasTexture,side:THREE.FrontSide,vertexColors:true});
+  /* 红石装饰（线/火把/拉杆）：不发光材质按顶点色手调亮度，双面 + 透明裁剪 */
+  var decorMaterial=new THREE.MeshBasicMaterial({
+    map:atlasTexture,side:THREE.DoubleSide,vertexColors:true,
+    transparent:true,alphaTest:0.08,depthWrite:true
+  });
   /* 水：半透明、不写深度，从里从外都能看见 */
   /* 水：半透明、双面（水下能看到水面）、不写深度避免自遮挡 */
   var waterMaterial=new THREE.MeshLambertMaterial({
@@ -1313,6 +1358,14 @@ canvas#game3d{display:block}
   };
   /* 合并脚本生成的 1.18 前物品纹理（方块纹理 + item_ 前缀的物品纹理） */
   if(window.MC_TEX){for(var _tk in MC_TEX)TEX_FILES[_tk]=MC_TEX[_tk];}
+  /* 反查表：贴图名 → 图集格号（红石粉、灯亮等需要按名字取格） */
+  var TILE_OF={};
+  for(var _tk2 in TEX_FILES)TILE_OF[TEX_FILES[_tk2]]=Number(_tk2);
+  /* 红石灯·亮：优先原版 redstone_lamp_on，缺图就退回灭灯贴图 */
+  var LAMP_ON_TILE=TILE_OF['redstone_lamp_on'];
+  if(LAMP_ON_TILE===undefined)LAMP_ON_TILE=TILE_OF['redstone_lamp'];
+  if(LAMP_ON_TILE===undefined)LAMP_ON_TILE=226;
+  BLOCKS[34].top=BLOCKS[34].side=BLOCKS[34].bottom=LAMP_ON_TILE;
   (function loadVanillaTextures(){
     /* 这些在原版里是灰度图，靠运行时按生物群系染色；
        这里直接乘上平原的草色/树叶色，否则地面会渲成灰白 */
@@ -1362,10 +1415,89 @@ canvas#game3d{display:block}
       if(lz<0&&lx>=0&&lx<CHUNK_SIZE)return chZN?chZN[(ay*CHUNK_SIZE+(lz+CHUNK_SIZE))*CHUNK_SIZE+lx]:0;
       return 0;
     }
-    /* 0 = 固体，1 = 水；两组分开出几何，水用半透明材质 */
-    var G=[{pos:[],nor:[],uvs:[],col:[],idx:[],vc:0},{pos:[],nor:[],uvs:[],col:[],idx:[],vc:0}];
+    /* ★ 红石装饰几何：以中心+半尺寸推一个盒子（复用 FACES 的面序与 UV） */
+    function pushBox(g,px,py,pz,hx,hy,hz,tile,r,gc,bb){
+      var cc=tile%ATLAS_COLS,cr=Math.floor(tile/ATLAS_COLS);
+      for(var f=0;f<6;f++){
+        var face=FACES[f],vs=g.vc;
+        for(var k=0;k<4;k++){
+          var q=face.corners[k];
+          g.pos.push(px+(q[0]-0.5)*2*hx,py+(q[1]-0.5)*2*hy,pz+(q[2]-0.5)*2*hz);
+          g.nor.push(face.dir[0],face.dir[1],face.dir[2]);
+        }
+        for(var u=0;u<4;u++)g.uvs.push((cc+face.uvs[u][0])*invC,(rowOff-cr+face.uvs[u][1])*invR);
+        for(var c2=0;c2<4;c2++)g.col.push(r,gc,bb);
+        g.idx.push(vs,vs+1,vs+2,vs,vs+2,vs+3);
+        g.vc+=4;
+      }
+    }
+    /* 贴地四边形（用于红石粉）：x0..x1 / z0..z1 为方块内 0~1 坐标。
+       swapUV=1 时把贴图 u/v 对调（原版 line0 是竖向条带，用旋转 UV 得到横向） */
+    function pushFlat(g,ox,oy,oz,x0,z0,x1,z1,tile,r,gc,bb,u0,u1,v0,v1,swapUV){
+      var cc=tile%ATLAS_COLS,cr=Math.floor(tile/ATLAS_COLS);
+      var vs=g.vc;
+      var pts=[[x0,z1,u0,v0],[x1,z1,u1,v0],[x1,z0,u1,v1],[x0,z0,u0,v1]];
+      for(var k=0;k<4;k++){
+        g.pos.push(ox+pts[k][0],oy,oz+pts[k][1]);
+        g.nor.push(0,1,0);
+        var uu=swapUV?pts[k][3]:pts[k][2],vv=swapUV?pts[k][2]:pts[k][3];
+        g.uvs.push((cc+uu)*invC,(rowOff-cr+vv)*invR);
+        g.col.push(r,gc,bb);
+      }
+      g.idx.push(vs,vs+1,vs+2,vs,vs+2,vs+3);g.vc+=4;
+    }
+    /* 红石粉要不要朝这个方向连线（原版简化：线/元件/上方一格） */
+    function wireLinked(wx,wy,wz,dx,dz){
+      var nb=getBlock(wx+dx,wy,wz+dz);
+      if(nb===30||nb===31||nb===32||nb===33)return true;         /* 线 / 火把 / 拉杆 */
+      if(nb===318||nb===317||nb===186||nb===34)return true;      /* 灯 / 红石块 */
+      var up=getBlock(wx+dx,wy+1,wz+dz);
+      if(up===30||up===31||up===33)return true;                  /* 上一格是线或火把 → 爬坡 */
+      return false;
+    }
+    function pushDecor(g,b,wx,wy,wz){
+      if(b===30){
+        /* 红石粉：原版 dot / line0 / line1 三张贴图贴地拼，强度只影响颜色（暗红→亮红） */
+        var pw=wirePower.get(wx+','+wy+','+wz)||0;
+        var wc=0.32+0.68*(pw/15);
+        var y=wy+0.063;
+        var dot=TILE_OF['redstone_dust_dot'],l0=TILE_OF['redstone_dust_line0'],l1=TILE_OF['redstone_dust_line1'];
+        if(dot===undefined)dot=294;
+        if(l0===undefined)l0=dot;
+        if(l1===undefined)l1=dot;
+        /* 中心点（十字） */
+        pushFlat(g,wx,y,wz,0,0,1,1,dot,wc,0,0,0,1,0,1,0);
+        /* 四向连线：半格范围由几何裁剪，UV 始终取整张——
+           line0 是竖向条带，东西向用时把 UV 旋转 90° 才变成横向 */
+        var dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+        for(var di=0;di<4;di++){
+          var dx=dirs[di][0],dz=dirs[di][1];
+          if(!wireLinked(wx,wy,wz,dx,dz))continue;
+          var yy=y+0.0004*(di+1);   /* 微错位，避免同深度 z-fighting */
+          if(dz===0){
+            var x0=dx>0?0.5:0,x1=dx>0?1:0.5;
+            pushFlat(g,wx,yy,wz,x0,0,x1,1,l0,wc,0,0,0,1,0,1,1);
+          }else{
+            var z0=dz>0?0.5:0,z1=dz>0?1:0.5;
+            pushFlat(g,wx,yy,wz,0,z0,1,z1,l0,wc,0,0,0,1,0,1,0);
+          }
+        }
+      }else if(b===31){
+        /* 红石火把：细柱 */
+        pushBox(g,wx+0.5,wy+0.30,wz+0.5,0.06,0.30,0.06,242,1,1,1);
+      }else{
+        /* 拉杆：底座 + 立杆，开时杆染红 */
+        var on=(b===33);
+        pushBox(g,wx+0.5,wy+0.06,wz+0.5,0.14,0.06,0.14,241,0.9,0.9,0.9);
+        pushBox(g,wx+0.5,wy+0.28,wz+0.5,0.045,0.17,0.045,241,on?1:0.55,on?0.45:0.55,on?0.4:0.55);
+      }
+    }
+    /* 0 = 固体，1 = 水，2 = 红石装饰（线/火把/拉杆）；各自分开出几何 */
+    var G=[{pos:[],nor:[],uvs:[],col:[],idx:[],vc:0},{pos:[],nor:[],uvs:[],col:[],idx:[],vc:0},{pos:[],nor:[],uvs:[],col:[],idx:[],vc:0}];
     var invC=1/ATLAS_COLS,invR=1/ATLAS_ROWS,rowOff=ATLAS_ROWS-1;
     var bx=cx*CHUNK_SIZE,bz=cz*CHUNK_SIZE;
+    /* 不透明判定：装饰件和水都不遮挡邻面 */
+    function opq(b){return b!==0&&!isWaterId(b)&&!isDecorId(b);}
 
     for(var ay=0;ay<WORLD_HEIGHT;ay++){
       var wy=ay+WORLD_MIN_Y;
@@ -1376,10 +1508,16 @@ canvas#game3d{display:block}
           var def=BLOCKS[b];if(!def)continue;
           var isWater=isWaterId(b);
 
+          /* ★ 红石装饰件：不走完整立方体路径，用专门的小模型 */
+          if(isDecorId(b)){
+            pushDecor(G[2],b,bx+lx,wy,bz+lz);
+            continue;
+          }
+
           var nP=getL(lx+1,ay,lz),nN=getL(lx-1,ay,lz),
               nU=getL(lx,ay+1,lz),nD=getL(lx,ay-1,lz),
               nQ=getL(lx,ay,lz+1),nB=getL(lx,ay,lz-1);
-          if(nP!==0&&nN!==0&&nU!==0&&nD!==0&&nQ!==0&&nB!==0)continue;
+          if(opq(nP)&&opq(nN)&&opq(nU)&&opq(nD)&&opq(nQ)&&opq(nB))continue;
 
           var wx=bx+lx,wz=bz+lz;
 
@@ -1388,13 +1526,17 @@ canvas#game3d{display:block}
 
           for(var f=0;f<6;f++){
             var nb=(f===0)?nP:(f===1)?nN:(f===2)?nU:(f===3)?nD:(f===4)?nQ:nB;
-            /* 水只被水遮挡；固体面遇到水仍然要画，否则从水下看岸壁会穿帮 */
-            if(nb!==0&&!(isWaterId(nb)&&!isWater))continue;
+            /* 固体面被不透明邻居剔除；水和红石装饰件不剔除，否则从侧面看会穿帮 */
+            if(opq(nb))continue;
+            if(isWater&&isWaterId(nb))continue;
 
             var face=FACES[f];
             var tile=(f===2)?def.top:(f===3)?def.bottom:def.side;
+            /* ★ 红石灯：被供电时换亮贴图且全亮（不受 AO 暗化） */
+            var litLamp=false;
+            if(b===318&&lampPowered(wx,wy,wz)){tile=LAMP_ON_TILE;litLamp=true;}
             var cc=tile%ATLAS_COLS,cr=Math.floor(tile/ATLAS_COLS);
-            var ao=faceAO(wx,wy,wz,f);
+            var ao=litLamp?[3,3,3,3]:faceAO(wx,wy,wz,f);
 
             var u0=(cc+face.uvs[0][0])*invC,v0=(rowOff-cr+face.uvs[0][1])*invR;
             var u1=(cc+face.uvs[1][0])*invC,v1=(rowOff-cr+face.uvs[1][1])*invR;
@@ -1429,7 +1571,7 @@ canvas#game3d{display:block}
       geo.computeBoundingSphere();
       return geo;
     }
-    return {solid:make(G[0]),water:make(G[1])};
+    return {solid:make(G[0]),water:make(G[1]),decor:make(G[2])};
   }
   function rebuildChunk(cx,cz){
     var key=ck(cx,cz);var data=chunkData.get(key);if(!data)return;
@@ -1441,8 +1583,10 @@ canvas#game3d{display:block}
     }
     var oldW=waterMeshes.get(key);
     if(oldW){scene.remove(oldW);oldW.geometry.dispose();waterMeshes.delete(key);}
+    var oldD=decorMeshes.get(key);
+    if(oldD){scene.remove(oldD);oldD.geometry.dispose();decorMeshes.delete(key);}
     var res=buildChunkGeo(cx,cz);
-    if(!res||(!res.solid&&!res.water))return;
+    if(!res||(!res.solid&&!res.water&&!res.decor))return;
     /* 水和固体分成两个对象：半球形的包围球不会互相连累剔除 */
     if(res.solid){
       var mesh=new THREE.Mesh(res.solid,blockMaterial);
@@ -1452,6 +1596,12 @@ canvas#game3d{display:block}
       var wm=new THREE.Mesh(res.water,waterMaterial);
       wm.frustumCulled=true;wm.renderOrder=2;
       scene.add(wm);waterMeshes.set(key,wm);
+    }
+    /* 红石装饰：独立网格，双面 + 透明裁剪（贴地薄片/细柱） */
+    if(res.decor){
+      var dm=new THREE.Mesh(res.decor,decorMaterial);
+      dm.frustumCulled=true;
+      scene.add(dm);decorMeshes.set(key,dm);
     }
   }
   function createLoadInd(cx,cz){
@@ -1500,6 +1650,8 @@ canvas#game3d{display:block}
     if(mesh){scene.remove(mesh);mesh.traverse(function(o){if(o.geometry)o.geometry.dispose();});chunkMeshes.delete(k);}
     var wm=waterMeshes.get(k);
     if(wm){scene.remove(wm);wm.geometry.dispose();waterMeshes.delete(k);}
+    var dm=decorMeshes.get(k);
+    if(dm){scene.remove(dm);dm.geometry.dispose();decorMeshes.delete(k);}
       removeLoadInd(cx2,cz2);
     }
     for(var j=0;j<newLoaded.length;j++){
@@ -1540,7 +1692,9 @@ canvas#game3d{display:block}
   chunkMeshes.forEach(function(m){scene.remove(m);m.traverse(function(o){if(o.geometry)o.geometry.dispose();});});
   chunkMeshes.clear();
   waterMeshes.forEach(function(m){scene.remove(m);m.geometry.dispose();});
-  waterMeshes.clear();dirtyChunks.clear();
+  waterMeshes.clear();
+  decorMeshes.forEach(function(m){scene.remove(m);m.geometry.dispose();});
+  decorMeshes.clear();dirtyChunks.clear();
     loadingIndicators.forEach(function(m){scene.remove(m);m.geometry.dispose();});
     loadingIndicators.clear();
     /* 也清理动物 */
@@ -1564,6 +1718,13 @@ canvas#game3d{display:block}
       mesh.visible=(dx*dx+dz*dz)<maxSq;
     });
     waterMeshes.forEach(function(mesh,key){
+      var parts=key.split(',');
+      var cx=parseInt(parts[0],10)*CHUNK_SIZE+CHUNK_SIZE/2;
+      var cz=parseInt(parts[1],10)*CHUNK_SIZE+CHUNK_SIZE/2;
+      var dx=cx-px,dz=cz-pz;
+      mesh.visible=(dx*dx+dz*dz)<maxSq;
+    });
+    decorMeshes.forEach(function(mesh,key){
       var parts=key.split(',');
       var cx=parseInt(parts[0],10)*CHUNK_SIZE+CHUNK_SIZE/2;
       var cz=parseInt(parts[1],10)*CHUNK_SIZE+CHUNK_SIZE/2;
@@ -1669,6 +1830,57 @@ canvas#game3d{display:block}
   var handBasePos={x:0.30,y:-0.12,z:-0.40};
   var handBaseRot={x:0.10,y:-0.04,z:0};
 
+  /* ═══ 第一人称手持物：选中方块→ 3D 小方块，物品→ 竖直贴片（原版样式） ═══ */
+  var TILE_TEX_CACHE={};
+  function tileTexture(tile){
+    if(TILE_TEX_CACHE[tile])return TILE_TEX_CACHE[tile];
+    var c=document.createElement('canvas');c.width=TILE_PX;c.height=TILE_PX;
+    var g=c.getContext('2d');g.imageSmoothingEnabled=false;
+    var col=tile%ATLAS_COLS,row=Math.floor(tile/ATLAS_COLS);
+    g.drawImage(atlasCanvas,col*TILE_PX,row*TILE_PX,TILE_PX,TILE_PX,0,0,TILE_PX,TILE_PX);
+    var t=new THREE.CanvasTexture(c);
+    t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;
+    TILE_TEX_CACHE[tile]=t;
+    return t;
+  }
+  var handHolder=new THREE.Group();
+  /* 相对手臂节点的偏移：原版手持物停在画面右下角 */
+  handHolder.position.set(0.02,-0.04,0.00);
+  handPivot.add(handHolder);
+  var handItemMesh=null;
+  function updateHandItem(){
+    /* 移除旧的 */
+    while(handHolder.children.length)handHolder.remove(handHolder.children[0]);
+    handItemMesh=null;
+    var id=getSelectedItemId();
+    var hasItem=false;
+    if(id&&gameMode!=='spectator'){
+      var def=BLOCKS[id];
+      if(def){
+        /* 方块：六个面用图集裁出的贴图 */
+        hasItem=true;
+        var mats=[def.side,def.side,def.top,def.bottom,def.side,def.side].map(function(t){
+          return new THREE.MeshLambertMaterial({map:tileTexture(t),transparent:true,alphaTest:0.05});
+        });
+        handItemMesh=new THREE.Mesh(new THREE.BoxGeometry(0.30,0.30,0.30),mats);
+        handItemMesh.rotation.y=Math.PI/4+0.15;
+        handItemMesh.rotation.x=0.10;
+        handItemMesh.renderOrder=3;
+        handHolder.add(handItemMesh);
+      }else if(ITEMS[id]&&ITEMS[id].tile!=null){
+        /* 物品：竖直平面，像原版拿剑/镐的卡片 */
+        hasItem=true;
+        var m=new THREE.MeshBasicMaterial({map:tileTexture(ITEMS[id].tile),transparent:true,alphaTest:0.05,side:THREE.DoubleSide});
+        handItemMesh=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.42),m);
+        handItemMesh.rotation.set(0.15,Math.PI/2-0.55,-0.25);
+        handItemMesh.renderOrder=3;
+        handHolder.add(handItemMesh);
+      }
+    }
+    /* 拿着东西时藏起手臂（原版如此） */
+    handArm.visible=!hasItem;
+  }
+
   var player={
     pos:{x:0.5,y:SEA_LEVEL+2,z:0.5},vel:{x:0,y:0,z:0},
     onGround:false,health:20,maxHealth:20,fallStartY:null,regenTimer:0,
@@ -1737,6 +1949,14 @@ canvas#game3d{display:block}
       return;
     }
     var k=e.key.toLowerCase();
+    /* F3：原版调试层开关（坐标/群系/模式/FPS） */
+    if(e.key==='F3'||e.code==='F3'){
+      if(appState==='playing'||appState==='paused'){
+        debugHudOn=!debugHudOn;
+        $('hudTop').classList.toggle('show',debugHudOn);
+      }
+      e.preventDefault();return;
+    }
     var wasDown=keys[k]||false;
     keys[k]=true;
     if(e.code==='Space')keys[' ']=true;
@@ -1785,6 +2005,8 @@ canvas#game3d{display:block}
   renderer.domElement.addEventListener('contextmenu',function(e){e.preventDefault();});
   renderer.domElement.addEventListener('mousedown',function(e){
     if(appState!=='playing'||inventoryOpen||chatOpen)return;
+    /* ★ 指针没锁时第一下点击只用来上锁，不触发挖掘/放置 */
+    if(!pointerLocked&&!isTouchUI){lockPointer();return;}
     e.preventDefault();
     if(e.button===0){
       mouseHeld[0]=true;
@@ -1820,6 +2042,35 @@ canvas#game3d{display:block}
     var dir=e.deltaY>0?1:-1;
     selectSlot(((selectedSlot+dir)%9+9)%9);
   },{passive:true});
+  /* ★ 统一的指针锁定入口。
+     Chrome 在 ESC 解锁后约 1.25s 内再次请求会直接 reject（还会抛
+     WrongDocumentError / SecurityError），之前直接调用没接住，
+     表现就是「鼠标总是冒出来、点不动视角」。这里失败自动重试。 */
+  var lockRetryTimer=null;
+  function lockPointer(){
+    if(isTouchUI||!hasFine)return;
+    if(!renderer||!renderer.domElement)return;
+    var el=renderer.domElement;
+    if(document.pointerLockElement===el)return;
+    if(lockRetryTimer){clearTimeout(lockRetryTimer);lockRetryTimer=null;}
+    var tries=0;
+    function attempt(){
+      lockRetryTimer=null;
+      if(appState!=='playing'||inventoryOpen||chatOpen||mapOpen)return;
+      if(document.pointerLockElement===el)return;
+      var p=null;
+      try{p=el.requestPointerLock();}catch(e){p=null;}
+      if(p&&p.catch){
+        p.catch(function(){
+          if(++tries<=3&&!lockRetryTimer)lockRetryTimer=setTimeout(attempt,450);
+        });
+      }else if(!p&&tries<3){
+        /* 老浏览器同步失败：也重试 */
+        tries++;lockRetryTimer=setTimeout(attempt,450);
+      }
+    }
+    attempt();
+  }
   document.addEventListener('pointerlockchange',function(){
     pointerLocked=(document.pointerLockElement===renderer.domElement);
     if(!pointerLocked&&appState==='playing'&&!inventoryOpen&&!chatOpen&&hasFine)setAppState('paused');
@@ -1910,6 +2161,17 @@ canvas#game3d{display:block}
     createRoom:$('createRoomScreen'),worldSelect:$('worldSelectScreen'),
     createWorld:$('createWorldScreen'),settings:$('settingsScreen'),pause:$('pauseScreen')
   };
+  var debugHudOn=false,tipsTimer=null,tipsDone=false;
+  /* 操作提示只在进世界后显示 15 秒，之后淡出——原版 HUD 上不该常驻这一块 */
+  function startTipsTimer(){
+    if(tipsDone||tipsTimer)return;
+    tipsTimer=setTimeout(function(){
+      tipsTimer=null;tipsDone=true;
+      var t=$('tips');if(!t)return;
+      t.classList.add('fade');
+      setTimeout(function(){if(tipsDone)t.style.display='none';},900);
+    },15000);
+  }
   var deathScreen=$('deathScreen'),inventoryScreen=$('inventoryScreen');
   var bgDecorEl=$('bgDecor'),chatBoxEl=$('chatBox'),chatInputEl=$('chatInput');
   var chunkLoadingEl=$('chunkLoading'),loadingScreenEl=$('loadingScreen');
@@ -1927,17 +2189,20 @@ canvas#game3d{display:block}
     if(s==='paused')screens.pause.classList.remove('hidden');
     var inGame=(s==='playing'||s==='paused'||s==='dead');
     bgDecorEl.classList.toggle('hidden',inGame);
-    $('hudTop').style.display=inGame?'flex':'none';
-    $('tips').style.display=(inGame&&!isTouchUI)?'block':'none';
+    /* 坐标/群系/FPS 是原版 F3 的内容：默认不显示，按 F3 切 */
+    $('hudTop').classList.toggle('show',inGame&&debugHudOn);
+    $('tips').style.display=(inGame&&!isTouchUI&&!tipsDone)?'block':'none';
+    if(inGame&&!isTouchUI&&!tipsDone)startTipsTimer();
     $('crosshair').style.display=(s==='playing'&&gameMode!=='spectator'&&!inventoryOpen&&!chatOpen)?'block':'none';
     $('hotbar').style.display=(inGame&&gameMode!=='spectator')?'flex':'none';
+    $('xpBar').style.display=(inGame&&gameMode!=='spectator')?'block':'none';
     $('healthBar').style.display=(inGame&&(gameMode==='survival'||gameMode==='hardcore'))?'block':'none';
     $('hungerBar').style.display=(inGame&&(gameMode==='survival'||gameMode==='hardcore'))?'block':'none';
     chatBoxEl.classList.toggle('visible',inGame);
     $('playerList').style.display=(inGame&&isMultiplayer)?'flex':'none';
     mobileControls.classList.toggle('show',s==='playing'&&isTouchUI&&!inventoryOpen);
     if(s==='playing'){
-      if(hasFine&&!document.pointerLockElement&&!inventoryOpen&&!chatOpen)renderer.domElement.requestPointerLock();
+      if(!inventoryOpen&&!chatOpen)lockPointer();
     }else{
       if(document.pointerLockElement)document.exitPointerLock();
     }
@@ -1953,8 +2218,10 @@ canvas#game3d{display:block}
     if(appState==='playing'||appState==='paused'||appState==='dead'){
       $('crosshair').style.display=(mode!=='spectator'&&!inventoryOpen&&!chatOpen)?'block':'none';
       $('hotbar').style.display=(mode!=='spectator')?'flex':'none';
+      $('xpBar').style.display=(mode!=='spectator')?'block':'none';
       $('healthBar').style.display=(mode==='survival'||mode==='hardcore')?'block':'none';
       $('hungerBar').style.display=(mode==='survival'||mode==='hardcore')?'block':'none';
+      $('hudTop').classList.toggle('show',debugHudOn);
     }
   }
   function showLoad(){loadingScreenEl.classList.remove('hidden');$('loadingBar').style.width='0%';$('loadingStatus').textContent='正在准备...';}
@@ -1981,7 +2248,7 @@ canvas#game3d{display:block}
   function closeChat(){
     chatOpen=false;chatInputEl.classList.remove('visible');
     $('chatInputField').value='';
-    if(appState==='playing'&&!inventoryOpen&&hasFine&&!document.pointerLockElement)renderer.domElement.requestPointerLock();
+    if(appState==='playing'&&!inventoryOpen)lockPointer();
   }
   function sendChat(){
     var f=$('chatInputField'),text=f.value.trim();
@@ -2334,7 +2601,18 @@ canvas#game3d{display:block}
         var rem=dirtyChunks.size;
         setLoadProgress(total-rem,total,rem>0?'构建中... ('+rem+')':'完成');
         if(rem>0&&steps<400){steps++;requestAnimationFrame(step);}
-        else{hideLoad();setAppState('playing');addChat('欢迎来到 '+escHtml(w.name),'system');}
+        else{
+          hideLoad();setAppState('playing');addChat('欢迎来到 '+escHtml(w.name),'system');
+          /* 存档里的红石组件重新触发一次信号计算（mods 键是区块内局部坐标） */
+          worldMods.forEach(function(modsObj,cKey){
+            var cp=cKey.split(','),ccx=+cp[0],ccz=+cp[1];
+            for(var mk in modsObj){
+              var pp=mk.split(','),v=modsObj[mk];
+              if(isDecorId(v)||isRsSource(v)||v===318)
+                rsDirty.add(rsKey(ccx*CHUNK_SIZE+(+pp[0]),+pp[1],ccz*CHUNK_SIZE+(+pp[2])));
+            }
+          });
+        }
       }
       step();
     },50);
@@ -2541,12 +2819,14 @@ canvas#game3d{display:block}
   }
   function updateHotbarDisplay(){
     for(var i=0;i<9;i++)if(hotbarEl.children[i])updHotSlot(hotbarEl.children[i],hotbarSlots[i]);
+    updateHandItem();
   }
   function selectSlot(i){
     if(i<0||i>=9)return;
     selectedSlot=i;
     var kids=hotbarEl.children;
     for(var j=0;j<kids.length;j++)kids[j].classList.toggle('active',j===i);
+    updateHandItem();
   }
   /* ★ 攻击冷却指示：原版用武器图标变暗表示蓄力进度 */
   function updateAttackVeil(){
@@ -2937,7 +3217,7 @@ canvas#game3d{display:block}
     if(gameMode!=='spectator')$('crosshair').style.display='block';
     if(appState==='playing'){
       if(isTouchUI)mobileControls.classList.add('show');
-      else if(hasFine&&!document.pointerLockElement)renderer.domElement.requestPointerLock();
+      else if(hasFine)lockPointer();
     }
   }
   $('invCloseBtn').addEventListener('click',closeInv);
@@ -2960,8 +3240,8 @@ canvas#game3d{display:block}
   FOOD.f.src='../assets/mc-gui/food_full.png';
   FOOD.h.src='../assets/mc-gui/food_half.png';
 
-  var hpC=document.createElement('canvas');hpC.width=182;hpC.height=18;
-  hpC.style.width='182px';hpC.style.height='18px';hpC.style.imageRendering='pixelated';
+  var hpC=document.createElement('canvas');hpC.width=162;hpC.height=18;
+  hpC.style.width='162px';hpC.style.height='18px';hpC.style.imageRendering='pixelated';
   $('healthBar').appendChild(hpC);
   var hpCtx=hpC.getContext('2d');
   hpCtx.imageSmoothingEnabled=false;
@@ -2970,18 +3250,19 @@ canvas#game3d{display:block}
     if(!img||!img.complete||!img.naturalWidth)return;
     g.drawImage(img,x,y,18,18);
   }
+  /* 原版排版：10 个心，每个 9×9 图标按 8px 间距排（相邻重叠 1px），2 倍后步长 16 */
   function updateHP(){
     hpCtx.clearRect(0,0,hpC.width,hpC.height);
     if(gameMode!=='survival'&&gameMode!=='hardcore')return;
     for(var i=0;i<10;i++){
-      var x=i*18,hp=player.health-i*2;
+      var x=i*16,hp=player.health-i*2;
       drawIcon(hpCtx,HEART.c,x,0);
       if(hp>=2)drawIcon(hpCtx,HEART.f,x,0);
       else if(hp===1)drawIcon(hpCtx,HEART.h,x,0);
     }
   }
-  var hunC=document.createElement('canvas');hunC.width=182;hunC.height=18;
-  hunC.style.width='182px';hunC.style.height='18px';hunC.style.imageRendering='pixelated';
+  var hunC=document.createElement('canvas');hunC.width=162;hunC.height=18;
+  hunC.style.width='162px';hunC.style.height='18px';hunC.style.imageRendering='pixelated';
   $('hungerBar').appendChild(hunC);
   var hunCtx=hunC.getContext('2d');
   hunCtx.imageSmoothingEnabled=false;
@@ -2989,12 +3270,29 @@ canvas#game3d{display:block}
     hunCtx.clearRect(0,0,hunC.width,hunC.height);
     if(gameMode!=='survival'&&gameMode!=='hardcore')return;
     for(var i=0;i<10;i++){
-      var x=(9-i)*18,hp=player.hunger-i*2;
+      var x=(9-i)*16,hp=player.hunger-i*2;
       drawIcon(hunCtx,FOOD.e,x,0);
       if(hp>=2)drawIcon(hunCtx,FOOD.f,x,0);
       else if(hp===1)drawIcon(hunCtx,FOOD.h,x,0);
     }
   }
+  /* 经验条：原版 xp_bg + xp_fill（182×5，2 倍）。当前还没有经验来源，先按 0 级画空槽 */
+  var XPBG=new Image();XPBG.src='../assets/mc-gui/xp_bg.png';
+  var XPFILL=new Image();XPFILL.src='../assets/mc-gui/xp_fill.png';
+  var xpC=document.createElement('canvas');xpC.width=364;xpC.height=10;
+  xpC.style.width='364px';xpC.style.height='10px';xpC.style.imageRendering='pixelated';
+  $('xpBar').appendChild(xpC);
+  var xpCtx=xpC.getContext('2d');
+  xpCtx.imageSmoothingEnabled=false;
+  function updateXP(){
+    xpCtx.clearRect(0,0,xpC.width,xpC.height);
+    if(XPBG.complete&&XPBG.naturalWidth)xpCtx.drawImage(XPBG,0,0,364,10);
+    var lv=player.xp&&player.xp.level?player.xp.level:0;
+    var prog=player.xp?player.xp.progress:0;
+    if(XPFILL.complete&&XPFILL.naturalWidth&&prog>0)
+      xpCtx.drawImage(XPFILL,0,0,Math.max(1,182*prog),5,0,0,Math.max(2,364*prog),10);
+  }
+  XPBG.onload=updateXP;XPFILL.onload=updateXP;
   /* 贴图是异步加载的，回来后补画一次 */
   [HEART.c,HEART.f,HEART.h,FOOD.e,FOOD.f,FOOD.h].forEach(function(img){
     img.onload=function(){updateHP();updateHunger();};
@@ -3012,7 +3310,9 @@ canvas#game3d{display:block}
     var tmy=sy!==0?(sy>0?(y+1-oy):(oy-y))/Math.abs(dy):Infinity;
     var tmz=sz!==0?(sz>0?(z+1-oz):(oz-z))/Math.abs(dz):Infinity;
     var nrm={x:0,y:0,z:0};
-    if(isSolid(x,y,z))return{x:x,y:y,z:z,normal:{x:0,y:1,z:0}};
+    /* 红石线/火把/拉杆不实心但可以被准星选中（挖掉、右键拉杆） */
+    function hitHere(xx,yy,zz){var bb=getBlock(xx,yy,zz);return isSolid(xx,yy,zz)||isDecorId(bb);}
+    if(hitHere(x,y,z))return{x:x,y:y,z:z,normal:{x:0,y:1,z:0}};
     var t=0,g=0;
     while(t<=maxD&&g++<512){
       if(tmx<tmy){
@@ -3023,7 +3323,7 @@ canvas#game3d{display:block}
         else{z+=sz;t=tmz;tmz+=tdz;nrm={x:0,y:0,z:-sz};}
       }
       if(t>maxD)break;
-      if(isSolid(x,y,z))return{x:x,y:y,z:z,normal:nrm};
+      if(hitHere(x,y,z))return{x:x,y:y,z:z,normal:nrm};
     }
     return null;
   }
@@ -3079,16 +3379,135 @@ canvas#game3d{display:block}
     }
   }
 
+  /* ═══════════════════════════════════════════════════
+     ★ 红石信号（简化原版）
+       源：拉杆·开(33)=15、红石火把(31)=15、红石块(317/186)=15
+       红石线(30)：多源 BFS，每格衰减 1，可沿台阶上下爬 1 格
+       红石灯(318)：渲染时检查 6 邻——有源或相邻亮线就点亮
+       触发：setBlock 时把 27 邻域标记进 rsDirty，每帧限量重算
+     ═══════════════════════════════════════════════════ */
+  var wirePower=new Map(),rsDirty=new Set(),rsProcessing=false;
+  function rsKey(x,y,z){return x+','+y+','+z;}
+  function rsTouch(x,y,z){
+    if(rsProcessing)return;
+    for(var dx=-1;dx<=1;dx++)for(var dy=-1;dy<=1;dy++)for(var dz=-1;dz<=1;dz++)
+      rsDirty.add(rsKey(x+dx,y+dy,z+dz));
+  }
+  /* 红石线的连通邻居：4 水平 + 上下各一层同列（爬台阶） */
+  function wireNeighbors(x,y,z,cb){
+    cb(x+1,y,z);cb(x-1,y,z);cb(x,y,z+1);cb(x,y,z-1);
+    cb(x+1,y+1,z);cb(x-1,y+1,z);cb(x,y+1,z+1);cb(x,y+1,z-1);
+    cb(x+1,y-1,z);cb(x-1,y-1,z);cb(x,y-1,z+1);cb(x,y-1,z-1);
+  }
+  /* 某格红石线的直接电源：6 邻里有源就是 15 */
+  function directSourcePower(x,y,z){
+    var n=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    for(var i=0;i<6;i++){
+      if(isRsSource(getBlock(x+n[i][0],y+n[i][1],z+n[i][2])))return 15;
+    }
+    return 0;
+  }
+  function lampPowered(x,y,z){
+    var n=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    for(var i=0;i<6;i++){
+      var nx=x+n[i][0],ny=y+n[i][1],nz=z+n[i][2];
+      if(isRsSource(getBlock(nx,ny,nz)))return true;
+      if(getBlock(nx,ny,nz)===30&&(wirePower.get(rsKey(nx,ny,nz))||0)>0)return true;
+    }
+    return false;
+  }
+  /* 从一点出发重算整张红石线网络（多源 BFS，按原版衰减） */
+  function recalcWireNet(sx,sy,sz){
+    var seen={},cells=[],stack=[[sx,sy,sz]];
+    seen[rsKey(sx,sy,sz)]=1;
+    while(stack.length&&cells.length<1600){
+      var c=stack.pop();
+      if(getBlock(c[0],c[1],c[2])===30)cells.push(c);
+      wireNeighbors(c[0],c[1],c[2],function(nx,ny,nz){
+        var k=rsKey(nx,ny,nz);
+        if(seen[k])return;
+        seen[k]=1;
+        if(getBlock(nx,ny,nz)===30)stack.push([nx,ny,nz]);
+      });
+    }
+    /* 多源初始化 */
+    var power={},q=[],head=0;
+    for(var i=0;i<cells.length;i++){
+      var p0=directSourcePower(cells[i][0],cells[i][1],cells[i][2]);
+      if(p0>0){
+        var k0=rsKey(cells[i][0],cells[i][1],cells[i][2]);
+        power[k0]=p0;q.push(cells[i]);
+      }
+    }
+    /* 衰减扩散 */
+    while(head<q.length){
+      var c2=q[head++],pc=power[rsKey(c2[0],c2[1],c2[2])];
+      if(pc<=1)continue;
+      wireNeighbors(c2[0],c2[1],c2[2],function(nx,ny,nz){
+        if(getBlock(nx,ny,nz)!==30)return;
+        var k=rsKey(nx,ny,nz),np=pc-1;
+        if((power[k]||0)>=np)return;
+        power[k]=np;q.push([nx,ny,nz]);
+      });
+    }
+    /* 应用变化并刷新相邻区块（灯的亮灭靠邻面重绘） */
+    for(var j=0;j<cells.length;j++){
+      var c3=cells[j],k3=rsKey(c3[0],c3[1],c3[2]);
+      var np2=power[k3]||0,op=wirePower.get(k3)||0;
+      if(np2!==op){
+        if(np2>0)wirePower.set(k3,np2);else wirePower.delete(k3);
+        markDirty(c3[0],c3[2]);
+        markDirty(c3[0]+1,c3[2]);markDirty(c3[0]-1,c3[2]);
+        markDirty(c3[0],c3[2]+1);markDirty(c3[0],c3[2]-1);
+      }
+    }
+    /* 起点已不是线（被挖掉）也要清强度 */
+    if(getBlock(sx,sy,sz)!==30&&wirePower.has(rsKey(sx,sy,sz))){
+      wirePower.delete(rsKey(sx,sy,sz));
+      markDirty(sx,sz);
+    }
+  }
+  function processRedstone(){
+    if(rsDirty.size===0)return;
+    rsProcessing=true;
+    var budget=4,done=[];
+    for(var key of rsDirty){
+      if(budget--<=0)break;
+      done.push(key);
+      var p=key.split(','),x=+p[0],y=+p[1],z=+p[2];
+      var b=getBlock(x,y,z);
+      if(b===30)recalcWireNet(x,y,z);
+      else if(isRsSource(b)||b===0||b===318||b===34){
+        /* 源/灯变化或被移除：重算周围每张线网 */
+        var touched={};
+        wireNeighbors(x,y,z,function(nx,ny,nz){
+          if(getBlock(nx,ny,nz)!==30)return;
+          var k=rsKey(nx,ny,nz);
+          if(touched[k])return;
+          touched[k]=1;
+          recalcWireNet(nx,ny,nz);
+        });
+        /* 源正上方/下方的线（直接贴着的）也重算 */
+        if(isRsSource(b)){
+          if(getBlock(x,y+1,z)===30&&!touched[rsKey(x,y+1,z)]){touched[rsKey(x,y+1,z)]=1;recalcWireNet(x,y+1,z);}
+          if(getBlock(x,y-1,z)===30&&!touched[rsKey(x,y-1,z)]){touched[rsKey(x,y-1,z)]=1;recalcWireNet(x,y-1,z);}
+        }
+      }
+    }
+    for(var i=0;i<done.length;i++)rsDirty.delete(done[i]);
+    rsProcessing=false;
+  }
+
   /* ★ 破坏方块（公共方法） */
   function destroyBlock(x,y,z,b){
     setBlock(x,y,z,0);
     sfxDig(b);
     markDirty(x,z);
     queueWaterAround(x,y,z);
-    /* 掉落：工具等级不够就只挖不捡（原版规则） */
+    /* 掉落：工具等级不够就只挖不捡（原版规则）；红石装饰件还原成物品 */
     if(gameMode==='survival'||gameMode==='hardcore'){
       var held=getSelectedItemId();
-      if(canHarvest(b,held))addItem(b,1);
+      if(canHarvest(b,held))addItem(RS_DROPS[b]||b,rsDropCount(b));
     }
     if(isMultiplayer&&net.connected)net.sendBlockChange(x,y,z,0);
   }
@@ -3201,8 +3620,8 @@ canvas#game3d{display:block}
     mapOpen=false;
     $('mapScreen').classList.remove('show');
     if(appState==='playing'&&gameMode!=='spectator')$('crosshair').style.display='block';
-    if(appState==='playing'&&hasFine&&!document.pointerLockElement&&!isTouchUI){
-      try{renderer.domElement.requestPointerLock();}catch(e){}
+    if(appState==='playing'&&hasFine&&!isTouchUI){
+      lockPointer();
     }
   }
   function drawMap(){
@@ -3255,12 +3674,26 @@ canvas#game3d{display:block}
     var heldItem=hotbarSlots[selectedSlot];
     if(heldItem&&heldItem.count>0&&itemName(heldItem.id)==='地图'){openMap();return;}
     var hit=camHit();if(!hit)return;
+    /* ★ 右键拉杆：直接切换开关，不放置 */
+    var tb=getBlock(hit.x,hit.y,hit.z);
+    if(tb===32||tb===33){
+      setBlock(hit.x,hit.y,hit.z,tb===32?33:32);
+      markDirty(hit.x,hit.z);
+      sfx('click',0.6);
+      swing();
+      return;
+    }
     var x=hit.x+hit.normal.x,y=hit.y+hit.normal.y,z=hit.z+hit.normal.z;
     var cur=getBlock(x,y,z);
     if(cur!==0&&!isWaterId(cur))return;   /* 水可以被方块替换 */
     var bid=getSelectedBlockId();
     if(!bid||bid===0){toast('空手无法放置');return;}
+    /* ★ 红石物品 → 对应装饰方块（红石粉→线、拉杆→开关、红石火把→火把） */
+    var RS_PLACE={1011:30,326:32,327:31};
+    if(RS_PLACE[bid])bid=RS_PLACE[bid];
     if(!BLOCKS[bid]){toast('这个物品不能放置');return;}
+    /* 红石装饰件必须贴在实心方块上面 */
+    if(isDecorId(bid)&&!isSolid(x,y-1,z)){toast('需要放在方块顶部');return;}
     if(gameMode==='survival'||gameMode==='hardcore'){
       var it=hotbarSlots[selectedSlot];
       if(!it||it.count<=0){toast('没有物品');return;}
@@ -3963,11 +4396,15 @@ canvas#game3d{display:block}
       updateAnimals(dt);
       updateAttackCooldown(dt);
       eatCooldown=Math.max(0,eatCooldown-dt);
-      waterTick(dt);
       var pcx=Math.floor(player.pos.x/CHUNK_SIZE),pcz=Math.floor(player.pos.z/CHUNK_SIZE);
       if(pcx!==lastPCX||pcz!==lastPCZ)updateChunks();
-      processDirty();
       updateVisibility(dt);
+    }
+    /* 红石/水流/区块重建不受「开背包」影响：否则站在物品栏里放红石不会有信号 */
+    if(appState==='playing'){
+      waterTick(dt);
+      processRedstone();
+      processDirty();
     }
     updateLoadAnim(now);
     if((appState==='playing'||appState==='paused')&&!isMultiplayer&&currentWorld){
@@ -4215,6 +4652,23 @@ canvas#game3d{display:block}
   refreshWorlds();
   setAppState('mainMenu');
   requestAnimationFrame(loop);
+
+  /* 极小的调试出口（自动化测试/排障用）：只读方块状态与信号强度，不含任何凭据 */
+  window.HSMC={
+    player:player,yaw:function(){return yaw;},pitch:function(){return pitch;},
+    getBlock:getBlock,setBlock:setBlock,markDirty:markDirty,
+    wirePower:wirePower,lampPowered:lampPowered,isRsSource:isRsSource,
+    setMode:setGameMode,toggleInv:toggleInv,setHealth:function(h){player.health=h;updateHP();},
+    setHunger:function(h){player.hunger=h;updateHunger();},
+    tileOf:function(n){return TILE_OF[n];},lampOn:function(){return LAMP_ON_TILE;},
+    atlas:function(){return atlasCanvas;},tilePixel:function(tile){
+      var c=tile%ATLAS_COLS,r=Math.floor(tile/ATLAS_COLS);
+      var d=atlasCtx.getImageData(c*TILE_PX+8,r*TILE_PX+8,1,1).data;
+      return [d[0],d[1],d[2],d[3]];
+    },
+    setFly:function(v){flying=!!v;player.vel.y=0;},
+    held:function(){var it=hotbarSlots[selectedSlot];return it?{id:it.id,count:it.count,dur:it.dur}:null;}
+  };
 })();
 </script>
 </body>
