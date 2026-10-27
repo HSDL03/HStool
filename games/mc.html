@@ -3441,6 +3441,8 @@ canvas#game3d{display:block}
       d.items=d.items.filter(function(id){
         var it=BLOCKS[id]||ITEMS[id];
         if(!it)return false;
+        /* 皮革盔甲的染色叠加层是纯透明贴图，原版也不单独显示 */
+        if(/_overlay$/.test(it.eng||''))return false;
         var key=(it.eng||'')+'|'+it.name;
         if(used[key])return false;
         used[key]=1;return true;
