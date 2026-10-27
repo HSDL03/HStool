@@ -804,7 +804,10 @@ canvas#game3d{display:block}
     if(e==='turtle_egg')return shBoxes([[0.125,0,0.125,0.875,0.4375,0.875]]);
     if(e==='repeater'||e==='comparator')return shBoxes([[0,0,0,1,0.125,1]]);
     if(e==='lever')return shBoxes([[0.3125,0,0.375,0.6875,0.5,0.625]]);
-    if(e==='scaffolding')return shBoxes([[0,0,0,1,1,1]]);
+    if(e==='scaffolding')return shBoxes([
+      [0,0,0,0.125,1,0.125],[0.875,0,0,1,1,0.125],
+      [0,0,0.875,0.125,1,1],[0.875,0,0.875,1,1,1],
+      [0,1,0,1,1,1]],[[0,0,0,1,1,1]]);
     if(e==='conduit')return shBoxes([[0.1875,0.1875,0.1875,0.8125,0.8125,0.8125]]);
     return SHAPE_FULL;
   }
@@ -1349,6 +1352,37 @@ canvas#game3d{display:block}
 
   /* 调试世界：把全部方块按 8×8 排进 4×4 个区块，左上角第一个区块留给出生点 */
   var DEBUG_CX0=1,DEBUG_CZ0=1,DEBUG_SIDE=4;
+  /* ═══════════════════════════════════════════════════
+     ★ 调试世界的「非完整方块走廊」
+       出生点 (8,8) 正南 z=4 起步，每行 16 个、x 间距 2 格、行距 4 格向北排，
+       专门用来逐个看半砖/楼梯/栅栏/火把/锁链/告示牌这些局部箱体与花草。
+     ═══════════════════════════════════════════════════ */
+  var DEBUG_SPOTS=null,DEBUG_BOX=null,DEBUG_LIST=null;
+  function debugSpots(){
+    if(DEBUG_SPOTS)return DEBUG_SPOTS;
+    var list=[],m=new Map();
+    for(var i=0;i<ALL_BLOCK_IDS.length;i++){
+      var id=ALL_BLOCK_IDS[i],sh=shapeOf(id);
+      if(!sh||(sh.t!=='boxes'&&sh.t!=='cross'))continue;
+      var d=BLOCKS[id];
+      if(!d||!d.eng)continue;
+      list.push(id);
+    }
+    list.sort(function(a,b){
+      var ea=BLOCKS[a].eng,eb=BLOCKS[b].eng;
+      if(ea.length!==eb.length)return ea.length-eb.length;   /* 先短名，基础的先出现 */
+      return ea<eb?-1:1;
+    });
+    var PER=16,STEPX=2,GAPZ=4,X0=8,Z0=4;
+    list.forEach(function(id,i){
+      var gx=i%PER,gz=Math.floor(i/PER);
+      m.set((X0+gx*STEPX)+',1,'+(Z0-gz*GAPZ),id);
+    });
+    var rows=Math.ceil(list.length/PER);
+    DEBUG_BOX={x0:X0-2,x1:X0+PER*STEPX+2,z0:Z0-rows*GAPZ-2,z1:Z0+2};
+    DEBUG_LIST=list;DEBUG_SPOTS=m;
+    return m;
+  }
   function debugBlockAt(cx,cz,lx,lz){
     var gx=cx-DEBUG_CX0,gz=cz-DEBUG_CZ0;
     if(gx<0||gz<0||gx>=DEBUG_SIDE||gz>=DEBUG_SIDE)return 0;
@@ -1361,12 +1395,16 @@ canvas#game3d{display:block}
     var bx=cx*CHUNK_SIZE,bz=cz*CHUNK_SIZE;
     if(worldType==='debug'){
       /* 调试世界：整片石头地板，东南方向 4×4 区块按 8×8 摆出所有方块 */
+      var dspots=debugSpots();
       for(var dlz=0;dlz<CHUNK_SIZE;dlz++)for(var dlx=0;dlx<CHUNK_SIZE;dlx++){
         d[(yIdx(0)*CHUNK_SIZE+dlz)*CHUNK_SIZE+dlx]=3;
         if((dlx%2===0)&&(dlz%2===0)){
           var dbid=debugBlockAt(cx,cz,dlx,dlz);
           if(dbid)d[(yIdx(1)*CHUNK_SIZE+dlz)*CHUNK_SIZE+dlx]=dbid;
         }
+        /* 非完整方块走廊（世界坐标查表，跨区块也连续） */
+        var lb=dspots.get((bx+dlx)+',1,'+(bz+dlz));
+        if(lb)d[(yIdx(1)*CHUNK_SIZE+dlz)*CHUNK_SIZE+dlx]=lb;
       }
     }else if(worldType==='flat'){
       for(var lz=0;lz<CHUNK_SIZE;lz++)for(var lx=0;lx<CHUNK_SIZE;lx++){
@@ -1585,7 +1623,11 @@ canvas#game3d{display:block}
   atlasTexture.magFilter=THREE.NearestFilter;atlasTexture.minFilter=THREE.NearestFilter;
   atlasTexture.generateMipmaps=false;
   atlasTexture.wrapS=THREE.ClampToEdgeWrapping;atlasTexture.wrapT=THREE.ClampToEdgeWrapping;
-  var blockMaterial=new THREE.MeshLambertMaterial({map:atlasTexture,side:THREE.FrontSide,vertexColors:true});
+  /* ★ alphaTest：方块贴图里有大量全透明像素（火把、锁链、告示牌、花草、玻璃板…），
+     不剔除就会渲染成黑边/黑块——这是「不完整方块黑边」的根因。 */
+  var blockMaterial=new THREE.MeshLambertMaterial({
+    map:atlasTexture,side:THREE.FrontSide,vertexColors:true,alphaTest:0.5
+  });
   /* 红石装饰（线/火把/拉杆）：不发光材质按顶点色手调亮度，双面 + 透明裁剪 */
   var decorMaterial=new THREE.MeshBasicMaterial({
     map:atlasTexture,side:THREE.DoubleSide,vertexColors:true,
@@ -1927,11 +1969,22 @@ canvas#game3d{display:block}
       return def.side;
     }
     /* 局部箱体方块：台阶/楼梯/栅栏/地毯/雪层… */
+    /* 贴图是不是「整格展开图」：
+       半砖/楼梯/栅栏/墙/地毯/雪/铁栏杆这类贴图本来就是铺满整格的，按箱体裁 UV 才对；
+       铁砧/箱子/床/告示牌/炼药锅这些贴图是「一个物件的图案」，裁了会把透明边角拉进来，
+       反而出现黑点与乱纹，所以它们保持整张贴过去。 */
+    var TILED_UV={'snow':1,'dirt_path':1,'farmland':1,'soul_sand':1,'rail':1,
+      'powered_rail':1,'detector_rail':1,'activator_rail':1,'iron_bars':1};
+    function uvCropped(eng){
+      if(!eng)return false;
+      if(TILED_UV[eng])return true;
+      return /(_carpet|_slab|_stairs|_fence_gate|_fence|_wall|_pane)$/.test(eng);
+    }
     function pushPartial(g,b,wx,wy,wz,def){
       var sh=shapeAt(b,wx,wy,wz);
       /* 形状可能被坐标决定（门的上半格不渲染、活塞头按朝向），这里要再确认一次 */
       if(sh.t!=='boxes'||!sh.b)return;
-      var boxes=sh.b;
+      var boxes=sh.b, crop=uvCropped(def.eng);
       for(var i=0;i<boxes.length;i++){
         var q=boxes[i],cull=[0,0,0,0,0,0];
         if(q[0]<=0&&opqB(getBlock(wx-1,wy,wz)))cull[1]=1;
@@ -1950,7 +2003,7 @@ canvas#game3d{display:block}
             var c=face.corners[k];
             var px=c[0]?q[3]:q[0],py=c[1]?q[4]:q[1],pz=c[2]?q[5]:q[2];
             pts.push([c[0]?x1:x0,c[1]?y1:y0,c[2]?z1:z0,face.dir[0],face.dir[1],face.dir[2]]);
-            uvs.push(faceUVat(f,px,py,pz));
+            uvs.push(crop?faceUVat(f,px,py,pz):face.uvs[k]);
           }
           pushQuad(g,pts,tile,uvs,lit,0);
         }
@@ -1959,7 +2012,8 @@ canvas#game3d{display:block}
     /* 花草：两片十字面片，正反都画 */
     function pushCross(g,def,wx,wy,wz){
       var tile=def.side,a=0.15,b2=0.85,y0=wy,y1=wy+1;
-      var uv=[[0,1],[1,1],[1,0],[0,0]];
+      /* v=0 是贴图底部：底部顶点必须配 v=0，否则花草/作物会上下颠倒（之前就反了） */
+      var uv=[[0,0],[1,0],[1,1],[0,1]];
       var q1=[[wx+a,y0,wz+a,0,0,1],[wx+b2,y0,wz+b2,0,0,1],[wx+b2,y1,wz+b2,0,0,1],[wx+a,y1,wz+a,0,0,1]];
       var q2=[[wx+a,y0,wz+b2,0,0,1],[wx+b2,y0,wz+a,0,0,1],[wx+b2,y1,wz+a,0,0,1],[wx+a,y1,wz+b2,0,0,1]];
       pushQuad(g,q1,tile,uv,0.95,0);
@@ -2387,7 +2441,9 @@ canvas#game3d{display:block}
       player.health=player.maxHealth;player.fallStartY=null;
       player.hunger=player.maxHunger;player.saturation=5;player.exhaustion=0;
       player.hungerTimer=0;player.starveTimer=0;
-      yaw=-Math.PI*0.75;pitch=-0.12;flying=false;sprintLock=false;
+      yaw=(worldType==='debug')?Math.PI:-Math.PI*0.75;
+      pitch=(worldType==='debug')?-0.20:-0.12;
+      flying=false;sprintLock=false;
       return;
     }
     /* 出生点优先落在水面以上的陆地，别一睁眼就在海里 */
@@ -5829,6 +5885,7 @@ canvas#game3d{display:block}
     tickPiston:pistonTick,isStickyPiston:isStickyPiston,
     doorToggle:doorToggle,doorOpen:doorIsOpen,openDoors:openDoors,isDoor:isDoorBlock,
     state:function(){return appState;},setState:setAppState,
+    debugSpots:function(){debugSpots();return {list:DEBUG_LIST,box:DEBUG_BOX};},
     shapeAt:shapeAt,blockAABBs:blockAABBs,hasCollision:hasCollision,
     shoot:function(kind,dir,power,dmg){shootProjectile(kind,dir,power,dmg);},
     animals:animals,
