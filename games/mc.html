@@ -708,7 +708,8 @@ canvas#game3d{display:block}
   if(window.MC_BLOCKS){
     for(var _bk in MC_BLOCKS){
       var _bd=MC_BLOCKS[_bk];
-      BLOCKS[_bk]={name:_bd.n,top:_bd.t,side:_bd.s,bottom:_bd.b,cat:_bd.c,eng:_bd.e||''};
+      BLOCKS[_bk]={name:_bd.n,top:_bd.t,side:_bd.s,bottom:_bd.b,cat:_bd.c,eng:_bd.e||'',
+        front:(_bd.f===undefined?undefined:_bd.f)};
       ALL_BLOCK_IDS.push(Number(_bk));
     }
   }
@@ -809,6 +810,41 @@ canvas#game3d{display:block}
   }
   for(var _sb in BLOCKS)SHAPES[_sb]=classifyShape(BLOCKS[_sb].eng||'');
   function shapeOf(b){return SHAPES[b]||SHAPE_FULL;}
+  /* ═══════════════════════════════════════════════════
+     ★ 门：占上下两格，右键开关。
+       下半格渲染整扇门板（1 格高），上半格只为「挡人不穿模」存在但不重复渲染。
+       开着的门板绕 Y 转 90°，人能走过去。
+     ═══════════════════════════════════════════════════ */
+  var openDoors=new Set();
+  function isDoorBlock(b){
+    var d=BLOCKS[b];
+    return !!(d&&/_door$/.test(d.eng||''));
+  }
+  function doorOpenOrient(d){
+    if(d===0)return 4;
+    if(d===4)return 1;
+    if(d===1)return 5;
+    if(d===5)return 0;
+    return d;
+  }
+  /* 门可能是上/下半格，统一找到下半格坐标 */
+  function doorBase(x,y,z){
+    if(isDoorBlock(getBlock(x,y-1,z)))return y-1;
+    return y;
+  }
+  function doorIsOpen(x,y,z){
+    return openDoors.has(oKey(x,doorBase(x,y,z),z));
+  }
+  function doorToggle(x,y,z){
+    if(!isDoorBlock(getBlock(x,y,z)))return false;
+    var y0=doorBase(x,y,z);
+    var k0=oKey(x,y0,z),k1=oKey(x,y0+1,z);
+    if(openDoors.has(k0)){openDoors.delete(k0);openDoors.delete(k1);}
+    else{openDoors.add(k0);openDoors.add(k1);}
+    markDirty(x,z);
+    sfx('click',0.5);swing();
+    return true;
+  }
 
   /* ═══════════════════════════════════════════════════
      ★ 方块朝向（所有方块共用一张表）
@@ -879,6 +915,11 @@ canvas#game3d{display:block}
     var base=shapeOf(b);
     if(base.t!=='boxes')return base;
     var d=orientAt(wx,wy,wz);
+    if(isDoorBlock(b)){
+      /* 上半格：门板已经由下半格画满，这里不再出几何、也不打碰撞 */
+      if(isDoorBlock(getBlock(wx,wy-1,wz)))return SHAPE_NONE;
+      if(openDoors.has(oKey(wx,wy,wz)))d=doorOpenOrient(d);
+    }
     if(d===ORIENT_DEFAULT)return base;
     var out=new Array(base.b.length);
     for(var i=0;i<base.b.length;i++)out[i]=rotBox(base.b[i],d);
@@ -1877,16 +1918,19 @@ canvas#game3d{display:block}
     var FACE_FRONT={'piston':1,'sticky_piston':1,'piston_head':1,
       'dispenser':1,'dropper':1,'observer':1,'carved_pumpkin':1,'jack_o_lantern':1};
     function faceTileOf(def,b,fi,wx,wy,wz){
-      if(orientKindOf(b)===0||!FACE_FRONT[def.eng])
+      var front=(def.front!==undefined&&def.front!==null)?def.front:null;
+      if(orientKindOf(b)===0||(front===null&&!FACE_FRONT[def.eng]))
         return (fi===2)?def.top:(fi===3)?def.bottom:def.side;
       var d=orientAt(wx,wy,wz);
-      if(fi===d)return def.top;
+      if(fi===d)return (front!==null)?front:def.top;
       if(fi===(d^1))return def.bottom||def.top;
       return def.side;
     }
     /* 局部箱体方块：台阶/楼梯/栅栏/地毯/雪层… */
     function pushPartial(g,b,wx,wy,wz,def){
       var sh=shapeAt(b,wx,wy,wz);
+      /* 形状可能被坐标决定（门的上半格不渲染、活塞头按朝向），这里要再确认一次 */
+      if(sh.t!=='boxes'||!sh.b)return;
       var boxes=sh.b;
       for(var i=0;i<boxes.length;i++){
         var q=boxes[i],cull=[0,0,0,0,0,0];
@@ -3291,6 +3335,20 @@ canvas#game3d{display:block}
       var id=Number(k),it=ITEMS[id];
       (map[it.cat]||map.misc).items.push(id);
     });
+    /* ★ 去重：数据里有历史遗留的重复条目（红石块 186/317、活塞 319/320、
+       蛋糕 344/1158、皮革、末影珍珠、岩浆膏、干海带…）。
+       创造栏按「英文名 + 中文名」只保留第一次出现的那条；
+       id 本身不动，旧存档里已放置的方块不受影响。 */
+    var used={};
+    defs.forEach(function(d){
+      d.items=d.items.filter(function(id){
+        var it=BLOCKS[id]||ITEMS[id];
+        if(!it)return false;
+        var key=(it.eng||'')+'|'+it.name;
+        if(used[key])return false;
+        used[key]=1;return true;
+      });
+    });
     defs.forEach(function(d){if(d.items.length)CREATIVE_CATS.push(d);});
   })();
   var creativeCat=(CREATIVE_CATS[0]||{id:'building'}).id;
@@ -3307,13 +3365,47 @@ canvas#game3d{display:block}
     }
   });
 
+  /* ★ 立体图标：方块画成原版物品栏那种「顶面 + 左右侧面」的等轴投影，
+     而不是把侧面贴图整个拉成一个正方形。贴图直接取该方块自己的
+     顶面/侧面 tile，三面各用各的，方向也就是对的。
+     物品（工具、食物…）仍是平面图。 */
+  function drawIsoIcon(g,topTile,sideTile){
+    function src(tile){
+      var c=tile%ATLAS_COLS,r=Math.floor(tile/ATLAS_COLS);
+      return [c*TILE_PX,r*TILE_PX];
+    }
+    /* 顶面：16×16 方图 → 菱形（顶点在上，左右各跨半宽） */
+    var tp=src(topTile),sp=src(sideTile);
+    g.save();
+    g.setTransform(1,0.5,-1,0.5,16,0);
+    g.drawImage(atlasCanvas,tp[0],tp[1],TILE_PX,TILE_PX,0,0,16,16);
+    g.restore();
+    /* 左侧面（暗 0.78） */
+    g.save();
+    g.setTransform(1,0.5,0,1,0,8);
+    g.globalAlpha=1;g.filter='brightness(0.78)';
+    g.drawImage(atlasCanvas,sp[0],sp[1],TILE_PX,TILE_PX,0,0,16,16);
+    g.restore();
+    /* 右侧面（暗 0.6） */
+    g.save();
+    g.setTransform(1,-0.5,0,1,16,16);
+    g.filter='brightness(0.6)';
+    g.drawImage(atlasCanvas,sp[0],sp[1],TILE_PX,TILE_PX,0,0,16,16);
+    g.restore();
+    g.filter='none';
+  }
   function makeIcon(bid){
     var def=BLOCKS[bid]||ITEMS[bid];
     if(!def)return null;
-    var tile=(def.side!==undefined)?def.side:def.tile;
-    var col=tile%ATLAS_COLS,row=Math.floor(tile/ATLAS_COLS);
     var c=document.createElement('canvas');c.width=32;c.height=32;
     var g=c.getContext('2d');g.imageSmoothingEnabled=false;
+    if(def.top!==undefined&&def.side!==undefined){
+      drawIsoIcon(g,def.top,def.side);
+      return c;
+    }
+    /* 纯物品：平面贴图 */
+    var tile=def.tile;
+    var col=tile%ATLAS_COLS,row=Math.floor(tile/ATLAS_COLS);
     g.drawImage(atlasCanvas,col*TILE_PX,row*TILE_PX,TILE_PX,TILE_PX,0,0,32,32);
     return c;
   }
@@ -4305,6 +4397,16 @@ canvas#game3d{display:block}
   /* ★ 破坏方块（公共方法） */
   function destroyBlock(x,y,z,b){
     setBlock(x,y,z,0);
+    /* 门是上下两格：拆掉一半，另一半跟着消失（原版行为） */
+    if(isDoorBlock(b)){
+      var oy=-1;
+      if(isDoorBlock(getBlock(x,y-1,z)))oy=y-1;
+      else if(isDoorBlock(getBlock(x,y+1,z)))oy=y+1;
+      if(oy>0){setBlock(x,oy,z,0);markDirty(x,z);}
+      openDoors.delete(oKey(x,y,z));
+      openDoors.delete(oKey(x,y-1,z));
+      openDoors.delete(oKey(x,y+1,z));
+    }
     sfxDig(b);
     markDirty(x,z);
     queueWaterAround(x,y,z);
@@ -4490,6 +4592,8 @@ canvas#game3d{display:block}
       swing();
       return;
     }
+    /* ★ 右键门：开/关（上下两格联动，开着的门板转 90°，人能走过去） */
+    if(isDoorBlock(tb)){doorToggle(hit.x,hit.y,hit.z);return;}
     var x=hit.x+hit.normal.x,y=hit.y+hit.normal.y,z=hit.z+hit.normal.z;
     var cur=getBlock(x,y,z);
     if(cur!==0&&!isWaterId(cur))return;   /* 水可以被方块替换 */
@@ -4517,6 +4621,12 @@ canvas#game3d{display:block}
     var od=placeOrient(bid);
     if(od!==undefined)setOrient(x,y,z,od);
     if(isPistonLike(bid))pistonSet.add(x+','+y+','+z);
+    /* 门占上下两格：上方空的话一并放下半扇 */
+    if(isDoorBlock(bid)&&getBlock(x,y+1,z)===0){
+      setBlock(x,y+1,z,bid);
+      if(od!==undefined)setOrient(x,y+1,z,od);
+      markDirty(x,z);
+    }
     if(gameMode==='survival'||gameMode==='hardcore'){
       var it2=hotbarSlots[selectedSlot];
       if(it2){it2.count--;if(it2.count<=0)hotbarSlots[selectedSlot]=null;
@@ -5717,6 +5827,7 @@ canvas#game3d{display:block}
     orientMap:function(){return bOrient;},placeOrient:placeOrient,
     serializeOrient:serializeOrient,expectOrient:ORIENT_DEFAULT,
     tickPiston:pistonTick,isStickyPiston:isStickyPiston,
+    doorToggle:doorToggle,doorOpen:doorIsOpen,openDoors:openDoors,isDoor:isDoorBlock,
     state:function(){return appState;},setState:setAppState,
     shapeAt:shapeAt,blockAABBs:blockAABBs,hasCollision:hasCollision,
     shoot:function(kind,dir,power,dmg){shootProjectile(kind,dir,power,dmg);},
