@@ -729,7 +729,8 @@ canvas#game3d{display:block}
      物理、射线、渲染共用同一份数据，避免「看着是台阶、踩着是整块」。
      ═══════════════════════════════════════════════════ */
   var SHAPE_FULL={t:'full',b:null},SHAPE_CROSS={t:'cross',b:null},SHAPE_NONE={t:'none',b:null};
-  function shBoxes(list){return {t:'boxes',b:list};}
+  /* b = 渲染箱体；c = 碰撞箱（不给就用 b）。栅栏这类「看着 1 格高、实际 1.5 格挡人」的要分开 */
+  function shBoxes(list,collide){return {t:'boxes',b:list,c:collide||list};}
   var SHAPES={};
   var NO_COLLIDE={'air':1,'cave_air':1,'void_air':1,'light':1,'barrier':1,'structure_void':1,
     'moving_piston':1,'fire':1,'soul_fire':1,'water':1,'lava':1,'bubble_column':1,
@@ -744,22 +745,32 @@ canvas#game3d{display:block}
   var CROSS_SUFFIX=['_sapling','_tulip','_coral','_coral_fan','_roots','_fungus','_sprouts','_shoots'];
   function classifyShape(e){
     if(!e)return SHAPE_FULL;
+    /* ★ 不挡人但「看得见」的贴片方块：以前一律 SHAPE_NONE，放下来是隐形的。
+       现在给它们薄片模型 + 空碰撞箱（c=[]），看得到、走得过去。 */
+    if(e==='ladder'||e==='vine')return shBoxes([[0,0,0,1,1,0.0625]],[]);
+    if(/_sign$/.test(e))return shBoxes([[0.06,0,0.4375,0.94,0.875,0.5625]],[]);
+    if(/_banner$/.test(e)||e==='banner')return shBoxes([[0.06,0,0.4375,0.94,1,0.5625]],[]);
+    if(e==='tripwire')return shBoxes([[0,0.0625,0,1,0.0938,1]],[]);
+    if(e==='tripwire_hook')return shBoxes([[0.375,0,0.375,0.625,0.5,0.625]],[]);
+    if(e==='cobweb')return SHAPE_CROSS;
     if(NO_COLLIDE[e])return SHAPE_NONE;
     if(CROSS_EXACT[e])return SHAPE_CROSS;
     for(var i=0;i<CROSS_SUFFIX.length;i++){
       var sf=CROSS_SUFFIX[i];
       if(e.length>sf.length&&e.slice(-sf.length)===sf)return SHAPE_CROSS;
     }
-    /* 多件式：旗帜立在地上不打碰撞 */
-    if(/_banner$/.test(e))return SHAPE_NONE;
-    if(/_sign$/.test(e))return SHAPE_NONE;
+    if(e==='bamboo')return SHAPE_CROSS;
     if(/_carpet$/.test(e))return shBoxes([[0,0,0,1,0.0625,1]]);
     if(e==='snow')return shBoxes([[0,0,0,1,0.125,1]]);
     if(/_slab$/.test(e))return shBoxes([[0,0,0,1,0.5,1]]);
     if(/_stairs$/.test(e))return shBoxes([[0,0,0,1,0.5,1],[0,0.5,0,1,1,0.5]]);
-    if(/_fence_gate$/.test(e))return shBoxes([[0.375,0,0,0.625,1.5,1]]);
-    if(/_fence$/.test(e))return shBoxes([[0.375,0,0.375,0.625,1.5,0.625],[0.375,0.75,0,0.625,1.5,1]]);
-    if(/_wall$/.test(e))return shBoxes([[0.25,0,0.25,0.75,1.5,0.75],[0.25,0.75,0,0.75,1.5,1]]);
+    if(/_fence_gate$/.test(e))return shBoxes([[0.375,0,0,0.625,1,1]],[[0.375,0,0,0.625,1.5,1]]);
+    if(/_fence$/.test(e))return shBoxes(
+      [[0.375,0,0.375,0.625,1,0.625],[0.375,0.75,0,0.625,1,1]],
+      [[0.375,0,0.375,0.625,1.5,0.625],[0.375,0.75,0,0.625,1.5,1]]);
+    if(/_wall$/.test(e))return shBoxes(
+      [[0.25,0,0.25,0.75,1,0.75],[0.25,0.75,0,0.75,1,1]],
+      [[0.25,0,0.25,0.75,1.5,0.75],[0.25,0.75,0,0.75,1.5,1]]);
     if(/_door$/.test(e))return shBoxes([[0,0,0,0.1875,1,1]]);
     if(/_trapdoor$/.test(e))return shBoxes([[0,0,0,1,0.1875,1]]);
     if(/_button$/.test(e))return shBoxes([[0.3125,0,0.375,0.6875,0.125,0.625]]);
@@ -798,28 +809,94 @@ canvas#game3d{display:block}
   }
   for(var _sb in BLOCKS)SHAPES[_sb]=classifyShape(BLOCKS[_sb].eng||'');
   function shapeOf(b){return SHAPES[b]||SHAPE_FULL;}
-  /* 活塞头/朝向这类「同一 id 不同朝向」的形状要按坐标查 */
+
+  /* ═══════════════════════════════════════════════════
+     ★ 方块朝向（所有方块共用一张表）
+       键 "wx,wy,wz" → 0..5，编号与 DIRS 一致：+X -X +Y -Y +Z -Z
+       4（+Z）= 默认姿态，等于「没旋转」——旧存档里的方块自动落到这一档，
+       所以加朝向不会让已有世界里的楼梯/活塞变形。
+       模型一律以「正面朝 +Z」为基准，按朝向绕 Y/X 轴旋转。
+     ═══════════════════════════════════════════════════ */
   var PISTON_HEAD_ID=40;
   var DIRS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
-  function shapeAt(b,wx,wy,wz){
-    if(b===PISTON_HEAD_ID){
-      var d=pistonFacing.get(wx+','+wy+','+wz);
-      if(d===undefined)d=0;
-      var t=0.25;
-      if(d===0)return shBoxes([[1-t,0,0,1,1,1]]);
-      if(d===1)return shBoxes([[0,0,0,t,1,1]]);
-      if(d===2)return shBoxes([[0,1-t,0,1,1,1]]);
-      if(d===3)return shBoxes([[0,0,0,1,t,1]]);
-      if(d===4)return shBoxes([[0,0,1-t,1,1,1]]);
-      return shBoxes([[0,0,0,1,1,t]]);
-    }
-    return shapeOf(b);
+  var ORIENT_DEFAULT=4;
+  var bOrient=new Map();
+  function oKey(x,y,z){return x+','+y+','+z;}
+  function orientAt(wx,wy,wz){
+    var d=bOrient.get(oKey(wx,wy,wz));
+    return d===undefined?ORIENT_DEFAULT:d;
   }
-  /* 有碰撞：整块或局部箱体（花草/空气/水/装饰件都不挡人） */
+  function setOrient(wx,wy,wz,d){
+    var k=oKey(wx,wy,wz);
+    if(d===undefined||d===null||d<0||d===ORIENT_DEFAULT)bOrient.delete(k);
+    else bOrient.set(k,d);
+  }
+  /* 0 = 不定向；1 = 只认水平四向（楼梯/门/箱子…）；2 = 六向（活塞/发射器…） */
+  var ORIENT_SIX={'piston':1,'sticky_piston':1,'piston_head':1,'dispenser':1,'dropper':1,
+    'observer':1,'end_rod':1,'hopper':1,'command_block':1,
+    'chain_command_block':1,'repeating_command_block':1};
+  var ORIENT_FOUR={'chest':1,'trapped_chest':1,'ender_chest':1,'furnace':1,
+    'blast_furnace':1,'smoker':1,'barrel':1,'carved_pumpkin':1,'jack_o_lantern':1,
+    'lectern':1,'stonecutter':1,'grindstone':1,'loom':1,'cartography_table':1,
+    'fletching_table':1,'smithing_table':1,'anvil':1,'chipped_anvil':1,'damaged_anvil':1,
+    'bee_nest':1,'beehive':1,'campfire':1,'soul_campfire':1};
+  function orientKind(eng){
+    if(!eng)return 0;
+    if(ORIENT_SIX[eng])return 2;
+    if(eng==='lever'||/_button$/.test(eng)||/_torch$/.test(eng))return 2;
+    if(eng==='ladder'||eng==='vine'||eng==='tripwire_hook')return 1;
+    if(ORIENT_FOUR[eng])return 1;
+    if(/_stairs$/.test(eng)||/_fence_gate$/.test(eng)||/_door$/.test(eng)||
+       /_trapdoor$/.test(eng)||/_sign$/.test(eng)||/_bed$/.test(eng))return 1;
+    return 0;
+  }
+  function orientKindOf(b){var d=BLOCKS[b];return d?orientKind(d.eng):0;}
+  /* 点绕方块中心旋转到指定朝向（90° 的整数倍，仍是轴对齐盒） */
+  function rotPt(x,y,z,d){
+    var u=x-0.5,v=y-0.5,w=z-0.5,a,b,c;
+    if(d===0){a=w;b=v;c=-u;}        /* +X */
+    else if(d===1){a=-w;b=v;c=u;}   /* -X */
+    else if(d===2){a=u;b=w;c=-v;}   /* +Y */
+    else if(d===3){a=u;b=-w;c=v;}   /* -Y */
+    else if(d===5){a=-u;b=v;c=-w;}  /* -Z（180°） */
+    else{a=u;b=v;c=w;}              /* +Z：不动 */
+    return [a+0.5,b+0.5,c+0.5];
+  }
+  function rg(v){return Math.round(v*1e6)/1e6;}   /* 消掉 0.49999999 */
+  function rotBox(q,d){
+    if(d===ORIENT_DEFAULT)return q;
+    var mnx=9,mny=9,mnz=9,mxx=-9,mxy=-9,mxz=-9;
+    for(var i=0;i<8;i++){
+      var p=rotPt(i&1?q[3]:q[0],i&2?q[4]:q[1],i&4?q[5]:q[2],d);
+      if(p[0]<mnx)mnx=p[0]; if(p[0]>mxx)mxx=p[0];
+      if(p[1]<mny)mny=p[1]; if(p[1]>mxy)mxy=p[1];
+      if(p[2]<mnz)mnz=p[2]; if(p[2]>mxz)mxz=p[2];
+    }
+    return [rg(mnx),rg(mny),rg(mnz),rg(mxx),rg(mxy),rg(mxz)];
+  }
+  /* 按坐标查形状：静态形状 × 该格的朝向（渲染箱与碰撞箱一起转） */
+  function shapeAt(b,wx,wy,wz){
+    var base=shapeOf(b);
+    if(base.t!=='boxes')return base;
+    var d=orientAt(wx,wy,wz);
+    if(d===ORIENT_DEFAULT)return base;
+    var out=new Array(base.b.length);
+    for(var i=0;i<base.b.length;i++)out[i]=rotBox(base.b[i],d);
+    var col=base.c===base.b?out:null;
+    if(!col){
+      col=new Array(base.c.length);
+      for(var j=0;j<base.c.length;j++)col[j]=rotBox(base.c[j],d);
+    }
+    return {t:'boxes',b:out,c:col};
+  }
+  /* 有碰撞：整块或「有实际碰撞箱」的局部箱体（花草/空气/水/贴片件都不挡人） */
   function hasCollision(b){
     if(b===0||isWaterId(b)||isDecorId(b))return false;
     var s=shapeOf(b);
-    return s.t==='full'||s.t==='boxes';
+    if(s.t==='full')return true;
+    if(s.t!=='boxes')return false;
+    var c=s.c||s.b;
+    return !!(c&&c.length);
   }
 
   /* ═══════════════════════════════════════════════════
@@ -1172,6 +1249,8 @@ canvas#game3d{display:block}
     var d=chunkData.get(ck(cx,cz));if(!d)return;
     var lx=wx-cx*CHUNK_SIZE,lz=wz-cz*CHUNK_SIZE;
     d[(yIdx(wy)*CHUNK_SIZE+lz)*CHUNK_SIZE+lx]=v;
+    /* 朝向跟着方块走：挖掉或换成不定向方块时，丢掉该格残留的朝向 */
+    if(v===0||orientKindOf(v)===0)setOrient(wx,wy,wz,undefined);
     /* 红石：任何方块变化都可能影响附近信号 */
     rsTouch(wx,wy,wz);
     if(record!==false){
@@ -1503,20 +1582,29 @@ canvas#game3d{display:block}
      ★ 活塞：放置时按玩家视线记朝向，通电伸出、断电缩回；
        粘性活塞缩回时把推出去的方块拉回来（最多推 12 格）
      ═══════════════════════════════════════════════════ */
-  var pistonFacing=new Map(),pistonState=new Map(),pistonSet=new Set();
+  var pistonState=new Map(),pistonSet=new Set();
+  /* 活塞朝向就用统一的 bOrient 表，不再单独维护一张 Map */
+  function pistonFacingGet(x,y,z){return orientAt(x,y,z);}
   var PISTON_ID=0,STICKY_ID=0;
   (function(){
     for(var _k in BLOCKS){
-      var _e=BLOCKS[_k].eng;
-      if(_e==='piston')PISTON_ID=Number(_k);
-      else if(_e==='sticky_piston')STICKY_ID=Number(_k);
+      var _b=BLOCKS[_k],_e=_b.eng;
+      if(_e==='piston'||_e==='sticky_piston'){
+        /* 数据里的 e 字段可能因贴图名回落而重名（粘性活塞曾写成 piston），按中文名兜底 */
+        if(_e==='sticky_piston'||/黏性活塞|粘性活塞/.test(_b.name))STICKY_ID=Number(_k);
+        else PISTON_ID=Number(_k);
+      }
     }
     var _t=TILE_OF['piston_top'];
     if(_t===undefined)_t=TILE_OF['piston_top_sticky'];
     if(_t===undefined)_t=TILE_OF['piston_side'];
     if(_t===undefined)_t=BLOCKS[PISTON_ID]?BLOCKS[PISTON_ID].side:0;
     BLOCKS[PISTON_HEAD_ID]={name:'活塞头',eng:'piston_head',top:_t,side:_t,bottom:_t,cat:'redstone'};
-    SHAPES[PISTON_HEAD_ID]=SHAPE_FULL;
+    /* 活塞头基准姿态：1/4 薄板贴在 +Z 末端，朝其他方向时由 shapeAt 旋转 */
+    SHAPES[PISTON_HEAD_ID]=shBoxes([[0,0,0.75,1,1,1]]);
+    /* 粘性活塞正面是单独的贴图（带黏液），原版就是两张 */
+    var _st=TILE_OF['piston_top_sticky'];
+    if(_st!==undefined&&BLOCKS[STICKY_ID])BLOCKS[STICKY_ID].top=_st;
   })();
   function facingFromLook(){
     var d=getLook(),ax=Math.abs(d.x),ay=Math.abs(d.y),az=Math.abs(d.z);
@@ -1524,10 +1612,29 @@ canvas#game3d{display:block}
     if(ax>=az)return d.x>0?0:1;
     return d.z>0?4:5;
   }
+  /* 放置时的朝向：六向按视线方向，四向只取水平分量（正面朝玩家看的那一侧） */
+  function placeOrient(bid){
+    var kind=orientKindOf(bid);
+    if(kind===0)return undefined;
+    if(kind===2)return facingFromLook();
+    var d=getLook();
+    return Math.abs(d.x)>=Math.abs(d.z)?(d.x>0?0:1):(d.z>0?4:5);
+  }
+  /* 数据里有重复的活塞条（旧手写 320 的 e 被贴图名回落写成了 piston），
+     按名字兜底，别让「粘性活塞」少了回拉功能 */
+  function isPistonLike(b){
+    var d=BLOCKS[b];
+    return !!(d&&(d.eng==='piston'||d.eng==='sticky_piston'));
+  }
+  function isStickyPiston(b){
+    if(b===STICKY_ID)return true;
+    var d=BLOCKS[b];
+    return !!(d&&/黏性活塞|粘性活塞/.test(d.name));
+  }
   function pistonPushable(b){
     if(b===0||isWaterId(b))return true;
-    if(b===PISTON_ID||b===STICKY_ID||b===PISTON_HEAD_ID)return false;
-    if(b===7)return false;              /* 基岩 */
+    if(isPistonLike(b)||b===PISTON_HEAD_ID)return false;
+    if(b===7)return false;
     return true;
   }
   function pistonPoweredAt(x,y,z){
@@ -1553,13 +1660,15 @@ canvas#game3d{display:block}
       }
       for(var i=moved.length-1;i>=0;i--){
         var m=moved[i];
+        var od=bOrient.get(oKey(m[0],m[1],m[2]));
         setBlock(m[0]+dir[0],m[1]+dir[1],m[2]+dir[2],m[3]);
+        if(od!==undefined)setOrient(m[0]+dir[0],m[1]+dir[1],m[2]+dir[2],od);
         setBlock(m[0],m[1],m[2],0);
         markDirty(m[0],m[2]);markDirty(m[0]+dir[0],m[2]+dir[2]);
       }
     }
     setBlock(tx,ty,tz,PISTON_HEAD_ID);
-    pistonFacing.set(tx+','+ty+','+tz,d);
+    setOrient(tx,ty,tz,d);
     markDirty(tx,tz);markDirty(tx+dir[0],tz+dir[2]);
     pistonState.set(x+','+y+','+z,{ext:true,pulled:moved.length>0});
     sfx('click',0.7);
@@ -1569,14 +1678,16 @@ canvas#game3d{display:block}
     var dir=DIRS[d],tx=x+dir[0],ty=y+dir[1],tz=z+dir[2];
     if(getBlock(tx,ty,tz)===PISTON_HEAD_ID){
       setBlock(tx,ty,tz,0);
-      pistonFacing.delete(tx+','+ty+','+tz);
+      setOrient(tx,ty,tz,undefined);
     }
     var st=pistonState.get(x+','+y+','+z);
-    if(getBlock(x,y,z)===STICKY_ID&&st&&st.pulled){
+    if(isStickyPiston(getBlock(x,y,z))&&st&&st.pulled){
       var bx=tx+dir[0],by=ty+dir[1],bz=tz+dir[2];
       var bb=getBlock(bx,by,bz);
       if(bb!==0&&!isWaterId(bb)&&pistonPushable(bb)){
+        var od=bOrient.get(oKey(bx,by,bz));
         setBlock(tx,ty,tz,bb);setBlock(bx,by,bz,0);
+        if(od!==undefined)setOrient(tx,ty,tz,od);
         markDirty(tx,tz);markDirty(bx,bz);
       }
     }
@@ -1589,9 +1700,8 @@ canvas#game3d{display:block}
     pistonSet.forEach(function(key){
       var p=key.split(','),x=+p[0],y=+p[1],z=+p[2];
       var b=getBlock(x,y,z);
-      if(b!==PISTON_ID&&b!==STICKY_ID){pistonSet.delete(key);pistonState.delete(key);return;}
-      var d=pistonFacing.get(key);
-      if(d===undefined){d=0;pistonFacing.set(key,d);}
+      if(!isPistonLike(b)){pistonSet.delete(key);pistonState.delete(key);return;}
+      var d=orientAt(x,y,z);
       var st=pistonState.get(key)||{ext:false,pulled:false};
       var pw=pistonPoweredAt(x,y,z);
       if(pw&&!st.ext)extendPiston(x,y,z,d);
@@ -1747,11 +1857,39 @@ canvas#game3d{display:block}
     }
     /* 不透明整块（只有整块才遮挡邻面） */
     function opqB(b){return b!==0&&!isWaterId(b)&&!isDecorId(b)&&shapeOf(b).t==='full';}
+    /* ★ 面 UV：把贴图上「方块上这一小块」取出来。
+       以前局部箱体每面都贴整张图，半砖会显示成被压扁的整张贴图；
+       按箱体在面内的位置裁 UV 之后，半砖/栅栏/地毯显示的就是贴图里对应的那条。
+       栅栏/墙做得比 1 格高，超出的部分夹回 0..1，免得采到图集里隔壁方块。 */
+    function faceUVat(fi,x,y,z){
+      var u,v;
+      if(fi===0){u=z;v=y;}          /* +X */
+      else if(fi===1){u=1-z;v=y;}   /* -X */
+      else if(fi===2){u=x;v=1-z;}   /* +Y */
+      else if(fi===3){u=x;v=z;}     /* -Y */
+      else if(fi===4){u=1-x;v=y;}   /* +Z */
+      else{u=x;v=y;}                /* -Z */
+      if(u<0)u=0;else if(u>1)u=1;
+      if(v<0)v=0;else if(v>1)v=1;
+      return [u,v];
+    }
+    /* 正面有独立贴图的方块（活塞推面这类）：按朝向换图，其余方块照旧 */
+    var FACE_FRONT={'piston':1,'sticky_piston':1,'piston_head':1,
+      'dispenser':1,'dropper':1,'observer':1,'carved_pumpkin':1,'jack_o_lantern':1};
+    function faceTileOf(def,b,fi,wx,wy,wz){
+      if(orientKindOf(b)===0||!FACE_FRONT[def.eng])
+        return (fi===2)?def.top:(fi===3)?def.bottom:def.side;
+      var d=orientAt(wx,wy,wz);
+      if(fi===d)return def.top;
+      if(fi===(d^1))return def.bottom||def.top;
+      return def.side;
+    }
     /* 局部箱体方块：台阶/楼梯/栅栏/地毯/雪层… */
     function pushPartial(g,b,wx,wy,wz,def){
-      var sh=shapeAt(b,wx,wy,wz),tiles=[def.top,def.side,def.bottom];
-      for(var i=0;i<sh.b.length;i++){
-        var q=sh.b[i],cull=[0,0,0,0,0,0];
+      var sh=shapeAt(b,wx,wy,wz);
+      var boxes=sh.b;
+      for(var i=0;i<boxes.length;i++){
+        var q=boxes[i],cull=[0,0,0,0,0,0];
         if(q[0]<=0&&opqB(getBlock(wx-1,wy,wz)))cull[1]=1;
         if(q[3]>=1&&opqB(getBlock(wx+1,wy,wz)))cull[0]=1;
         if(q[1]<=0&&opqB(getBlock(wx,wy-1,wz)))cull[3]=1;
@@ -1761,14 +1899,16 @@ canvas#game3d{display:block}
         var x0=wx+q[0],y0=wy+q[1],z0=wz+q[2],x1=wx+q[3],y1=wy+q[4],z1=wz+q[5];
         for(var f=0;f<6;f++){
           if(cull[f])continue;
-          var face=FACES[f],tile=(f===2)?tiles[0]:(f===3)?tiles[2]:tiles[1];
+          var face=FACES[f],tile=faceTileOf(def,b,f,wx,wy,wz);
           var lit=(f===2)?1:(f===3)?0.62:0.84;
-          var pts=[];
+          var pts=[],uvs=[];
           for(var k=0;k<4;k++){
             var c=face.corners[k];
+            var px=c[0]?q[3]:q[0],py=c[1]?q[4]:q[1],pz=c[2]?q[5]:q[2];
             pts.push([c[0]?x1:x0,c[1]?y1:y0,c[2]?z1:z0,face.dir[0],face.dir[1],face.dir[2]]);
+            uvs.push(faceUVat(f,px,py,pz));
           }
-          pushQuad(g,pts,tile,face.uvs,lit,0);
+          pushQuad(g,pts,tile,uvs,lit,0);
         }
       }
     }
@@ -1827,7 +1967,7 @@ canvas#game3d{display:block}
             if(isWater&&isWaterId(nb))continue;
 
             var face=FACES[f];
-            var tile=(f===2)?def.top:(f===3)?def.bottom:def.side;
+            var tile=faceTileOf(def,b,f,wx,wy,wz);
             /* ★ 红石灯：被供电时换亮贴图且全亮（不受 AO 暗化） */
             var litLamp=false;
             if(b===318&&lampPowered(wx,wy,wz)){tile=LAMP_ON_TILE;litLamp=true;}
@@ -2237,14 +2377,48 @@ canvas#game3d{display:block}
     if(!hasCollision(b))return null;
     var s=shapeAt(b,wx,wy,wz);
     if(s.t==='full')return [[wx,wy,wz,wx+1,wy+1,wz+1]];
-    var out=[];
-    for(var i=0;i<s.b.length;i++){
-      var q=s.b[i];
+    var src=s.c||s.b,out=[];
+    for(var i=0;i<src.length;i++){
+      var q=src[i];
       out.push([wx+q[0],wy+q[1],wz+q[2],wx+q[3],wy+q[4],wz+q[5]]);
     }
     return out;
   }
   var _tmpBoxes=[];
+  /* ★ 自动上台阶：脚前有 ≤0.6 格高的矮台阶（半砖/楼梯/地毯）就直接贴上去。
+     原版没有「跳」这个动作，autoJump 那套只负责 1 格高的整块墙。 */
+  function stepUp(mvx,mvz){
+    if(!player.onGround)return false;
+    var sp=Math.hypot(mvx,mvz);
+    if(sp<0.05)return false;
+    var p=player.pos;
+    var fx=Math.floor(p.x+mvx/sp*0.45),fz=Math.floor(p.z+mvz/sp*0.45);
+    var fy=Math.floor(p.y+0.0001);
+    var boxes=blockAABBs(fx,fy,fz);
+    if(!boxes)return false;
+    var top=-1e9;
+    for(var i=0;i<boxes.length;i++)if(boxes[i][4]>top)top=boxes[i][4];
+    var dh=top-p.y;
+    if(dh<=0.001||dh>0.6)return false;
+    var ny=p.y+dh+0.0002;
+    /* 抬上去之后头顶不能撞到东西 */
+    var y0=Math.floor(ny),y1=Math.floor(ny+PLAYER_HEIGHT-0.001);
+    var x0=Math.floor(p.x-PLAYER_HALF),x1=Math.floor(p.x+PLAYER_HALF);
+    var z0=Math.floor(p.z-PLAYER_HALF),z1=Math.floor(p.z+PLAYER_HALF);
+    for(var x=x0;x<=x1;x++)for(var y=y0;y<=y1;y++)for(var z=z0;z<=z1;z++){
+      var bs=blockAABBs(x,y,z);
+      if(!bs)continue;
+      for(var j=0;j<bs.length;j++){
+        var bb=bs[j];
+        if(bb[4]<=ny+0.001)continue;
+        if(bb[0]<p.x+PLAYER_HALF&&bb[3]>p.x-PLAYER_HALF&&
+           bb[2]<p.z+PLAYER_HALF&&bb[5]>p.z-PLAYER_HALF&&
+           bb[1]<ny+PLAYER_HEIGHT-0.001)return false;
+      }
+    }
+    p.y=ny;player.vel.y=0;player.onGround=true;
+    return true;
+  }
   function collide(axis,delta){
     if(delta===0)return;
     var p=player.pos;p[axis]+=delta;
@@ -2763,6 +2937,20 @@ canvas#game3d{display:block}
     if(!obj)return;
     for(var k in obj)worldMods.set(k,obj[k]);
   }
+  /* 朝向表：键是世界坐标，值 0..5；只有非默认朝向的方块才会存进来 */
+  function serializeOrient(){
+    var out={};
+    bOrient.forEach(function(d,k){out[k]=d;});
+    return out;
+  }
+  function deserializeOrient(obj){
+    bOrient.clear();
+    if(!obj)return;
+    for(var k in obj){
+      var d=+obj[k];
+      if(d>=0&&d<=5&&d!==ORIENT_DEFAULT)bOrient.set(k,d);
+    }
+  }
   function saveWorldNow(notify){
     if(!currentWorld||isMultiplayer)return;
     currentWorld.playerPos={x:player.pos.x,y:player.pos.y,z:player.pos.z};
@@ -2770,6 +2958,7 @@ canvas#game3d{display:block}
     currentWorld.gameMode=gameMode;
     currentWorld.lastPlayedAt=Date.now();
     currentWorld.mods=serializeMods();
+    currentWorld.orient=serializeOrient();
     currentWorld.hunger=player.hunger;
     saveWorlds();
     if(notify)addChat('✓ 世界已保存','success');
@@ -2936,6 +3125,7 @@ canvas#game3d{display:block}
     currentWorld=w;isMultiplayer=false;currentRoom=null;
     WORLD_SEED=w.seed;worldType=w.worldType||'default';difficulty=w.difficulty||'normal';
     deserializeMods(w.mods);
+    deserializeOrient(w.orient);
     clearAllChunks();setGameMode(w.gameMode||'survival');
     clearInventory();
     showLoad();setLoadProgress(0,1,'正在准备世界...');
@@ -2967,7 +3157,7 @@ canvas#game3d{display:block}
               if(isDecorId(v)||isRsSource(v)||v===318)
                 rsDirty.add(rsKey(wx,wy,wz));
               /* 活塞：读档后重新纳入驱动列表（朝向未知时默认朝 +X） */
-              if(v===PISTON_ID||v===STICKY_ID){pistonSet.add(wx+','+wy+','+wz);}
+              if(isPistonLike(v)){pistonSet.add(wx+','+wy+','+wz);}
             }
           });
         }
@@ -4324,10 +4514,9 @@ canvas#game3d{display:block}
     }
     setBlock(x,y,z,bid);markDirty(x,z);swing();
     queueWaterAround(x,y,z);
-    if(bid===PISTON_ID||bid===STICKY_ID){
-      pistonFacing.set(x+','+y+','+z,facingFromLook());
-      pistonSet.add(x+','+y+','+z);
-    }
+    var od=placeOrient(bid);
+    if(od!==undefined)setOrient(x,y,z,od);
+    if(isPistonLike(bid))pistonSet.add(x+','+y+','+z);
     if(gameMode==='survival'||gameMode==='hardcore'){
       var it2=hotbarSlots[selectedSlot];
       if(it2){it2.count--;if(it2.count<=0)hotbarSlots[selectedSlot]=null;
@@ -4762,6 +4951,7 @@ canvas#game3d{display:block}
       player.pos.x+=player.vel.x*dt;player.pos.y+=player.vel.y*dt;player.pos.z+=player.vel.z*dt;
       player.onGround=false;
     }else{
+      if(!isFly)stepUp(player.vel.x,player.vel.z);
       player.onGround=false;
       collide('x',player.vel.x*dt);collide('z',player.vel.z*dt);collide('y',player.vel.y*dt);
     }
@@ -5522,7 +5712,12 @@ canvas#game3d{display:block}
     recipes:function(){return RECIPES;},matchCraft:matchCraft,
     armor:function(){return armorSlots;},armorPoints:armorPoints,
     pistonId:function(){return [PISTON_ID,STICKY_ID,PISTON_HEAD_ID];},
-    pistonSet:pistonSet,pistonFacing:pistonFacing,pistonState:pistonState,
+    pistonSet:pistonSet,pistonState:pistonState,
+    orientAt:orientAt,setOrient:setOrient,orientKind:orientKindOf,
+    orientMap:function(){return bOrient;},placeOrient:placeOrient,
+    serializeOrient:serializeOrient,expectOrient:ORIENT_DEFAULT,
+    tickPiston:pistonTick,isStickyPiston:isStickyPiston,
+    state:function(){return appState;},setState:setAppState,
     shapeAt:shapeAt,blockAABBs:blockAABBs,hasCollision:hasCollision,
     shoot:function(kind,dir,power,dmg){shootProjectile(kind,dir,power,dmg);},
     animals:animals,
