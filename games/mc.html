@@ -474,6 +474,45 @@ canvas#game3d{display:block}
     font-size:12.5px;color:#404040;margin-bottom:4px;letter-spacing:1px;
   }
 
+
+  /* 真·原版全景：6 张 panorama 里的 4 张侧面按 front/right/back/left 拼成 360° 环，
+     横向无限平移就是原版主菜单那种「世界在慢慢转」的效果（不是渐变仿制） */
+  .mc-pano{position:absolute;inset:0;overflow:hidden;background:#000}
+  /* 环图 4:1（4 张 90° 面拼接），按视口高度等比放大：一份 = 400vh 宽 × 100vh 高，
+     平移一整份就是 360°，首尾无缝，也不会有纵向拉伸 */
+  .mc-pano-track{
+    position:absolute;top:0;left:0;height:100vh;width:800vh;
+    background:url(../assets/mc-gui/pano_strip.png) repeat-x 0 50%;
+    background-size:400vh 100vh;
+    animation:panoSpin 300s linear infinite;
+    will-change:transform;
+  }
+  @keyframes panoSpin{from{transform:translateX(0)}to{transform:translateX(-400vh)}}
+  .mc-pano-vignette{
+    position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 95% at 50% 45%,transparent 40%,rgba(0,0,0,.42) 100%);
+  }
+
+
+  /* 玩家立绘区按原版：黑色底、50×72（2 倍 = 100×144 会太大，这里用 50×72 逻辑尺寸） */
+  .inv-panel.player .inv-player-preview{
+    background:#000;width:50px;height:72px;overflow:hidden;
+    box-shadow:inset 0 0 0 1px #555;display:flex;align-items:flex-end;justify-content:center;
+  }
+  .inv-panel.player .inv-player-preview canvas{width:44px;height:70px;display:block}
+  /* 合成箭头：原版是 12×15 的箭头像素图，这里用 CSS 画一个等比箭头 */
+  .inv-panel.player .craft-arrow{
+    font-size:0;width:24px;height:20px;position:relative;margin:0 8px;
+    background:#8b8b8b;
+    clip-path:polygon(0 35%,55% 35%,55% 10%,100% 50%,55% 90%,55% 65%,0 65%);
+    box-shadow:none;
+  }
+
+
+  /* 原版排布：「合成」标题单独一行，下面才是 2×2 → 箭头 → 结果 */
+  .inv-panel.player .vanilla-craft{display:flex;flex-direction:column;align-items:flex-start}
+  .inv-panel.player .craft-row{display:flex;align-items:center;gap:10px}
+
 </style>
 </head>
 <body>
@@ -551,12 +590,7 @@ canvas#game3d{display:block}
 
 <div id="mainMenuScreen" class="screen mc-title-screen">
   <!-- 背景：原版那种缓慢推进的全景（jar 里 panorama 是 1×1 占位，这里用分层渐变模拟） -->
-  <div class="mc-pano">
-    <div class="mc-pano-sky"></div>
-    <div class="mc-pano-hills"></div>
-    <div class="mc-pano-ground"></div>
-    <div class="mc-pano-vignette"></div>
-  </div>
+  <div class="mc-pano"><div class="mc-pano-track"></div><div class="mc-pano-vignette"></div></div>
   <div class="mc-title-body">
     <div class="mc-logo-wrap">
       <img class="mc-logo" src="../assets/mc-gui/title_mc.png" alt="MINECRAFT" draggable="false">
@@ -720,9 +754,11 @@ canvas#game3d{display:block}
       <div class="vanilla-top">
         <div class="vanilla-craft">
           <div class="craft-title">合成</div>
-          <div class="craft-grid c2" id="invCraftGrid"></div>
-          <div class="craft-arrow">➜</div>
-          <div class="craft-result"><div class="inv-cell" id="invCraftResult" title="合成结果"></div></div>
+          <div class="craft-row">
+            <div class="craft-grid c2" id="invCraftGrid"></div>
+            <div class="craft-arrow">➜</div>
+            <div class="craft-result"><div class="inv-cell" id="invCraftResult" title="合成结果"></div></div>
+          </div>
         </div>
         <div class="vanilla-right">
           <div class="armor-col" id="invArmorRow"></div>
