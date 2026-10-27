@@ -571,6 +571,7 @@ canvas#game3d{display:block}
 
 <script src="../assets/mc-inline-textures.js"></script>
 <script src="../assets/mc-items-data.js"></script>
+<script src="../assets/mc-models-data.js"></script>
 <script src="../assets/mc-recipes-data.js"></script>
 <script src="../assets/vendor/three.min.js"></script>
 <script>if(typeof THREE==='undefined')document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
@@ -1650,6 +1651,9 @@ canvas#game3d{display:block}
     17:'spruce_log',18:'spruce_log_top',19:'spruce_leaves',20:'ice',21:'deepslate',
     22:'coal_ore',23:'iron_ore',24:'gold_ore',25:'diamond_ore',26:'lapis_ore'
   };
+  /* ★ 原版模型：从 jar 的 blockstates/models 解析出来的 elements 与逐面 UV，
+     有模型的方块直接按模型画（形状与贴图都对得上原版），没有再回退到形状推断 */
+  var MODELS=(window.MC_MODELS||{});
   /* 合并脚本生成的 1.18 前物品纹理（方块纹理 + item_ 前缀的物品纹理） */
   if(window.MC_TEX){for(var _tk in MC_TEX)TEX_FILES[_tk]=MC_TEX[_tk];}
   /* 反查表：贴图名 → 图集格号（红石粉、灯亮等需要按名字取格） */
@@ -2009,6 +2013,40 @@ canvas#game3d{display:block}
         }
       }
     }
+    /* ★ 原版模型渲染：elements 坐标是 1/16 格，逐面 UV 是原版 0..16 坐标。
+       v 方向要翻：原版 uv 的 v 从上往下，three.js 的 v=0 在贴图底部。
+       cullface 只在「该面正好贴着方块边界」且邻居是不透明整块时才剔除。 */
+    function modelFaceCulled(fi,q,wx,wy,wz){
+      if(fi===0)return q[3]>=0.999&&opqB(getBlock(wx+1,wy,wz));
+      if(fi===1)return q[0]<=0.001&&opqB(getBlock(wx-1,wy,wz));
+      if(fi===2)return q[4]>=0.999&&opqB(getBlock(wx,wy+1,wz));
+      if(fi===3)return q[1]<=0.001&&opqB(getBlock(wx,wy-1,wz));
+      if(fi===4)return q[5]>=0.999&&opqB(getBlock(wx,wy,wz+1));
+      return q[2]<=0.001&&opqB(getBlock(wx,wy,wz-1));
+    }
+    function pushModel(g,els,b,wx,wy,wz){
+      var d=orientAt(wx,wy,wz);
+      for(var i=0;i<els.length;i++){
+        var e=els[i];
+        var q=[e[0]/16,e[1]/16,e[2]/16,e[3]/16,e[4]/16,e[5]/16];
+        if(d!==ORIENT_DEFAULT)q=rotBox(q,d);
+        var X0=wx+q[0],Y0=wy+q[1],Z0=wz+q[2],X1=wx+q[3],Y1=wy+q[4],Z1=wz+q[5];
+        var fl=e[6];
+        for(var fj=0;fj<fl.length;fj++){
+          var fc=fl[fj],fi=fc[0];
+          if(fc[6]&&modelFaceCulled(fi,q,wx,wy,wz))continue;
+          var F=FACES[fi],tile=fc[5],u1=fc[1],v1=fc[2],u2=fc[3],v2=fc[4];
+          var lit=(fi===2)?1:(fi===3)?0.62:0.84;
+          var pts=[],uvs=[];
+          for(var k=0;k<4;k++){
+            var c=F.corners[k],a=F.uvs[k][0],bb=F.uvs[k][1];
+            pts.push([c[0]?X1:X0,c[1]?Y1:Y0,c[2]?Z1:Z0,F.dir[0],F.dir[1],F.dir[2]]);
+            uvs.push([(u1+a*(u2-u1))/16, 1-((v2-bb*(v2-v1))/16)]);
+          }
+          pushQuad(g,pts,tile,uvs,lit,0);
+        }
+      }
+    }
     /* 花草：两片十字面片，正反都画 */
     function pushCross(g,def,wx,wy,wz){
       var tile=def.side,a=0.15,b2=0.85,y0=wy,y1=wy+1;
@@ -2026,7 +2064,7 @@ canvas#game3d{display:block}
     var invC=1/ATLAS_COLS,invR=1/ATLAS_ROWS,rowOff=ATLAS_ROWS-1;
     var bx=cx*CHUNK_SIZE,bz=cz*CHUNK_SIZE;
     /* 不透明判定：只有整块才遮挡邻面（水/装饰件/花草/台阶都不挡） */
-    function opq(b){return b!==0&&!isWaterId(b)&&!isDecorId(b)&&shapeOf(b).t==='full';}
+    function opq(b){return b!==0&&!isWaterId(b)&&!isDecorId(b)&&!MODELS[b]&&shapeOf(b).t==='full';}
 
     for(var ay=0;ay<WORLD_HEIGHT;ay++){
       var wy=ay+WORLD_MIN_Y;
@@ -2042,7 +2080,10 @@ canvas#game3d{display:block}
             pushDecor(G[2],b,bx+lx,wy,bz+lz);
             continue;
           }
-          /* ★ 按形状分流：花草十字面片 / 局部箱体 / 整块 */
+          /* ★ 有原版模型：直接按 jar 里的 elements 与逐面 UV 出几何 */
+          var mdl=MODELS[b];
+          if(mdl){pushModel(G[0],mdl,b,bx+lx,wy,bz+lz);continue;}
+          /* 没模型就按形状分流：花草十字面片 / 局部箱体 / 整块 */
           var shp=shapeOf(b);
           if(shp.t==='none')continue;
           if(shp.t==='cross'){pushCross(G[0],def,bx+lx,wy,bz+lz);continue;}
