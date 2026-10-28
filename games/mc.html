@@ -209,11 +209,14 @@ canvas#game3d{display:block}
 
 #inventoryScreen{position:fixed;inset:0;z-index:42;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55)}
 #inventoryScreen.hidden{display:none}
-.inv-window{display:flex;gap:12px;align-items:stretch;max-width:96vw;max-height:92vh}
+.inv-window{display:flex;gap:12px;align-items:flex-start;max-width:96vw;max-height:92vh}
+/* 原版界面：canvas 按整数倍缩放（保持像素锐利），不加任何仿制边框 */
+.inv-vanilla{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0}
+#invCanvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(3px 3px 0 rgba(0,0,0,.4));cursor:pointer;touch-action:none}
+.inv-vanilla .inv-hint{font-size:11px;color:#d8d8d8;text-shadow:1px 1px 0 #000;text-align:center;line-height:1.6;max-width:340px}
 /* 原版物品栏：灰底 + slot_frame 九宫格边框 */
 .inv-panel{background:#c6c6c6;border:2px solid #565656;box-shadow:inset 2px 2px 0 #fff,inset -2px -2px 0 #8b8b8b,3px 3px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden;color:#3f3f3f}
 .inv-panel.creative{width:min(500px,48vw)}
-.inv-panel.player{width:min(470px,46vw)}
 .inv-panel-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#8b8b8b;color:#fff;border-bottom:2px solid #565656;font-size:13px;font-weight:bold;letter-spacing:2px;flex-shrink:0;text-shadow:2px 2px 0 #3f3f3f}
 .inv-search-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#c6c6c6;border-bottom:2px solid #8b8b8b;flex-shrink:0}
 .inv-tabs{display:flex;flex-wrap:wrap;gap:3px;padding:7px 8px;background:#c6c6c6;border-bottom:2px solid #8b8b8b;flex-shrink:0}
@@ -737,6 +740,12 @@ canvas#game3d{display:block}
 
 <div id="inventoryScreen" class="hidden">
   <div class="inv-window">
+    <!-- 原版界面：整块面板用 26.3 的 GUI 贴图在 canvas 上按原版坐标绘制 -->
+    <div class="inv-vanilla">
+      <canvas id="invCanvas" width="176" height="166"></canvas>
+      <div class="inv-hint">左键拿起/放下 · 右键取一半 · Shift 快速移动 · E 关闭</div>
+    </div>
+    <!-- 创造物品栏：全量方块/物品的检索网格（原版创造栏同款入口） -->
     <div class="inv-panel creative" id="invCreativePanel">
       <div class="inv-panel-header">创造物品栏</div>
       <div class="inv-search-row">
@@ -747,36 +756,6 @@ canvas#game3d{display:block}
       <div class="inv-scroll">
         <div class="inv-grid-9" id="invGridCreative"></div>
       </div>
-    </div>
-    <div class="inv-panel player">
-      <div class="inv-panel-header">物品栏<span class="sp"></span><button class="icon-btn" id="invRecipeBtn" title="合成配方书">📖</button><button class="icon-btn" id="invCloseBtn">✕</button></div>
-      <!-- 原版布局：左上是合成区（箭头 + 结果），右侧是护甲列与玩家立绘 -->
-      <div class="vanilla-top">
-        <div class="vanilla-craft">
-          <div class="craft-title">合成</div>
-          <div class="craft-row">
-            <div class="craft-grid c2" id="invCraftGrid"></div>
-            <div class="craft-arrow">➜</div>
-            <div class="craft-result"><div class="inv-cell" id="invCraftResult" title="合成结果"></div></div>
-          </div>
-        </div>
-        <div class="vanilla-right">
-          <div class="armor-col" id="invArmorRow"></div>
-          <div class="inv-player-preview"><canvas id="invPlayerCanvas" width="90" height="150"></canvas></div>
-          <div class="offhand-slot"><div class="inv-cell disabled" id="invOffhand" title="副手槽"><span class="armor-icon">✋</span></div></div>
-        </div>
-      </div>
-      <div class="vanilla-rows">
-        <div class="inv-recipe-section" id="invRecipeSection">
-          <div class="inv-section-title" id="invRecipeTitle">可用配方（点一下自动摆放）</div>
-          <div class="inv-recipe-list" id="invRecipeList"></div>
-        </div>
-        <div class="vanilla-label">背包</div>
-        <div class="inv-grid-9" id="invGridBackpack"></div>
-        <div class="vanilla-label vanilla-hotbar">快捷栏</div>
-        <div class="inv-grid-9" id="invGridHotbar"></div>
-      </div>
-      <div class="inv-hint">左键点物品跟随鼠标 · 再点放入对应格子 · 右键取一半/放一个 · Shift 点击快速切换 · Q 丢弃</div>
     </div>
   </div>
 </div>
@@ -2044,6 +2023,7 @@ canvas#game3d{display:block}
           }
         });
         atlasTexture.needsUpdate=true;
+        ICON_DIRTY=true;
       };
       img.onerror=function(){ /* 缺图就用程序化纹理兜底 */ };
       /* ★ 优先用内联 dataURL：file:// 双击打开时外部 png 会污染 canvas，
@@ -2261,6 +2241,12 @@ canvas#game3d{display:block}
           var fc=fl[fj],fi=fc[0];
           if(fc[6]&&modelFaceCulled(fi,q,wx,wy,wz))continue;
           var F=FACES[fi],tile=fc[5],u1=fc[1],v1=fc[2],u2=fc[3],v2=fc[4];
+          /* 少数模型的贴图是「名字」而不是格号（床、营火、炼药台…），
+             以前直接拿去算模运算会得到 NaN，那一整面就渲染成乱码/不可见 */
+          if(typeof tile!=='number'){
+            var _bt=TILE_OF[tile],_bd=BLOCKS[b];
+            tile=(_bt!==undefined)?_bt:(_bd?_bd.side:0);
+          }
           var lit=(fi===2)?1:(fi===3)?0.62:0.84;
           var pts=[],uvs=[];
           for(var k=0;k<4;k++){
@@ -2617,18 +2603,25 @@ canvas#game3d{display:block}
       m.map=skinTex(r);m.color.setHex(0xffffff);m.needsUpdate=true;
     }
     skinMatQueue.length=0;
-    drawPlayerPreview();
+    if(inventoryOpen)drawInvScreen();
   };
 
-  /* 第一人称：史蒂夫右臂（4×12×4）。盒子沿 +y 竖直，旋转后向前下方伸出 */
+  /* ★ 第一人称右臂：照原版 ItemInHandRenderer#renderPlayerArm 的几何来。
+     原版把「手」放在镜头坐标系 (0.56, -0.52, -0.72)，前臂从手往屏幕右上后方
+     伸出去，所以在画面上只看到右下角一截、末端是手。
+     以前是「从画面中间斜插一根 0.16 粗的细杆」，位置和粗细都不对。
+     手臂本体是 4×12×4 像素 = 0.25×0.75×0.25 格。 */
+  var HAND_POS=new THREE.Vector3(0.42,-0.46,-0.70);
+  var HAND_DIR=new THREE.Vector3(0.72,0.60,0.10).normalize();  /* 手 → 肩 的方向 */
+  var ARM_LEN=0.75,ARM_W=0.25;
   var handPivot=new THREE.Group();
-  handPivot.position.set(0.30,-0.12,-0.40);camera.add(handPivot);
-  var handArm=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.56,0.16),skinMats('rArm'));
-  handArm.position.set(0,-0.24,0);
-  handArm.rotation.x=0.95;
+  handPivot.position.copy(HAND_POS);camera.add(handPivot);
+  var handArm=new THREE.Mesh(new THREE.BoxGeometry(ARM_W,ARM_LEN,ARM_W),skinMats('rArm'));
+  handArm.position.copy(HAND_DIR).multiplyScalar(ARM_LEN/2);
+  handArm.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),HAND_DIR);
   handPivot.add(handArm);
-  var handBasePos={x:0.30,y:-0.12,z:-0.40};
-  var handBaseRot={x:0.10,y:-0.04,z:0};
+  var handBasePos={x:HAND_POS.x,y:HAND_POS.y,z:HAND_POS.z};
+  var handBaseRot={x:0,y:0,z:0};
 
   /* ═══ 第一人称手持物：选中方块→ 3D 小方块，物品→ 竖直贴片（原版样式） ═══ */
   var TILE_TEX_CACHE={};
@@ -2644,8 +2637,9 @@ canvas#game3d{display:block}
     return t;
   }
   var handHolder=new THREE.Group();
-  /* 相对手臂节点的偏移：原版手持物停在画面右下角 */
-  handHolder.position.set(0.02,-0.04,0.00);
+  /* 手持物挂在「手」上：往镜头前方挪一点，正好在手掌外侧。
+     原版手持方块是 scale(0.4) 的一个方块，所以这里也用 0.4 见方。 */
+  handHolder.position.set(-0.02,-0.05,-0.09);
   handPivot.add(handHolder);
   var handItemMesh=null;
   function updateHandItem(){
@@ -2662,7 +2656,7 @@ canvas#game3d{display:block}
         var mats=[def.side,def.side,def.top,def.bottom,def.side,def.side].map(function(t){
           return new THREE.MeshLambertMaterial({map:tileTexture(t),transparent:true,alphaTest:0.05});
         });
-        handItemMesh=new THREE.Mesh(new THREE.BoxGeometry(0.30,0.30,0.30),mats);
+        handItemMesh=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.40,0.40),mats);
         handItemMesh.rotation.y=Math.PI/4+0.15;
         handItemMesh.rotation.x=0.10;
         handItemMesh.renderOrder=3;
@@ -2671,7 +2665,7 @@ canvas#game3d{display:block}
         /* 物品：竖直平面，像原版拿剑/镐的卡片 */
         hasItem=true;
         var m=new THREE.MeshBasicMaterial({map:tileTexture(ITEMS[id].tile),transparent:true,alphaTest:0.05,side:THREE.DoubleSide});
-        handItemMesh=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.42),m);
+        handItemMesh=new THREE.Mesh(new THREE.PlaneGeometry(0.45,0.45),m);
         handItemMesh.rotation.set(0.15,Math.PI/2-0.55,-0.25);
         handItemMesh.renderOrder=3;
         handHolder.add(handItemMesh);
@@ -3693,50 +3687,182 @@ canvas#game3d{display:block}
     }
   });
 
-  /* ★ 立体图标：方块画成原版物品栏那种「顶面 + 左右侧面」的等轴投影，
-     而不是把侧面贴图整个拉成一个正方形。贴图直接取该方块自己的
-     顶面/侧面 tile，三面各用各的，方向也就是对的。
-     物品（工具、食物…）仍是平面图。 */
-  function drawIsoIcon(g,topTile,sideTile){
-    function src(tile){
-      var c=tile%ATLAS_COLS,r=Math.floor(tile/ATLAS_COLS);
-      return [c*TILE_PX,r*TILE_PX];
-    }
-    /* 顶面：16×16 方图 → 菱形（顶点在上，左右各跨半宽） */
-    var tp=src(topTile),sp=src(sideTile);
-    g.save();
-    g.setTransform(1,0.5,-1,0.5,16,0);
-    g.drawImage(atlasCanvas,tp[0],tp[1],TILE_PX,TILE_PX,0,0,16,16);
-    g.restore();
-    /* 左侧面（暗 0.78） */
-    g.save();
-    g.setTransform(1,0.5,0,1,0,8);
-    g.globalAlpha=1;g.filter='brightness(0.78)';
-    g.drawImage(atlasCanvas,sp[0],sp[1],TILE_PX,TILE_PX,0,0,16,16);
-    g.restore();
-    /* 右侧面（暗 0.6） */
-    g.save();
-    g.setTransform(1,-0.5,0,1,16,16);
-    g.filter='brightness(0.6)';
-    g.drawImage(atlasCanvas,sp[0],sp[1],TILE_PX,TILE_PX,0,0,16,16);
-    g.restore();
-    g.filter='none';
+  /* ═══════════════════════════════════════════════════
+     ★ 物品图标：照原版 ItemRenderer 的做法，把方块的「模型」用正交投影画出来。
+
+     原版 GUI 里物品的变换是模型自带的 display.gui：
+         rotateY(225°) → rotateX(30°) → scale(0.625)，正交投影
+     也就是说看到的永远是「顶面 + 两个侧面」，跟游戏里看到的是同一个模型，
+     台阶/楼梯/栅栏/火把这些不完整方块在图标里也就是它们本来的样子，
+     而不是以前那种「把侧面贴图压成菱形」的近似。
+
+     关键点：正交投影是线性变换，一个矩形面投到屏幕上仍然是**平行四边形**，
+     正好可以用 canvas 的仿射变换精确贴图，所以不需要三角拆分，也没有插值误差。
+     ═══════════════════════════════════════════════════ */
+  var ICON_SIZE=32;                  /* 输出 canvas 边长（= GUI 内 16px 的 2 倍） */
+  var ICON_UNIT=ICON_SIZE/16;        /* 1 个 GUI 像素 = 2 个 canvas 像素 */
+  var ICON_S=0.625*ICON_SIZE;        /* 1 格方块 = 0.625*16 GUI 像素 → canvas 像素 */
+  var ICON_CENTER=ICON_SIZE/2;
+  var ICON_CACHE={};
+  var ICON_SHADE={0:0.6,1:0.6,2:1.0,3:0.5,4:0.8,5:0.8}; /* 原版方向亮度：东西 0.6 / 顶 1 / 底 0.5 / 南北 0.8 */
+  var SHADED_TILE={};
+  /* 旋转常数：rotY(225°) 接 rotX(30°) */
+  var ICO_CA=Math.cos(225*Math.PI/180),ICO_SA=Math.sin(225*Math.PI/180);
+  var ICO_CB=Math.cos(30*Math.PI/180),ICO_SB=Math.sin(30*Math.PI/180);
+
+  /* 方块单位坐标 → 图标像素坐标；同时返回深度（越大越靠近相机） */
+  function iconProj(x,y,z){
+    var X=x-0.5,Y=y-0.5,Z=z-0.5;
+    var x1=X*ICO_CA+Z*ICO_SA, z1=-X*ICO_SA+Z*ICO_CA;
+    var y2=Y*ICO_CB-z1*ICO_SB, z2=Y*ICO_SB+z1*ICO_CB;
+    return {x:ICON_CENTER+x1*ICON_S,y:ICON_CENTER-y2*ICON_S,d:z2};
   }
-  function makeIcon(bid){
-    var def=BLOCKS[bid]||ITEMS[bid];
-    if(!def)return null;
-    var c=document.createElement('canvas');c.width=32;c.height=32;
+  /* 带方向亮度的贴图小图（同一格贴图 × 4 档亮度，缓存起来） */
+  function shadedTile(tile,lit){
+    var key=tile+'|'+lit;
+    if(SHADED_TILE[key])return SHADED_TILE[key];
+    var c=document.createElement('canvas');c.width=TILE_PX;c.height=TILE_PX;
     var g=c.getContext('2d');g.imageSmoothingEnabled=false;
-    if(def.top!==undefined&&def.side!==undefined){
-      drawIsoIcon(g,def.top,def.side);
-      return c;
-    }
-    /* 纯物品：平面贴图 */
-    var tile=def.tile;
     var col=tile%ATLAS_COLS,row=Math.floor(tile/ATLAS_COLS);
-    g.drawImage(atlasCanvas,col*TILE_PX,row*TILE_PX,TILE_PX,TILE_PX,0,0,32,32);
+    g.drawImage(atlasCanvas,col*TILE_PX,row*TILE_PX,TILE_PX,TILE_PX,0,0,TILE_PX,TILE_PX);
+    if(lit<1){g.globalCompositeOperation='source-atop';g.fillStyle='rgba(0,0,0,'+(1-lit)+')';g.fillRect(0,0,TILE_PX,TILE_PX);}
+    SHADED_TILE[key]=c;
     return c;
   }
+  /* 把贴图上 (u1,v1)-(u2,v2)（0..16 原版坐标）这块，精确贴到投影后的平行四边形上。
+     (a,w) 是这个面的参数坐标：a 沿 u 方向，w 沿「贴图从上到下」方向。 */
+  function blitFace(g,img,u1,v1,u2,v2,pts,pa){
+    var p0=pts[0],p1=pts[1],p3=pts[3],A0=pa[0],A1=pa[1],A3=pa[3];
+    var d1x=A1[0]-A0[0],d1y=A1[1]-A0[1],d3x=A3[0]-A0[0],d3y=A3[1]-A0[1];
+    var det=d1x*d3y-d1y*d3x;
+    if(!det)return;
+    var D1x=p1.x-p0.x,D1y=p1.y-p0.y,D3x=p3.x-p0.x,D3y=p3.y-p0.y;
+    /* p = p0 + α*(p1-p0) + β*(p3-p0)，其中 (a,w) = A0 + α*d1 + β*d3 */
+    var ax=(d3y*D1x-d1y*D3x)/det, ay=(d3y*D1y-d1y*D3y)/det;
+    var wx=(-d3x*D1x+d1x*D3x)/det, wy=(-d3x*D1y+d1x*D3y)/det;
+    var e=p0.x-ax*A0[0]-wx*A0[1], f=p0.y-ay*A0[0]-wy*A0[1];
+    var sw=u2-u1,sh=v2-v1;
+    if(sw<=0||sh<=0)return;
+    g.save();
+    g.setTransform(ax,ay,wx,wy,e,f);
+    g.drawImage(img,
+      (u1/16)*TILE_PX,(v1/16)*TILE_PX,(sw/16)*TILE_PX,(sh/16)*TILE_PX,
+      0,0,1,1);
+    g.restore();
+  }
+  /* 一组矩形面（每个面 = 4 个角 + tile + uv）按深度排序后画出 */
+  function paintFaces(g,faces){
+    faces.sort(function(A,B){return A.d-B.d;});
+    for(var i=0;i<faces.length;i++){
+      var F=faces[i];
+      blitFace(g,shadedTile(F.tile,F.lit),F.u1,F.v1,F.u2,F.v2,F.p,F.a);
+    }
+  }
+  function resolveTileOf(tile,fallback){
+    if(typeof tile==='number')return tile;
+    var t=TILE_OF[tile];
+    return (t===undefined)?fallback:t;
+  }
+  /* 从原版模型元素出图标：与游戏内 pushModel 完全同一套 UV 推导 */
+  function modelIconFaces(els,def){
+    var out=[];
+    for(var i=0;i<els.length;i++){
+      var e=els[i];
+      var q=[e[0]/16,e[1]/16,e[2]/16,e[3]/16,e[4]/16,e[5]/16];
+      for(var j=0;j<e[6].length;j++){
+        var fc=e[6][j],fi=fc[0],F=FACES[fi];
+        var u1=fc[1],v1=fc[2],u2=fc[3],v2=fc[4];
+        var tile=resolveTileOf(fc[5],def.side);
+        var pts=[],pa=[],dsum=0;
+        for(var k=0;k<4;k++){
+          var c=F.corners[k],a=F.uvs[k][0],b=F.uvs[k][1];
+          var px=c[0]?q[3]:q[0],py=c[1]?q[4]:q[1],pz=c[2]?q[5]:q[2];
+          var pr=iconProj(px,py,pz);
+          pts.push(pr);dsum+=pr.d;
+          /* 原版 UV：v = v2 - b*(v2-v1)，所以 b=0 在 v2（下方），b=1 在 v1（上方）。
+             贴图坐标 w 是从上往下数，故 w = 1-b。 */
+          pa.push([a,1-b]);
+        }
+        out.push({p:pts,a:pa,tile:tile,lit:ICON_SHADE[fi],d:dsum/4,u1:u1,v1:v1,u2:u2,v2:v2});
+      }
+    }
+    return out;
+  }
+  /* 没有模型时按形状兜底：局部箱体出六面，整块就是一个立方体 */
+  function shapeIconFaces(def,boxes,sideTile,topTile,botTile){
+    var out=[];
+    for(var bi=0;bi<boxes.length;bi++){
+      var q=boxes[bi];
+      for(var fi=0;fi<6;fi++){
+        var F=FACES[fi],pts=[],pa=[],dsum=0;
+        var tile=(fi===2)?topTile:(fi===3)?botTile:sideTile;
+        for(var k=0;k<4;k++){
+          var c=F.corners[k];
+          var px=c[0]?q[3]:q[0],py=c[1]?q[4]:q[1],pz=c[2]?q[5]:q[2];
+          var pr=iconProj(px,py,pz);
+          pts.push(pr);dsum+=pr.d;
+          pa.push([F.uvs[k][0],1-F.uvs[k][1]]);
+        }
+        out.push({p:pts,a:pa,tile:tile,lit:ICON_SHADE[fi],d:dsum/4,u1:0,v1:0,u2:16,v2:16});
+      }
+    }
+    return out;
+  }
+  /* 花草/作物：原版是两片十字面片（绕 Y 转 ±45°），图标里也一样 */
+  function crossIconFaces(def){
+    var h=0.45,dx=h*Math.SQRT1_2,dz=dx,out=[],tile=def.side;
+    var quads=[
+      [[0.5-dx,0,0.5-dz],[0.5+dx,0,0.5+dz],[0.5+dx,1,0.5+dz],[0.5-dx,1,0.5-dz]],
+      [[0.5+dx,0,0.5-dz],[0.5-dx,0,0.5+dz],[0.5-dx,1,0.5+dz],[0.5+dx,1,0.5-dz]]
+    ];
+    for(var i=0;i<quads.length;i++){
+      var q=quads[i],pts=[],dsum=0;
+      /* 面片四角：(0,0)(1,0)(1,1)(0,1) —— 下面是 v2，上面是 v1 */
+      for(var k=0;k<4;k++){
+        var pr=iconProj(q[k][0],q[k][1],q[k][2]);
+        pts.push(pr);dsum+=pr.d;
+      }
+      var pa=[[0,1],[1,1],[1,0],[0,0]];
+      /* 正反两面都画，免得从背后看是空的 */
+      out.push({p:pts,a:pa,tile:tile,lit:1.0,d:dsum/4,u1:0,v1:0,u2:16,v2:16});
+      out.push({p:pts.slice().reverse(),a:pa.slice().reverse(),tile:tile,lit:0.85,d:dsum/4-0.001,u1:0,v1:0,u2:16,v2:16});
+    }
+    return out;
+  }
+
+  function makeIcon(bid){
+    if(ICON_DIRTY)clearIconCache();
+    if(ICON_CACHE[bid])return ICON_CACHE[bid];
+    var def=BLOCKS[bid]||ITEMS[bid];
+    if(!def)return null;
+    var c=document.createElement('canvas');c.width=ICON_SIZE;c.height=ICON_SIZE;
+    var g=c.getContext('2d');g.imageSmoothingEnabled=false;
+    if(def.top!==undefined&&def.side!==undefined){
+      /* 方块：有原版模型就用原版模型，没有就按形状兜底 */
+      var faces=null;
+      var mdl=MODELS[bid];
+      if(mdl)faces=modelIconFaces(mdl,def);
+      else{
+        var sh=shapeOf(bid);
+        if(sh.t==='cross')faces=crossIconFaces(def);
+        else if(sh.t==='boxes'&&sh.b&&sh.b.length)faces=shapeIconFaces(def,sh.b,def.side,def.top,def.bottom!==undefined?def.bottom:def.side);
+        else if(sh.t==='none')faces=null;
+        else faces=shapeIconFaces(def,[[0,0,0,1,1,1]],def.side,def.top,def.bottom!==undefined?def.bottom:def.side);
+      }
+      if(faces&&faces.length)paintFaces(g,faces);
+      ICON_CACHE[bid]=c;
+      return c;
+    }
+    /* 纯物品：平面贴图（锤子/苹果这类本来就是一张图） */
+    var tile=resolveTileOf(def.tile!==undefined?def.tile:0,0);
+    var col=tile%ATLAS_COLS,row=Math.floor(tile/ATLAS_COLS);
+    g.drawImage(atlasCanvas,col*TILE_PX,row*TILE_PX,TILE_PX,TILE_PX,0,0,ICON_SIZE,ICON_SIZE);
+    ICON_CACHE[bid]=c;
+    return c;
+  }
+  /* 贴图集准备好之后要清一次图标缓存（之前可能是用程序生成的占位贴图画的） */
+  var ICON_DIRTY=false;
+  function clearIconCache(){ICON_CACHE={};SHADED_TILE={};ICON_DIRTY=false;}
   /* ★ 耐久条：原版是把一条彩色细条叠在物品图标上 */
   function appendDurBar(parent,item){
     if(!item||item.dur==null)return;
@@ -3877,86 +4003,274 @@ canvas#game3d{display:block}
     invCursorEl.style.top=invMouseY+'px';
   }
 
-  function fillInvCell(cell,item){
-    while(cell.firstChild)cell.removeChild(cell.firstChild);
-    if(item&&item.id&&item.count>0){
-      var icon=makeIcon(item.id);
-      if(icon)cell.appendChild(icon);
-      if(item.count>1){
-        var c=document.createElement('span');c.className='cnt';c.textContent=item.count;
-        cell.appendChild(c);
-      }
-      appendDurBar(cell,item);
-      cell.title=itemName(item.id)+' x'+item.count+durText(item);
-    }else cell.title='';
+  /* ═══════════════════════════════════════════════════
+     ★ 原版 GUI 屏幕
+
+     面板贴图直接用 26.3 jar 里的 gui/container/*.png，
+     槽位坐标照抄原版 InventoryScreen / CraftingScreen 的常量（不是量出来的近似）：
+       合成 2×2   (98,18)+(18,18)       结果 (154,28)
+       护甲       (8,8+18i)             副手 (77,62)
+       背包/快捷   (8+18j, 84+18i) / (8+18i, 142)
+       工作台 3×3 (30,17)+(18,18)       结果 (124,35)
+     canvas 的逻辑坐标系就是 GUI 的 176×166，按整数倍放大，像素不糊。
+     ═══════════════════════════════════════════════════ */
+  var GUI_IMG={inv:new Image(),craft:new Image()};
+  GUI_IMG.inv.src='../assets/mc-gui/gui_inventory.png';
+  GUI_IMG.craft.src='../assets/mc-gui/gui_crafting.png';
+  var invCanvas=$('invCanvas');
+  var invCtx=invCanvas?invCanvas.getContext('2d'):null;
+  var INV_W=176,INV_H=166,INV_S=2,invHoverIdx=-1;
+  var offhandSlot=null;                 /* 副手：原版有这个格子，这里也能用 */
+  function invPanelImg(){return craftTableOpen?GUI_IMG.craft:GUI_IMG.inv;}
+
+  /* 面板内所有槽位（x/y 是 GUI 逻辑坐标） */
+  function invSlots(){
+    var out=[],i,n=craftSize();
+    if(n===2){
+      out.push({kind:'result',x:154,y:28});
+      for(var cy=0;cy<2;cy++)for(var cx=0;cx<2;cx++)
+        out.push({kind:'craft',idx:cy*2+cx,x:98+18*cx,y:18+18*cy});
+      for(i=0;i<4;i++)out.push({kind:'armor',idx:i,x:8,y:8+18*i});
+      out.push({kind:'offhand',idx:0,x:77,y:62});
+    }else{
+      out.push({kind:'result',x:124,y:35});
+      for(var c3y=0;c3y<3;c3y++)for(var c3x=0;c3x<3;c3x++)
+        out.push({kind:'craft',idx:c3y*3+c3x,x:30+18*c3x,y:17+18*c3y});
+    }
+    for(i=0;i<27;i++)out.push({kind:'inv',idx:i,arr:backpackSlots,shift:hotbarSlots,
+      x:8+18*(i%9),y:84+18*Math.floor(i/9)});
+    for(i=0;i<9;i++)out.push({kind:'inv',idx:i,arr:hotbarSlots,shift:backpackSlots,
+      x:8+18*i,y:142});
+    return out;
+  }
+  function invSlotItem(s){
+    if(s.kind==='armor')return armorSlots[s.idx];
+    if(s.kind==='offhand')return offhandSlot;
+    if(s.kind==='craft')return craftGrid[s.idx];
+    if(s.kind==='result')return craftResult;
+    return s.arr[s.idx];
+  }
+  function invSlotSet(s,v){
+    if(s.kind==='armor')armorSlots[s.idx]=v;
+    else if(s.kind==='offhand')offhandSlot=v;
+    else if(s.kind==='craft')craftGrid[s.idx]=v;
+    else if(s.kind==='inv')s.arr[s.idx]=v;
   }
 
-  function bindSlotMouse(cell,arr,idx,opts){
-    opts=opts||{};
-    cell.addEventListener('mousedown',function(e){
-      e.preventDefault();e.stopPropagation();
-      var item=arr[idx];
-      if(e.shiftKey&&!cursorItem&&item&&item.id){
-        /* 护甲：Shift 点击直接穿上 */
-        var aslot=armorSlotOf(itemEng(item.id));
-        if(aslot>=0){
-          var oldA=armorSlots[aslot];
-          armorSlots[aslot]={id:item.id,count:1,dur:item.dur};
-          arr[idx]=oldA||null;
-          drawArmorBar();
-          refreshInvUI();
-          return;
-        }
-        var targetArr=opts.shiftTarget;
-        if(targetArr){
-          for(var t=0;t<targetArr.length;t++){
-            var ts=targetArr[t];
-            if(ts&&ts.id===item.id&&ts.count<maxStack(item.id)){
-              var mv=Math.min(maxStack(item.id)-ts.count,item.count);
-              ts.count+=mv;item.count-=mv;
-              if(item.count<=0){arr[idx]=null;break;}
-            }
-          }
-          if(arr[idx]){
-            for(var t2=0;t2<targetArr.length;t2++){
-              if(!targetArr[t2]){targetArr[t2]=item;arr[idx]=null;break;}
-            }
-          }
-        }
-        refreshInvUI();
+  /* 物品图标 + 数量 + 耐久条：全按原版位置（数量右下、耐久条 x+2,y+13） */
+  function drawSlotContents(g,x,y,item){
+    if(!item||!item.id||!item.count)return;
+    var ic=makeIcon(item.id);
+    if(ic)g.drawImage(ic,x,y,16,16);
+    if(item.count>1){
+      g.font='bold 8px ui-monospace,Menlo,Consolas,monospace';
+      g.textAlign='right';g.textBaseline='alphabetic';
+      g.fillStyle='#3f3f3f';g.fillText(String(item.count),x+17,y+10);
+      g.fillStyle='#ffffff';g.fillText(String(item.count),x+16,y+9);
+    }
+    var meta=itemMeta(item.id);
+    if(item.dur!=null&&meta&&meta.dur){
+      var r=Math.max(0,Math.min(1,item.dur/meta.dur));
+      g.fillStyle='#000000';g.fillRect(x+2,y+13,13,2);
+      g.fillStyle=(r>0.5)?'#5bd75b':(r>0.25?'#e0c020':'#d02020');
+      g.fillRect(x+2,y+13,Math.max(1,Math.round(13*r)),1);
+      g.fillStyle='rgba(255,255,255,.45)';
+      g.fillRect(x+2,y+13,Math.max(1,Math.round(13*r)),1);
+    }
+  }
+  /* 玩家立绘：用皮肤正面拼一个 2D 小人（原版这里是渲染真实体，位置一致） */
+  function drawPreviewInto(g,x,y,w,h){
+    var ready=STEVE_IMG.complete&&STEVE_IMG.naturalWidth>0;
+    var u=Math.min(h/32,(w-4)/16);
+    var cx=x+w/2,top=y+(h-32*u)/2;
+    function put(rect,dx,dy,dw,dh){
+      if(ready)g.drawImage(STEVE_IMG,rect[0],rect[1],rect[2],rect[3],dx,dy,dw,dh);
+      else{g.fillStyle='#9a9a9a';g.fillRect(dx,dy,dw,dh);}
+    }
+    put([8,8,8,8],    cx-4*u,   top,       8*u, 8*u);
+    put([20,20,8,12], cx-4*u,   top+8*u,   8*u, 12*u);
+    put([44,20,4,12], cx-8*u,   top+8*u,   4*u, 12*u);
+    put([36,52,4,12], cx+4*u,   top+8*u,   4*u, 12*u);
+    put([4,20,4,12],  cx-4*u,   top+20*u,  4*u, 12*u);
+    put([20,52,4,12], cx,       top+20*u,  4*u, 12*u);
+  }
+
+  function fitInvCanvas(){
+    /* 按整数倍放大（原版 guiScale 也是整数），像素才不会糊 */
+    var s=Math.floor(Math.min((window.innerWidth*0.94)/INV_W,(window.innerHeight*0.78)/INV_H));
+    INV_S=Math.max(1,Math.min(4,s||1));
+    if(!invCanvas)return;
+    invCanvas.width=INV_W*INV_S;invCanvas.height=INV_H*INV_S;
+    invCanvas.style.width=(INV_W*INV_S)+'px';
+    invCanvas.style.height=(INV_H*INV_S)+'px';
+  }
+  function drawInvScreen(){
+    if(!invCtx||!inventoryOpen)return;
+    var g=invCtx,crafting=craftTableOpen;
+    g.setTransform(1,0,0,1,0,0);
+    g.imageSmoothingEnabled=false;
+    g.clearRect(0,0,invCanvas.width,invCanvas.height);
+    g.setTransform(INV_S,0,0,INV_S,0,0);
+    /* 面板底图：贴图里内容就在左上 176×166 */
+    var img=invPanelImg();
+    if(img.complete&&img.naturalWidth)g.drawImage(img,0,0,INV_W,INV_H,0,0,INV_W,INV_H);
+    else{g.fillStyle='#c6c6c6';g.fillRect(0,0,INV_W,INV_H);}
+
+    if(!crafting){
+      drawPreviewInto(g,26,8,52,72);
+    }else{
+      /* 工作台面板左上角是空的，原版在这里写「合成」和「物品栏」 */
+      g.font='8px ui-monospace,Menlo,Consolas,monospace';
+      g.textAlign='left';g.textBaseline='alphabetic';
+      g.fillStyle='#404040';
+      g.fillText('合成',28,12);
+      g.fillText('物品栏',8,80);
+    }
+
+    var slots=invSlots(),i;
+    if(invHoverIdx>=0&&invHoverIdx<slots.length){
+      var hv=slots[invHoverIdx];
+      g.fillStyle='rgba(255,255,255,.55)';
+      g.fillRect(hv.x,hv.y,16,16);
+    }
+    for(i=0;i<slots.length;i++){
+      var s=slots[i];
+      drawSlotContents(g,s.x,s.y,invSlotItem(s));
+    }
+    /* 鼠标上拿着的那一叠，原版也是画在 GUI 里（这里用 DOM 浮层，图层在 canvas 之上） */
+  }
+
+  /* 屏幕坐标 → 槽位序号 */
+  function slotIndexAt(mx,my){
+    var slots=invSlots();
+    for(var i=0;i<slots.length;i++){
+      var s=slots[i];
+      if(mx>=s.x&&mx<s.x+16&&my>=s.y&&my<s.y+16)return i;
+    }
+    return -1;
+  }
+
+  /* 一趟快速移动：把一叠东西塞进另一组格子（原版 shift 点击） */
+  function quickMove(s){
+    var item=invSlotItem(s);
+    if(!item||!item.id)return;
+    /* 护甲：直接穿到对应护甲格 */
+    if(s.kind==='inv'||s.kind==='craft'){
+      var aslot=armorSlotOf(itemEng(item.id));
+      if(aslot>=0&&!armorSlots[aslot]){
+        armorSlots[aslot]={id:item.id,count:1,dur:item.dur};
+        invSlotSet(s,null);
+        drawArmorBar();refreshInvUI();
         return;
       }
-      if(e.button===0){
-        /* ★ 工具不可堆叠：数量固定为 1，只做整格交换 */
+    }
+    var target=(s.kind==='inv')?s.shift:null;
+    if(!target)target=(s.kind==='craft')?backpackSlots:null;
+    if(!target)return;
+    var max=maxStack(item.id),t;
+    for(t=0;t<target.length&&item.count>0;t++){
+      var ts=target[t];
+      if(ts&&ts.id===item.id&&ts.count<max){
+        var mv=Math.min(max-ts.count,item.count);
+        ts.count+=mv;item.count-=mv;
+      }
+    }
+    if(item.count<=0){invSlotSet(s,null);refreshInvUI();return;}
+    for(t=0;t<target.length;t++){
+      if(!target[t]){target[t]=newStack(item.id,Math.min(max,item.count));item.count-=target[t].count;break;}
+    }
+    if(item.count<=0)invSlotSet(s,null);
+    refreshInvUI();
+  }
+
+  /* 槽位点击：与原版 AbstractContainerMenu 的语义一致 */
+  function invSlotClick(s,e){
+    var item=invSlotItem(s);
+    /* 合成结果格：只读，取走才消耗材料 */
+    if(s.kind==='result'){
+      if(!craftResult)return;
+      if(e.shiftKey){
+        var guard=0;
+        while(craftResult&&guard++<64){
+          if(!addItem(craftResult.id,craftResult.count))break;
+          consumeCraft();updateCraftResult();
+        }
+        refreshInvUI();return;
+      }
+      if(!craftOnceToCursor())return;
+      consumeCraft();
+      updateCraftResult();refreshInvUI();
+      return;
+    }
+    if(e.shiftKey&&!cursorItem&&item&&item.id){quickMove(s);return;}
+
+    if(e.button===2){
+      /* 右键：空手取一半 / 手上有东西就放一个 */
+      if(cursorItem){
+        if(!item){
+          invSlotSet(s,newStack(cursorItem.id,1));
+          if(cursorItem.dur!=null)invSlotSet(s,{id:cursorItem.id,count:1,dur:cursorItem.dur});
+          cursorItem.count--;
+        }else if(item.id===cursorItem.id&&item.count<maxStack(item.id)){
+          item.count++;cursorItem.count--;
+        }
+        if(cursorItem.count<=0)cursorItem=null;
+      }else if(item){
+        var half=Math.ceil(item.count/2);
+        cursorItem={id:item.id,count:half,dur:item.dur};
+        item.count-=half;
+        if(item.count<=0)invSlotSet(s,null);
+      }
+    }else{
+      /* 左键：同类合并，否则整格交换 */
+      if(s.kind==='armor'||s.kind==='offhand'){
+        /* 护甲格只收对应的护甲 */
+        if(cursorItem&&s.kind==='armor'){
+          var want=armorSlotOf(itemEng(cursorItem.id));
+          if(want!==s.idx)return;
+        }
+        if(item&&!cursorItem){cursorItem=item;invSlotSet(s,null);}
+        else if(cursorItem&&!item){invSlotSet(s,cursorItem);cursorItem=null;}
+        else if(cursorItem&&item){
+          var tmp=item;invSlotSet(s,cursorItem);cursorItem=tmp;
+        }
+      }else{
         var cmax=cursorItem?maxStack(cursorItem.id):64;
         if(cursorItem&&item&&cursorItem.id===item.id&&item.count+cursorItem.count<=cmax){
-          item.count+=cursorItem.count;
-          cursorItem=null;
+          item.count+=cursorItem.count;cursorItem=null;
         }else{
-          var tmp=item;
-          arr[idx]=cursorItem;
-          cursorItem=tmp;
-        }
-      }else if(e.button===2){
-        if(cursorItem){
-          if(!item){
-            arr[idx]=newStack(cursorItem.id,1);
-            cursorItem.count--;
-          }else if(item.id===cursorItem.id&&item.count<maxStack(item.id)){
-            item.count++;cursorItem.count--;
-          }
-          if(cursorItem&&cursorItem.count<=0)cursorItem=null;
-        }else if(item){
-          var half=Math.ceil(item.count/2);
-          cursorItem={id:item.id,count:half,dur:item.dur};
-          item.count-=half;
-          if(item.count<=0)arr[idx]=null;
+          invSlotSet(s,cursorItem);cursorItem=item||null;
         }
       }
-      if(arr[idx]&&arr[idx].count<=0)arr[idx]=null;
-      refreshInvUI();
+    }
+    if(invSlotItem(s)&&invSlotItem(s).count<=0)invSlotSet(s,null);
+    refreshInvUI();
+  }
+
+  if(invCanvas){
+    invCanvas.addEventListener('contextmenu',function(e){e.preventDefault();});
+    invCanvas.addEventListener('pointerdown',function(e){
+      if(!inventoryOpen)return;
+      e.preventDefault();
+      var r=invCanvas.getBoundingClientRect();
+      var mx=(e.clientX-r.left)/INV_S,my=(e.clientY-r.top)/INV_S;
+      var idx=slotIndexAt(mx,my);
+      if(idx<0){
+        /* 点在面板空白处：手上的东西放回背包（原版是丢到地上，这里没有掉落物实体） */
+        if(cursorItem){returnCursorToInv();refreshInvUI();}
+        return;
+      }
+      invSlotClick(invSlots()[idx],{shiftKey:e.shiftKey,button:e.button});
     });
-    cell.addEventListener('contextmenu',function(e){e.preventDefault();});
+    invCanvas.addEventListener('pointermove',function(e){
+      if(!inventoryOpen)return;
+      var r=invCanvas.getBoundingClientRect();
+      var idx=slotIndexAt((e.clientX-r.left)/INV_S,(e.clientY-r.top)/INV_S);
+      if(idx!==invHoverIdx){invHoverIdx=idx;drawInvScreen();}
+    });
+    invCanvas.addEventListener('pointerleave',function(){
+      if(invHoverIdx!==-1){invHoverIdx=-1;drawInvScreen();}
+    });
   }
 
   function buildCreativeGrid(){
@@ -4018,30 +4332,6 @@ canvas#game3d{display:block}
       });
       tabs.appendChild(b);
     })(CREATIVE_CATS[i]);
-  }
-
-  function buildBackpackGrid(){
-    var grid=$('invGridBackpack');
-    grid.innerHTML='';
-    for(var i=0;i<BACKPACK_SIZE;i++)(function(idx){
-      var cell=document.createElement('div');
-      cell.className='inv-cell';
-      fillInvCell(cell,backpackSlots[idx]);
-      bindSlotMouse(cell,backpackSlots,idx,{shiftTarget:hotbarSlots});
-      grid.appendChild(cell);
-    })(i);
-  }
-
-  function buildHotbarInvGrid(){
-    var grid=$('invGridHotbar');
-    grid.innerHTML='';
-    for(var i=0;i<9;i++)(function(idx){
-      var cell=document.createElement('div');
-      cell.className='inv-cell'+(idx===selectedSlot?' selected':'');
-      fillInvCell(cell,hotbarSlots[idx]);
-      bindSlotMouse(cell,hotbarSlots,idx,{shiftTarget:backpackSlots});
-      grid.appendChild(cell);
-    })(i);
   }
 
   /* ═══════════════════════════════════════════════════
@@ -4110,21 +4400,8 @@ canvas#game3d{display:block}
   }
   var craftResult=null;
   function updateCraftResult(){
-    var cell=$('invCraftResult');if(!cell)return;
     var r=matchCraft();
     craftResult=r?{id:r.r[0],count:r.r[1]}:null;
-    while(cell.firstChild)cell.removeChild(cell.firstChild);
-    if(craftResult){
-      var ic=makeIcon(craftResult.id);
-      if(ic)cell.appendChild(ic);
-      if(craftResult.count>1){
-        var c=document.createElement('span');c.className='cnt';c.textContent=craftResult.count;cell.appendChild(c);
-      }
-      cell.title=itemName(craftResult.id)+' ×'+craftResult.count+'（点击取走，Shift 连做）';
-      cell.style.opacity='1';
-    }else{
-      cell.title='把材料摆进左边格子';cell.style.opacity='0.45';
-    }
   }
   function consumeCraft(){
     var n=craftSize();
@@ -4232,110 +4509,25 @@ canvas#game3d{display:block}
     refreshInvUI();
   }
 
-  function buildCraftGrid(){
-    var grid=$('invCraftGrid');
-    grid.innerHTML='';
-    var n=craftSize();
-    grid.className='craft-grid '+(n===3?'c3':'c2');
-    for(var i=0;i<n*n;i++)(function(idx){
-      var cell=document.createElement('div');
-      cell.className='inv-cell';
-      fillInvCell(cell,craftGrid[idx]);
-      bindSlotMouse(cell,craftGrid,idx,{});
-      grid.appendChild(cell);
-    })(i);
-  }
-
-  function buildArmorRow(){
-    var row=$('invArmorRow');
-    row.innerHTML='';
-    var icons=['⛑','🥋','👖','🥾'];
-    var names=['头盔','胸甲','护腿','靴子'];
-    for(var i=0;i<4;i++)(function(idx){
-      var st=armorSlots[idx];
-      var cell=document.createElement('div');
-      cell.className='inv-cell'+(st?'':' disabled');
-      if(st&&st.id){
-        var ic=makeIcon(st.id);
-        if(ic)cell.appendChild(ic);
-        cell.title='已装备：'+itemName(st.id)+'（点击取下）';
-        cell.addEventListener('mousedown',function(e){
-          e.preventDefault();e.stopPropagation();
-          if(cursorItem){toast('手里还有东西');return;}
-          cursorItem=armorSlots[idx];armorSlots[idx]=null;
-          drawArmorBar();refreshInvUI();
-        });
-        cell.addEventListener('contextmenu',function(e){e.preventDefault();});
-      }else{
-        cell.title=names[idx]+'槽（Shift 点击背包里的护甲可穿戴）';
-        var sp=document.createElement('span');
-        sp.className='armor-icon';
-        sp.textContent=icons[idx];
-        cell.appendChild(sp);
-      }
-      row.appendChild(cell);
-    })(i);
-  }
-
-  /* 用史蒂夫皮肤正面图拼一个 2D 立绘（不加载 3D，打开物品栏不卡） */
-  function drawPlayerPreview(){
-    var cv=$('invPlayerCanvas');
-    if(!cv)return;
-    var g=cv.getContext('2d');
-    g.imageSmoothingEnabled=false;
-    g.clearRect(0,0,cv.width,cv.height);
-    var u=4.2,top=6,cx=cv.width/2;
-    var ready=STEVE_IMG.complete&&STEVE_IMG.naturalWidth>0;
-    function put(rect,dx,dy,w,h){
-      if(ready)g.drawImage(STEVE_IMG,rect[0],rect[1],rect[2],rect[3],dx,dy,w,h);
-      else{g.fillStyle='#9a9a9a';g.fillRect(dx,dy,w,h);}
-    }
-    put([8,8,8,8],   cx-4*u, top,        8*u, 8*u);   /* 头 */
-    put([20,20,8,12],cx-4*u, top+8*u,    8*u, 12*u);  /* 身体 */
-    put([44,20,4,12],cx-8*u, top+8*u,    4*u, 12*u);  /* 右臂 */
-    put([36,52,4,12],cx+4*u, top+8*u,    4*u, 12*u);  /* 左臂 */
-    put([4,20,4,12], cx-4*u, top+20*u,   4*u, 12*u);  /* 右腿 */
-    put([20,52,4,12],cx,     top+20*u,   4*u, 12*u);  /* 左腿 */
-  }
-
-  function updatePlayerStats(){
-    var hEl=$('statHealth');if(hEl)hEl.textContent=Math.max(0,Math.round(player.health))+' / '+player.maxHealth;
-    var gEl=$('statHunger');if(gEl)gEl.textContent=Math.max(0,Math.round(player.hunger))+' / '+player.maxHunger;
-    var mEl=$('statMode');
-    if(mEl)mEl.textContent={creative:'创造',survival:'生存',spectator:'旁观',adventure:'冒险'}[gameMode]||'创造';
-    var sEl=$('statSlots');
-    if(sEl){
-      var used=0;
-      for(var i=0;i<9;i++)if(hotbarSlots[i])used++;
-      for(var j=0;j<BACKPACK_SIZE;j++)if(backpackSlots[j])used++;
-      sEl.textContent=used+' / '+(9+BACKPACK_SIZE);
-    }
-  }
-
+  /* 打开/刷新界面：原版 GUI 全部在 canvas 上重画，DOM 只留创造网格 */
   function buildInvUI(){
     var cp=$('invCreativePanel');
     if(cp)cp.style.display=(gameMode==='creative')?'flex':'none';
+    fitInvCanvas();
     buildInvTabs();
     buildCreativeGrid();
-    buildCraftGrid();
     buildRecipeList();
-    buildArmorRow();
-    drawPlayerPreview();
-    updatePlayerStats();
-    buildBackpackGrid();
-    buildHotbarInvGrid();
     updateCraftResult();
+    invHoverIdx=-1;
+    drawInvScreen();
     renderCursor();
   }
 
   function refreshInvUI(){
     updateHotbarDisplay();
-    buildCraftGrid();
-    buildRecipeList();
-    buildBackpackGrid();
-    buildHotbarInvGrid();
-    updatePlayerStats();
     updateCraftResult();
+    buildRecipeList();
+    drawInvScreen();
     renderCursor();
   }
 
@@ -4402,32 +4594,6 @@ canvas#game3d{display:block}
       else if(hasFine)lockPointer();
     }
   }
-  $('invCloseBtn').addEventListener('click',closeInv);
-  if($('invRecipeBtn'))$('invRecipeBtn').addEventListener('click',function(){
-    var sec=$('invRecipeSection');
-    if(!sec)return;
-    sec.classList.toggle('open');
-    this.classList.toggle('on',sec.classList.contains('open'));
-  });
-  /* 合成结果：点击取走（Shift 连做） */
-  (function(){
-    var cell=$('invCraftResult');
-    if(!cell)return;
-    cell.addEventListener('mousedown',function(e){
-      e.preventDefault();e.stopPropagation();
-      if(!craftResult)return;
-      var guard=e.shiftKey?64:1;
-      for(var i=0;i<guard;i++){
-        if(!craftResult)break;
-        if(!craftOnceToCursor())break;
-        consumeCraft();
-        updateCraftResult();
-        if(!craftResult&&i<guard-1)break;
-      }
-      refreshInvUI();
-    });
-    cell.addEventListener('contextmenu',function(e){e.preventDefault();});
-  })();
   inventoryScreen.addEventListener('click',function(e){if(e.target===inventoryScreen)closeInv();});
   (function(){
     var si=$('invSearchInput');
@@ -4435,7 +4601,15 @@ canvas#game3d{display:block}
       creativeSearch=e.target.value||'';
       buildCreativeGrid();
     });
+    /* 创造栏的搜索框只在创造模式出现，非创造模式别让它抢键盘 */
+    if(si)si.addEventListener('focus',function(){if(gameMode!=='creative')si.blur();});
   })();
+  /* 窗口尺寸变了要重新算缩放，否则画布会被拉伸 */
+  window.addEventListener('resize',function(){
+    if(!inventoryOpen)return;
+    fitInvCanvas();
+    drawInvScreen();
+  });
 
   /* ★ 生命值 / 饥饿值：直接用 26.3 的 9×9 原版贴图，2 倍绘制 */
   var HEART={c:new Image(),f:new Image(),h:new Image()};
@@ -6151,6 +6325,13 @@ canvas#game3d{display:block}
     setFly:function(v){flying=!!v;player.vel.y=0;},
     setLook:function(y,p2){yaw=y;pitch=p2;},
     addItem:addItem,openInv:openInv,closeInv:closeInv,
+    makeIcon:makeIcon,invSlots:invSlots,invScale:function(){return INV_S;},
+    backpack:function(){return backpackSlots;},hotbar:function(){return hotbarSlots;},
+    offhand:function(){return offhandSlot;},
+    cursorItem:function(){return cursorItem;},setCursorItem:function(v){cursorItem=v;refreshInvUI();},
+    drawInv:drawInvScreen,
+    camera:function(){return camera;},
+    hand:function(){return {pivot:handPivot,arm:handArm,holder:handHolder,item:handItemMesh};},
     craftGrid:function(){return craftGrid;},craftResult:function(){return craftResult;},
     fillCraft:function(r){fillCraftFromRecipe(r);},
     recipes:function(){return RECIPES;},matchCraft:matchCraft,
