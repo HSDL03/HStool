@@ -516,6 +516,240 @@ canvas#game3d{display:block}
   .inv-panel.player .vanilla-craft{display:flex;flex-direction:column;align-items:flex-start}
   .inv-panel.player .craft-row{display:flex;align-items:center;gap:10px}
 
+  /* ══════════════════════════════════════════════════════════════
+     ★ 原版 GUI 布局层
+     所有原版界面都按「GUI 像素」摆坐标（按钮 200×20、列距 160、行距 24…），
+     整层再用 zoom 做整数倍放大 —— 和原版 guiScale 是同一套算法：
+     取最大的 s 使 ceil(w/s)≥320 且 ceil(h/s)≥240。
+     用 zoom 而不是 transform，是因为 zoom 会按放大后的字号重新栅格化文本，
+     8px 的字放大 3 倍仍然锐利；transform 只会把 8px 的位图糊开。
+     按钮/滑条/输入框全部贴 jar 里的 sprites/widget 贴图，九宫格参数抄原版
+     blitNineSliced(..., 20, 4, 200, 20)：左右各 20、上下各 4。
+     ══════════════════════════════════════════════════════════════ */
+  #guiLayer{
+    position:fixed;left:0;top:0;z-index:41;pointer-events:none;overflow:hidden;
+    font-family:"Minecraft","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    font-size:8px;line-height:10px;color:#fff;
+  }
+  .vscreen{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:auto;overflow:hidden}
+  .vscreen.hidden{display:none}
+  /* .vform 也带 display:flex，得用更高优先级保证 hidden 仍然生效 */
+  #guiLayer .vscreen.hidden{display:none}
+  /* 原版菜单底色 = fillGradient(0xC0101010 → 0xD0101010) */
+  .vmenu-bg{position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,16,16,.75),rgba(16,16,16,.82))}
+  /* 原版暂停会把世界模糊掉（renderBlurredBackground）。放在 z-index:13 ——
+     比 HUD（15~22）低，所以热键栏/血条仍然清晰，只有世界被糊掉，跟原版一致 */
+  #guiBlur{position:fixed;inset:0;z-index:13;pointer-events:none;display:none;
+    background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  .vt{color:#fff;text-shadow:1px 1px 0 #3f3f3f;font-size:8px;line-height:10px;white-space:nowrap}
+  .vt.gray{color:#a0a0a0}
+  .vt.yellow{color:#ffff55}
+  .vt.title{font-size:16px;line-height:16px;text-shadow:2px 2px 0 #3f3f3f}
+  .vtitlebar{position:absolute;left:0;right:0;top:15px;text-align:center;pointer-events:none}
+  .vcenter{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  .vcol{display:flex;flex-direction:column;gap:4px;align-items:center}
+  .vrow{display:flex;gap:4px;align-items:center}
+  /* —— 按钮 —— */
+  .vbtn{
+    position:relative;width:200px;height:20px;box-sizing:border-box;
+    border-style:solid;border-width:4px 20px;border-color:transparent;
+    border-image:url(../assets/mc-gui/widget/button.png) 4 20 fill stretch;
+    background:none;padding:0;margin:0;color:#fff;
+    font-family:inherit;font-size:8px;line-height:12px;text-shadow:1px 1px 0 #3f3f3f;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;overflow:hidden;outline:none;
+  }
+  .vbtn:hover{border-image-source:url(../assets/mc-gui/widget/button_highlighted.png)}
+  .vbtn:active{border-image-source:url(../assets/mc-gui/widget/button_highlighted.png)}
+  .vbtn:disabled{border-image-source:url(../assets/mc-gui/widget/button_disabled.png);color:#a0a0a0;cursor:default}
+  .vbtn.w98{width:98px}
+  .vbtn.w150{width:150px}
+  .vbtn.w60{width:60px}
+  /* 20×20 图标按钮（原版标题界面的语言 / 无障碍）：图标画在 border-image 之上，
+     所以必须是子元素 —— border-image 的 fill 会把 background 盖住 */
+  .vbtn.icon20{
+    width:20px;border-width:4px 4px;border-image-slice:4 4 fill;
+  }
+  .vbtn.icon20 i{
+    display:block;width:15px;height:15px;flex:0 0 15px;
+    background-repeat:no-repeat;background-position:center;background-size:15px 15px;
+    image-rendering:pixelated;pointer-events:none;
+  }
+  /* —— 滑条 —— */
+  .vslider{
+    position:relative;width:200px;height:20px;box-sizing:border-box;cursor:pointer;
+    background:url(../assets/mc-gui/widget/slider.png) 0 0/100% 100% no-repeat;
+    image-rendering:pixelated;user-select:none;touch-action:none;
+  }
+  .vslider:hover{background-image:url(../assets/mc-gui/widget/slider_highlighted.png)}
+  .vslider .knob{
+    position:absolute;top:0;left:0;width:8px;height:20px;
+    background:url(../assets/mc-gui/widget/slider_handle.png) 0 0/100% 100% no-repeat;
+  }
+  .vslider:hover .knob{background-image:url(../assets/mc-gui/widget/slider_handle_highlighted.png)}
+  .vslider .lab{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  /* —— 输入框 —— */
+  .vfield{
+    width:200px;height:20px;box-sizing:border-box;border:0;padding:0 4px;
+    background:url(../assets/mc-gui/widget/text_field.png) 0 0/100% 100% no-repeat;
+    color:#fff;font-family:inherit;font-size:8px;text-shadow:1px 1px 0 #3f3f3f;
+    outline:none;image-rendering:pixelated;
+  }
+  .vfield:focus{background-image:url(../assets/mc-gui/widget/text_field_highlighted.png)}
+  .vfield::placeholder{color:#808080}
+  /* —— 选项两列网格：原版 left = W/2-155、right = W/2+5、150×20、行距 24 —— */
+  .vgrid{
+    position:absolute;left:calc(50% - 155px);top:32px;
+    display:grid;grid-template-columns:150px 150px;gap:4px 10px;align-items:center;
+  }
+  .vgrid > .vbtn,.vgrid > .vslider{width:150px}
+  /* —— 标题界面 —— */
+  #titleBg{position:fixed;inset:0;z-index:39;background:#000;overflow:hidden}
+  #titleBg.hidden{display:none}
+  #titleLogo{position:absolute;width:256px;height:64px;image-rendering:pixelated;pointer-events:none}
+  #titleEdition{position:absolute;width:128px;height:16px;image-rendering:pixelated;opacity:.85;pointer-events:none}
+  #titleSplash{
+    position:absolute;color:#ffff00;font-size:8px;line-height:10px;white-space:nowrap;
+    text-shadow:1px 1px 0 #3f3f3f;transform-origin:0 50%;pointer-events:none;
+  }
+  #titleBtnCol{position:absolute;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+  #titleIconRow{position:absolute;display:flex;gap:2px}
+  #titleFooter{position:absolute;left:2px;bottom:2px;font-size:8px;line-height:10px;color:#a0a0a0;text-shadow:1px 1px 0 #3f3f3f}
+  #titleCopyright{position:absolute;right:2px;bottom:2px;font-size:8px;line-height:10px;color:#a0a0a0;text-shadow:1px 1px 0 #3f3f3f}
+  /* —— 死亡界面 —— */
+  .vdeath-bg{position:absolute;inset:0;background:linear-gradient(180deg,rgba(96,0,0,.62),rgba(0,0,0,.58))}
+  #deathTitle{position:absolute;left:0;right:0;text-align:center;color:#fff;font-size:16px;line-height:16px;text-shadow:2px 2px 0 #3f3f3f}
+
+  /* ══════════════════════════════════════════════════════════════
+     列表 / 表单类界面（选择世界、多人游戏、创建世界、创建房间）
+     DOM 结构不动，只把外观换成原版控件：暗底列表 + 8px 白字 + 原版按钮
+     ══════════════════════════════════════════════════════════════ */
+  #guiLayer .vform{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    /* 原版菜单底色：整块暗色渐变，盖住页面底纹 */
+    background:linear-gradient(180deg,rgba(16,16,16,.75),rgba(16,16,16,.82));
+  }
+  #guiLayer .vform .panel{
+    width:316px;height:calc(100% - 44px);min-height:0;display:flex;flex-direction:column;
+    background:rgba(0,0,0,.55);border:1px solid #000;overflow:hidden;padding:0;
+  }
+  /* 列表容器：默认不带背景/内边距，条目自己画 */
+  #guiLayer #roomList,
+  #guiLayer #worldList,
+  #guiLayer #saveListForRoom{
+    flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px;
+    display:block;background:transparent;gap:0;
+  }
+  #guiLayer .vform .panel-header{
+    display:flex;align-items:center;gap:2px;padding:3px 4px;flex:0 0 auto;
+    background:rgba(0,0,0,.32);border-bottom:1px solid #000;
+    font-size:8px;line-height:10px;color:#fff;text-shadow:1px 1px 0 #3f3f3f;
+    white-space:nowrap;
+  }
+  #guiLayer .vform .panel-header strong{font-weight:normal;font-size:8px;line-height:10px}
+  #guiLayer .vform .sp{flex:1}
+  #guiLayer .vform .panel-body{flex:1;min-height:0;overflow-y:auto;padding:5px 6px}
+  #guiLayer .vform .icon-btn{
+    width:12px;height:12px;min-width:0;padding:0;flex:0 0 12px;
+    border:1px solid #000;background:#707070;color:#fff;font-size:8px;line-height:10px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;text-shadow:none;
+  }
+  #guiLayer .vform .icon-btn:hover{background:#7d7d7d}
+  /* 列表条目：原版那种 32px 图标 + 两行字 + 右侧按钮 */
+  #guiLayer .vform .world-card,
+  #guiLayer .vform .room-card,
+  #guiLayer .vform .save-card{
+    display:flex;align-items:center;gap:4px;padding:2px 3px;min-height:36px;
+    border-bottom:1px solid rgba(0,0,0,.55);cursor:pointer;
+  }
+  #guiLayer .vform .world-card:hover,
+  #guiLayer .vform .room-card:hover,
+  #guiLayer .vform .save-card:hover{background:rgba(255,255,255,.12)}
+  #guiLayer .vform .save-card.selected{background:rgba(255,255,255,.2)}
+  #guiLayer .vform .world-thumb,
+  #guiLayer .vform .room-icon,
+  #guiLayer .vform .save-thumb{
+    width:32px;height:32px;flex:0 0 32px;display:flex;align-items:center;justify-content:center;
+    background:#141414;border:1px solid #000;font-size:12px;line-height:12px;
+    image-rendering:pixelated;
+  }
+  #guiLayer .vform .world-info,
+  #guiLayer .vform .room-info,
+  #guiLayer .vform .save-info{flex:1;min-width:0}
+  #guiLayer .vform .world-info .name,
+  #guiLayer .vform .room-info .name,
+  #guiLayer .vform .save-info .name{
+    font-size:8px;line-height:10px;color:#fff;text-shadow:1px 1px 0 #3f3f3f;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  #guiLayer .vform .meta{
+    display:flex;flex-wrap:wrap;gap:0 6px;font-size:8px;line-height:10px;
+    color:#a0a0a0;text-shadow:1px 1px 0 #3f3f3f;overflow:hidden;
+  }
+  #guiLayer .vform .meta .tag{color:#ffff55}
+  #guiLayer .vform .meta .tag.creative{color:#55ffff}
+  #guiLayer .vform .meta .tag.hardcore{color:#ff5555}
+  #guiLayer .vform .meta .players.full{color:#ff5555}
+  #guiLayer .vform .world-actions-card,
+  #guiLayer .vform .room-actions{display:flex;gap:2px;flex:0 0 auto}
+  #guiLayer .vform .world-empty,
+  #guiLayer .vform .room-empty{
+    padding:14px 4px;text-align:center;font-size:8px;line-height:12px;color:#a0a0a0;
+    text-shadow:1px 1px 0 #3f3f3f;
+  }
+  #guiLayer .vform .world-empty .hint,
+  #guiLayer .vform .room-empty .hint{color:#707070}
+  #guiLayer .vform .room-empty .cloud-icon{font-size:16px;line-height:18px}
+  /* 原版按钮：主按钮 150 宽，卡片里的小按钮 52 宽 */
+  #guiLayer .vform .btn-row{display:flex;gap:4px;justify-content:center}
+  #guiLayer .mc-btn{
+    width:150px;height:20px;box-sizing:border-box;min-width:0;
+    border-style:solid;border-width:4px 20px;border-color:transparent;
+    border-image:url(../assets/mc-gui/widget/button.png) 4 20 fill stretch;
+    background:none;padding:0;margin:0;color:#fff;
+    font-family:inherit;font-size:8px;line-height:12px;text-shadow:1px 1px 0 #3f3f3f;
+    display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;filter:none;transform:none;letter-spacing:0;
+  }
+  #guiLayer .mc-btn:hover{border-image-source:url(../assets/mc-gui/widget/button_highlighted.png);filter:none}
+  #guiLayer .mc-btn:active{transform:none}
+  #guiLayer .mc-btn:disabled{border-image-source:url(../assets/mc-gui/widget/button_disabled.png);color:#a0a0a0;cursor:default}
+  #guiLayer .mc-btn.small{width:52px;border-width:4px 8px;border-image-slice:4 8 fill}
+  #guiLayer .mc-btn.danger{color:#fff}
+  /* 表单行 */
+  #guiLayer .form-row{display:flex;align-items:center;gap:4px;margin:3px 0;padding:0;
+    font-size:8px;line-height:10px}
+  #guiLayer .form-row > label{
+    width:56px;flex:0 0 56px;color:#fff;text-shadow:1px 1px 0 #3f3f3f;
+    font-size:8px;line-height:10px;font-weight:normal;
+  }
+  #guiLayer .form-row input[type=text]{
+    flex:1;height:20px;box-sizing:border-box;border:0;padding:0 4px;
+    background:url(../assets/mc-gui/widget/text_field.png) 0 0/100% 100% no-repeat;
+    color:#fff;font-family:inherit;font-size:8px;line-height:10px;
+    text-shadow:1px 1px 0 #3f3f3f;outline:none;
+  }
+  #guiLayer .form-row input[type=text]:focus{
+    background-image:url(../assets/mc-gui/widget/text_field_highlighted.png);
+  }
+  #guiLayer .btn-group{display:flex;gap:2px;flex-wrap:wrap;flex:1}
+  #guiLayer .option-btn,
+  #guiLayer .toggle-btn{
+    height:20px;min-width:40px;box-sizing:border-box;padding:0;
+    border-style:solid;border-width:4px 8px;border-color:transparent;
+    border-image:url(../assets/mc-gui/widget/button.png) 4 8 fill stretch;
+    background:none;color:#fff;font-family:inherit;font-size:8px;line-height:12px;
+    text-shadow:1px 1px 0 #3f3f3f;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  #guiLayer .option-btn:hover,
+  #guiLayer .toggle-btn:hover{border-image-source:url(../assets/mc-gui/widget/button_highlighted.png)}
+  #guiLayer .option-btn.active{background:rgba(255,255,255,.16);color:#ffff55}
+  #guiLayer .toggle-btn .knob{display:none}
+  #guiLayer .toggle-btn .label{pointer-events:none}
+  #guiLayer .save-list{
+    max-height:90px;overflow-y:auto;border:1px solid #000;background:rgba(0,0,0,.4);
+  }
 </style>
 </head>
 <body>
@@ -569,7 +803,6 @@ canvas#game3d{display:block}
 <div id="chatInput"><span class="prefix" id="chatPrefix">></span><input type="text" id="chatInputField" maxlength="256" autocomplete="off"></div>
 <div id="toast"></div>
 
-<div id="deathScreen" class="hidden"><h2>你死了！</h2><p>正在重生…</p></div>
 
 <div id="mobileControls">
   <div id="mobileLookArea"></div>
@@ -591,56 +824,80 @@ canvas#game3d{display:block}
   </div>
 </div>
 
-<div id="mainMenuScreen" class="screen mc-title-screen">
-  <!-- 背景：原版那种缓慢推进的全景（jar 里 panorama 是 1×1 占位，这里用分层渐变模拟） -->
-  <div class="mc-pano"><div class="mc-pano-track"></div><div class="mc-pano-vignette"></div></div>
-  <div class="mc-title-body">
-    <div class="mc-logo-wrap">
-      <img class="mc-logo" src="../assets/mc-gui/title_mc.png" alt="MINECRAFT" draggable="false">
-      <img class="mc-edition" src="../assets/mc-gui/title_edition.png" alt="Java Edition" draggable="false">
-      <div class="mc-splash">网页版也能玩！</div>
-    </div>
-    <div class="mc-menu">
-      <button class="mc-mbtn primary" id="singlePlayerBtn">单人游戏</button>
-      <button class="mc-mbtn" id="multiPlayerBtn">多人游戏</button>
-      <button class="mc-mbtn" id="realmsBtn" disabled>Minecraft Realms</button>
-      <div class="mc-menu-icons">
-        <button class="mc-iconbtn" id="menuLangBtn" title="语言（暂只有中文）">文</button>
-        <button class="mc-iconbtn" id="menuAccessBtn" title="无障碍">♿</button>
-        <button class="mc-iconbtn" id="optionsBtn" title="选项...">⚙</button>
-      </div>
-      <div class="mc-menu-row">
-        <button class="mc-mbtn" id="optionsBtn2">选项...</button>
-        <button class="mc-mbtn" id="quitGameBtn">退出游戏</button>
-      </div>
+<!-- 主菜单全景：真·4 面环图（jar 里 panorama 是 1×1 占位，真图在 objects） -->
+<div id="titleBg"><div class="mc-pano-track"></div><div class="mc-pano-vignette"></div></div>
+
+<!-- 暂停/选项的背景：只模糊世界，不糊 HUD -->
+<div id="guiBlur"></div>
+
+<!-- 原版 GUI 层：界面按 GUI 像素布局，整层 zoom 整数倍放大 -->
+<div id="guiLayer">
+
+<div id="mainMenuScreen" class="vscreen">
+  <img id="titleLogo" src="../assets/mc-gui/logo.png" alt="MINECRAFT" draggable="false">
+  <img id="titleEdition" src="../assets/mc-gui/title_edition.png" alt="Java Edition" draggable="false">
+  <div id="titleSplash">网页版也能玩！</div>
+  <div id="titleBtnCol">
+    <button class="vbtn" id="singlePlayerBtn">单人游戏</button>
+    <button class="vbtn" id="multiPlayerBtn">多人游戏</button>
+    <button class="vbtn" id="realmsBtn" disabled>Minecraft Realms</button>
+    <div class="vrow">
+      <button class="vbtn w98" id="optionsBtn2">选项...</button>
+      <button class="vbtn w98" id="quitGameBtn">退出游戏</button>
     </div>
   </div>
-  <div class="mc-menu-footer">
-    <span>Minecraft Web · 26.3 复刻 · Y -64~320</span>
-    <span>非官方作品，素材版权归 Mojang</span>
+  <div id="titleIconRow">
+    <button class="vbtn icon20" id="menuLangBtn" title="语言..."><i style="background-image:url(../assets/mc-gui/icon/language.png)"></i></button>
+    <button class="vbtn icon20" id="menuAccessBtn" title="辅助功能设置..."><i style="background-image:url(../assets/mc-gui/icon/accessibility.png)"></i></button>
   </div>
+  <div id="titleFooter">Minecraft Web 26.3 · 非官方复刻</div>
+  <div id="titleCopyright">素材版权归 Mojang Studios</div>
 </div>
 
-<div id="multiplayerScreen" class="screen hidden">
+<div id="pauseScreen" class="vscreen hidden">
+  <div class="vtitlebar"><span class="vt title">游戏菜单</span></div>
+  <div class="vcenter"><div class="vcol">
+    <button class="vbtn" id="resumeBtn">回到游戏</button>
+    <button class="vbtn" id="pauseOptionsBtn">选项...</button>
+    <button class="vbtn" id="saveAndQuitBtn">保存并退回到标题画面</button>
+  </div></div>
+</div>
+
+<div id="settingsScreen" class="vscreen hidden">
+  <div class="vmenu-bg"></div>
+  <div class="vtitlebar"><span class="vt title">选项</span></div>
+  <div class="vgrid" id="settingsGrid"></div>
+  <button class="vbtn" id="settingsDoneBtn" style="position:absolute;left:calc(50% - 100px);bottom:27px">完成</button>
+</div>
+
+<div id="deathScreen" class="vscreen hidden">
+  <div class="vdeath-bg"></div>
+  <div id="deathTitle">你死了！</div>
+  <button class="vbtn" id="respawnBtn" style="position:absolute;left:calc(50% - 100px)">重生</button>
+  <button class="vbtn" id="deathTitleBtn" style="position:absolute;left:calc(50% - 100px)">返回标题画面</button>
+</div>
+
+
+<div id="multiplayerScreen" class="vscreen vform hidden">
   <div class="panel">
     <div class="panel-header">
       <strong>多人游戏 · 房间列表</strong><span class="sp"></span>
-      <span style="font-size:11px;opacity:.8" id="roomServerStatus">连接中...</span>
-      <button class="icon-btn" id="refreshRoomsBtn">🔄</button>
-      <button class="icon-btn" id="multiBackBtn">🧰</button>
+      <span class="vt gray" id="roomServerStatus">连接中...</span>
+      <button class="icon-btn" id="refreshRoomsBtn" title="刷新">↻</button>
+      <button class="icon-btn" id="multiBackBtn" title="返回">←</button>
     </div>
     <div id="roomList"></div>
   </div>
   <div class="btn-row"><button class="mc-btn primary" id="createRoomBtn">创建房间</button></div>
 </div>
 
-<div id="createRoomScreen" class="screen hidden">
+<div id="createRoomScreen" class="vscreen vform hidden">
   <div class="panel">
-    <div class="panel-header"><strong>创建房间</strong><span class="sp"></span><button class="icon-btn" id="createRoomBackBtn">✕</button></div>
+    <div class="panel-header"><strong>创建房间</strong><span class="sp"></span><button class="icon-btn" id="createRoomBackBtn" title="取消">×</button></div>
     <div class="panel-body">
       <div class="form-row"><label>房间名称</label><input type="text" id="roomNameInput" value="我的房间" maxlength="32"></div>
       <div class="form-row"><label>房主昵称</label><input type="text" id="roomHostInput" value="房主" maxlength="16"></div>
-      <div class="form-row"><label>选择存档</label><div style="flex:1;font-size:12.5px;color:var(--muted)">↓ 从你的单人存档中选择</div></div>
+      <div class="form-row"><label>选择存档</label><div class="vt gray" style="flex:1">↓ 从你的单人存档中选择</div></div>
       <div class="save-list" id="saveListForRoom"></div>
       <div class="form-row" style="margin-top:14px"><label>最大玩家</label>
         <div class="btn-group" id="maxPlayersGroup">
@@ -668,17 +925,17 @@ canvas#game3d{display:block}
   </div>
 </div>
 
-<div id="worldSelectScreen" class="screen hidden">
+<div id="worldSelectScreen" class="vscreen vform hidden">
   <div class="panel">
-    <div class="panel-header"><strong>选择世界</strong><span class="sp"></span><button class="icon-btn" id="worldBackBtn">🧰</button></div>
+    <div class="panel-header"><strong>选择世界</strong><span class="sp"></span><button class="icon-btn" id="worldBackBtn" title="返回">←</button></div>
     <div id="worldList"></div>
   </div>
   <div class="btn-row"><button class="mc-btn primary" id="createWorldBtn">创建新世界</button></div>
 </div>
 
-<div id="createWorldScreen" class="screen hidden">
+<div id="createWorldScreen" class="vscreen vform hidden">
   <div class="panel">
-    <div class="panel-header"><strong>创建新世界</strong><span class="sp"></span><button class="icon-btn" id="createHeaderBack">✕</button></div>
+    <div class="panel-header"><strong>创建新世界</strong><span class="sp"></span><button class="icon-btn" id="createHeaderBack" title="取消">×</button></div>
     <div class="panel-body">
       <div class="form-row"><label>世界名称</label><input type="text" id="newWorldName" value="新的世界" maxlength="32"></div>
       <div class="form-row"><label>世界种子</label><input type="text" id="newWorldSeed" placeholder="留空随机" maxlength="20"></div>
@@ -718,25 +975,7 @@ canvas#game3d{display:block}
   </div>
 </div>
 
-<div id="settingsScreen" class="screen hidden">
-  <div class="panel">
-    <div class="panel-header"><strong>选项</strong><span class="sp"></span><button class="icon-btn" id="settingsCloseBtn">✕</button></div>
-    <div class="settings-layout">
-      <div class="settings-tabs" id="settingsTabs"></div>
-      <div class="settings-panels" id="settingsPanels"></div>
-    </div>
-  </div>
-  <div class="btn-row"><button class="mc-btn primary" id="settingsDoneBtn">完成</button></div>
-</div>
-
-<div id="pauseScreen" class="screen hidden">
-  <div class="screen-title">游戏已暂停</div>
-  <div class="menu-buttons">
-    <button class="mc-btn primary" id="resumeBtn">返回游戏</button>
-    <button class="mc-btn" id="pauseOptionsBtn">选项...</button>
-    <button class="mc-btn danger" id="saveAndQuitBtn">保存并退出</button>
-  </div>
-</div>
+</div><!-- /guiLayer -->
 
 <div id="inventoryScreen" class="hidden">
   <div class="inv-window">
@@ -836,7 +1075,7 @@ canvas#game3d{display:block}
   var inventoryOpen=false,chatOpen=false;
   var myPlayerName=storage.get('mc3d_player_name','玩家'+Math.floor(Math.random()*1000));
 
-  var DEFAULT_SETTINGS={fov:75,brightness:50,renderDistance:4,viewBobbing:1,sensitivity:2.2,invertMouse:0,autoJump:0,maxFramerate:60,showSun:1,showClouds:1};
+  var DEFAULT_SETTINGS={fov:75,brightness:50,renderDistance:4,viewBobbing:1,sensitivity:2.2,invertMouse:0,autoJump:0,maxFramerate:60,showSun:1,showClouds:1,guiScale:0};
   var settings=Object.assign({},DEFAULT_SETTINGS);
   (function(){var s=storage.getJSON('mc3d_settings',null);if(s)Object.assign(settings,s);})();
   function saveSettings(){storage.setJSON('mc3d_settings',settings);}
@@ -2582,12 +2821,17 @@ canvas#game3d{display:block}
     if(!skinTexCache[key])skinTexCache[key]=cropTex(STEVE_IMG,rect[0],rect[1],rect[2],rect[3]);
     return skinTexCache[key];
   }
-  function skinMats(part){
-    var uv=SKIN_UV[part]||{}, order=['right','left','top','bottom','back','front'], out=[];
+  function skinMats(part,basic){
+    var uv=SKIN_UV[part]||{};
+    /* BoxGeometry 的材质顺序是 +X,-X,+Y,-Y,+Z,-Z；原版皮肤里 front 是 +Z、back 是 -Z。
+       以前写成 [...,'back','front']，正反面是反的（第三人称时脸会出现在后脑勺）。 */
+    var order=['right','left','top','bottom','front','back'], out=[];
     var ready=STEVE_IMG.complete&&STEVE_IMG.naturalWidth>0;
     for(var i=0;i<6;i++){
       var p=uv[order[i]];
-      var m=new THREE.MeshLambertMaterial({color:SKIN_FALLBACK[part]||0xcccccc});
+      /* basic=true 用于第一人称手臂：原版手是「全亮」渲染，不跟着场景光照变暗 */
+      var m=basic?new THREE.MeshBasicMaterial({color:SKIN_FALLBACK[part]||0xcccccc})
+                 :new THREE.MeshLambertMaterial({color:SKIN_FALLBACK[part]||0xcccccc});
       if(p){
         if(ready){m.map=skinTex(p);m.color.setHex(0xffffff);}
         else{m.userData.skinRect=p;skinMatQueue.push(m);}
@@ -2606,17 +2850,21 @@ canvas#game3d{display:block}
     if(inventoryOpen)drawInvScreen();
   };
 
-  /* ★ 第一人称右臂：照原版 ItemInHandRenderer#renderPlayerArm 的几何来。
-     原版把「手」放在镜头坐标系 (0.56, -0.52, -0.72)，前臂从手往屏幕右上后方
-     伸出去，所以在画面上只看到右下角一截、末端是手。
-     以前是「从画面中间斜插一根 0.16 粗的细杆」，位置和粗细都不对。
-     手臂本体是 4×12×4 像素 = 0.25×0.75×0.25 格。 */
-  var HAND_POS=new THREE.Vector3(0.42,-0.46,-0.70);
-  var HAND_DIR=new THREE.Vector3(0.72,0.60,0.10).normalize();  /* 手 → 肩 的方向 */
+  /* ★ 第一人称右臂
+     几何要点（照着原版看到的样子来，不是拍脑袋）：
+       · 拳头在画面右下（约 74% 宽 / 85% 高），这是「手」的锚点，
+         原版手持物也是挂在同一点附近（applyItemArmTransform 的 0.56/-0.52/-0.72）；
+       · 前臂从拳头**朝右下角**退出去，肘/肩在屏幕外，
+         所以空手时只看到前臂的皮肤，**看不到袖子**；
+         以前方向写反了（朝右上），把肩膀和袖子一起拽进画面，
+         看起来像一块带青色顶面的木板，非常奇怪；
+       · 手臂本体就是 4×12×4 像素 = 0.25×0.75×0.25 格。 */
+  var HAND_POS=new THREE.Vector3(0.294,-0.270,-0.80);
+  var HAND_DIR=new THREE.Vector3(0.35,-0.94,0).normalize();  /* 拳头 → 肩膀：朝右下、与画面平行 */
   var ARM_LEN=0.75,ARM_W=0.25;
   var handPivot=new THREE.Group();
   handPivot.position.copy(HAND_POS);camera.add(handPivot);
-  var handArm=new THREE.Mesh(new THREE.BoxGeometry(ARM_W,ARM_LEN,ARM_W),skinMats('rArm'));
+  var handArm=new THREE.Mesh(new THREE.BoxGeometry(ARM_W,ARM_LEN,ARM_W),skinMats('rArm',true));
   handArm.position.copy(HAND_DIR).multiplyScalar(ARM_LEN/2);
   handArm.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),HAND_DIR);
   handPivot.add(handArm);
@@ -2637,9 +2885,8 @@ canvas#game3d{display:block}
     return t;
   }
   var handHolder=new THREE.Group();
-  /* 手持物挂在「手」上：往镜头前方挪一点，正好在手掌外侧。
-     原版手持方块是 scale(0.4) 的一个方块，所以这里也用 0.4 见方。 */
-  handHolder.position.set(-0.02,-0.05,-0.09);
+  /* 手持物挂在拳头外侧偏上、略朝镜头一点（原版手持物大约在 78% 宽 / 84% 高） */
+  handHolder.position.set(0.00,0.04,-0.06);
   handPivot.add(handHolder);
   var handItemMesh=null;
   function updateHandItem(){
@@ -2654,9 +2901,10 @@ canvas#game3d{display:block}
         /* 方块：六个面用图集裁出的贴图 */
         hasItem=true;
         var mats=[def.side,def.side,def.top,def.bottom,def.side,def.side].map(function(t){
-          return new THREE.MeshLambertMaterial({map:tileTexture(t),transparent:true,alphaTest:0.05});
+          /* 原版手持物也是全亮的，用 Basic 不受场景光照影响 */
+          return new THREE.MeshBasicMaterial({map:tileTexture(t),transparent:true,alphaTest:0.05});
         });
-        handItemMesh=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.40,0.40),mats);
+        handItemMesh=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.28,0.28),mats);
         handItemMesh.rotation.y=Math.PI/4+0.15;
         handItemMesh.rotation.x=0.10;
         handItemMesh.renderOrder=3;
@@ -2665,7 +2913,7 @@ canvas#game3d{display:block}
         /* 物品：竖直平面，像原版拿剑/镐的卡片 */
         hasItem=true;
         var m=new THREE.MeshBasicMaterial({map:tileTexture(ITEMS[id].tile),transparent:true,alphaTest:0.05,side:THREE.DoubleSide});
-        handItemMesh=new THREE.Mesh(new THREE.PlaneGeometry(0.45,0.45),m);
+        handItemMesh=new THREE.Mesh(new THREE.PlaneGeometry(0.34,0.34),m);
         handItemMesh.rotation.set(0.15,Math.PI/2-0.55,-0.25);
         handItemMesh.renderOrder=3;
         handHolder.add(handItemMesh);
@@ -2852,6 +3100,11 @@ canvas#game3d{display:block}
       var nowT=performance.now();
       if(nowT-lastWTap<300)sprintLock=true;
       lastWTap=nowT;
+    }
+    /* 原版行为：选项界面按 ESC 回上一层，死亡界面按 ESC 无效 */
+    if(e.key==='Escape'){
+      if(appState==='settings'){closeSettings();e.preventDefault();return;}
+      if(appState==='dead'){e.preventDefault();return;}
     }
     if(appState!=='playing')return;
     if(k==='t'&&!inventoryOpen){openChat(false);e.preventDefault();return;}
@@ -3063,6 +3316,130 @@ canvas#game3d{display:block}
   var chunkLoadingEl=$('chunkLoading'),loadingScreenEl=$('loadingScreen');
   var mobileControls=$('mobileControls');
 
+  /* ══════════════════════════════════════════════════════════════════
+     ★ 原版 GUI 缩放 + 界面排版
+     原版 guiScale：取最大的 s 使 ceil(w/s)≥320 且 ceil(h/s)≥240，
+     界面按 guiWidth×guiHeight 这块「GUI 像素」画布来布局，再整体放大 s 倍。
+     我们照做：GUI_W/GUI_H 就是这块画布，层上用 zoom 放大。
+     ══════════════════════════════════════════════════════════════════ */
+  var GUI_S=1,GUI_W=320,GUI_H=240;
+  function calcGuiScale(){
+    var want=settings.guiScale|0;
+    var s=want>0?want:8;
+    while(s>1&&(window.innerWidth/s<320||window.innerHeight/s<240))s--;
+    return Math.max(1,Math.min(8,s));
+  }
+  function layoutGuiLayer(){
+    var l=$('guiLayer');if(!l)return;
+    GUI_S=calcGuiScale();
+    GUI_W=Math.ceil(window.innerWidth/GUI_S);
+    GUI_H=Math.ceil(window.innerHeight/GUI_S);
+    l.style.zoom=GUI_S;
+    l.style.width=GUI_W+'px';
+    l.style.height=GUI_H+'px';
+    layoutVanillaScreens();
+  }
+  function layoutVanillaScreens(){
+    var W=GUI_W,H=GUI_H;
+    /* —— 标题界面：原版 logo 左边界 = W/2-128，宽 256×64；
+       按钮列从 H/4+48 起，每行 24 像素（20 高 + 4 间距）—— */
+    var logo=$('titleLogo');
+    if(logo){
+      var logoTop=Math.round(H/4-40);
+      logo.style.left=Math.round(W/2-128)+'px';
+      logo.style.top=logoTop+'px';
+      /* 「JAVA EDITION」贴在 logo 正下方，跟原版一样紧挨着 */
+      var ed=$('titleEdition');
+      if(ed){ed.style.left=Math.round(W/2-64)+'px';ed.style.top=(logoTop+64)+'px';}
+      /* 闪标语在 logo 右下角，倾斜 20° 压在上面 */
+      var sp=$('titleSplash');
+      if(sp){
+        sp.style.left=Math.round(W/2+78)+'px';
+        sp.style.top=(logoTop+46)+'px';
+        sp.style.transform='rotate(-20deg)';
+      }
+      var col=$('titleBtnCol');
+      if(col){
+        col.style.left=Math.round(W/2-100)+'px';
+        col.style.top=Math.round(H/4+48)+'px';
+      }
+      var ic=$('titleIconRow');
+      if(ic){
+        ic.style.left=Math.round(W/2+104)+'px';
+        ic.style.top=Math.round(H/4+48+72)+'px';
+      }
+    }
+    /* —— 死亡界面：标题 y=30（原版 2 倍字号），按钮 H/4+72 与 H/4+120 —— */
+    var dt=$('deathTitle');
+    if(dt)dt.style.top='30px';
+    var rb=$('respawnBtn');if(rb)rb.style.top=Math.round(H/4+72)+'px';
+    var db=$('deathTitleBtn');if(db)db.style.top=Math.round(H/4+120)+'px';
+  }
+  /* 滑条：原版 AbstractSliderButton —— 轨道 200×20，把手 8×20 在 (w-8)*value 处 */
+  function vSlider(opts){
+    var el=document.createElement('div');
+    el.className='vslider';
+    if(opts.width)el.style.width=opts.width+'px';
+    var knob=document.createElement('div');knob.className='knob';
+    var lab=document.createElement('div');lab.className='lab';
+    var span=document.createElement('span');span.className='vt';
+    lab.appendChild(span);el.appendChild(knob);el.appendChild(lab);
+    var dragging=false;
+    function pct(){
+      var v=(settings[opts.key]-opts.min)/(opts.max-opts.min);
+      return Math.max(0,Math.min(1,v));
+    }
+    function paint(){
+      var w=el.offsetWidth||200;
+      knob.style.left=Math.round(pct()*(w-8))+'px';
+      span.textContent=opts.label+'：'+(opts.fmt?opts.fmt(settings[opts.key]):settings[opts.key]);
+    }
+    function apply(clientX){
+      var r=el.getBoundingClientRect();
+      var k=Math.max(0,Math.min(1,(clientX-r.left)/r.width));
+      var raw=opts.min+k*(opts.max-opts.min);
+      var v=Math.round(raw/opts.step)*opts.step;
+      v=Math.max(opts.min,Math.min(opts.max,v));
+      v=Math.round(v*1000)/1000;
+      settings[opts.key]=v;
+      paint();
+      if(opts.onChange)opts.onChange(v);
+      saveSettings();
+    }
+    el.addEventListener('pointerdown',function(e){
+      dragging=true;el.setPointerCapture(e.pointerId);apply(e.clientX);e.preventDefault();
+    });
+    el.addEventListener('pointermove',function(e){if(dragging)apply(e.clientX);});
+    el.addEventListener('pointerup',function(e){dragging=false;try{el.releasePointerCapture(e.pointerId);}catch(_){}});
+    el.addEventListener('pointercancel',function(){dragging=false;});
+    el._paint=paint;
+    setTimeout(paint,0);
+    return el;
+  }
+  /* 循环按钮：原版 CycleButton —— 点一下切到下一个值，文字是「标签：值」 */
+  function vCycle(opts){
+    var b=document.createElement('button');
+    b.className='vbtn'+(opts.cls?' '+opts.cls:'');
+    function idx(){
+      for(var i=0;i<opts.values.length;i++)if(opts.values[i]===settings[opts.key])return i;
+      return 0;
+    }
+    function paint(){
+      var v=opts.values[idx()];
+      b.textContent=opts.label+'：'+(opts.fmt?opts.fmt(v):v);
+    }
+    b.addEventListener('click',function(){
+      var i=(idx()+1)%opts.values.length;
+      settings[opts.key]=opts.values[i];
+      paint();
+      if(opts.onChange)opts.onChange(opts.values[i]);
+      saveSettings();
+    });
+    b._paint=paint;
+    paint();
+    return b;
+  }
+
   function setAppState(s){
     appState=s;
     for(var k in screens)screens[k].classList.add('hidden');
@@ -3073,11 +3450,20 @@ canvas#game3d{display:block}
     if(s==='createWorld')screens.createWorld.classList.remove('hidden');
     if(s==='settings')screens.settings.classList.remove('hidden');
     if(s==='paused')screens.pause.classList.remove('hidden');
+    /* 主菜单全景只在自己当背景时显示（进世界就藏起来，省一次合成） */
+    var tb=$('titleBg');
+    if(tb)tb.classList.toggle('hidden',s!=='mainMenu');
+    var gb=$('guiBlur');
+    if(gb)gb.style.display=(s==='paused'||s==='settings')?'block':'none';
+    /* 区块加载提示只在真正游戏时出现，否则会顶在暂停标题上 */
+    if(s!=='playing')$('chunkLoading').style.display='none';
+    if(s==='settings'){refreshSettings();}
+    layoutGuiLayer();
     var inGame=(s==='playing'||s==='paused'||s==='dead');
     bgDecorEl.classList.toggle('hidden',inGame);
     /* 坐标/群系/FPS 是原版 F3 的内容：默认不显示，按 F3 切 */
     $('hudTop').classList.toggle('show',inGame&&debugHudOn);
-    $('tips').style.display=(inGame&&!isTouchUI&&!tipsDone)?'block':'none';
+    $('tips').style.display=(s==='playing'&&!isTouchUI&&!tipsDone)?'block':'none';
     if(inGame&&!isTouchUI&&!tipsDone)startTipsTimer();
     $('crosshair').style.display=(s==='playing'&&gameMode!=='spectator'&&!inventoryOpen&&!chatOpen)?'block':'none';
     $('hotbar').style.display=(inGame&&gameMode!=='spectator')?'flex':'none';
@@ -3210,12 +3596,16 @@ canvas#game3d{display:block}
 
   $('singlePlayerBtn').addEventListener('click',function(){refreshWorlds();setAppState('worldSelect');});
   $('multiPlayerBtn').addEventListener('click',function(){refreshRooms();setAppState('multiplayer');});
-  $('optionsBtn').addEventListener('click',function(){prevScreen='mainMenu';setAppState('settings');});
   if($('optionsBtn2'))$('optionsBtn2').addEventListener('click',function(){prevScreen='mainMenu';setAppState('settings');});
   if($('menuLangBtn'))$('menuLangBtn').addEventListener('click',function(){toast('暂时只有简体中文');});
   if($('menuAccessBtn'))$('menuAccessBtn').addEventListener('click',function(){toast('无障碍选项还没做');});
   if($('realmsBtn'))$('realmsBtn').addEventListener('click',function(){toast('Realms 需要正版账号，这里用「多人游戏」代替');});
   $('quitGameBtn').addEventListener('click',function(){if(confirm('确定要退出游戏吗？')){window.close();setTimeout(function(){setAppState('mainMenu');},100);}});
+  $('respawnBtn').addEventListener('click',respawnNow);
+  $('deathTitleBtn').addEventListener('click',function(){
+    deathScreen.classList.add('hidden');
+    captureWorld();clearAllChunks();currentWorld=null;refreshWorlds();setAppState('mainMenu');
+  });
 
   function fmtDate(ts){if(!ts)return '从未';var d=Date.now()-ts;
     if(d<60000)return '刚刚';if(d<3600000)return Math.floor(d/60000)+' 分钟前';
@@ -3234,7 +3624,12 @@ canvas#game3d{display:block}
     var sorted=worlds.slice().sort(function(a,b){return (b.lastPlayedAt||0)-(a.lastPlayedAt||0);});
     sorted.forEach(function(w){
       var card=document.createElement('div');card.className='world-card';
-      var thumb=document.createElement('div');thumb.className='world-thumb';card.appendChild(thumb);
+      /* 缩略图用草方块的三维图标（原版是存档截图，这里没有截图就用方块图标顶上，
+         总比一块纯黑好看，也不是假数据） */
+      var thumb=document.createElement('div');thumb.className='world-thumb';
+      var thumbIcon=makeIcon(1);
+      if(thumbIcon){thumbIcon.style.width='28px';thumbIcon.style.height='28px';thumb.appendChild(thumbIcon);}
+      card.appendChild(thumb);
       var info=document.createElement('div');info.className='world-info';
       var name=document.createElement('div');name.className='name';name.textContent=w.name||'未命名';info.appendChild(name);
       var meta=document.createElement('div');meta.className='meta';
@@ -3372,11 +3767,11 @@ canvas#game3d{display:block}
       var card=document.createElement('div');card.className='room-card';
       var full=room.current_players>=room.max_players;
       if(full)card.classList.add('full');
-      var icon=document.createElement('div');icon.className='room-icon';icon.textContent='🌍';card.appendChild(icon);
+      var icon=document.createElement('div');icon.className='room-icon';icon.textContent='▦';card.appendChild(icon);
       var info=document.createElement('div');info.className='room-info';
       var name=document.createElement('div');name.className='name';name.textContent=room.name;info.appendChild(name);
       var meta=document.createElement('div');meta.className='meta';
-      var ps=document.createElement('span');ps.className='players'+(full?' full':'');ps.textContent='👤 '+room.current_players+' / '+room.max_players;meta.appendChild(ps);
+      var ps=document.createElement('span');ps.className='players'+(full?' full':'');ps.textContent='人数 '+room.current_players+' / '+room.max_players;meta.appendChild(ps);
       var hs=document.createElement('span');hs.textContent='房主: '+(room.host_name||'未知');meta.appendChild(hs);
       var ss=document.createElement('span');ss.textContent='种子: '+room.seed;meta.appendChild(ss);
       var ms=document.createElement('span');ms.textContent=modeLabel(room.game_mode);meta.appendChild(ms);
@@ -3407,7 +3802,10 @@ canvas#game3d{display:block}
     worlds.forEach(function(w,i){
       var card=document.createElement('div');
       card.className='save-card'+(i===selSaveIdx?' selected':'');
-      var thumb=document.createElement('div');thumb.className='save-thumb';card.appendChild(thumb);
+      var thumb=document.createElement('div');thumb.className='save-thumb';
+      var tIcon=makeIcon(1);
+      if(tIcon){tIcon.style.width='28px';tIcon.style.height='28px';thumb.appendChild(tIcon);}
+      card.appendChild(thumb);
       var info=document.createElement('div');info.className='save-info';
       var name=document.createElement('div');name.className='name';name.textContent=w.name||'未命名';info.appendChild(name);
       var meta=document.createElement('div');meta.className='meta';
@@ -3540,66 +3938,52 @@ canvas#game3d{display:block}
     else{captureWorld();clearAllChunks();currentWorld=null;refreshWorlds();setAppState('worldSelect');}
   });
 
-  var SDEFS=[
-    {id:'graphics',name:'图形',items:[
-      {key:'fov',label:'视角广度',type:'slider',min:30,max:110,step:1,fmt:function(v){return v+'°';}},
-      {key:'brightness',label:'亮度',type:'slider',min:0,max:100,step:1,fmt:function(v){return v+'%';}},
-      {key:'renderDistance',label:'渲染距离',type:'slider',min:2,max:32,step:2,fmt:function(v){return v+' 区块';}},
-      {key:'maxFramerate',label:'最大帧率',type:'slider',min:20,max:260,step:10,fmt:function(v){return v>=260?'无限':v+' fps';}},
-      {key:'viewBobbing',label:'视角摇晃',type:'toggle'},
-      {key:'showSun',label:'显示太阳',type:'toggle'},
-      {key:'showClouds',label:'显示云层',type:'toggle'}
-    ]},
-    {id:'controls',name:'控制',items:[
-      {key:'sensitivity',label:'鼠标灵敏度',type:'slider',min:0.5,max:10,step:0.1,fmt:function(v){return v.toFixed(1);}},
-      {key:'invertMouse',label:'鼠标反转',type:'toggle'},
-      {key:'autoJump',label:'自动跳跃',type:'toggle'}
-    ]}
+  /* 原版选项界面：两列网格，每格 150×20。左列图形、右列控制，
+     跟原版「视频设置 / 控制」里那种一排 cycle 按钮 + 滑条的观感一致。 */
+  var VOPT=[
+    {key:'fov',label:'视角广度',type:'slider',min:30,max:110,step:1,
+      fmt:function(v){return v+'°';}},
+    {key:'sensitivity',label:'鼠标灵敏度',type:'slider',min:0.5,max:10,step:0.1,
+      fmt:function(v){return Math.round(v*10)+'%';}},
+    {key:'renderDistance',label:'渲染距离',type:'slider',min:2,max:32,step:2,
+      fmt:function(v){return v+' 区块';}},
+    {key:'invertMouse',label:'鼠标反转',type:'cycle',values:[0,1],
+      fmt:function(v){return v?'开':'关';}},
+    {key:'maxFramerate',label:'最大帧率',type:'slider',min:20,max:260,step:10,
+      fmt:function(v){return v>=260?'无限':v+' fps';}},
+    {key:'autoJump',label:'自动跳跃',type:'cycle',values:[0,1],
+      fmt:function(v){return v?'开':'关';}},
+    {key:'brightness',label:'亮度',type:'slider',min:0,max:100,step:1,
+      fmt:function(v){return v+'%';}},
+    {key:'viewBobbing',label:'视角摇晃',type:'cycle',values:[0,1],
+      fmt:function(v){return v?'开':'关';}},
+    {key:'guiScale',label:'界面尺寸',type:'cycle',values:[0,1,2,3,4],
+      fmt:function(v){return v?'×'+v:'自动';}},
+    {key:'showClouds',label:'云',type:'cycle',values:[0,1],
+      fmt:function(v){return v?'开':'关';}}
   ];
   function buildSettings(){
-    var tabsEl=$('settingsTabs'),panelsEl=$('settingsPanels');
-    tabsEl.innerHTML='';panelsEl.innerHTML='';
-    SDEFS.forEach(function(def,i){
-      var btn=document.createElement('button');
-      btn.className='tab-btn'+(i===0?' active':'');btn.textContent=def.name;
-      btn.addEventListener('click',function(){
-        var tabs=tabsEl.querySelectorAll('.tab-btn');
-        for(var t=0;t<tabs.length;t++)tabs[t].classList.toggle('active',tabs[t]===btn);
-        var panels=panelsEl.querySelectorAll('.settings-panel');
-        for(var p=0;p<panels.length;p++)panels[p].classList.toggle('active',panels[p].getAttribute('data-panel')===def.id);
-      });
-      tabsEl.appendChild(btn);
-      var panel=document.createElement('div');
-      panel.className='settings-panel'+(i===0?' active':'');
-      panel.setAttribute('data-panel',def.id);
-      def.items.forEach(function(item){
-        var row=document.createElement('div');row.className='setting-row';
-        var label=document.createElement('label');label.textContent=item.label;row.appendChild(label);
-        if(item.type==='slider'){
-          var input=document.createElement('input');
-          input.type='range';input.min=item.min;input.max=item.max;input.step=item.step;
-          input.value=settings[item.key];row.appendChild(input);
-          var val=document.createElement('span');val.className='valBox';
-          val.textContent=item.fmt?item.fmt(settings[item.key]):settings[item.key];row.appendChild(val);
-          input.addEventListener('input',function(){
-            var v=parseFloat(input.value);settings[item.key]=v;
-            val.textContent=item.fmt?item.fmt(v):v;
-            onSet(item.key,v);saveSettings();
-          });
-        }else if(item.type==='toggle'){
-          var btn3=document.createElement('button');
-          btn3.className='toggle-settings-btn'+(settings[item.key]?' on':'');
-          btn3.textContent=settings[item.key]?'开启':'关闭';row.appendChild(btn3);
-          btn3.addEventListener('click',function(){
-            var v=settings[item.key]?0:1;settings[item.key]=v;
-            btn3.textContent=v?'开启':'关闭';btn3.classList.toggle('on',!!v);
-            onSet(item.key,v);saveSettings();
-          });
-        }
-        panel.appendChild(row);
-      });
-      panelsEl.appendChild(panel);
+    var grid=$('settingsGrid');if(!grid)return;
+    grid.innerHTML='';
+    VOPT.forEach(function(item){
+      var el;
+      if(item.type==='slider'){
+        el=vSlider({key:item.key,label:item.label,min:item.min,max:item.max,
+          step:item.step,fmt:item.fmt,onChange:function(v){onSet(item.key,v);}});
+      }else{
+        el=vCycle({key:item.key,label:item.label,values:item.values,fmt:item.fmt,
+          onChange:function(v){onSet(item.key,v);}});
+      }
+      grid.appendChild(el);
     });
+  }
+  /* 打开界面时重画一遍：滑条把手位置依赖 offsetWidth，隐藏时量不到 */
+  function refreshSettings(){
+    var grid=$('settingsGrid');if(!grid)return;
+    for(var i=0;i<grid.children.length;i++){
+      var c=grid.children[i];
+      if(c._paint)c._paint();
+    }
   }
   function onSet(key,value){
     switch(key){
@@ -3610,6 +3994,7 @@ canvas#game3d{display:block}
         if(appState==='playing'||appState==='paused')updateChunks(true);break;
       case 'showSun':sunMesh.visible=!!value;sunGlow.visible=!!value;break;
       case 'showClouds':if(cloudPlane)cloudPlane.visible=!!value;break;
+      case 'guiScale':layoutGuiLayer();refreshSettings();break;
     }
   }
   buildSettings();
@@ -3620,7 +4005,6 @@ canvas#game3d{display:block}
     if(prevScreen==='paused')setAppState('paused');else setAppState('mainMenu');
   }
   $('settingsDoneBtn').addEventListener('click',closeSettings);
-  $('settingsCloseBtn').addEventListener('click',closeSettings);
 
   /* ═══ 物品栏系统 ═══ */
   var hotbarEl=$('hotbar');
@@ -4606,6 +4990,7 @@ canvas#game3d{display:block}
   })();
   /* 窗口尺寸变了要重新算缩放，否则画布会被拉伸 */
   window.addEventListener('resize',function(){
+    layoutGuiLayer();
     if(!inventoryOpen)return;
     fitInvCanvas();
     drawInvScreen();
@@ -5156,8 +5541,18 @@ canvas#game3d{display:block}
     else updateHP();
   }
   function onDeath(){
-    setAppState('dead');deathScreen.classList.remove('hidden');addChat('你死了！','error');
-    setTimeout(function(){deathScreen.classList.add('hidden');spawnPlayer();updateChunks(true);updateHP();updateHunger();setAppState('playing');},2000);
+    /* 原版死亡界面：红黑渐变压暗世界，白字「你死了！」按 2 倍字号画在 y=30，
+       下面两个按钮（重生 / 返回标题画面）在 height/4+72 与 +120，等玩家自己点 */
+    setAppState('dead');
+    deathScreen.classList.remove('hidden');
+    layoutVanillaScreens();
+    if(document.pointerLockElement)document.exitPointerLock();
+    addChat('你死了！','error');
+  }
+  function respawnNow(){
+    deathScreen.classList.add('hidden');
+    spawnPlayer();updateChunks(true);updateHP();updateHunger();drawArmorBar();
+    setAppState('playing');
   }
 
   /* ★ 饥饿机制（贴近原版）
@@ -6314,7 +6709,7 @@ canvas#game3d{display:block}
     player:player,yaw:function(){return yaw;},pitch:function(){return pitch;},
     getBlock:getBlock,setBlock:setBlock,markDirty:markDirty,
     wirePower:wirePower,lampPowered:lampPowered,isRsSource:isRsSource,
-    setMode:setGameMode,toggleInv:toggleInv,setHealth:function(h){player.health=h;updateHP();},
+    setMode:setGameMode,toggleInv:toggleInv,setHealth:function(h){player.health=h;updateHP();if(h<=0)onDeath();},
     setHunger:function(h){player.hunger=h;updateHunger();},
     tileOf:function(n){return TILE_OF[n];},lampOn:function(){return LAMP_ON_TILE;},
     atlas:function(){return atlasCanvas;},tilePixel:function(tile){
@@ -6332,6 +6727,13 @@ canvas#game3d{display:block}
     drawInv:drawInvScreen,
     camera:function(){return camera;},
     hand:function(){return {pivot:handPivot,arm:handArm,holder:handHolder,item:handItemMesh};},
+    setHand:function(px,py,pz,dx,dy,dz){
+      var p=new THREE.Vector3(px,py,pz),d=new THREE.Vector3(dx,dy,dz).normalize();
+      handBasePos.x=p.x;handBasePos.y=p.y;handBasePos.z=p.z;
+      handPivot.position.copy(p);
+      handArm.position.copy(d).multiplyScalar(ARM_LEN/2);
+      handArm.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);
+    },
     craftGrid:function(){return craftGrid;},craftResult:function(){return craftResult;},
     fillCraft:function(r){fillCraftFromRecipe(r);},
     recipes:function(){return RECIPES;},matchCraft:matchCraft,
