@@ -37,6 +37,7 @@
     display:flex;flex-direction:column;gap:6px;
     padding:10px;background:var(--bg);
     border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);
+    transition:opacity .16s ease;
   }
   .row{display:flex;gap:6px}
   .btn{
@@ -52,6 +53,12 @@
   .btn.on,.btn.primary{background:var(--ac);border-color:var(--ac);color:var(--on-ac);box-shadow:none}
   .btn.primary:hover,.btn.on:hover{background:var(--ac);border-color:var(--ac);filter:brightness(1.08)}
   .btn.wide{flex:0 0 auto;padding:8px 10px}
+  .btn:disabled{
+    color:var(--faint);background:var(--bg2);border-color:var(--bd);
+    box-shadow:none;cursor:not-allowed;opacity:.55;
+  }
+  .btn:disabled:hover{background:var(--bg2);border-color:var(--bd)}
+  .btn:disabled:active{transform:none}
 
   .sliders{
     display:flex;flex-direction:column;gap:7px;
@@ -117,6 +124,96 @@
   #mask .err{color:var(--dgr);font-size:14px;font-weight:800}
   #mask .tip{max-width:420px;padding:0 24px;text-align:center;line-height:1.8}
 
+  /* ── 自定义抽屉 ── */
+  .drawer{
+    position:absolute;top:14px;right:14px;width:264px;max-height:calc(100% - 28px);
+    display:flex;flex-direction:column;
+    background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+    box-shadow:var(--sh);overflow:hidden;
+    opacity:0;transform:translateX(10px);pointer-events:none;
+    transition:opacity .16s ease,transform .16s ease;
+  }
+  .drawer.open{opacity:1;transform:none;pointer-events:auto}
+  .drawer > header{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--bd)}
+  .drawer > header strong{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--text)}
+  .dx{
+    width:22px;height:22px;flex:none;display:grid;place-items:center;
+    font:800 13px/1 system-ui,sans-serif;color:var(--muted);background:var(--bg2);
+    border:2px solid var(--bd);border-radius:var(--r);cursor:pointer;
+  }
+  .dx:hover{color:var(--dgr);border-color:var(--dgr)}
+
+  .dtabs{display:flex;gap:4px;padding:8px 10px 0}
+  .dtab{
+    flex:1;padding:5px 0;font-family:inherit;font-size:11px;font-weight:700;line-height:1;
+    color:var(--muted);background:var(--bg2);border:2px solid var(--bd);
+    border-radius:var(--r);cursor:pointer;
+  }
+  .dtab:hover{border-color:var(--bd2);color:var(--text)}
+  .dtab.on{background:var(--ac);border-color:var(--ac);color:var(--on-ac)}
+
+  .dbody{display:none;flex:1;min-height:0;overflow-y:auto;padding:10px 12px 12px}
+  .dbody.on{display:block}
+
+  .dsec{margin:12px 0 6px;font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--faint)}
+  .dbody > .dsec:first-child{margin-top:0}
+
+  .crow{display:flex;align-items:center;gap:8px;min-height:22px;margin:4px 0;font-size:11px;color:var(--muted)}
+  .crow > span{flex:0 0 58px;white-space:nowrap}
+  .crow > .sp{flex:1}
+  .crow input[type=range]{flex:1;min-width:0;height:14px;accent-color:var(--ac);cursor:pointer}
+  .crow output{
+    flex:0 0 38px;text-align:right;font-family:var(--mono);font-size:10.5px;font-weight:800;
+    color:var(--ac);font-variant-numeric:tabular-nums;
+  }
+
+  .sw{
+    flex:0 0 46px;padding:4px 0;font-family:inherit;font-size:11px;font-weight:700;line-height:1;
+    color:var(--text);background:var(--bg2);border:2px solid var(--bd);
+    border-radius:var(--r);cursor:pointer;
+  }
+  .sw.on{background:var(--ac);border-color:var(--ac);color:var(--on-ac)}
+
+  .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+  .cgrid .crow{margin:2px 0}
+  .cgrid .crow > span{flex:1;overflow:hidden;text-overflow:ellipsis}
+  .crow input[type=color]{
+    width:26px;height:18px;flex:none;padding:0;border:2px solid var(--bd);
+    border-radius:2px;background:var(--bg2);cursor:pointer;
+  }
+  .crow input[type=color]::-webkit-color-swatch-wrapper{padding:1px}
+  .crow input[type=color]::-webkit-color-swatch{border:none;border-radius:1px}
+
+  .dfoot{display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--bd);background:var(--bg2)}
+  .dfoot .btn{padding:5px 8px;font-size:11px;flex:0 0 auto}
+  .dfoot span{font-size:10px;color:var(--faint)}
+
+  /* ── 批量统计面板 ── */
+  .batch{
+    position:absolute;left:16px;bottom:70px;width:316px;
+    display:flex;flex-direction:column;gap:8px;padding:10px 12px;
+    background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+    box-shadow:var(--sh);
+    opacity:0;transform:translateY(8px);pointer-events:none;
+    transition:opacity .16s ease,transform .16s ease;
+  }
+  .batch.open{opacity:1;transform:none;pointer-events:auto}
+  .batch > header{display:flex;align-items:center;gap:8px}
+  .batch > header strong{font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--text)}
+  .batch > header .bsub{flex:1;font-size:10.5px;color:var(--faint);text-align:right;white-space:nowrap}
+  .bgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px 8px}
+  .bgrid div{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .bgrid i{font-style:normal;font-size:9.5px;letter-spacing:.02em;color:var(--faint);white-space:nowrap}
+  .bgrid b{
+    font-family:var(--mono);font-size:13px;font-weight:800;color:var(--text);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  #bAvgV{color:var(--ac)}
+  #bAvgP{color:var(--warn)}
+  #bHist{width:100%;height:84px;display:block;border-top:1px dashed var(--bd);padding-top:6px}
+  .bfoot{display:flex;gap:6px}
+  .bfoot .btn{padding:6px 8px;font-size:11px}
+
   .pnl-toggle{display:none}
 
   @media(max-width:760px){
@@ -136,6 +233,11 @@
     }
     .stats b{font-size:12.5px}
     .legend,.status{display:none}
+    .drawer{left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:66vh}
+    .batch{left:10px;right:10px;bottom:10px;width:auto;max-height:58vh;overflow-y:auto}
+    body.batch-open .pnl,body.batch-open .stats{opacity:0;pointer-events:none}
+    body.drawer-open .pnl{opacity:0;pointer-events:none}
+    body.drawer-open .stats{opacity:0}
   }
   @media(prefers-reduced-motion:reduce){
     .spin{animation-duration:3s}
@@ -179,7 +281,11 @@
     </div>
     <div class="row">
       <button id="btnDiag" class="btn on" title="允许斜向移动（D）">八向</button>
-      <button id="btnRotate" class="btn" title="相机自动旋转">自转</button>
+      <button id="btnRotate" class="btn" title="相机自动旋转（F）">自转</button>
+      <button id="btnView" class="btn" title="复位视角（V）">视角</button>
+    </div>
+    <div class="row">
+      <button id="btnCustom" class="btn" title="配色 / 地板 / 相机都能调（O）">自定义…</button>
     </div>
     <div class="sliders">
       <label><span>列</span><input type="range" id="cols" min="16" max="60" step="1" value="36"><output id="colsV">36</output></label>
@@ -187,6 +293,27 @@
       <label><span>速度</span><input type="range" id="speed" min="1" max="160" step="1" value="26"><output id="speedV">26</output></label>
     </div>
   </section>
+
+  <aside class="drawer" id="drawer" aria-label="自定义参数">
+    <header>
+      <strong>自定义</strong><span style="flex:1"></span>
+      <button class="dx" id="drawerClose" aria-label="关闭">×</button>
+    </header>
+    <nav class="dtabs" role="tablist">
+      <button class="dtab on" data-tab="look" role="tab">外观</button>
+      <button class="dtab" data-tab="floor" role="tab">地板</button>
+      <button class="dtab" data-tab="cam" role="tab">相机</button>
+      <button class="dtab" data-tab="batch" role="tab">批量</button>
+    </nav>
+    <div class="dbody on" id="tab-look"></div>
+    <div class="dbody" id="tab-floor"></div>
+    <div class="dbody" id="tab-cam"></div>
+    <div class="dbody" id="tab-batch"></div>
+    <footer class="dfoot">
+      <button class="btn" id="cfgReset">恢复默认</button>
+      <span>改动自动保存</span>
+    </footer>
+  </aside>
 
   <div class="stats">
     <div><i>访问</i><b id="visited">0</b></div>
@@ -196,6 +323,29 @@
   </div>
 
   <div class="status" id="status">就绪</div>
+
+  <aside class="batch" id="batchPanel" aria-label="批量统计">
+    <header>
+      <strong>批量统计</strong>
+      <span class="bsub" id="bSub">未开始</span>
+      <button class="dx" id="bClose" aria-label="关闭">×</button>
+    </header>
+    <div class="bgrid">
+      <div><i>完成</i><b id="bDone">0</b></div>
+      <div><i>成功</i><b id="bOk">0</b></div>
+      <div><i>失败</i><b id="bFail">0</b></div>
+      <div><i>吞吐</i><b id="bThr">–</b></div>
+      <div><i>平均访问</i><b id="bAvgV">–</b></div>
+      <div><i>中位访问</i><b id="bMedV">–</b></div>
+      <div><i>最少/最多</i><b id="bMinMax">–</b></div>
+      <div><i>平均路径</i><b id="bAvgP">–</b></div>
+    </div>
+    <canvas id="bHist" width="292" height="84"></canvas>
+    <div class="bfoot">
+      <button class="btn" id="bCsv" disabled>复制 CSV</button>
+      <button class="btn" id="bStop" disabled>停止</button>
+    </div>
+  </aside>
 
   <div class="legend" id="legend"></div>
 </div>
@@ -219,6 +369,68 @@ var DIRS8 = DIRS4.concat([[1,1],[1,-1],[-1,1],[-1,-1]]);
 var HEIGHT = { empty:0.30, wall:2.10, danger:0.55, water:0.40, open:1.40, closed:0.90, path:2.00 };
 var STIFF = 170, DAMP = 13;               // 高度弹簧
 var SQRT2 = Math.SQRT2;
+
+/* ── 可自定义参数：抽屉里改的全部落在这一个对象上，存 localStorage ── */
+var DEFAULT_CFG = {
+  /* 网格 */
+  cols: 36, rows: 24, cell: 1, box: 0.86, speed: 26, diagonal: 1,
+  /* 外观 */
+  followTheme: 1, shadow: 1, pathPulse: 1,
+  heights: { empty: 0.30, wall: 2.10, danger: 0.55, water: 0.40, open: 1.40, closed: 0.90, path: 2.00 },
+  colors: {
+    empty: '#d9d3bd', ground: '#efe9d6', wall: '#6f6a52', danger: '#c05a44', water: '#5b9bd0',
+    open: '#8fb04a', closed: '#6b7cc4', path: '#d9a520', start: '#2e8b3d', end: '#c0392b'
+  },
+  /* 地板 */
+  floorOn: 1, floorMargin: 0.9, floorTone: 1,
+  gridOn: 1, gridAlpha: 0.26,
+  offX: 0, offY: 0, offZ: 0,
+  /* 相机 */
+  fov: 42, phi: 0.98, lookY: 0.9, autoRot: 0.16,
+  /* 批量 */
+  batchN: 200, batchRand: 1, batchDensity: 26
+};
+var CFG = null, CFG_KEY = 'hs-astar-prefs';
+
+function cloneCfg(o) { return JSON.parse(JSON.stringify(o)); }
+function mergeCfg(dst, src) {
+  for (var k in src) {
+    if (!Object.prototype.hasOwnProperty.call(src, k)) continue;
+    var v = src[k];
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      if (!dst[k] || typeof dst[k] !== 'object') dst[k] = {};
+      mergeCfg(dst[k], v);
+    } else if (dst[k] === undefined || typeof v === typeof dst[k]) {
+      dst[k] = v;
+    }
+  }
+  return dst;
+}
+function loadCfg() {
+  var c = cloneCfg(DEFAULT_CFG);
+  if (window.innerWidth < 760) {
+    c.cols = 18; c.rows = 20; c.phi = 0.62; c.lookY = -0.2; c.shadow = 0;
+  }
+  try {
+    var raw = localStorage.getItem(CFG_KEY);
+    if (raw) mergeCfg(c, JSON.parse(raw));
+  } catch (e) {}
+  return c;
+}
+var saveTimer = 0;
+function saveCfg() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function () {
+    try { localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); } catch (e) {}
+  }, 220);
+}
+function syncHeights() {
+  for (var k in HEIGHT) if (CFG.heights[k] != null) HEIGHT[k] = CFG.heights[k];
+}
+CFG = loadCfg();
+CELL = CFG.cell;
+BOX = CFG.box;
+syncHeights();
 
 var $ = function (id) { return document.getElementById(id); };
 var canvas = $('cv');
@@ -251,47 +463,69 @@ function buildPalette() {
   var P = { dark: dark, bg: bg };
   if (dark) {
     P.bg       = bg;
-    P.ground   = mix(bg, black, 0.45);
-    P.empty    = mix(bg, white, 0.13);
+    P.ground   = mix(bg, black, 0.55);
+    P.empty    = mix(bg, white, 0.20);
     P.wall     = mix(bg, white, 0.34);
     P.danger   = dgr.clone();
     P.water    = C('#2f6d9a');
     P.open     = ac.clone();
-    P.closed   = C('#6c81c8');
+    P.closed   = C('#8b83d6');
     P.path     = warn.clone();
-    P.grid     = mix(bg, white, 0.30);
-    P.gridA    = 0.16;
+    P.grid     = mix(P.ground, white, 0.26);
+    P.gridA    = 0.22;
     P.start    = C('#4cc76a');
     P.end      = C('#e8564a');
     P.fog      = 0.0085;
-    P.hemiSky  = C('#6c8eb0'); P.hemiGnd = C('#0c1014'); P.hemiI = 0.85;
-    P.dirCol   = C('#d8e8ff'); P.dirI = 0.55;
+    P.hemiSky  = C('#6c8eb0'); P.hemiGnd = C('#0c1014'); P.hemiI = 0.70;
+    P.dirCol   = C('#d8e8ff'); P.dirI = 0.85;
   } else {
     P.bg       = bg;
-    P.ground   = mix(bg, bd2, 0.10);
-    P.empty    = mix(bg, bd2, 0.20);
-    P.wall     = mix(bd2, bg, 0.18);
-    P.danger   = mix(dgr, white, 0.10);
-    P.water    = C('#5b9bd0');
+    P.ground   = mix(bg, bd2, 0.11);     // 地板浅、砖块深，格子才分得开
+    P.empty    = mix(bg, bd2, 0.23);
+    P.wall     = mix(bd2, bg, 0.06);
+    P.danger   = mix(dgr, white, 0.26);
+    P.water    = C('#4a90c8');
     P.open     = ac2.clone();
-    P.closed   = C('#6b7cc4');
+    P.closed   = C('#7f77c9');
     P.path     = mix(warn, white, 0.05);
-    P.grid     = mix(bg, bd2, 0.35);
-    P.gridA    = 0.22;
+    P.grid     = mix(P.ground, bd2, 0.30);
+    P.gridA    = 0.30;
     P.start    = C('#2e8b3d');
     P.end      = C('#c0392b');
     P.fog      = 0.0060;
-    P.hemiSky  = C('#ffffff'); P.hemiGnd = mix(bg, bd2, 0.3); P.hemiI = 0.78;
-    P.dirCol   = C('#ffffff'); P.dirI = 0.45;
+    P.hemiSky  = C('#ffffff'); P.hemiGnd = mix(bg, bd2, 0.3); P.hemiI = 0.50;
+    P.dirCol   = C('#ffffff'); P.dirI = 0.58;
   }
+
+  /* 自定义配色：直接覆盖上面按主题算出来的那一套；
+     光照方向按「地板是深还是浅」重新挑，否则深色地板会一片死黑 */
+  if (!CFG.followTheme) {
+    var q = CFG.colors;
+    P.empty = C(q.empty);   P.ground = C(q.ground);
+    P.wall  = C(q.wall);    P.danger = C(q.danger);
+    P.water = C(q.water);   P.open   = C(q.open);
+    P.closed = C(q.closed); P.path   = C(q.path);
+    P.start = C(q.start);   P.end    = C(q.end);
+    P.dark = lum(P.ground) < 0.42;
+    P.grid = mix(P.ground, P.wall, 0.5);
+    P.hemiSky = P.dark ? C('#6c8eb0') : C('#ffffff');
+    P.hemiGnd = P.dark ? C('#0c1014') : mix(P.ground, C('#000000'), 0.28);
+    P.hemiI = P.dark ? 0.85 : 0.78;
+    P.dirCol = P.dark ? C('#d8e8ff') : C('#ffffff');
+    P.dirI = P.dark ? 0.55 : 0.45;
+    P.fog = P.dark ? 0.0085 : 0.006;
+  }
+  /* 地板明度：单独给地板一个倍数，方便把地面压暗/提亮而不动柱子 */
+  if (CFG.floorTone !== 1) P.ground = P.ground.clone().multiplyScalar(CFG.floorTone);
+
   return P;
 }
 
 /* ══════════════════════════════════════════════════════════════════
    3. 渲染器 / 场景 / 相机
    ══════════════════════════════════════════════════════════════════ */
-var renderer, scene, camera, hemi, dirLight;
-var ground, gridLines = null, cellMesh = null, startMesh, endMesh, startRing, endRing;
+var renderer, scene, camera, hemi, dirLight, board;
+var ground, boardEdge = null, gridLines = null, cellMesh = null, startMesh, endMesh;
 
 try {
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -300,24 +534,53 @@ try {
   return;
 }
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+/* 不用阴影贴图：地板是带渐隐的透明面，shadow map 在这种尺度下容易整体糊黑，
+   而且每一步都要多渲一遍 864 根柱子。改用下面程序生成的软投影。 */
 
 scene = new THREE.Scene();
 camera = new THREE.PerspectiveCamera(42, 1, 0.1, 600);
 
+/* 地板 + 柱子 + 起终点全挂在 board 下：
+   「地板的位置」就是挪这个 group，取景、拾取、阴影全跟着走 */
+board = new THREE.Group();
+scene.add(board);
+
 hemi = new THREE.HemisphereLight(0xffffff, 0x999999, 0.8);
 scene.add(hemi);
 dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-dirLight.position.set(14, 26, 10);
+dirLight.position.set(14, 30, 10);
 scene.add(dirLight);
+scene.add(dirLight.target);
 
-/* 地面：一块很淡的底板，只为让柱子有"落点" */
+/* 地板贴图：中间实、外圈渐隐，跟背景自然接上（纯色大平面太生硬） */
+function makeFloorTexture() {
+  var S = 256, cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  var g = cv.getContext('2d');
+  g.fillStyle = '#ffffff';
+  g.fillRect(0, 0, S, S);
+  var grd = g.createRadialGradient(S / 2, S / 2, S * 0.16, S / 2, S / 2, S * 0.50);
+  grd.addColorStop(0, 'rgba(255,255,255,1)');
+  grd.addColorStop(0.72, 'rgba(255,255,255,0.96)');
+  grd.addColorStop(1, 'rgba(255,255,255,0)');
+  g.globalCompositeOperation = 'destination-in';
+  g.fillStyle = grd;
+  g.fillRect(0, 0, S, S);
+  var tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter;
+  return tex;
+}
+
+/* 地面：一块柔边薄板，颜色跟着配色走（默认 1×1，按棋盘尺寸缩放） */
 ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(420, 420),
-  new THREE.MeshLambertMaterial({ color: 0xffffff })
+  new THREE.PlaneGeometry(1, 1),
+  new THREE.MeshLambertMaterial({
+    color: 0xffffff, map: makeFloorTexture(), transparent: true, depthWrite: false
+  })
 );
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.02;
-scene.add(ground);
+board.add(ground);
 
 /* 起终点：小球 + 一圈光环 */
 function makeMarker(radius, ringColor) {
@@ -334,7 +597,7 @@ function makeMarker(radius, ringColor) {
   ring.position.y = -radius * 0.6;
   g.add(ball); g.add(ring);
   g.userData.ball = ball; g.userData.ring = ring;
-  scene.add(g);
+  board.add(g);
   return g;
 }
 startMesh = makeMarker(0.3, 0x2e8b3d);
@@ -348,28 +611,50 @@ var cam = { theta: 0.62, phi: 0.98, dist: 46, tTheta: 0.62, tPhi: 0.98, tDist: 4
 var autoRotate = false;
 var autoFit = true;          // 用户没手动缩放前，跟着窗口大小自动取景
 
-var lookY = 0.9;
+/* 视角绕的是「棋盘中心」，所以地板挪到哪儿，相机就跟到哪儿 */
+function camCenter() {
+  return { x: CFG.offX, y: CFG.offY + CFG.lookY, z: CFG.offZ };
+}
 function placeCameraAt(d) {
+  var c = camCenter();
   var sp = Math.sin(cam.phi), cp = Math.cos(cam.phi);
   camera.position.set(
-    d * sp * Math.sin(cam.theta),
-    d * cp,
-    d * sp * Math.cos(cam.theta)
+    c.x + d * sp * Math.sin(cam.theta),
+    c.y + d * cp,
+    c.z + d * sp * Math.cos(cam.theta)
   );
-  camera.lookAt(0, lookY, 0);
+  camera.lookAt(c.x, c.y, c.z);
 }
 function applyCamera() { placeCameraAt(cam.dist); }
+
+/* 地板（整块棋盘）的位置：挪 group，顺手把阴影光源也搬过去，
+   否则地板挪远了影子就掉出阴影相机的范围 */
+function applyBoardPos() {
+  board.position.set(CFG.offX, CFG.offY, CFG.offZ);
+  var s = Math.max(cols, rows) * CELL * 0.9 + 6;
+  /* 光源放在「左后上方」：影子会朝右前（相机这一侧）投出来，
+     否则影子全躲在柱子背后，等于白开 */
+  dirLight.position.set(CFG.offX - s * 0.62, CFG.offY + s * 0.95, CFG.offZ - s * 0.50);
+  dirLight.target.position.set(CFG.offX, CFG.offY, CFG.offZ);
+  dirLight.target.updateMatrixWorld();
+  var c = dirLight.shadow.camera;
+  c.left = -s; c.right = s; c.top = s; c.bottom = -s;
+  c.near = 1; c.far = s * 4 + 40;
+  c.updateProjectionMatrix();
+}
 
 /* 取景：把网格的 8 个角投影到屏幕，二分出一个刚好装得下的距离。
    外接球那套在竖屏上会把网格切掉，直接投影才准。 */
 var fitPts = [];
 function refreshFitPts() {
-  var hw = (cols - 1) / 2 * CELL + 0.5, hh = (rows - 1) / 2 * CELL + 0.5;
-  var top = 2.2;
-  fitPts = [
-    [-hw, 0, -hh], [hw, 0, -hh], [-hw, 0, hh], [hw, 0, hh],
-    [-hw, top, -hh], [hw, top, -hh], [-hw, top, hh], [hw, top, hh]
-  ];
+  var hw = (cols - 1) / 2 * CELL + CELL * 0.6, hh = (rows - 1) / 2 * CELL + CELL * 0.6;
+  var top = Math.max(2.2, HEIGHT.wall + 0.3);
+  var ox = CFG.offX, oy = CFG.offY, oz = CFG.offZ;
+  fitPts = [];
+  [[-hw, -hh], [hw, -hh], [-hw, hh], [hw, hh]].forEach(function (p) {
+    fitPts.push([ox + p[0], oy, oz + p[1]]);
+    fitPts.push([ox + p[0], oy + top, oz + p[1]]);
+  });
 }
 var _fv = new THREE.Vector3();
 function boardFits(d, limit) {
@@ -431,39 +716,87 @@ function defaultStartEnd() {
 }
 
 /* 网格线：每次重建网格时重画 */
+function halfSpan() {
+  return {
+    w: (cols - 1) / 2 * CELL + CELL * 0.5,
+    h: (rows - 1) / 2 * CELL + CELL * 0.5
+  };
+}
 function buildGridLines() {
-  if (gridLines) { scene.remove(gridLines); gridLines.geometry.dispose(); gridLines.material.dispose(); }
-  var hw = (cols - 1) / 2 * CELL, hh = (rows - 1) / 2 * CELL;
-  var pad = 0.5 * CELL;
+  if (gridLines) { board.remove(gridLines); gridLines.geometry.dispose(); gridLines.material.dispose(); }
+  var hs = halfSpan(), hw = hs.w, hh = hs.h;
   var pts = [], i;
   for (i = 0; i < cols; i++) {
     var x = -hw + i * CELL;
-    pts.push(x, 0, -hh - pad, x, 0, hh + pad);
+    pts.push(x, 0, -hh, x, 0, hh);
   }
   for (i = 0; i < rows; i++) {
     var z = -hh + i * CELL;
-    pts.push(-hw - pad, 0, z, hw + pad, 0, z);
+    pts.push(-hw, 0, z, hw, 0, z);
   }
   var geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
   var mat = new THREE.LineBasicMaterial({
-    color: PAL.grid.getHex(), transparent: true, opacity: PAL.gridA, depthWrite: false
+    color: (PAL ? PAL.grid : new THREE.Color(0x888888)).getHex(), transparent: true,
+    opacity: CFG.gridAlpha, depthWrite: false
   });
   gridLines = new THREE.LineSegments(geo, mat);
   gridLines.position.y = 0.004;
-  scene.add(gridLines);
+  gridLines.visible = !!CFG.gridOn;
+  board.add(gridLines);
+}
+
+/* 棋盘外框：一圈细线，边上有收口，画面才不散 */
+function buildBoardEdge() {
+  if (boardEdge) { board.remove(boardEdge); boardEdge.geometry.dispose(); boardEdge.material.dispose(); }
+  var hs = halfSpan(), hw = hs.w + CELL * 0.16, hh = hs.h + CELL * 0.16;
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(
+    [-hw, 0, -hh, hw, 0, -hh, hw, 0, hh, -hw, 0, hh], 3
+  ));
+  var mat = new THREE.LineBasicMaterial({
+    color: (PAL ? PAL.grid : new THREE.Color(0x888888)).getHex(), transparent: true,
+    opacity: 0.55, depthWrite: false
+  });
+  boardEdge = new THREE.LineLoop(geo, mat);
+  boardEdge.position.y = 0.006;
+  boardEdge.visible = !!CFG.gridOn;
+  board.add(boardEdge);
+}
+
+/* 地板尺寸/显隐：地板比棋盘略微外扩一点，视觉上才"托得住" */
+function applyFloor() {
+  var hs = halfSpan();
+  var pad = CFG.floorMargin * CELL;
+  var w = hs.w * 2 + pad * 2 + CELL * 0.6;
+  var h = hs.h * 2 + pad * 2 + CELL * 0.6;
+  ground.scale.set(w, h, 1);
+  ground.visible = !!CFG.floorOn;
+  if (gridLines) gridLines.visible = !!CFG.gridOn;
+  if (boardEdge) boardEdge.visible = !!CFG.gridOn;
 }
 
 /* 柱子：一个 InstancedMesh 画完，颜色存 instanceColor */
 function buildCellMesh() {
   if (cellMesh) {
-    scene.remove(cellMesh);
+    board.remove(cellMesh);
     cellMesh.geometry.dispose();
     cellMesh.material.dispose();
   }
   var geo = new THREE.BoxGeometry(1, 1, 1);
   geo.translate(0, 0.5, 0);                     // 底面贴地，缩放时向上长
-  var mat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+
+  /* 柱身竖直渐变（底暗顶亮）：同一个材质、顶点色烘焙进去，
+     跟 instanceColor 相乘，所以每根柱子都自带一点"体积感" */
+  var pos = geo.attributes.position, vc = new Float32Array(pos.count * 3);
+  for (var vi = 0; vi < pos.count; vi++) {
+    var t = Math.min(1, Math.max(0, pos.getY(vi)));
+    var br = 0.74 + 0.26 * t;
+    vc[vi * 3] = br; vc[vi * 3 + 1] = br; vc[vi * 3 + 2] = br;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(vc, 3));
+
+  var mat = new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors: true });
 
   cellMesh = new THREE.InstancedMesh(geo, mat, cols * rows);
   cellMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -471,9 +804,196 @@ function buildCellMesh() {
   var white = new THREE.Color(1, 1, 1);
   for (var i = 0; i < cols * rows; i++) cellMesh.setColorAt(i, white);
   cellMesh.instanceColor.needsUpdate = true;
-  scene.add(cellMesh);
+  cellMesh.castShadow = false;
+  cellMesh.receiveShadow = false;
+  board.add(cellMesh);
   for (var k = 0; k < nodes.length; k++) { nodes[k].hDrawn = -1; nodes[k].cDrawn.setRGB(-1, -1, -1); }
+  buildShadowLayer();
+  buildCaps();
   drawInstances();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   5.1 顶面贴花：墙 = 砖缝，危险区 = 警示斜条，路径 = 暖色亮面。
+   柱子是同一个 InstancedMesh，没法逐根换材质，所以另开三个
+   InstancedMesh 专门画「顶盖」，只画需要的格子。
+   ══════════════════════════════════════════════════════════════════ */
+var caps = null;
+
+function capTexture(kind) {
+  var S = 64, cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  var g = cv.getContext('2d');
+  g.fillStyle = '#ffffff';
+  g.fillRect(0, 0, S, S);
+
+  if (kind === 'wall') {
+    /* 砖缝：一条横缝 + 交错竖缝，压在墙顶就像码好的石砖 */
+    g.strokeStyle = 'rgba(0,0,0,0.30)';
+    g.lineWidth = 2;
+    for (var y = 0; y <= S; y += 16) {
+      g.beginPath(); g.moveTo(0, y + 0.5); g.lineTo(S, y + 0.5); g.stroke();
+    }
+    for (var r = 0; r < 4; r++) {
+      var off = (r % 2) ? 16 : 0;
+      for (var x = off; x <= S; x += 32) {
+        g.beginPath(); g.moveTo(x + 0.5, r * 16); g.lineTo(x + 0.5, r * 16 + 16); g.stroke();
+      }
+    }
+    /* 砖面再加一点点颗粒，别太平 */
+    g.fillStyle = 'rgba(0,0,0,0.05)';
+    for (var i = 0; i < 90; i++) {
+      g.fillRect((i * 37) % S, (i * 61) % S, 2, 2);
+    }
+  } else {
+    /* 警示斜条：白条会被 PAL.danger 染色，缝是暗的 */
+    g.save();
+    g.translate(S / 2, S / 2);
+    g.rotate(-Math.PI / 4);
+    g.fillStyle = 'rgba(0,0,0,0.34)';
+    for (var k = -S; k < S; k += 20) g.fillRect(k, -S, 9, S * 2);
+    g.restore();
+  }
+
+  var tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.minFilter = THREE.LinearMipMapLinearFilter;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+function capGeometry() {
+  var g = new THREE.PlaneGeometry(1, 1);
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+
+/* ── 软投影：贴在地板上的径向渐隐圆斑 ──
+   柱子越高影子越大、越往外偏，靠这个把"体积"读出来。
+   不用 shadow map 是因为地板是透明渐隐面，那个尺度下很容易整片糊黑。 */
+var shadowLayer = null, shadowTex = null;
+function makeShadowTexture() {
+  var S = 128, cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  var g = cv.getContext('2d');
+  g.fillStyle = '#000000';
+  g.fillRect(0, 0, S, S);
+  var grd = g.createRadialGradient(S / 2, S / 2, S * 0.06, S / 2, S / 2, S / 2);
+  grd.addColorStop(0, '#ffffff');
+  grd.addColorStop(0.42, '#b9b9b9');
+  grd.addColorStop(1, '#000000');
+  g.fillStyle = grd;
+  g.beginPath(); g.arc(S / 2, S / 2, S / 2, 0, Math.PI * 2); g.fill();
+  var t = new THREE.CanvasTexture(cv);
+  t.minFilter = THREE.LinearFilter;
+  return t;
+}
+function buildShadowLayer() {
+  if (shadowLayer) {
+    board.remove(shadowLayer);
+    shadowLayer.geometry.dispose();
+    shadowLayer.material.dispose();
+  }
+  if (!shadowTex) shadowTex = makeShadowTexture();
+  var m = new THREE.MeshBasicMaterial({
+    color: 0x000000, alphaMap: shadowTex, transparent: true, opacity: 0.30, depthWrite: false
+  });
+  shadowLayer = new THREE.InstancedMesh(capGeometry(), m, nodes.length);
+  shadowLayer.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  shadowLayer.frustumCulled = false;
+  shadowLayer.renderOrder = -1;
+  shadowLayer.visible = !!CFG.shadow;
+  board.add(shadowLayer);
+}
+
+function buildCaps() {
+  if (caps) {
+    ['wall', 'danger', 'path'].forEach(function (k) {
+      if (!caps[k]) return;
+      board.remove(caps[k]);
+      caps[k].geometry.dispose();
+      caps[k].material.dispose();
+    });
+    caps = null;
+  }
+  var n = nodes.length;
+  caps = {
+    wall: new THREE.InstancedMesh(capGeometry(), new THREE.MeshLambertMaterial({ map: capTexture('wall') }), n),
+    danger: new THREE.InstancedMesh(capGeometry(), new THREE.MeshLambertMaterial({ map: capTexture('danger') }), n),
+    path: new THREE.InstancedMesh(capGeometry(), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.92 }), n)
+  };
+  ['wall', 'danger', 'path'].forEach(function (k) {
+    var m = caps[k];
+    m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    m.frustumCulled = false;
+    m.count = 0;
+    m.castShadow = false;
+    m.renderOrder = 1;
+    board.add(m);
+  });
+  for (var i = 0; i < nodes.length; i++) { nodes[i].capKind = -1; nodes[i].capH = -1; }
+  syncCapColors();
+}
+
+function syncCapColors() {
+  if (!caps || !PAL) return;
+  caps.wall.material.color.copy(PAL.wall).offsetHSL(0, 0, 0.10);
+  caps.path.material.color.copy(PAL.path).offsetHSL(0, 0, 0.06);
+  caps.danger.material.color.copy(PAL.danger);
+}
+
+function capKindOf(n) {
+  if (n.terrain === T_WALL) return 1;
+  if (n.isPath) return 2;
+  if (n.terrain === T_DANGER) return 3;
+  return 0;
+}
+
+/* 只有「顶盖内容真的变了」才重写一遍，静置时零开销 */
+function drawCaps() {
+  if (!caps) return;
+  var need = false, i, n, k;
+  for (i = 0; i < nodes.length; i++) {
+    n = nodes[i]; k = capKindOf(n);
+    if (n.capKind !== k || Math.abs(n.capH - n.hCur) > 0.0015) { need = true; break; }
+  }
+  if (!need) return;
+
+  var cw = 0, cd = 0, cp = 0;
+  for (i = 0; i < nodes.length; i++) {
+    n = nodes[i]; k = capKindOf(n);
+    n.capKind = k; n.capH = n.hCur;
+    if (!k) continue;
+    dummy.position.set(n.wx, n.hCur + 0.008, n.wz);
+    dummy.scale.set(BOX * 0.995, 1, BOX * 0.995);
+    dummy.updateMatrix();
+    if (k === 1) dummy.matrix.toArray(caps.wall.instanceMatrix.array, (cw++) * 16);
+    else if (k === 2) dummy.matrix.toArray(caps.path.instanceMatrix.array, (cp++) * 16);
+    else dummy.matrix.toArray(caps.danger.instanceMatrix.array, (cd++) * 16);
+  }
+  /* 影子：跟高度一起变，朝光源反方向（右上后方）偏 */
+  if (shadowLayer) {
+    for (i = 0; i < nodes.length; i++) {
+      n = nodes[i];
+      var sh = n.hCur;
+      /* 平贴着的空地砖不画影子（影子比砖还大，会糊成一片灰雾），
+         只有立起来的东西才需要"落地感" */
+      var vis = sh > 0.42 ? 1 : 0;
+      var sz = (BOX * 0.92 + sh * 0.66) * vis;
+      dummy.position.set(n.wx + sh * 0.20, 0.004, n.wz + sh * 0.16);
+      dummy.scale.set(sz, 1, sz);
+      dummy.updateMatrix();
+      dummy.matrix.toArray(shadowLayer.instanceMatrix.array, i * 16);
+    }
+    shadowLayer.instanceMatrix.needsUpdate = true;
+  }
+
+  caps.wall.count = cw;
+  caps.danger.count = cd;
+  caps.path.count = cp;
+  caps.wall.instanceMatrix.needsUpdate = true;
+  caps.danger.instanceMatrix.needsUpdate = true;
+  caps.path.instanceMatrix.needsUpdate = true;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -484,7 +1004,7 @@ function computeTarget(n, t) {
   if (n.terrain === T_WALL) {
     h = HEIGHT.wall; c = PAL.wall;
   } else if (n.isPath) {
-    h = HEIGHT.path + Math.sin(t * 2.6 + (n.x + n.y) * 0.4) * 0.10;
+    h = HEIGHT.path + (CFG.pathPulse ? Math.sin(t * 2.6 + (n.x + n.y) * 0.4) * 0.10 : 0);
     c = PAL.path;
   } else if (n.isClosed) {
     h = HEIGHT.closed; c = PAL.closed;
@@ -692,9 +1212,10 @@ function pickNode(clientX, clientY) {
   pointerNDC.x = ((clientX - rect.left) / rect.width) * 2 - 1;
   pointerNDC.y = -((clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(pointerNDC, camera);
+  groundPlane.constant = -CFG.offY;      // 地板被抬高时，拾取面也得跟着抬
   if (!raycaster.ray.intersectPlane(groundPlane, hitPt)) return null;
-  var x = Math.round(hitPt.x / CELL + (cols - 1) / 2);
-  var y = Math.round(hitPt.z / CELL + (rows - 1) / 2);
+  var x = Math.round((hitPt.x - CFG.offX) / CELL + (cols - 1) / 2);
+  var y = Math.round((hitPt.z - CFG.offZ) / CELL + (rows - 1) / 2);
   if (x < 0 || y < 0 || x >= cols || y >= rows) return null;
   return nodes[idx(x, y)];
 }
@@ -742,9 +1263,9 @@ canvas.addEventListener('pointerdown', function (e) {
   }
   if (pointers.size > 2) return;
 
-  /* 右键（或中键）= 转视角 */
+  /* 右键 = 转视角，中键 = 平移（挪的就是地板） */
   if (e.button === 2 || e.button === 1) {
-    dragMode = 'orbit';
+    dragMode = e.button === 1 ? 'pan' : 'orbit';
     gesture = { x: e.clientX, y: e.clientY };
     canvas.setPointerCapture(e.pointerId);
     return;
@@ -778,15 +1299,24 @@ canvas.addEventListener('pointermove', function (e) {
     var cx = (p[0].x + p[1].x) / 2, cy = (p[0].y + p[1].y) / 2;
     if (gesture.d > 0) { autoFit = false; cam.tDist = clampDist(cam.tDist * (gesture.d / Math.max(20, d))); }
     cam.tTheta -= (cx - gesture.cx) * 0.006;
-    cam.tPhi = clampPhi(cam.tPhi + (cy - gesture.cy) * 0.004);
+    cam.tPhi = clampPhi(cam.tPhi - (cy - gesture.cy) * 0.004);
     gesture.d = d; gesture.cx = cx; gesture.cy = cy;
     return;
   }
 
-  /* 右键平移视角 */
+  /* 中键平移：整块棋盘跟着鼠标走 */
+  if (dragMode === 'pan' && gesture && e.buttons) {
+    panBy(e.clientX - gesture.x, e.clientY - gesture.y);
+    gesture.x = e.clientX; gesture.y = e.clientY;
+    return;
+  }
+
+  /* 右键转视角 */
   if (dragMode === 'orbit' && gesture && e.buttons) {
     cam.tTheta -= (e.clientX - gesture.x) * 0.006;
-    cam.tPhi = clampPhi(cam.tPhi + (e.clientY - gesture.y) * 0.004);
+    /* phi 是「从 +Y 起算的极角」：往下拖 -> phi 变小 -> 机位抬高、更俯视，
+       跟原版（往下拖看头顶）一致。之前写反了 */
+    cam.tPhi = clampPhi(cam.tPhi - (e.clientY - gesture.y) * 0.004);
     gesture.x = e.clientX; gesture.y = e.clientY;
     return;
   }
@@ -829,9 +1359,25 @@ canvas.addEventListener('wheel', function (e) {
 
 function clampDist(d) {
   var span = Math.max(cols, rows) * CELL;
-  return Math.max(span * 0.45, Math.min(span * 3.2, d));
+  return Math.max(span * 0.32, Math.min(span * 3.4, d));
 }
-function clampPhi(p) { return Math.max(0.16, Math.min(1.45, p)); }
+function clampPhi(p) { return Math.max(0.12, Math.min(1.52, p)); }
+function clampNum(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+/* 平移：按屏幕像素换算成世界位移，落在相机的右/上两个轴上 */
+var _pr = new THREE.Vector3(), _pu = new THREE.Vector3();
+function panBy(dx, dy) {
+  var h = canvas.clientHeight || 1;
+  var scale = 2 * cam.dist * Math.tan(camera.fov * Math.PI / 360) / h;
+  _pr.setFromMatrixColumn(camera.matrixWorld, 0);
+  _pu.setFromMatrixColumn(camera.matrixWorld, 1);
+  CFG.offX = clampNum(CFG.offX + (_pr.x * dx - _pu.x * dy) * scale, -40, 40);
+  CFG.offY = clampNum(CFG.offY + (_pr.y * dx - _pu.y * dy) * scale, -12, 12);
+  CFG.offZ = clampNum(CFG.offZ + (_pr.z * dx - _pu.z * dy) * scale, -40, 40);
+  applyBoardPos();
+  syncCfgUI();
+  saveCfg();
+}
 
 /* ══════════════════════════════════════════════════════════════════
    10. 控件
@@ -842,6 +1388,720 @@ brushBtns.forEach(function (b) {
     brushMode = b.dataset.mode;
     brushBtns.forEach(function (x) { x.classList.toggle('on', x === b); });
   });
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   10.1 生效函数：抽屉里改一个值 -> 调一个这里的小函数
+   ══════════════════════════════════════════════════════════════════ */
+function forceRedraw() {
+  for (var i = 0; i < nodes.length; i++) { nodes[i].hDrawn = -1; nodes[i].cDrawn.setRGB(-1, -1, -1); }
+}
+function refreshWorld() {
+  for (var i = 0; i < nodes.length; i++) {
+    nodes[i].wx = worldX(nodes[i].x);
+    nodes[i].wz = worldZ(nodes[i].y);
+  }
+  forceRedraw();
+}
+
+function applyCellSize() {
+  CELL = CFG.cell;
+  refreshWorld();
+  applyFloor();
+  buildGridLines();
+  buildBoardEdge();
+  applyBoardPos();
+  if (autoFit) { cam.tDist = fitDistance(); }
+}
+
+function applyShadow() {
+  if (shadowLayer) shadowLayer.visible = !!CFG.shadow;
+}
+
+function applyFov() {
+  camera.fov = CFG.fov;
+  camera.updateProjectionMatrix();
+}
+
+function resetView() {
+  var phone = window.innerWidth < 760;
+  CFG.offX = 0; CFG.offY = 0; CFG.offZ = 0;
+  CFG.lookY = phone ? -0.2 : 0.9;
+  CFG.phi = phone ? 0.62 : 0.98;
+  CFG.fov = 42;
+  applyFov();
+  cam.phi = cam.tPhi = CFG.phi;
+  applyBoardPos();
+  autoFit = true;
+  cam.tDist = fitDistance();
+  cam.dist = cam.tDist;
+  applyCamera();
+  syncCfgUI();
+  saveCfg();
+  setStatus('视角已复位');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   10.2 自定义抽屉：所有参数都由这几行小工具生成
+   ══════════════════════════════════════════════════════════════════ */
+var CTRL = {};
+function regCtrl(key, fn) { (CTRL[key] = CTRL[key] || []).push(fn); }
+function syncCfgUI() {
+  if (!CTRL) return;
+  for (var k in CTRL) {
+    var fs = CTRL[k];
+    for (var i = 0; i < fs.length; i++) fs[i]();
+  }
+}
+
+function elx(tag, cls, txt) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = txt;
+  return e;
+}
+function addSec(host, t) { host.appendChild(elx('div', 'dsec', t)); }
+
+function addRange(host, o) {
+  var row = elx('label', 'crow');
+  row.appendChild(elx('span', null, o.label));
+  var inp = document.createElement('input');
+  inp.type = 'range'; inp.min = o.min; inp.max = o.max; inp.step = o.step;
+  inp.value = o.get();
+  var out = elx('output', null, o.fmt ? o.fmt(o.get()) : o.get());
+  row.appendChild(inp); row.appendChild(out);
+
+  function commit() {
+    var v = parseFloat(inp.value);
+    out.textContent = o.fmt ? o.fmt(v) : v;
+    o.set(v);
+    saveCfg();
+  }
+  inp.addEventListener('input', function () {
+    out.textContent = o.fmt ? o.fmt(parseFloat(inp.value)) : inp.value;
+    if (o.live) commit();
+  });
+  inp.addEventListener('change', commit);
+
+  host.appendChild(row);
+  regCtrl(o.key, function () {
+    var v = o.get();
+    inp.value = v;
+    out.textContent = o.fmt ? o.fmt(v) : v;
+  });
+}
+
+function addSwitch(host, o) {
+  var row = elx('div', 'crow');
+  row.appendChild(elx('span', null, o.label));
+  row.appendChild(elx('i', 'sp'));
+  var b = elx('button', 'sw' + (o.get() ? ' on' : ''), o.get() ? '开' : '关');
+  function paint() {
+    var v = !!o.get();
+    b.textContent = v ? '开' : '关';
+    b.classList.toggle('on', v);
+  }
+  b.addEventListener('click', function () { o.set(!o.get()); paint(); o.after && o.after(); saveCfg(); });
+  row.appendChild(b);
+  host.appendChild(row);
+  regCtrl(o.key, paint);
+}
+
+function addBtn(host, label, fn) {
+  var row = elx('div', 'row');
+  row.style.marginTop = '8px';
+  var b = elx('button', 'btn', label);
+  b.style.cssText = 'flex:1;font-size:11px;padding:6px 4px';
+  b.addEventListener('click', fn);
+  row.appendChild(b);
+  host.appendChild(row);
+  return b;
+}
+
+/* 配色：点一下色块就进"自定义配色"，其余颜色从当前主题里继承过来，
+   这样只改一个颜色时，其它颜色不会突然全变 */
+function seedColorsFromPalette() {
+  var map = {
+    empty: PAL.empty, ground: PAL.ground, wall: PAL.wall, danger: PAL.danger, water: PAL.water,
+    open: PAL.open, closed: PAL.closed, path: PAL.path, start: PAL.start, end: PAL.end
+  };
+  for (var k in map) CFG.colors[k] = '#' + map[k].getHexString();
+}
+
+function addColors(host, keys) {
+  var grid = elx('div', 'cgrid');
+  keys.forEach(function (it) {
+    var row = elx('label', 'crow');
+    row.appendChild(elx('span', null, it[1]));
+    var inp = document.createElement('input');
+    inp.type = 'color';
+    inp.value = CFG.colors[it[0]];
+    inp.addEventListener('input', function () {
+      if (CFG.followTheme) {
+        seedColorsFromPalette();
+        CFG.followTheme = 0;
+      }
+      CFG.colors[it[0]] = inp.value;
+      applyPalette();
+      syncCfgUI();
+      saveCfg();
+    });
+    row.appendChild(inp);
+    grid.appendChild(row);
+    regCtrl('colors.' + it[0], function () { inp.value = CFG.colors[it[0]]; });
+  });
+  host.appendChild(grid);
+}
+
+function buildDrawer() {
+  var look = $('tab-look'), floor = $('tab-floor'), camTab = $('tab-cam'), batchTab = $('tab-batch');
+
+  /* ── 外观 ── */
+  addSec(look, '配色');
+  addSwitch(look, {
+    key: 'followTheme', label: '跟随站点主题',
+    get: function () { return CFG.followTheme; },
+    set: function (v) {
+      if (!v && CFG.followTheme) seedColorsFromPalette();
+      CFG.followTheme = v ? 1 : 0;
+    },
+    after: function () { applyPalette(); }
+  });
+  addColors(look, [
+    ['empty', '空地'], ['ground', '地板'], ['wall', '墙'], ['danger', '危险'], ['water', '水'],
+    ['open', '开放'], ['closed', '关闭'], ['path', '路径'], ['start', '起点'], ['end', '终点']
+  ]);
+
+  addSec(look, '柱高');
+  [['empty', '空地', 0.05, 1.2], ['wall', '墙', 0.4, 5], ['danger', '危险', 0.05, 1.2],
+   ['water', '水', 0.05, 1.2], ['open', '开放', 0.1, 3], ['closed', '关闭', 0.1, 2.5],
+   ['path', '路径', 0.1, 3]].forEach(function (h) {
+    addRange(look, {
+      key: 'heights.' + h[0], label: h[1], min: h[2], max: h[3], step: 0.05, live: true,
+      fmt: function (v) { return v.toFixed(2); },
+      get: function () { return CFG.heights[h[0]]; },
+      set: function (v) { CFG.heights[h[0]] = v; HEIGHT[h[0]] = v; }
+    });
+  });
+
+  addSec(look, '效果');
+  addSwitch(look, {
+    key: 'shadow', label: '投影阴影',
+    get: function () { return CFG.shadow; },
+    set: function (v) { CFG.shadow = v ? 1 : 0; },
+    after: applyShadow
+  });
+  addSwitch(look, {
+    key: 'pathPulse', label: '路径呼吸',
+    get: function () { return CFG.pathPulse; },
+    set: function (v) { CFG.pathPulse = v ? 1 : 0; }
+  });
+
+  /* ── 地板 ── */
+  addSec(floor, '网格');
+  addRange(floor, {
+    key: 'cols', label: '列', min: 16, max: 60, step: 1, live: false,
+    get: function () { return CFG.cols; },
+    set: function (v) { rebuild(v, CFG.rows); }
+  });
+  addRange(floor, {
+    key: 'rows', label: '行', min: 12, max: 40, step: 1, live: false,
+    get: function () { return CFG.rows; },
+    set: function (v) { rebuild(CFG.cols, v); }
+  });
+  addRange(floor, {
+    key: 'cell', label: '格子尺寸', min: 0.6, max: 1.8, step: 0.05, live: true,
+    fmt: function (v) { return v.toFixed(2); },
+    get: function () { return CFG.cell; },
+    set: function (v) { CFG.cell = v; applyCellSize(); }
+  });
+  addRange(floor, {
+    key: 'box', label: '柱子粗细', min: 0.4, max: 1, step: 0.02, live: true,
+    fmt: function (v) { return v.toFixed(2); },
+    get: function () { return CFG.box; },
+    set: function (v) { CFG.box = v; BOX = v; forceRedraw(); }
+  });
+
+  addSec(floor, '地板');
+  addSwitch(floor, {
+    key: 'floorOn', label: '显示地板',
+    get: function () { return CFG.floorOn; },
+    set: function (v) { CFG.floorOn = v ? 1 : 0; applyFloor(); }
+  });
+  addRange(floor, {
+    key: 'floorMargin', label: '地板外扩', min: 0, max: 4, step: 0.1, live: true,
+    fmt: function (v) { return v.toFixed(1); },
+    get: function () { return CFG.floorMargin; },
+    set: function (v) { CFG.floorMargin = v; applyFloor(); }
+  });
+  addRange(floor, {
+    key: 'floorTone', label: '地板明度', min: 0.4, max: 1.6, step: 0.02, live: true,
+    fmt: function (v) { return v.toFixed(2); },
+    get: function () { return CFG.floorTone; },
+    set: function (v) {
+      CFG.floorTone = v;
+      PAL = buildPalette();
+      ground.material.color.copy(PAL.ground);
+    }
+  });
+
+  addSec(floor, '网格线');
+  addSwitch(floor, {
+    key: 'gridOn', label: '显示网格',
+    get: function () { return CFG.gridOn; },
+    set: function (v) { CFG.gridOn = v ? 1 : 0; applyFloor(); }
+  });
+  addRange(floor, {
+    key: 'gridAlpha', label: '线深', min: 0, max: 0.7, step: 0.01, live: true,
+    fmt: function (v) { return v.toFixed(2); },
+    get: function () { return CFG.gridAlpha; },
+    set: function (v) {
+      CFG.gridAlpha = v;
+      if (gridLines) gridLines.material.opacity = v;
+    }
+  });
+
+  addSec(floor, '地板位置');
+  [['offX', '左右', -40, 40], ['offY', '上下', -8, 8], ['offZ', '前后', -40, 40]].forEach(function (a) {
+    addRange(floor, {
+      key: a[0], label: a[1], min: a[2], max: a[3], step: 0.5, live: true,
+      fmt: function (v) { return v.toFixed(1); },
+      get: function () { return CFG[a[0]]; },
+      set: function (v) { CFG[a[0]] = v; applyBoardPos(); }
+    });
+  });
+  addBtn(floor, '地板归位', function () {
+    CFG.offX = 0; CFG.offY = 0; CFG.offZ = 0;
+    applyBoardPos(); syncCfgUI(); saveCfg();
+    setStatus('地板已归位');
+  });
+
+  /* ── 相机 ── */
+  addSec(camTab, '镜头');
+  addRange(camTab, {
+    key: 'fov', label: '视场角', min: 26, max: 90, step: 1, live: true,
+    fmt: function (v) { return v + '°'; },
+    get: function () { return CFG.fov; },
+    set: function (v) { CFG.fov = v; applyFov(); }
+  });
+  addRange(camTab, {
+    key: 'phi', label: '俯仰', min: 0.12, max: 1.52, step: 0.01, live: true,
+    fmt: function (v) { return Math.round(v * 180 / Math.PI) + '°'; },
+    get: function () { return CFG.phi; },
+    set: function (v) { CFG.phi = v; cam.tPhi = v; }
+  });
+  addRange(camTab, {
+    key: 'lookY', label: '目标高度', min: -1.5, max: 3, step: 0.05, live: true,
+    fmt: function (v) { return v.toFixed(2); },
+    get: function () { return CFG.lookY; },
+    set: function (v) { CFG.lookY = v; }
+  });
+  addRange(camTab, {
+    key: 'autoRot', label: '自转速度', min: 0, max: 60, step: 1, live: true,
+    fmt: function (v) { return v ? (v / 100).toFixed(2) : '关'; },
+    get: function () { return Math.round((CFG.autoRot || 0) * 100); },
+    set: function (v) { CFG.autoRot = v / 100; }
+  });
+  addBtn(camTab, '复位视角', resetView);
+
+  addSec(camTab, '操作');
+  var tip = elx('div', null, '左键画 · 右键转 · 中键平移 · 滚轮缩放');
+  tip.style.cssText = 'font-size:10.5px;line-height:1.7;color:var(--faint)';
+  camTab.appendChild(tip);
+
+  /* ── 批量 ── */
+  addSec(batchTab, '批量模拟');
+  addRange(batchTab, {
+    key: 'batchN', label: '局数', min: 1, max: 1000, step: 1, live: false,
+    get: function () { return CFG.batchN; },
+    set: function (v) { CFG.batchN = Math.round(v); }
+  });
+  addSwitch(batchTab, {
+    key: 'batchRand', label: '每局随机地形',
+    get: function () { return CFG.batchRand; },
+    set: function (v) { CFG.batchRand = v ? 1 : 0; }
+  });
+  addRange(batchTab, {
+    key: 'batchDensity', label: '障碍密度', min: 0, max: 45, step: 1, live: false,
+    fmt: function (v) { return v + '%'; },
+    get: function () { return CFG.batchDensity; },
+    set: function (v) { CFG.batchDensity = Math.round(v); }
+  });
+  addBtn(batchTab, '开始批量模拟', function () {
+    startBatch(CFG.batchN, !!CFG.batchRand, CFG.batchDensity / 100);
+  });
+  var hint = elx('div', null,
+    '每局各自一套状态，按时间片轮流推进，所以是真的一起在跑。\n' +
+    '不开随机地形时所有局走同一张图，结果只差在耗时上。');
+  hint.style.cssText = 'margin-top:8px;font-size:10.5px;line-height:1.7;color:var(--faint);white-space:pre-line';
+  batchTab.appendChild(hint);
+
+  /* 标签页切换 */
+  Array.prototype.forEach.call(document.querySelectorAll('.dtab'), function (b) {
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(document.querySelectorAll('.dtab'), function (x) {
+        x.classList.toggle('on', x === b);
+      });
+      ['look', 'floor', 'cam', 'batch'].forEach(function (t) {
+        $('tab-' + t).classList.toggle('on', t === b.dataset.tab);
+      });
+    });
+  });
+}
+
+function setDrawer(open) {
+  $('drawer').classList.toggle('open', open);
+  document.body.classList.toggle('drawer-open', open);
+  $('btnCustom').classList.toggle('on', open);
+  if (open) $('btnCustom').textContent = '收起参数';
+  else $('btnCustom').textContent = '自定义…';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   10.4 批量模拟：1~1000 局同时推进
+   每一局都有自己的 g / parent / 状态 和二叉堆，按时间片轮流往前走，
+   所以是「同时在跑」而不是一局跑完再跑下一局。
+   ══════════════════════════════════════════════════════════════════ */
+var batch = null, batchRAF = 0;
+
+function batchPush(r, id, f) {
+  var ids = r.hi, fs = r.hf, i = ids.length;
+  ids.push(id); fs.push(f);
+  while (i > 0) {
+    var p = (i - 1) >> 1;
+    if (fs[p] <= fs[i]) break;
+    var ti = ids[p]; ids[p] = ids[i]; ids[i] = ti;
+    var tf = fs[p]; fs[p] = fs[i]; fs[i] = tf;
+    i = p;
+  }
+}
+function batchPop(r) {
+  var ids = r.hi, fs = r.hf, len = ids.length;
+  if (!len) return -1;
+  var top = ids[0];
+  var li = ids.pop(), lf = fs.pop();
+  if (len > 1) {
+    ids[0] = li; fs[0] = lf;
+    var i = 0, n = ids.length;
+    for (;;) {
+      var l = i * 2 + 1, rr = l + 1, m = i;
+      if (l < n && fs[l] < fs[m]) m = l;
+      if (rr < n && fs[rr] < fs[m]) m = rr;
+      if (m === i) break;
+      var ti = ids[m]; ids[m] = ids[i]; ids[i] = ti;
+      var tf = fs[m]; fs[m] = fs[i]; fs[i] = tf;
+      i = m;
+    }
+  }
+  return top;
+}
+function batchH(x, y, ex, ey, diag) {
+  var dx = Math.abs(x - ex), dy = Math.abs(y - ey);
+  if (!diag) return dx + dy;
+  return (dx + dy) + (SQRT2 - 2) * Math.min(dx, dy);
+}
+
+function makeRun(terr, s, e, diag, cols) {
+  var n = terr.length;
+  var g = new Float32Array(n);
+  for (var i = 0; i < n; i++) g[i] = Infinity;
+  /* par 必须填 -1：Int32Array 默认是 0，回溯长度时会绕在 0 号格上死循环 */
+  var par = new Int32Array(n);
+  par.fill(-1);
+  var r = {
+    terr: terr, s: s, e: e, diag: diag,
+    g: g, par: par, st: new Uint8Array(n),
+    hi: [], hf: [],
+    done: false, counted: false, ok: false,
+    visited: 0, cost: 0, pathLen: 0
+  };
+  var sx = s % cols, sy = (s - sx) / cols;
+  var ex = e % cols, ey = (e - ex) / cols;
+  r.g[s] = 0;
+  batchPush(r, s, batchH(sx, sy, ex, ey, diag));
+  return r;
+}
+
+/* 推进一局，最多 budget 次扩展；返回实际扩展数 */
+function advanceRun(r, cols, rows, budget) {
+  var terr = r.terr, g = r.g, par = r.par, st = r.st;
+  var ex0 = r.e % cols, ey0 = (r.e - (r.e % cols)) / cols;
+  var diag = r.diag, cnt = 0;
+
+  while (cnt < budget) {
+    var cur = batchPop(r);
+    if (cur < 0) { r.done = true; r.ok = false; return cnt; }
+    if (st[cur] === 2) continue;
+    st[cur] = 2;
+    r.visited++;
+    cnt++;
+
+    if (cur === r.e) {
+      var len = 0, p = cur;
+      while (p !== -1) { len++; p = par[p]; }
+      r.done = true; r.ok = true;
+      r.cost = g[cur]; r.pathLen = len - 1;
+      return cnt;
+    }
+
+    var cx = cur % cols, cy = (cur - cx) / cols;
+    var base = cy * cols;
+    for (var d = 0; d < (diag ? 8 : 4); d++) {
+      var dx = DIRS8[d][0], dy = DIRS8[d][1];
+      var nx = cx + dx, ny = cy + dy;
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+      var ni = ny * cols + nx;
+      if (terr[ni] === T_WALL) continue;
+      if (dx && dy) {
+        if (terr[base + nx] === T_WALL) continue;
+        if (terr[ny * cols + cx] === T_WALL) continue;
+      }
+      if (st[ni] === 2) continue;
+      var step = T_COST[terr[ni]] * (dx && dy ? SQRT2 : 1);
+      var tg = g[cur] + step;
+      if (tg < g[ni] - 1e-9) {
+        par[ni] = cur;
+        g[ni] = tg;
+        batchPush(r, ni, tg + batchH(nx, ny, ex0, ey0, diag));
+      }
+    }
+  }
+  return cnt;
+}
+
+function snapshotTerrain() {
+  var t = new Uint8Array(nodes.length);
+  for (var i = 0; i < nodes.length; i++) t[i] = nodes[i].terrain;
+  return t;
+}
+
+function randomTerrain(len, density, s, e, cols, rows) {
+  var t = new Uint8Array(len), i;
+  for (i = 0; i < len; i++) {
+    var r = Math.random();
+    if (r < density) t[i] = T_WALL;
+    else if (r < density * 1.30) t[i] = T_DANGER;
+    else if (r < density * 1.55) t[i] = T_WATER;
+    else t[i] = T_EMPTY;
+  }
+  /* 起点终点和它们周围留出来，不然一堆局从第一步就走不动 */
+  [s, e].forEach(function (k) {
+    t[k] = T_EMPTY;
+    var kx = k % cols, ky = (k - kx) / cols;
+    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+      var nx = kx + d[0], ny = ky + d[1];
+      if (nx >= 0 && ny >= 0 && nx < cols && ny < rows) t[ny * cols + nx] = T_EMPTY;
+    });
+  });
+  return t;
+}
+
+function openBatchPanel(open) {
+  $('batchPanel').classList.toggle('open', open);
+  document.body.classList.toggle('batch-open', open);
+}
+
+function startBatch(count, useRand, density) {
+  count = Math.max(1, Math.min(1000, Math.round(count || 1)));
+  var base = snapshotTerrain();
+  var runs = [], i;
+  for (i = 0; i < count; i++) {
+    var terr = useRand
+      ? randomTerrain(base.length, Math.max(0.02, density || 0.2), startIdx, endIdx, cols, rows)
+      : base;
+    runs.push(makeRun(terr, startIdx, endIdx, allowDiagonal, cols));
+  }
+  batch = {
+    runs: runs, total: count, finished: 0, ok: 0, fail: 0,
+    expanded: 0, t0: performance.now(), dur: 0, active: true,
+    lastUi: 0, rand: !!useRand
+  };
+  openBatchPanel(true);
+  $('bStop').disabled = false;
+  $('bCsv').disabled = false;
+  $('bSub').textContent = '运行中…';
+  updateBatchUI();
+  setStatus('批量模拟 ' + count + ' 局…');
+  if (!batchRAF) batchRAF = requestAnimationFrame(batchTick);
+}
+
+function stopBatch(msg) {
+  if (!batch) return;
+  batch.active = false;
+  if (batchRAF) { cancelAnimationFrame(batchRAF); batchRAF = 0; }
+  batch.dur = performance.now() - batch.t0;
+  $('bStop').disabled = true;
+  $('bSub').textContent = msg || '已停止';
+  updateBatchUI();
+}
+
+/* 时间片：每帧最多占 10ms，剩下的让给渲染 */
+function batchTick() {
+  batchRAF = 0;
+  if (!batch || !batch.active) return;
+  var t0 = performance.now();
+  var runs = batch.runs, n = runs.length, guard = 0;
+
+  while (performance.now() - t0 < 10) {
+    var progressed = false;
+    for (var i = 0; i < n; i++) {
+      var r = runs[i];
+      if (r.done) continue;
+      progressed = true;
+      batch.expanded += advanceRun(r, cols, rows, 16);
+      if (r.done && !r.counted) {
+        r.counted = true;
+        batch.finished++;
+        if (r.ok) batch.ok++; else batch.fail++;
+      }
+    }
+    if (!progressed) break;
+    if (++guard > 4000) break;
+  }
+
+  var now = performance.now();
+  if (now - batch.lastUi > 110 || batch.finished === batch.total) {
+    batch.lastUi = now;
+    updateBatchUI();
+  }
+  if (batch.finished === batch.total) {
+    batch.active = false;
+    batch.dur = now - batch.t0;
+    $('bStop').disabled = true;
+    $('bSub').textContent = '完成 · ' + Math.round(batch.dur) + 'ms';
+    updateBatchUI();
+    setStatus('批量完成：' + batch.total + ' 局');
+    return;
+  }
+  batchRAF = requestAnimationFrame(batchTick);
+}
+
+function batchCollect() {
+  var vs = [], ps = [], cs = [], i, r;
+  for (i = 0; i < batch.runs.length; i++) {
+    r = batch.runs[i];
+    if (r.done && r.ok) { vs.push(r.visited); ps.push(r.pathLen); cs.push(r.cost); }
+  }
+  return { vs: vs, ps: ps, cs: cs };
+}
+function medianOf(a) {
+  if (!a.length) return 0;
+  var b = a.slice().sort(function (x, y) { return x - y; });
+  var m = b.length >> 1;
+  return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2;
+}
+function avgOf(a) {
+  if (!a.length) return 0;
+  var s = 0;
+  for (var i = 0; i < a.length; i++) s += a[i];
+  return s / a.length;
+}
+
+function updateBatchUI() {
+  if (!batch) return;
+  var c = batchCollect();
+  $('bDone').textContent = batch.finished + '/' + batch.total;
+  $('bOk').textContent = batch.ok;
+  $('bFail').textContent = batch.fail;
+
+  var ms = Math.max(1, performance.now() - batch.t0);
+  var thr = batch.expanded / ms * 1000;
+  $('bThr').textContent = thr >= 1000
+    ? (thr / 1000).toFixed(1) + 'k/s' : Math.round(thr) + '/s';
+
+  $('bAvgV').textContent = c.vs.length ? Math.round(avgOf(c.vs)) : '–';
+  $('bMedV').textContent = c.vs.length ? Math.round(medianOf(c.vs)) : '–';
+  $('bMinMax').textContent = c.vs.length
+    ? Math.min.apply(null, c.vs) + '/' + Math.max.apply(null, c.vs) : '–';
+  $('bAvgP').textContent = c.ps.length ? (Math.round(avgOf(c.ps) * 10) / 10) : '–';
+
+  if (batch.active) {
+    $('bSub').textContent = '运行中 ' + Math.round(batch.finished / batch.total * 100) + '%';
+  }
+  drawBatchHist(c.vs);
+}
+
+function drawBatchHist(vs) {
+  var cv = $('bHist');
+  if (!cv) return;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  var W = cv.clientWidth || 292, H = 84;
+  if (cv.width !== Math.round(W * dpr)) {
+    cv.width = Math.round(W * dpr);
+    cv.height = Math.round(H * dpr);
+  }
+  var g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  var css = getComputedStyle(document.documentElement);
+  var ac = (css.getPropertyValue('--ac') || '#3d521f').trim();
+  var bd = (css.getPropertyValue('--bd') || '#a8a89a').trim();
+  var faint = (css.getPropertyValue('--faint') || '#888').trim();
+
+  g.font = '9px ui-monospace,Menlo,Consolas,monospace';
+  g.textBaseline = 'top';
+
+  if (!vs.length) {
+    g.fillStyle = faint;
+    g.fillText('还没有完成的局', 4, H / 2 - 4);
+    return;
+  }
+  var min = Math.min.apply(null, vs), max = Math.max.apply(null, vs);
+  if (max === min) max = min + 1;
+
+  var B = 14, bins = new Array(B), i;
+  for (i = 0; i < B; i++) bins[i] = 0;
+  for (i = 0; i < vs.length; i++) {
+    var k = Math.min(B - 1, Math.floor((vs[i] - min) / (max - min) * B));
+    bins[k]++;
+  }
+  var mx = Math.max.apply(null, bins) || 1;
+
+  var padX = 2, top = 12, bot = 14;
+  var bw = (W - padX * 2) / B;
+  for (i = 0; i < B; i++) {
+    var hgt = (H - top - bot) * (bins[i] / mx);
+    if (!hgt && !bins[i]) { g.fillStyle = bd; g.globalAlpha = 0.25; hgt = 1; }
+    else { g.fillStyle = ac; g.globalAlpha = bins[i] ? 0.85 : 0.25; }
+    g.fillRect(padX + i * bw + 0.5, H - bot - hgt, Math.max(1, bw - 1.5), Math.max(1, hgt));
+  }
+  g.globalAlpha = 1;
+
+  g.fillStyle = bd;
+  g.fillRect(padX, H - bot, W - padX * 2, 1);
+
+  g.fillStyle = faint;
+  g.fillText(String(min), padX, H - bot + 3);
+  var rl = String(max), rw = g.measureText(rl).width;
+  g.fillText(rl, W - padX - rw, H - bot + 3);
+  g.fillStyle = faint;
+  g.fillText('访问节点数分布 · 共 ' + vs.length + ' 局', padX, 1);
+}
+
+function batchCSV() {
+  if (!batch) return '';
+  var lines = ['run,ok,visited,pathLen,cost'];
+  for (var i = 0; i < batch.runs.length; i++) {
+    var r = batch.runs[i];
+    lines.push([i + 1, r.done ? (r.ok ? 1 : 0) : -1, r.visited,
+      r.ok ? r.pathLen : '', r.ok ? Math.round(r.cost * 100) / 100 : ''].join(','));
+  }
+  return lines.join('\n');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   10.3 按钮与滑条
+   ══════════════════════════════════════════════════════════════════ */
+$('btnCustom').addEventListener('click', function () {
+  setDrawer(!$('drawer').classList.contains('open'));
+});
+$('drawerClose').addEventListener('click', function () { setDrawer(false); });
+$('cfgReset').addEventListener('click', function () {
+  try { localStorage.removeItem(CFG_KEY); } catch (e) {}
+  CFG = loadCfg();
+  applyAllCfg();
+  setStatus('已恢复默认');
 });
 
 $('btnPlay').addEventListener('click', function () {
@@ -891,17 +2151,38 @@ $('btnMaze').addEventListener('click', function () {
 
 $('btnDiag').addEventListener('click', function () {
   allowDiagonal = !allowDiagonal;
+  CFG.diagonal = allowDiagonal ? 1 : 0;
   this.classList.toggle('on', allowDiagonal);
   resetSearch();
+  saveCfg();
   setStatus(allowDiagonal ? '八向移动' : '四向移动');
 });
 
 $('btnRotate').addEventListener('click', function () {
   autoRotate = !autoRotate;
+  if (autoRotate && !(CFG.autoRot > 0)) { CFG.autoRot = 0.16; syncCfgUI(); saveCfg(); }
   this.classList.toggle('on', autoRotate);
 });
 
-/* 滑条：拖动时只更新数字，松手才重建网格（避免每一帧重建） */
+$('btnView').addEventListener('click', resetView);
+
+$('bClose').addEventListener('click', function () { openBatchPanel(false); });
+$('bStop').addEventListener('click', function () { stopBatch('已停止'); });
+$('bCsv').addEventListener('click', function () {
+  var txt = batchCSV();
+  if (!txt) { setStatus('先跑一次批量模拟'); return; }
+  var ok = false;
+  try {
+    if (window.HS && HS.copy) { HS.copy(txt); ok = true; }
+  } catch (e) {}
+  if (!ok && navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(function () { setStatus('CSV 已复制'); },
+      function () { setStatus('复制失败，浏览器不给权限'); });
+    return;
+  }
+  setStatus(ok ? 'CSV 已复制' : '复制失败，浏览器不给权限');
+});
+
 $('btnMore').addEventListener('click', function () {
   var pnl = document.querySelector('.pnl');
   pnl.classList.toggle('min');
@@ -914,16 +2195,32 @@ colsEl.addEventListener('input', function () { colsV.textContent = colsEl.value;
 rowsEl.addEventListener('input', function () { rowsV.textContent = rowsEl.value; });
 colsEl.addEventListener('change', function () { rebuild(+colsEl.value, +rowsEl.value); });
 rowsEl.addEventListener('change', function () { rebuild(+colsEl.value, +rowsEl.value); });
-speedEl.addEventListener('input', function () { speed = +speedEl.value; speedV.textContent = speed; });
+speedEl.addEventListener('input', function () {
+  speed = +speedEl.value;
+  CFG.speed = speed;
+  speedV.textContent = speed;
+  saveCfg();
+});
 
 window.addEventListener('keydown', function (e) {
   var tag = (e.target.tagName || '').toLowerCase();
   if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  if (e.code === 'Escape') { setDrawer(false); return; }
   var map = {
     Space: 'btnPlay', KeyS: 'btnStep', KeyR: 'btnReset',
     KeyC: 'btnClear', KeyM: 'btnMaze', KeyX: 'btnSwap',
-    KeyD: 'btnDiag', KeyF: 'btnRotate'
+    KeyD: 'btnDiag', KeyF: 'btnRotate', KeyV: 'btnView'
   };
+  if (e.code === 'KeyB') {
+    e.preventDefault();
+    startBatch(CFG.batchN, !!CFG.batchRand, CFG.batchDensity / 100);
+    return;
+  }
+  if (e.code === 'KeyO') {
+    e.preventDefault();
+    setDrawer(!$('drawer').classList.contains('open'));
+    return;
+  }
   var id = map[e.code];
   if (id) { e.preventDefault(); $(id).click(); }
 });
@@ -961,10 +2258,16 @@ function rebuild(c, r) {
 
   buildCellMesh();
   buildGridLines();
+  buildBoardEdge();
+  applyFloor();
+  applyBoardPos();
   autoFit = true;
   cam.tDist = fitDistance();
   colsEl.value = cols; rowsEl.value = rows;
   colsV.textContent = cols; rowsV.textContent = rows;
+  CFG.cols = cols; CFG.rows = rows;
+  syncCfgUI();
+  saveCfg();
 
   resetSearch();
   setStatus('网格 ' + cols + ' × ' + rows);
@@ -973,9 +2276,30 @@ function rebuild(c, r) {
 /* ══════════════════════════════════════════════════════════════════
    12. 主题切换
    ══════════════════════════════════════════════════════════════════ */
+/* 背景：上浅下深的一点点渐变，比纯色平铺耐看，也不会抢柱子的对比 */
+var bgTex = null;
+function buildBgTexture() {
+  var cv = document.createElement('canvas');
+  cv.width = 4; cv.height = 256;
+  var g = cv.getContext('2d');
+  var top = PAL.bg.clone().offsetHSL(0, 0, PAL.dark ? 0.05 : 0.035);
+  var bot = PAL.bg.clone().offsetHSL(0, 0, PAL.dark ? -0.04 : -0.022);
+  var grd = g.createLinearGradient(0, 0, 0, 256);
+  grd.addColorStop(0, '#' + top.getHexString());
+  grd.addColorStop(1, '#' + bot.getHexString());
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 4, 256);
+  var t = new THREE.CanvasTexture(cv);
+  t.minFilter = THREE.LinearFilter;
+  return t;
+}
+
+/* 换配色：只更新颜色，不重建几何（拖色板的时候要跟手） */
 function applyPalette() {
   PAL = buildPalette();
-  scene.background = PAL.bg.clone();
+  if (bgTex) bgTex.dispose();
+  bgTex = buildBgTexture();
+  scene.background = bgTex;
   scene.fog = new THREE.FogExp2(PAL.bg.getHex(), PAL.fog);
   ground.material.color.copy(PAL.ground);
   hemi.color.copy(PAL.hemiSky); hemi.groundColor.copy(PAL.hemiGnd); hemi.intensity = PAL.hemiI;
@@ -984,10 +2308,46 @@ function applyPalette() {
   startMesh.userData.ring.material.color.copy(PAL.start);
   endMesh.userData.ball.material.color.copy(PAL.end);
   endMesh.userData.ring.material.color.copy(PAL.end);
-  if (cellMesh) { buildCellMesh(); }
-  buildGridLines();
-  for (var i = 0; i < nodes.length; i++) computeTarget(nodes[i], 0);
+  if (gridLines) gridLines.material.color.copy(PAL.grid);
+  if (boardEdge) boardEdge.material.color.copy(PAL.grid);
+  syncCapColors();
+  for (var i = 0; i < nodes.length; i++) {
+    computeTarget(nodes[i], 0);
+    nodes[i].cDrawn.setRGB(-1, -1, -1);
+  }
   renderLegend();
+}
+
+/* 把所有配置重新套一遍（恢复默认时用） */
+function applyAllCfg() {
+  PAL = buildPalette();
+  CELL = CFG.cell;
+  BOX = CFG.box;
+  syncHeights();
+  allowDiagonal = !!CFG.diagonal;
+  $('btnDiag').classList.toggle('on', allowDiagonal);
+  applyFov();
+  cam.phi = cam.tPhi = CFG.phi;
+  speed = CFG.speed;
+  $('speed').value = speed;
+  $('speedV').textContent = speed;
+
+  applyFloor();
+  buildGridLines();
+  buildBoardEdge();
+  applyBoardPos();
+  applyPalette();
+  applyShadow();
+
+  if (cols !== CFG.cols || rows !== CFG.rows) {
+    rebuild(CFG.cols, CFG.rows);
+  } else {
+    refreshWorld();
+    autoFit = true;
+    cam.tDist = fitDistance();
+    syncCfgUI();
+    saveCfg();
+  }
 }
 
 function renderLegend() {
@@ -1080,13 +2440,14 @@ function animate() {
   endMesh.userData.ring.rotation.z = -animT * 0.5;
 
   /* 相机阻尼 */
-  if (autoRotate) cam.tTheta += dt * 0.16;
+  if (autoRotate) cam.tTheta += dt * Math.max(0.02, CFG.autoRot || 0.16);
   var k = 1 - Math.exp(-10 * dt);
   cam.theta += (cam.tTheta - cam.theta) * k;
   cam.phi   += (cam.tPhi - cam.phi) * k;
   cam.dist  += (cam.tDist - cam.dist) * k;
   applyCamera();
 
+  drawCaps();
   drawInstances();
   renderer.render(scene, camera);
 
@@ -1125,28 +2486,17 @@ window.addEventListener('resize', sizeToViewport);
 function boot() {
   if (!window.THREE) { fail('3D 引擎没加载出来', { message: 'assets/vendor/three.min.js 没取到' }); return; }
 
-  PAL = buildPalette();
-  scene.background = PAL.bg.clone();
-  scene.fog = new THREE.FogExp2(PAL.bg.getHex(), PAL.fog);
-  ground.material.color.copy(PAL.ground);
-  hemi.color.copy(PAL.hemiSky); hemi.groundColor.copy(PAL.hemiGnd); hemi.intensity = PAL.hemiI;
-  dirLight.color.copy(PAL.dirCol); dirLight.intensity = PAL.dirI;
-  startMesh.userData.ball.material.color.copy(PAL.start);
-  startMesh.userData.ring.material.color.copy(PAL.start);
-  endMesh.userData.ball.material.color.copy(PAL.end);
-  endMesh.userData.ring.material.color.copy(PAL.end);
+  /* 配置在脚本开头就载入了，这里只是把它铺到各处 */
+  PAL = buildPalette();          // 网格线/外框都要用它取色，必须最先算好
+  cols = CFG.cols; rows = CFG.rows;
+  speed = CFG.speed;
+  allowDiagonal = !!CFG.diagonal;
+  $('btnDiag').classList.toggle('on', allowDiagonal);
+  applyFov();
+  cam.phi = cam.tPhi = CFG.phi;
 
-  /* 手机屏幕窄，格子少一点才看得清；同时把视点压低一点，让网格整体偏上，
-     不被底部面板压住 */
-  if (window.innerWidth < 760) {
-    cols = 18; rows = 20;
-    colsEl2.value = cols; rowsEl2.value = rows;
-    colsV2.textContent = cols; rowsV2.textContent = rows;
-    document.querySelector('.pnl').classList.add('min');
-    /* 竖屏看横向的长条网格，把机位抬高一点（更接近俯视），网格才填得满 */
-    cam.phi = cam.tPhi = 0.62;
-    lookY = -0.2;
-  }
+  /* 手机屏幕窄：面板默认收起，格子少一点才看得清 */
+  if (window.innerWidth < 760) document.querySelector('.pnl').classList.add('min');
 
   buildNodes();
   defaultStartEnd();
@@ -1163,10 +2513,15 @@ function boot() {
   sizeToViewport();
   buildCellMesh();
   buildGridLines();
+  buildBoardEdge();
+  applyFloor();
+  applyBoardPos();
+  applyPalette();          // 场景配色 + 图例
+  applyShadow();
+
   cam.tDist = fitDistance();
   cam.dist = cam.tDist;
   applyCamera();
-  renderLegend();
 
   for (var j = 0; j < nodes.length; j++) {
     computeTarget(nodes[j], 0);
@@ -1176,6 +2531,9 @@ function boot() {
 
   colsEl.value = cols; rowsEl.value = rows; speedEl.value = speed;
   colsV.textContent = cols; rowsV.textContent = rows; speedV.textContent = speed;
+
+  buildDrawer();
+  syncCfgUI();
   resetSearch();
   setStatus('就绪');
   renderer.render(scene, camera);   // 先画一帧，遮罩才谈得上"淡出"
@@ -1199,7 +2557,51 @@ window.ASTAR = {
     };
   },
   cellAt: function (x, y) { var n = nodes[idx(x, y)]; return n ? n.terrain : -1; },
-  brush: function (m) { brushMode = m; }
+  brush: function (m) { brushMode = m; },
+  cfg: function () { return cloneCfg(CFG); },
+  setCfg: function (patch) { mergeCfg(CFG, patch); applyAllCfg(); syncCfgUI(); saveCfg(); },
+  setOff: function (x, y, z) {
+    CFG.offX = x; CFG.offY = y; CFG.offZ = z;
+    applyBoardPos(); syncCfgUI(); saveCfg();
+  },
+  board: function () {
+    var p = board.position;
+    return { x: p.x, y: p.y, z: p.z, floorOn: !!CFG.floorOn, floorY: ground.position.y,
+             grid: !!CFG.gridOn, cell: CELL, box: BOX };
+  },
+  drawer: function (open) { setDrawer(open); },
+  batchStart: function (n, rand, dens) { startBatch(n, rand, dens); },
+  batchStats: function () {
+    if (!batch) return null;
+    var c = batchCollect();
+    return {
+      total: batch.total, finished: batch.finished, ok: batch.ok, fail: batch.fail,
+      active: batch.active, expanded: batch.expanded, ms: Math.round(performance.now() - batch.t0),
+      avgVisited: c.vs.length ? Math.round(avgOf(c.vs)) : 0,
+      medianVisited: c.vs.length ? Math.round(medianOf(c.vs)) : 0,
+      avgPath: c.ps.length ? Math.round(avgOf(c.ps) * 10) / 10 : 0,
+      minVisited: c.vs.length ? Math.min.apply(null, c.vs) : 0,
+      maxVisited: c.vs.length ? Math.max.apply(null, c.vs) : 0
+    };
+  },
+  batchCSV: function () { return batchCSV(); },
+  pal: function () {
+    var o = {};
+    ['empty', 'ground', 'wall', 'danger', 'water', 'open', 'closed', 'path', 'grid'].forEach(function (k) {
+      o[k] = '#' + PAL[k].getHexString();
+    });
+    o.hemiI = PAL.hemiI; o.dirI = PAL.dirI;
+    return o;
+  },
+  obj: function () { return { renderer: renderer, scene: scene, camera: camera, dirLight: dirLight, ground: ground, cellMesh: cellMesh, board: board }; },
+  dbg: function () {
+    return {
+      shadowOn: shadowLayer ? shadowLayer.visible : null,
+      shadowCount: shadowLayer ? shadowLayer.count : null,
+      cellCast: cellMesh ? cellMesh.castShadow : null,
+      lightPos: dirLight.position.toArray().map(function (v) { return Math.round(v * 10) / 10; })
+    };
+  }
 };
 
 })();
