@@ -29,7 +29,9 @@
     "desc": "15 个纯前端工具打包成单个 exe，双击即用、不装不联网",
     "tag": "工具",
     "version": "v1.0.0",
+    "url": "https://github.com/HSDL03/HStool/releases/download/offline-v1.0.0/HStool-Offline-1.0.0.exe",
+    "size": "70 MB",
     "hidden": false,
-    "offline": true
+    "offline": false
   }
 ]
