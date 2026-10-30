@@ -190,5 +190,17 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-astar-nav",
+    "icon": "🧭",
+    "name": "A* 寻路演示",
+    "desc": "3D 可视化：画墙、铺水域，看算法如何一步步搜索",
+    "tag": "工具",
+    "url": "./games/astar.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

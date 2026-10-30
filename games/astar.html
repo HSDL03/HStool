@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>A* 寻路演示 · 红石的小站</title>
+<meta name="description" content="3D 的 A* 寻路可视化：画墙、铺水域和危险区，看算法一步步把开放列表铺满地图。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+  /* 页面是「一整块画布 + 浮层」，所以只借 core.css 的令牌与顶栏，布局自己来 */
+  html,body{height:100%}
+  body{overflow:hidden}
+
+  #cv{
+    position:fixed;left:0;right:0;top:var(--topbar-h,52px);bottom:0;
+    width:100%;height:calc(100% - var(--topbar-h,52px));
+    display:block;touch-action:none;background:var(--bg2);
+  }
+
+  /* 浮层：容器不吃事件，子元素各自吃，画布才能画 */
+  .hud{position:fixed;inset:var(--topbar-h,52px) 0 0 0;z-index:20;pointer-events:none}
+  .hud > *{pointer-events:auto}
+
+  .hd{position:absolute;top:14px;left:16px;max-width:46vw;pointer-events:none}
+  .hd h1{margin:0;font-size:15px;font-weight:800;letter-spacing:.02em;color:var(--text)}
+  .hd p{margin:3px 0 0;font-size:11.5px;color:var(--faint);line-height:1.5}
+  .hd kbd{
+    display:inline-block;padding:0 4px;margin:0 1px;font-family:var(--mono);font-size:10.5px;
+    border:1px solid var(--bd);border-radius:2px;background:var(--bg2);color:var(--muted);
+  }
+
+  /* ── 控制面板 ── */
+  .pnl{
+    position:absolute;top:14px;right:14px;width:226px;
+    display:flex;flex-direction:column;gap:6px;
+    padding:10px;background:var(--bg);
+    border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--sh);
+  }
+  .row{display:flex;gap:6px}
+  .btn{
+    flex:1;min-width:0;padding:8px 6px;
+    font-family:inherit;font-size:12px;font-weight:700;line-height:1;
+    color:var(--text);background:var(--bg2);
+    border:2px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel);
+    cursor:pointer;white-space:nowrap;
+    transition:background .12s,border-color .12s,color .12s,transform .06s;
+  }
+  .btn:hover{background:var(--bg3);border-color:var(--bd2)}
+  .btn:active{transform:translateY(1px)}
+  .btn.on,.btn.primary{background:var(--ac);border-color:var(--ac);color:var(--on-ac);box-shadow:none}
+  .btn.primary:hover,.btn.on:hover{background:var(--ac);border-color:var(--ac);filter:brightness(1.08)}
+  .btn.wide{flex:0 0 auto;padding:8px 10px}
+
+  .sliders{
+    display:flex;flex-direction:column;gap:7px;
+    margin-top:2px;padding-top:9px;border-top:1px dashed var(--bd);
+  }
+  .sliders label{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);cursor:pointer}
+  .sliders span{flex:0 0 26px}
+  .sliders input[type=range]{
+    flex:1;min-width:0;height:14px;background:transparent;
+    accent-color:var(--ac);cursor:pointer;
+  }
+  .sliders output{
+    flex:0 0 26px;text-align:right;
+    font-family:var(--mono);font-size:11px;font-weight:800;color:var(--ac);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ── 底部数据条 ── */
+  .stats{
+    position:absolute;left:16px;bottom:16px;
+    display:flex;gap:16px;padding:8px 13px;
+    background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+    box-shadow:var(--sh);
+  }
+  .stats div{display:flex;flex-direction:column;gap:1px;min-width:38px}
+  .stats i{font-style:normal;font-size:10px;letter-spacing:.06em;color:var(--faint)}
+  .stats b{font-family:var(--mono);font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text)}
+  #visited{color:var(--ac)}
+  #pathcost{color:var(--warn)}
+
+  .status{
+    position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+    padding:6px 14px;font-size:12px;font-weight:700;
+    background:var(--bg);border:2px solid var(--bd2);border-radius:999px;
+    box-shadow:var(--sh);color:var(--muted);white-space:nowrap;pointer-events:none;
+  }
+  .status.ok{color:var(--ok);border-color:var(--ok)}
+  .status.err{color:var(--dgr);border-color:var(--dgr)}
+
+  /* ── 图例 ── */
+  .legend{
+    position:absolute;right:16px;bottom:16px;
+    display:grid;grid-template-columns:auto auto;gap:4px 14px;
+    font-size:11px;color:var(--faint);pointer-events:none;
+  }
+  .legend span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .dot{width:9px;height:9px;border-radius:2px;flex:none;box-shadow:var(--bevel)}
+
+  /* ── 加载 / 报错 ── */
+  #mask{
+    position:fixed;inset:var(--topbar-h,52px) 0 0 0;z-index:40;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    background:var(--bg);color:var(--faint);font-size:12.5px;
+    transition:opacity .5s;
+  }
+  #mask.done{opacity:0;pointer-events:none}
+  .spin{
+    width:30px;height:30px;border-radius:50%;
+    border:3px solid var(--bd-soft);border-top-color:var(--ac);
+    animation:spin .9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #mask .err{color:var(--dgr);font-size:14px;font-weight:800}
+  #mask .tip{max-width:420px;padding:0 24px;text-align:center;line-height:1.8}
+
+  .pnl-toggle{display:none}
+
+  @media(max-width:760px){
+    .hd{top:10px;left:12px}
+    .hd h1{font-size:14px}
+    .hd p{display:none}
+    .pnl{
+      left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:46vh;overflow-y:auto;
+    }
+    /* 手机上默认收起，只留常用那一行 —— 画面才是主角 */
+    .pnl-toggle{display:block;flex:0 0 auto;padding:8px 9px}
+    .pnl.min > *:not(.row:first-child){display:none}
+    .pnl.min > .row:first-child .pnl-toggle{display:block}
+    .stats{
+      left:12px;right:12px;top:calc(var(--topbar-h,52px) + 8px);bottom:auto;
+      justify-content:space-between;gap:8px;padding:6px 10px;
+    }
+    .stats b{font-size:12.5px}
+    .legend,.status{display:none}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .spin{animation-duration:3s}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<canvas id="cv" aria-label="A* 寻路三维演示"></canvas>
+
+<div class="hud">
+  <div class="hd">
+    <h1>A* 寻路</h1>
+    <p>左键拖动绘制 · 右键拖动旋转 · 滚轮缩放<br>
+       <kbd>空格</kbd>开始 <kbd>S</kbd>单步 <kbd>R</kbd>重置 <kbd>M</kbd>迷宫 <kbd>D</kbd>八向</p>
+  </div>
+
+  <section class="pnl" aria-label="控制">
+    <div class="row">
+      <button id="btnPlay" class="btn primary">开始</button>
+      <button id="btnStep" class="btn" title="单步（S）">单步</button>
+      <button id="btnReset" class="btn" title="重置（R）">重置</button>
+      <button id="btnMore" class="btn pnl-toggle" aria-label="展开参数">参数</button>
+    </div>
+    <div class="row" id="brushes">
+      <button class="btn on" data-mode="wall" title="墙壁：不可通行">墙</button>
+      <button class="btn" data-mode="danger" title="危险区：代价 ×4">危险</button>
+      <button class="btn" data-mode="water" title="水域：代价 ×8">水</button>
+      <button class="btn" data-mode="erase" title="橡皮：恢复空地">擦</button>
+    </div>
+    <div class="row">
+      <button id="btnMaze" class="btn" title="随机生成地形（M）">迷宫</button>
+      <button id="btnSwap" class="btn" title="交换起点终点（X）">换起终</button>
+      <button id="btnClear" class="btn" title="清空地形（C）">清空</button>
+    </div>
+    <div class="row">
+      <button id="btnDiag" class="btn on" title="允许斜向移动（D）">八向</button>
+      <button id="btnRotate" class="btn" title="相机自动旋转">自转</button>
+    </div>
+    <div class="sliders">
+      <label><span>列</span><input type="range" id="cols" min="16" max="60" step="1" value="36"><output id="colsV">36</output></label>
+      <label><span>行</span><input type="range" id="rows" min="12" max="40" step="1" value="24"><output id="rowsV">24</output></label>
+      <label><span>速度</span><input type="range" id="speed" min="1" max="160" step="1" value="26"><output id="speedV">26</output></label>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div><i>访问</i><b id="visited">0</b></div>
+    <div><i>路径</i><b id="pathlen">–</b></div>
+    <div><i>代价</i><b id="pathcost">–</b></div>
+    <div><i>用时</i><b id="elapsed">0ms</b></div>
+  </div>
+
+  <div class="status" id="status">就绪</div>
+
+  <div class="legend" id="legend"></div>
+</div>
+
+<div id="mask"><div class="spin"></div><div>正在点亮网格…</div></div>
+
+<script src="../assets/vendor/three.min.js"></script>
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════
+   1. 常量
+   ══════════════════════════════════════════════════════════════════ */
+var CELL = 1, BOX = 0.86;                 // 格子间距 / 柱子边长
+var T_EMPTY = 0, T_WALL = 1, T_DANGER = 2, T_WATER = 3;
+var T_COST  = [1, 1, 4, 8];               // 每格的通行代价
+var DIRS4 = [[1,0],[-1,0],[0,1],[0,-1]];
+var DIRS8 = DIRS4.concat([[1,1],[1,-1],[-1,1],[-1,-1]]);
+var HEIGHT = { empty:0.30, wall:2.10, danger:0.55, water:0.40, open:1.40, closed:0.90, path:2.00 };
+var STIFF = 170, DAMP = 13;               // 高度弹簧
+var SQRT2 = Math.SQRT2;
+
+var $ = function (id) { return document.getElementById(id); };
+var canvas = $('cv');
+
+/* ══════════════════════════════════════════════════════════════════
+   2. 主题取色
+   3D 场景不上死色，而是从 core.css 的令牌里取，这样切到「下界/樱花/海洋」
+   时整个场景跟着换色，跟站里其它页面是一套皮。
+   ══════════════════════════════════════════════════════════════════ */
+function cssVar(name, fallback) {
+  var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+  return (v && v.trim()) || fallback;
+}
+function C(hex) { return new THREE.Color().setStyle(hex); }
+function mix(a, b, t) { return a.clone().lerp(b, t); }
+function lum(c) { return c.r * 0.299 + c.g * 0.587 + c.b * 0.114; }
+
+var PAL = null;
+
+function buildPalette() {
+  var bg  = C(cssVar('--bg',  '#fffdf5'));
+  var bd2 = C(cssVar('--bd2', '#4a4a3a'));
+  var ac  = C(cssVar('--ac',  '#3d521f'));
+  var ac2 = C(cssVar('--ac2', '#7a9c3c'));
+  var dgr = C(cssVar('--dgr', '#a02020'));
+  var warn= C(cssVar('--warn','#b08800'));
+  var dark = lum(bg) < 0.42;
+  var white = C('#ffffff'), black = C('#000000');
+
+  var P = { dark: dark, bg: bg };
+  if (dark) {
+    P.bg       = bg;
+    P.ground   = mix(bg, black, 0.45);
+    P.empty    = mix(bg, white, 0.13);
+    P.wall     = mix(bg, white, 0.34);
+    P.danger   = dgr.clone();
+    P.water    = C('#2f6d9a');
+    P.open     = ac.clone();
+    P.closed   = C('#6c81c8');
+    P.path     = warn.clone();
+    P.grid     = mix(bg, white, 0.30);
+    P.gridA    = 0.16;
+    P.start    = C('#4cc76a');
+    P.end      = C('#e8564a');
+    P.fog      = 0.0085;
+    P.hemiSky  = C('#6c8eb0'); P.hemiGnd = C('#0c1014'); P.hemiI = 0.85;
+    P.dirCol   = C('#d8e8ff'); P.dirI = 0.55;
+  } else {
+    P.bg       = bg;
+    P.ground   = mix(bg, bd2, 0.10);
+    P.empty    = mix(bg, bd2, 0.20);
+    P.wall     = mix(bd2, bg, 0.18);
+    P.danger   = mix(dgr, white, 0.10);
+    P.water    = C('#5b9bd0');
+    P.open     = ac2.clone();
+    P.closed   = C('#6b7cc4');
+    P.path     = mix(warn, white, 0.05);
+    P.grid     = mix(bg, bd2, 0.35);
+    P.gridA    = 0.22;
+    P.start    = C('#2e8b3d');
+    P.end      = C('#c0392b');
+    P.fog      = 0.0060;
+    P.hemiSky  = C('#ffffff'); P.hemiGnd = mix(bg, bd2, 0.3); P.hemiI = 0.78;
+    P.dirCol   = C('#ffffff'); P.dirI = 0.45;
+  }
+  return P;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   3. 渲染器 / 场景 / 相机
+   ══════════════════════════════════════════════════════════════════ */
+var renderer, scene, camera, hemi, dirLight;
+var ground, gridLines = null, cellMesh = null, startMesh, endMesh, startRing, endRing;
+
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+} catch (e) {
+  fail('这台设备没能创建 WebGL 上下文', e);
+  return;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+scene = new THREE.Scene();
+camera = new THREE.PerspectiveCamera(42, 1, 0.1, 600);
+
+hemi = new THREE.HemisphereLight(0xffffff, 0x999999, 0.8);
+scene.add(hemi);
+dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+dirLight.position.set(14, 26, 10);
+scene.add(dirLight);
+
+/* 地面：一块很淡的底板，只为让柱子有"落点" */
+ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(420, 420),
+  new THREE.MeshLambertMaterial({ color: 0xffffff })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.02;
+scene.add(ground);
+
+/* 起终点：小球 + 一圈光环 */
+function makeMarker(radius, ringColor) {
+  var g = new THREE.Group();
+  var ball = new THREE.Mesh(
+    new THREE.SphereGeometry(radius, 20, 14),
+    new THREE.MeshLambertMaterial({ color: 0xffffff })
+  );
+  var ring = new THREE.Mesh(
+    new THREE.RingGeometry(radius * 1.45, radius * 1.75, 36),
+    new THREE.MeshBasicMaterial({ color: ringColor, transparent: true, opacity: 0.42, side: THREE.DoubleSide })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = -radius * 0.6;
+  g.add(ball); g.add(ring);
+  g.userData.ball = ball; g.userData.ring = ring;
+  scene.add(g);
+  return g;
+}
+startMesh = makeMarker(0.3, 0x2e8b3d);
+endMesh   = makeMarker(0.3, 0xc0392b);
+
+/* ══════════════════════════════════════════════════════════════════
+   4. 轨道相机（自己写，省一个 vendor 依赖）
+   左键归画笔，所以旋转只认右键 / 双指。
+   ══════════════════════════════════════════════════════════════════ */
+var cam = { theta: 0.62, phi: 0.98, dist: 46, tTheta: 0.62, tPhi: 0.98, tDist: 46 };
+var autoRotate = false;
+var autoFit = true;          // 用户没手动缩放前，跟着窗口大小自动取景
+
+var lookY = 0.9;
+function placeCameraAt(d) {
+  var sp = Math.sin(cam.phi), cp = Math.cos(cam.phi);
+  camera.position.set(
+    d * sp * Math.sin(cam.theta),
+    d * cp,
+    d * sp * Math.cos(cam.theta)
+  );
+  camera.lookAt(0, lookY, 0);
+}
+function applyCamera() { placeCameraAt(cam.dist); }
+
+/* 取景：把网格的 8 个角投影到屏幕，二分出一个刚好装得下的距离。
+   外接球那套在竖屏上会把网格切掉，直接投影才准。 */
+var fitPts = [];
+function refreshFitPts() {
+  var hw = (cols - 1) / 2 * CELL + 0.5, hh = (rows - 1) / 2 * CELL + 0.5;
+  var top = 2.2;
+  fitPts = [
+    [-hw, 0, -hh], [hw, 0, -hh], [-hw, 0, hh], [hw, 0, hh],
+    [-hw, top, -hh], [hw, top, -hh], [-hw, top, hh], [hw, top, hh]
+  ];
+}
+var _fv = new THREE.Vector3();
+function boardFits(d, limit) {
+  placeCameraAt(d);
+  camera.updateMatrixWorld();
+  for (var i = 0; i < fitPts.length; i++) {
+    var p = fitPts[i];
+    _fv.set(p[0], p[1], p[2]).project(camera);
+    if (Math.abs(_fv.x) > limit || Math.abs(_fv.y) > limit) return false;
+  }
+  return true;
+}
+function fitDistance() {
+  refreshFitPts();
+  /* 竖屏时画面高、网格扁，留边可以小一点，让网格占满宽度 */
+  var limit = window.innerWidth < 760 ? 0.97 : 0.88;
+  var lo = 8, hi = 320;
+  if (!boardFits(hi, limit)) return hi;
+  for (var i = 0; i < 20; i++) {
+    var mid = (lo + hi) / 2;
+    if (boardFits(mid, limit)) hi = mid; else lo = mid;
+  }
+  return hi * 1.01;
+}
+/* ══════════════════════════════════════════════════════════════════
+   5. 网格数据
+   ══════════════════════════════════════════════════════════════════ */
+var cols = 36, rows = 24;
+var nodes = [];
+var startIdx = 0, endIdx = 0;
+var dummy = new THREE.Object3D();
+
+function idx(x, y) { return y * cols + x; }
+function worldX(x) { return (x - (cols - 1) / 2) * CELL; }
+function worldZ(y) { return (y - (rows - 1) / 2) * CELL; }
+
+function createNode(x, y) {
+  return {
+    x: x, y: y, wx: worldX(x), wz: worldZ(y),
+    terrain: T_EMPTY,
+    isOpen: false, isClosed: false, isPath: false,
+    g: Infinity, h: 0, f: Infinity, parent: null,
+    hCur: HEIGHT.empty, hTarget: HEIGHT.empty, hDrawn: -1, hVel: 0,
+    color: new THREE.Color(), colorTarget: new THREE.Color(),
+    cDrawn: new THREE.Color(-1, -1, -1)
+  };
+}
+
+function buildNodes() {
+  nodes = new Array(cols * rows);
+  for (var y = 0; y < rows; y++)
+    for (var x = 0; x < cols; x++)
+      nodes[y * cols + x] = createNode(x, y);
+}
+
+function defaultStartEnd() {
+  startIdx = idx(Math.max(1, Math.round(cols * 0.1)), Math.floor(rows / 2));
+  endIdx   = idx(Math.min(cols - 2, Math.round(cols * 0.9)), Math.floor(rows / 2));
+}
+
+/* 网格线：每次重建网格时重画 */
+function buildGridLines() {
+  if (gridLines) { scene.remove(gridLines); gridLines.geometry.dispose(); gridLines.material.dispose(); }
+  var hw = (cols - 1) / 2 * CELL, hh = (rows - 1) / 2 * CELL;
+  var pad = 0.5 * CELL;
+  var pts = [], i;
+  for (i = 0; i < cols; i++) {
+    var x = -hw + i * CELL;
+    pts.push(x, 0, -hh - pad, x, 0, hh + pad);
+  }
+  for (i = 0; i < rows; i++) {
+    var z = -hh + i * CELL;
+    pts.push(-hw - pad, 0, z, hw + pad, 0, z);
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  var mat = new THREE.LineBasicMaterial({
+    color: PAL.grid.getHex(), transparent: true, opacity: PAL.gridA, depthWrite: false
+  });
+  gridLines = new THREE.LineSegments(geo, mat);
+  gridLines.position.y = 0.004;
+  scene.add(gridLines);
+}
+
+/* 柱子：一个 InstancedMesh 画完，颜色存 instanceColor */
+function buildCellMesh() {
+  if (cellMesh) {
+    scene.remove(cellMesh);
+    cellMesh.geometry.dispose();
+    cellMesh.material.dispose();
+  }
+  var geo = new THREE.BoxGeometry(1, 1, 1);
+  geo.translate(0, 0.5, 0);                     // 底面贴地，缩放时向上长
+  var mat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+
+  cellMesh = new THREE.InstancedMesh(geo, mat, cols * rows);
+  cellMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  cellMesh.frustumCulled = false;
+  var white = new THREE.Color(1, 1, 1);
+  for (var i = 0; i < cols * rows; i++) cellMesh.setColorAt(i, white);
+  cellMesh.instanceColor.needsUpdate = true;
+  scene.add(cellMesh);
+  for (var k = 0; k < nodes.length; k++) { nodes[k].hDrawn = -1; nodes[k].cDrawn.setRGB(-1, -1, -1); }
+  drawInstances();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   6. 每个格子的目标高度 / 颜色
+   ══════════════════════════════════════════════════════════════════ */
+function computeTarget(n, t) {
+  var h, c;
+  if (n.terrain === T_WALL) {
+    h = HEIGHT.wall; c = PAL.wall;
+  } else if (n.isPath) {
+    h = HEIGHT.path + Math.sin(t * 2.6 + (n.x + n.y) * 0.4) * 0.10;
+    c = PAL.path;
+  } else if (n.isClosed) {
+    h = HEIGHT.closed; c = PAL.closed;
+  } else if (n.isOpen) {
+    h = HEIGHT.open; c = PAL.open;
+  } else if (n.terrain === T_DANGER) {
+    h = HEIGHT.danger + Math.sin(t * 2 + n.x * 0.5 + n.y * 0.4) * 0.04;
+    c = PAL.danger;
+  } else if (n.terrain === T_WATER) {
+    h = HEIGHT.water; c = PAL.water;
+  } else {
+    h = HEIGHT.empty; c = PAL.empty;
+  }
+  n.hTarget = h;
+  n.colorTarget.copy(c);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   7. A*（二叉堆 + 惰性删除）
+   ══════════════════════════════════════════════════════════════════ */
+function MinHeap() { this.d = []; }
+MinHeap.prototype.size = function () { return this.d.length; };
+MinHeap.prototype.push = function (item) {
+  var d = this.d; d.push(item);
+  var i = d.length - 1;
+  while (i > 0) {
+    var p = (i - 1) >> 1;
+    if (d[p].f <= d[i].f) break;
+    var t = d[p]; d[p] = d[i]; d[i] = t; i = p;
+  }
+};
+MinHeap.prototype.pop = function () {
+  var d = this.d;
+  if (!d.length) return null;
+  var top = d[0], last = d.pop();
+  if (d.length) {
+    d[0] = last;
+    var i = 0, n = d.length;
+    for (;;) {
+      var l = 2 * i + 1, r = l + 1, m = i;
+      if (l < n && d[l].f < d[m].f) m = l;
+      if (r < n && d[r].f < d[m].f) m = r;
+      if (m === i) break;
+      var t = d[m]; d[m] = d[i]; d[i] = t; i = m;
+    }
+  }
+  return top;
+};
+
+var allowDiagonal = true;
+
+function heuristic(a, b) {
+  var dx = Math.abs(a.x - b.x), dy = Math.abs(a.y - b.y);
+  if (!allowDiagonal) return dx + dy;
+  return (dx + dy) + (SQRT2 - 2) * Math.min(dx, dy);
+}
+
+function neighborsOf(n) {
+  var out = [], dirs = allowDiagonal ? DIRS8 : DIRS4;
+  for (var i = 0; i < dirs.length; i++) {
+    var dx = dirs[i][0], dy = dirs[i][1];
+    var nx = n.x + dx, ny = n.y + dy;
+    if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+    var nb = nodes[idx(nx, ny)];
+    if (nb.terrain === T_WALL) continue;
+    /* 斜向不许"切墙角" */
+    if (dx !== 0 && dy !== 0) {
+      if (nodes[idx(n.x + dx, n.y)].terrain === T_WALL) continue;
+      if (nodes[idx(n.x, n.y + dy)].terrain === T_WALL) continue;
+    }
+    out.push(nb);
+  }
+  return out;
+}
+
+function* searchAstar() {
+  for (var i = 0; i < nodes.length; i++) {
+    var n = nodes[i];
+    n.g = Infinity; n.h = 0; n.f = Infinity;
+    n.parent = null; n.isOpen = false; n.isClosed = false; n.isPath = false;
+  }
+  pathList = []; pathCost = null; visitedCount = 0;
+
+  var start = nodes[startIdx], end = nodes[endIdx];
+  if (start === end) { yield { type: 'done', path: [start], cost: 0 }; return; }
+  if (start.terrain === T_WALL || end.terrain === T_WALL) { yield { type: 'fail' }; return; }
+
+  start.g = 0; start.h = heuristic(start, end); start.f = start.h; start.isOpen = true;
+  var heap = new MinHeap();
+  heap.push({ node: start, f: start.f });
+  var visits = 0, guard = 0;
+
+  while (heap.size() > 0) {
+    if (++guard > 400000) { yield { type: 'fail' }; return; }
+    var top = heap.pop(), cur = top.node;
+    if (cur.isClosed) continue;
+    if (top.f > cur.f + 1e-9) continue;       // 过期条目
+
+    cur.isOpen = false; cur.isClosed = true;
+    visitedCount = ++visits;
+    yield { type: 'progress' };
+
+    if (cur === end) {
+      var path = [], p = cur;
+      while (p) { path.push(p); p = p.parent; }
+      path.reverse();
+      yield { type: 'done', path: path, cost: cur.g };
+      return;
+    }
+
+    var nbs = neighborsOf(cur);
+    for (var k = 0; k < nbs.length; k++) {
+      var nb = nbs[k];
+      if (nb.isClosed) continue;
+      var diag = (nb.x !== cur.x && nb.y !== cur.y);
+      var step = T_COST[nb.terrain] * (diag ? SQRT2 : 1);
+      var tg = cur.g + step;
+      if (tg < nb.g - 1e-9) {
+        nb.parent = cur; nb.g = tg;
+        nb.h = heuristic(nb, end); nb.f = nb.g + nb.h;
+        nb.isOpen = true;
+        heap.push({ node: nb, f: nb.f });
+      }
+    }
+  }
+  yield { type: 'fail' };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   8. 状态
+   ══════════════════════════════════════════════════════════════════ */
+var pathList = [], pathCost = null, visitedCount = 0, elapsed = 0;
+var running = false, finished = false, searchGen = null, searchAcc = 0;
+var speed = 26, brushMode = 'wall', dragMode = null, lastPaint = null;
+
+var colsEl2 = $('cols'), rowsEl2 = $('rows'), colsV2 = $('colsV'), rowsV2 = $('rowsV');
+var elVisited = $('visited'), elPathLen = $('pathlen'),
+    elPathCost = $('pathcost'), elElapsed = $('elapsed'), elStatus = $('status');
+var btnPlay = $('btnPlay');
+
+function setStatus(text, kind) {
+  elStatus.textContent = text;
+  elStatus.className = 'status' + (kind ? ' ' + kind : '');
+}
+function updateStats() {
+  elVisited.textContent = visitedCount;
+  elPathLen.textContent = pathList.length > 1 ? pathList.length - 1 : '–';
+  elPathCost.textContent = (pathCost != null && isFinite(pathCost))
+    ? (Math.round(pathCost * 100) / 100) : '–';
+  elElapsed.textContent = elapsed < 1000
+    ? Math.round(elapsed) + 'ms' : (elapsed / 1000).toFixed(2) + 's';
+}
+function syncPlayBtn() {
+  btnPlay.textContent = running ? '暂停' : finished ? '重播' : searchGen ? '继续' : '开始';
+}
+
+function resetSearch() {
+  for (var i = 0; i < nodes.length; i++) {
+    var n = nodes[i];
+    n.g = Infinity; n.h = 0; n.f = Infinity;
+    n.parent = null; n.isOpen = false; n.isClosed = false; n.isPath = false;
+  }
+  searchGen = null; running = false; finished = false; searchAcc = 0;
+  visitedCount = 0; elapsed = 0; pathList = []; pathCost = null;
+  updateStats(); syncPlayBtn();
+}
+
+/* 推进一步；返回 false 表示搜索结束 */
+function stepOnce() {
+  if (!searchGen) return false;
+  var r = searchGen.next();
+  if (r.done) { searchGen = null; return false; }
+  var v = r.value;
+  if (v.type === 'done') {
+    pathList = v.path; pathCost = v.cost;
+    for (var i = 0; i < v.path.length; i++) v.path[i].isPath = true;
+    finished = true; running = false; searchGen = null;
+    var d = 0, w = 0;
+    for (var j = 0; j < v.path.length; j++) {
+      if (v.path[j].terrain === T_DANGER) d++;
+      else if (v.path[j].terrain === T_WATER) w++;
+    }
+    var extra = (d ? ' · 危险 ' + d : '') + (w ? ' · 水域 ' + w : '');
+    setStatus('到达 · 代价 ' + (Math.round(v.cost * 100) / 100) + extra, 'ok');
+    syncPlayBtn();
+  } else if (v.type === 'fail') {
+    finished = true; running = false; searchGen = null;
+    setStatus('走不通', 'err');
+    syncPlayBtn();
+  }
+  updateStats();
+  return true;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   9. 交互：画笔 / 拖动起终点 / 相机
+   ══════════════════════════════════════════════════════════════════ */
+var raycaster = new THREE.Raycaster();
+var pointerNDC = new THREE.Vector2();
+var groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+var hitPt = new THREE.Vector3();
+
+function pickNode(clientX, clientY) {
+  var rect = canvas.getBoundingClientRect();
+  pointerNDC.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  pointerNDC.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointerNDC, camera);
+  if (!raycaster.ray.intersectPlane(groundPlane, hitPt)) return null;
+  var x = Math.round(hitPt.x / CELL + (cols - 1) / 2);
+  var y = Math.round(hitPt.z / CELL + (rows - 1) / 2);
+  if (x < 0 || y < 0 || x >= cols || y >= rows) return null;
+  return nodes[idx(x, y)];
+}
+
+function setTerrain(n, mode) {
+  if (!n || n === nodes[startIdx] || n === nodes[endIdx]) return false;
+  var t = mode === 'wall' ? T_WALL : mode === 'danger' ? T_DANGER : mode === 'water' ? T_WATER : T_EMPTY;
+  if (n.terrain === t) return false;
+  n.terrain = t;
+  return true;
+}
+function paintLine(a, b, mode) {
+  var x0 = a.x, y0 = a.y, x1 = b.x, y1 = b.y;
+  var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+  var sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+  var err = dx - dy, changed = false, guard = 0;
+  while (guard++ < 400) {
+    if (setTerrain(nodes[idx(x0, y0)], mode)) changed = true;
+    if (x0 === x1 && y0 === y1) break;
+    var e2 = 2 * err;
+    if (e2 > -dy) { err -= dy; x0 += sx; }
+    if (e2 < dx) { err += dx; y0 += sy; }
+  }
+  return changed;
+}
+
+var pointers = new Map();
+var gesture = null;
+
+canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+canvas.addEventListener('pointerdown', function (e) {
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  /* 双指 = 旋转 + 缩放 */
+  if (e.pointerType === 'touch') canvas.setPointerCapture(e.pointerId);
+  if (pointers.size === 2) {
+    var p = Array.from(pointers.values());
+    gesture = {
+      d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y),
+      cx: (p[0].x + p[1].x) / 2, cy: (p[0].y + p[1].y) / 2
+    };
+    dragMode = null; lastPaint = null;
+    return;
+  }
+  if (pointers.size > 2) return;
+
+  /* 右键（或中键）= 转视角 */
+  if (e.button === 2 || e.button === 1) {
+    dragMode = 'orbit';
+    gesture = { x: e.clientX, y: e.clientY };
+    canvas.setPointerCapture(e.pointerId);
+    return;
+  }
+  if (e.button !== 0) return;
+
+  var n = pickNode(e.clientX, e.clientY);
+  if (!n) return;
+  canvas.setPointerCapture(e.pointerId);
+
+  if (n === nodes[startIdx])      dragMode = 'start';
+  else if (n === nodes[endIdx])   dragMode = 'goal';
+  else {
+    dragMode = brushMode;
+    lastPaint = n;
+    if (setTerrain(n, dragMode)) { resetSearch(); setStatus('绘制中…'); }
+  }
+  e.preventDefault();
+});
+
+canvas.addEventListener('pointermove', function (e) {
+  if (pointers.has(e.pointerId)) {
+    var rec = pointers.get(e.pointerId);
+    rec.x = e.clientX; rec.y = e.clientY;
+  }
+
+  /* 双指手势 */
+  if (gesture && pointers.size === 2 && gesture.d != null) {
+    var p = Array.from(pointers.values());
+    var d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+    var cx = (p[0].x + p[1].x) / 2, cy = (p[0].y + p[1].y) / 2;
+    if (gesture.d > 0) { autoFit = false; cam.tDist = clampDist(cam.tDist * (gesture.d / Math.max(20, d))); }
+    cam.tTheta -= (cx - gesture.cx) * 0.006;
+    cam.tPhi = clampPhi(cam.tPhi + (cy - gesture.cy) * 0.004);
+    gesture.d = d; gesture.cx = cx; gesture.cy = cy;
+    return;
+  }
+
+  /* 右键平移视角 */
+  if (dragMode === 'orbit' && gesture && e.buttons) {
+    cam.tTheta -= (e.clientX - gesture.x) * 0.006;
+    cam.tPhi = clampPhi(cam.tPhi + (e.clientY - gesture.y) * 0.004);
+    gesture.x = e.clientX; gesture.y = e.clientY;
+    return;
+  }
+
+  if (!dragMode) return;
+  var n = pickNode(e.clientX, e.clientY);
+  if (!n) return;
+
+  if (dragMode === 'start') {
+    if (n === nodes[endIdx] || n.terrain === T_WALL) return;
+    startIdx = idx(n.x, n.y); resetSearch(); setStatus('起点已移动');
+    return;
+  }
+  if (dragMode === 'goal') {
+    if (n === nodes[startIdx] || n.terrain === T_WALL) return;
+    endIdx = idx(n.x, n.y); resetSearch(); setStatus('终点已移动');
+    return;
+  }
+  var changed;
+  if (lastPaint && lastPaint !== n) changed = paintLine(lastPaint, n, dragMode);
+  else changed = setTerrain(n, dragMode);
+  lastPaint = n;
+  if (changed) { resetSearch(); setStatus('绘制中…'); }
+});
+
+function endPointer(e) {
+  if (e && e.pointerId != null) pointers.delete(e.pointerId);
+  if (pointers.size < 2) gesture = null;
+  if (pointers.size === 0) { dragMode = null; lastPaint = null; }
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+window.addEventListener('blur', function () { pointers.clear(); gesture = null; dragMode = null; });
+
+canvas.addEventListener('wheel', function (e) {
+  e.preventDefault();
+  autoFit = false;
+  cam.tDist = clampDist(cam.tDist * Math.exp(e.deltaY * 0.0012));
+}, { passive: false });
+
+function clampDist(d) {
+  var span = Math.max(cols, rows) * CELL;
+  return Math.max(span * 0.45, Math.min(span * 3.2, d));
+}
+function clampPhi(p) { return Math.max(0.16, Math.min(1.45, p)); }
+
+/* ══════════════════════════════════════════════════════════════════
+   10. 控件
+   ══════════════════════════════════════════════════════════════════ */
+var brushBtns = Array.prototype.slice.call(document.querySelectorAll('#brushes .btn'));
+brushBtns.forEach(function (b) {
+  b.addEventListener('click', function () {
+    brushMode = b.dataset.mode;
+    brushBtns.forEach(function (x) { x.classList.toggle('on', x === b); });
+  });
+});
+
+$('btnPlay').addEventListener('click', function () {
+  if (running) { running = false; setStatus('已暂停'); syncPlayBtn(); return; }
+  if (finished) resetSearch();
+  if (!searchGen) searchGen = searchAstar();
+  running = true; searchAcc = 0;
+  setStatus('搜索中…');
+  syncPlayBtn();
+});
+
+$('btnStep').addEventListener('click', function () {
+  if (finished) return;
+  if (!searchGen) { resetSearch(); searchGen = searchAstar(); }
+  running = false;
+  stepOnce();
+  syncPlayBtn();
+});
+
+$('btnReset').addEventListener('click', function () {
+  resetSearch(); setStatus('就绪');
+});
+
+$('btnClear').addEventListener('click', function () {
+  for (var i = 0; i < nodes.length; i++) nodes[i].terrain = T_EMPTY;
+  resetSearch(); setStatus('地形已清空');
+});
+
+$('btnSwap').addEventListener('click', function () {
+  var t = startIdx; startIdx = endIdx; endIdx = t;
+  resetSearch(); setStatus('起点终点已交换');
+});
+
+$('btnMaze').addEventListener('click', function () {
+  for (var i = 0; i < nodes.length; i++) {
+    var r = Math.random();
+    nodes[i].terrain = r < 0.20 ? T_WALL : r < 0.30 ? T_DANGER : r < 0.36 ? T_WATER : T_EMPTY;
+  }
+  [startIdx, endIdx].forEach(function (si) {
+    nodes[si].terrain = T_EMPTY;
+    neighborsOf(nodes[si]).forEach(function (nb) {
+      if (nb !== nodes[startIdx] && nb !== nodes[endIdx]) nb.terrain = T_EMPTY;
+    });
+  });
+  resetSearch(); setStatus('已生成随机地形');
+});
+
+$('btnDiag').addEventListener('click', function () {
+  allowDiagonal = !allowDiagonal;
+  this.classList.toggle('on', allowDiagonal);
+  resetSearch();
+  setStatus(allowDiagonal ? '八向移动' : '四向移动');
+});
+
+$('btnRotate').addEventListener('click', function () {
+  autoRotate = !autoRotate;
+  this.classList.toggle('on', autoRotate);
+});
+
+/* 滑条：拖动时只更新数字，松手才重建网格（避免每一帧重建） */
+$('btnMore').addEventListener('click', function () {
+  var pnl = document.querySelector('.pnl');
+  pnl.classList.toggle('min');
+  this.textContent = pnl.classList.contains('min') ? '参数' : '收起';
+});
+
+var colsEl = $('cols'), rowsEl = $('rows'), speedEl = $('speed');
+var colsV = $('colsV'), rowsV = $('rowsV'), speedV = $('speedV');
+colsEl.addEventListener('input', function () { colsV.textContent = colsEl.value; });
+rowsEl.addEventListener('input', function () { rowsV.textContent = rowsEl.value; });
+colsEl.addEventListener('change', function () { rebuild(+colsEl.value, +rowsEl.value); });
+rowsEl.addEventListener('change', function () { rebuild(+colsEl.value, +rowsEl.value); });
+speedEl.addEventListener('input', function () { speed = +speedEl.value; speedV.textContent = speed; });
+
+window.addEventListener('keydown', function (e) {
+  var tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  var map = {
+    Space: 'btnPlay', KeyS: 'btnStep', KeyR: 'btnReset',
+    KeyC: 'btnClear', KeyM: 'btnMaze', KeyX: 'btnSwap',
+    KeyD: 'btnDiag', KeyF: 'btnRotate'
+  };
+  var id = map[e.code];
+  if (id) { e.preventDefault(); $(id).click(); }
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   11. 重建网格
+   ══════════════════════════════════════════════════════════════════ */
+function rebuild(c, r) {
+  c = Math.max(16, Math.min(60, Math.round(c)));
+  r = Math.max(12, Math.min(40, Math.round(r)));
+  if (c === cols && r === rows) return;
+
+  /* 起终点按比例落到新网格上，地形用最近邻采样保留形状 */
+  var sX = cols > 1 ? nodes[startIdx].x / (cols - 1) : 0.1;
+  var sY = rows > 1 ? nodes[startIdx].y / (rows - 1) : 0.5;
+  var eX = cols > 1 ? nodes[endIdx].x / (cols - 1) : 0.9;
+  var eY = rows > 1 ? nodes[endIdx].y / (rows - 1) : 0.5;
+  var old = nodes, oc = cols, or = rows;
+
+  cols = c; rows = r;
+  buildNodes();
+  for (var y = 0; y < rows; y++) {
+    for (var x = 0; x < cols; x++) {
+      var ox = Math.round(x / Math.max(1, cols - 1) * (oc - 1));
+      var oy = Math.round(y / Math.max(1, rows - 1) * (or - 1));
+      nodes[idx(x, y)].terrain = old[oy * oc + ox].terrain;
+    }
+  }
+  var cl = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  startIdx = idx(cl(Math.round(sX * (cols - 1)), 0, cols - 1), cl(Math.round(sY * (rows - 1)), 0, rows - 1));
+  endIdx   = idx(cl(Math.round(eX * (cols - 1)), 0, cols - 1), cl(Math.round(eY * (rows - 1)), 0, rows - 1));
+  if (startIdx === endIdx) endIdx = idx((endIdx % cols + 1) % cols, Math.floor(endIdx / cols));
+  nodes[startIdx].terrain = T_EMPTY;
+  nodes[endIdx].terrain = T_EMPTY;
+
+  buildCellMesh();
+  buildGridLines();
+  autoFit = true;
+  cam.tDist = fitDistance();
+  colsEl.value = cols; rowsEl.value = rows;
+  colsV.textContent = cols; rowsV.textContent = rows;
+
+  resetSearch();
+  setStatus('网格 ' + cols + ' × ' + rows);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   12. 主题切换
+   ══════════════════════════════════════════════════════════════════ */
+function applyPalette() {
+  PAL = buildPalette();
+  scene.background = PAL.bg.clone();
+  scene.fog = new THREE.FogExp2(PAL.bg.getHex(), PAL.fog);
+  ground.material.color.copy(PAL.ground);
+  hemi.color.copy(PAL.hemiSky); hemi.groundColor.copy(PAL.hemiGnd); hemi.intensity = PAL.hemiI;
+  dirLight.color.copy(PAL.dirCol); dirLight.intensity = PAL.dirI;
+  startMesh.userData.ball.material.color.copy(PAL.start);
+  startMesh.userData.ring.material.color.copy(PAL.start);
+  endMesh.userData.ball.material.color.copy(PAL.end);
+  endMesh.userData.ring.material.color.copy(PAL.end);
+  if (cellMesh) { buildCellMesh(); }
+  buildGridLines();
+  for (var i = 0; i < nodes.length; i++) computeTarget(nodes[i], 0);
+  renderLegend();
+}
+
+function renderLegend() {
+  var items = [
+    ['墙', PAL.wall], ['危险 ×4', PAL.danger], ['水 ×8', PAL.water],
+    ['开放', PAL.open], ['关闭', PAL.closed], ['路径', PAL.path]
+  ];
+  $('legend').innerHTML = items.map(function (it) {
+    return '<span><i class="dot" style="background:' + '#' + it[1].getHexString() + '"></i>' + it[0] + '</span>';
+  }).join('');
+}
+
+var themeTimer = null;
+new MutationObserver(function () {
+  clearTimeout(themeTimer);
+  themeTimer = setTimeout(applyPalette, 60);
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* ══════════════════════════════════════════════════════════════════
+   13. 主循环
+   柱子每帧只写「有变化」的实例，静止时几乎零开销。
+   ══════════════════════════════════════════════════════════════════ */
+var clock = new THREE.Clock();
+var animT = 0;
+
+function drawInstances() {
+  var mChanged = false, cChanged = false;
+  var m = cellMesh.instanceMatrix.array, cs = cellMesh.instanceColor.array;
+
+  for (var i = 0; i < nodes.length; i++) {
+    var n = nodes[i];
+
+    if (Math.abs(n.hCur - n.hDrawn) > 0.0012) {
+      dummy.position.set(n.wx, 0, n.wz);
+      dummy.scale.set(BOX, Math.max(0.02, n.hCur), BOX);
+      dummy.updateMatrix();
+      dummy.matrix.toArray(m, i * 16);
+      n.hDrawn = n.hCur;
+      mChanged = true;
+    }
+    var k = i * 3;
+    if (Math.abs(n.color.r - n.cDrawn.r) > 0.002 ||
+        Math.abs(n.color.g - n.cDrawn.g) > 0.002 ||
+        Math.abs(n.color.b - n.cDrawn.b) > 0.002) {
+      cs[k] = n.color.r; cs[k + 1] = n.color.g; cs[k + 2] = n.color.b;
+      n.cDrawn.copy(n.color);
+      cChanged = true;
+    }
+  }
+  if (mChanged) cellMesh.instanceMatrix.needsUpdate = true;
+  if (cChanged) cellMesh.instanceColor.needsUpdate = true;
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  var dt = Math.min(clock.getDelta(), 0.05);
+  animT += dt;
+
+  /* 搜索推进 */
+  if (running && searchGen) {
+    elapsed += dt * 1000;
+    searchAcc += dt * 1000;
+    var step = 1000 / speed, guard = 0;
+    while (searchAcc >= step && guard++ < 200) {
+      searchAcc -= step;
+      if (!stepOnce()) break;
+    }
+  }
+
+  /* 高度弹簧 + 颜色过渡 */
+  var ck = 1 - Math.exp(-9 * dt);
+  for (var i = 0; i < nodes.length; i++) {
+    var n = nodes[i];
+    computeTarget(n, animT);
+    n.hVel += (n.hTarget - n.hCur) * STIFF * dt;
+    n.hVel *= Math.exp(-DAMP * dt);
+    n.hCur += n.hVel * dt;
+    if (n.hCur < 0.02) { n.hCur = 0.02; n.hVel = 0; }
+    n.color.lerp(n.colorTarget, ck);
+  }
+
+  /* 起终点轻浮 */
+  var s = nodes[startIdx], e = nodes[endIdx];
+  var bob = Math.sin(animT * 1.9) * 0.07;
+  startMesh.position.set(s.wx, s.hCur + 0.34 + bob, s.wz);
+  startMesh.userData.ball.scale.setScalar(1 + Math.sin(animT * 1.9) * 0.06);
+  startMesh.userData.ring.rotation.z = animT * 0.5;
+  endMesh.position.set(e.wx, e.hCur + 0.34 - bob, e.wz);
+  endMesh.userData.ball.scale.setScalar(1 + Math.sin(animT * 1.9 + 1.6) * 0.06);
+  endMesh.userData.ring.rotation.z = -animT * 0.5;
+
+  /* 相机阻尼 */
+  if (autoRotate) cam.tTheta += dt * 0.16;
+  var k = 1 - Math.exp(-10 * dt);
+  cam.theta += (cam.tTheta - cam.theta) * k;
+  cam.phi   += (cam.tPhi - cam.phi) * k;
+  cam.dist  += (cam.tDist - cam.dist) * k;
+  applyCamera();
+
+  drawInstances();
+  renderer.render(scene, camera);
+
+  if (loading) hideMask();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   14. 启动
+   ══════════════════════════════════════════════════════════════════ */
+var loading = true;
+function hideMask() {
+  loading = false;
+  var m = $('mask');
+  if (!m) return;
+  m.classList.add('done');
+  setTimeout(function () { if (m.parentNode) m.parentNode.removeChild(m); }, 600);
+}
+function fail(title, err) {
+  var m = $('mask');
+  if (!m) return;
+  m.innerHTML = '<div class="err">' + title + '</div><div class="tip">' +
+    (err && err.message ? String(err.message) : '请换一个支持 WebGL 的浏览器再试。') + '</div>';
+}
+
+function sizeToViewport() {
+  var w = canvas.clientWidth || window.innerWidth;
+  var h = canvas.clientHeight || (window.innerHeight - 52);
+  if (w === 0 || h === 0) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  if (autoFit) cam.tDist = fitDistance();
+}
+window.addEventListener('resize', sizeToViewport);
+
+function boot() {
+  if (!window.THREE) { fail('3D 引擎没加载出来', { message: 'assets/vendor/three.min.js 没取到' }); return; }
+
+  PAL = buildPalette();
+  scene.background = PAL.bg.clone();
+  scene.fog = new THREE.FogExp2(PAL.bg.getHex(), PAL.fog);
+  ground.material.color.copy(PAL.ground);
+  hemi.color.copy(PAL.hemiSky); hemi.groundColor.copy(PAL.hemiGnd); hemi.intensity = PAL.hemiI;
+  dirLight.color.copy(PAL.dirCol); dirLight.intensity = PAL.dirI;
+  startMesh.userData.ball.material.color.copy(PAL.start);
+  startMesh.userData.ring.material.color.copy(PAL.start);
+  endMesh.userData.ball.material.color.copy(PAL.end);
+  endMesh.userData.ring.material.color.copy(PAL.end);
+
+  /* 手机屏幕窄，格子少一点才看得清；同时把视点压低一点，让网格整体偏上，
+     不被底部面板压住 */
+  if (window.innerWidth < 760) {
+    cols = 18; rows = 20;
+    colsEl2.value = cols; rowsEl2.value = rows;
+    colsV2.textContent = cols; rowsV2.textContent = rows;
+    document.querySelector('.pnl').classList.add('min');
+    /* 竖屏看横向的长条网格，把机位抬高一点（更接近俯视），网格才填得满 */
+    cam.phi = cam.tPhi = 0.62;
+    lookY = -0.2;
+  }
+
+  buildNodes();
+  defaultStartEnd();
+
+  /* 初始地形：撒一点危险区和水域，让人一进门就有的看 */
+  for (var i = 0; i < nodes.length; i++) {
+    if (Math.random() < 0.06) {
+      nodes[i].terrain = Math.random() < 0.62 ? T_DANGER : T_WATER;
+    }
+  }
+  nodes[startIdx].terrain = T_EMPTY;
+  nodes[endIdx].terrain = T_EMPTY;
+
+  sizeToViewport();
+  buildCellMesh();
+  buildGridLines();
+  cam.tDist = fitDistance();
+  cam.dist = cam.tDist;
+  applyCamera();
+  renderLegend();
+
+  for (var j = 0; j < nodes.length; j++) {
+    computeTarget(nodes[j], 0);
+    nodes[j].hCur = nodes[j].hTarget;
+    nodes[j].color.copy(nodes[j].colorTarget);
+  }
+
+  colsEl.value = cols; rowsEl.value = rows; speedEl.value = speed;
+  colsV.textContent = cols; rowsV.textContent = rows; speedV.textContent = speed;
+  resetSearch();
+  setStatus('就绪');
+  renderer.render(scene, camera);   // 先画一帧，遮罩才谈得上"淡出"
+  requestAnimationFrame(animate);
+}
+
+try { boot(); } catch (err) { console.error(err); fail('初始化失败', err); }
+
+/* 方便自动化测试/控制台调参的最小句柄，不影响正常使用 */
+window.ASTAR = {
+  info: function () {
+    var t = { wall: 0, danger: 0, water: 0 };
+    for (var i = 0; i < nodes.length; i++) {
+      var k = nodes[i].terrain;
+      if (k === T_WALL) t.wall++; else if (k === T_DANGER) t.danger++; else if (k === T_WATER) t.water++;
+    }
+    return {
+      cols: cols, rows: rows, start: startIdx, end: endIdx,
+      running: running, finished: finished, visited: visitedCount,
+      pathLen: pathList.length, terrain: t, cam: { theta: cam.tTheta, phi: cam.tPhi, dist: cam.tDist }
+    };
+  },
+  cellAt: function (x, y) { var n = nodes[idx(x, y)]; return n ? n.terrain : -1; },
+  brush: function (m) { brushMode = m; }
+};
+
+})();
+</script>
+</body>
+</html>
