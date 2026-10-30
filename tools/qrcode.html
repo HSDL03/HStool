@@ -94,13 +94,55 @@
 
   <div class="card">
     <div class="tip">
-      💡 <strong>提示</strong>：二维码使用 CDN 库 <code>qrcode.js</code> 生成，完全在你的浏览器本地计算，内容不会上传到任何服务器。首次打开需要联网加载一次库文件。
+      💡 <strong>提示</strong>：二维码用站内自带的 <code>qrcode.js</code>（MIT，qrcode-generator）生成，完全在你的浏览器本地计算，内容不会上传到任何服务器，断网也能用。
     </div>
   </div>
 </div>
 
-<!-- 纠正：qrcode@1.5.3 的 npm 包里没有 build/qrcode.min.js（404），实际产物是 build/qrcode.js -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.js"></script>
+<!-- 二维码库已本地化（qrcode-generator 1.4.4 + UTF-8 补丁），断网/离线版也能用 -->
+<script src="../assets/vendor/qrcode.js"></script>
+<script>
+/* 适配层：把 qrcode-generator 包成 page 里用的 QRCode.toCanvas(canvas, text, opts, cb) */
+(function () {
+  if (window.QRCode || typeof qrcode !== 'function') return;
+  function levelOf(s) {
+    s = String(s || 'M').toUpperCase();
+    return s === 'L' || s === 'Q' || s === 'H' ? s : 'M';
+  }
+  window.QRCode = {
+    toCanvas: function (canvas, text, opts, cb) {
+      opts = opts || {};
+      try {
+        var q = qrcode(0, levelOf(opts.errorCorrectionLevel));
+        q.addData(String(text));
+        q.make();
+        var n = q.getModuleCount();
+        var margin = opts.margin == null ? 4 : opts.margin;
+        var total = n + margin * 2;
+        var want = opts.width || 320;
+        var scale = Math.max(1, Math.round(want / total));
+        var px = total * scale;
+        canvas.width = canvas.height = px;
+        canvas.style.width = canvas.style.height = want + 'px';
+        var g = canvas.getContext('2d');
+        var dark = (opts.color && opts.color.dark) || '#000000';
+        var light = (opts.color && opts.color.light) || '#ffffff';
+        g.fillStyle = light;
+        g.fillRect(0, 0, px, px);
+        g.fillStyle = dark;
+        for (var r = 0; r < n; r++) {
+          for (var c = 0; c < n; c++) {
+            if (q.isDark(r, c)) g.fillRect((c + margin) * scale, (r + margin) * scale, scale, scale);
+          }
+        }
+        if (cb) cb(null);
+      } catch (e) {
+        if (cb) cb(e); else throw e;
+      }
+    }
+  };
+})();
+</script>
 <script src="../assets/js/core.js"></script>
 <script>
 (function(){
