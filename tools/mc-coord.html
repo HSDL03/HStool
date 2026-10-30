@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 坐标换算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.grid3 .fld{margin-bottom:0}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:11px}
+.card{background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);padding:11px 13px;box-shadow:var(--bevel)}
+.card em{display:block;font-size:10.5px;font-style:normal;font-weight:800;letter-spacing:.06em;color:var(--faint);margin-bottom:5px}
+.card b{display:block;font-family:var(--mono);font-size:clamp(.95rem,2.6vw,1.2rem);font-weight:800;word-break:break-all;font-variant-numeric:tabular-nums}
+.card small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:86px;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all}
+.dim{font-size:12px;color:var(--faint);margin-top:9px}
+@media(max-width:640px){.res{grid-template-columns:1fr}.grid3{gap:7px}.grid3 .fld label{font-size:10px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🌐 坐标换算</h1><p class="sub">主世界 ↔ 下界坐标互换 · 区块定位 · 两点距离</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">维度坐标换算</h2>
+      <div class="fld" style="margin-bottom:11px">
+        <label>我现在在</label>
+        <div class="seg" id="dimSeg">
+          <button type="button" data-dim="over" aria-pressed="true">主世界</button>
+          <button type="button" data-dim="nether" aria-pressed="false">下界</button>
+        </div>
+      </div>
+      <div class="grid3">
+        <div class="fld"><label for="cx">X</label><input id="cx" class="mono" inputmode="numeric" autocomplete="off" value="1200"></div>
+        <div class="fld"><label for="cy">Y</label><input id="cy" class="mono" inputmode="numeric" autocomplete="off" value="64"></div>
+        <div class="fld"><label for="cz">Z</label><input id="cz" class="mono" inputmode="numeric" autocomplete="off" value="-800"></div>
+      </div>
+      <div class="res">
+        <div class="card"><em>换算后坐标（另一边）</em><b id="rOut">—</b><small id="rOutNote">—</small></div>
+        <div class="card"><em>所在区块</em><b id="rChunk">—</b><small id="rChunkNote">—</small></div>
+      </div>
+      <div class="dim" id="rPortal">—</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopyTp" type="button">📋 复制坐标</button>
+        <button class="btn" id="btnSwap" type="button">↔ 交换维度</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">两点距离</h2>
+      <div class="grid2">
+        <div class="grid3">
+          <div class="fld"><label for="ax">A · X</label><input id="ax" class="mono" inputmode="numeric" value="0"></div>
+          <div class="fld"><label for="ay">A · Y</label><input id="ay" class="mono" inputmode="numeric" value="64"></div>
+          <div class="fld"><label for="az">A · Z</label><input id="az" class="mono" inputmode="numeric" value="0"></div>
+        </div>
+        <div class="grid3">
+          <div class="fld"><label for="bx">B · X</label><input id="bx" class="mono" inputmode="numeric" value="1000"></div>
+          <div class="fld"><label for="by">B · Y</label><input id="by" class="mono" inputmode="numeric" value="64"></div>
+          <div class="fld"><label for="bz">B · Z</label><input id="bz" class="mono" inputmode="numeric" value="0"></div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="kv"><span>水平距离</span><b id="dFlat">—</b></div>
+        <div class="kv"><span>空间距离</span><b id="dFull">—</b></div>
+        <div class="kv"><span>步行</span><b id="dWalk">—</b></div>
+        <div class="kv"><span>冲刺</span><b id="dSprint">—</b></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 下界 1 格 = 主世界 8 格，所以<strong>下界坐标 = 主世界坐标 ÷ 8</strong>，Y 不变。
+        在目标点造好门以后，游戏会先在<strong>水平半径 128 格（主世界）/ 16 格（下界）</strong>内找已有的门并尝试对接，
+        找不到才新建 —— 这也是「门跑偏」的常见原因。数据按 Java 版通用规则，速度取 <code>4.317</code>（步行）与
+        <code>5.612</code>（冲刺）格/秒，不含跳跃与地形起伏。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var dim='over';
+
+function num(el){
+  var v=String(el.value).trim().replace(/，/g,',');
+  if(v==='') return null;
+  if(!/^-?\d+(\.\d+)?$/.test(v)) return NaN;
+  return Number(v);
+}
+function fmt(n){
+  var r=Math.round(n*100)/100;
+  return String(r);
+}
+function chunkOf(v){ return Math.floor(v/16); }
+
+function render(){
+  var x=num($('cx')),y=num($('cy')),z=num($('cz'));
+  if(isNaN(x)||isNaN(y)||isNaN(z)){
+    $('rOut').textContent='请填数字';
+    $('rOutNote').textContent='坐标可以是负数或小数';
+    $('rChunk').textContent='—';$('rChunkNote').textContent='—';
+    $('rPortal').textContent='—';
+    return;
+  }
+  if(x===null||y===null||z===null){
+    $('rOut').textContent='—';$('rOutNote').textContent='三个坐标都要填';
+    $('rChunk').textContent='—';$('rChunkNote').textContent='—';
+    $('rPortal').textContent='—';
+    return;
+  }
+  var k = dim==='over' ? 1/8 : 8;
+  var tx=Math.round(x*k), tz=Math.round(z*k);
+  var otherName = dim==='over' ? '下界' : '主世界';
+  $('rOut').textContent=tx+' '+y+' '+tz;
+  $('rOutNote').textContent='换算到'+otherName+' · Y 不变';
+  $('rChunk').textContent=chunkOf(x)+', '+chunkOf(z);
+  $('rChunkNote').textContent='当前维度 · 另一边为 '+chunkOf(tx)+', '+chunkOf(tz);
+  var radius = dim==='over' ? 128 : 16;
+  $('rPortal').textContent='传送门搜索：先从换算点向外找水平半径 '+radius+' 格内已存在的门，找不到才新建。';
+}
+
+function syncSeg(){
+  Array.prototype.forEach.call(document.querySelectorAll('#dimSeg button'),function(b){
+    var on=b.getAttribute('data-dim')===dim;
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
+document.querySelectorAll('#dimSeg button').forEach(function(b){
+  b.addEventListener('click',function(){
+    dim=b.getAttribute('data-dim');syncSeg();render();
+  });
+});
+
+['cx','cy','cz'].forEach(function(id){ $(id).addEventListener('input',render); });
+
+$('btnSwap').addEventListener('click',function(){
+  var x=num($('cx')),y=num($('cy')),z=num($('cz'));
+  if(x===null||y===null||z===null||isNaN(x)||isNaN(y)||isNaN(z)){toast('先填好坐标');return;}
+  var k = dim==='over' ? 1/8 : 8;
+  var tx=Math.round(x*k), tz=Math.round(z*k);
+  dim = dim==='over' ? 'nether' : 'over';
+  $('cx').value=String(tx);
+  $('cy').value=String(y);
+  $('cz').value=String(tz);
+  syncSeg();
+  render();
+  toast('已切到'+(dim==='over'?'主世界':'下界'));
+});
+
+$('btnCopyTp').addEventListener('click',function(){
+  var t=$('rOut').textContent;
+  if(!t||t==='—'||t.indexOf('请')===0||t.indexOf('三个')===0){toast('先填一个有效坐标');return;}
+  HS.copy(t);toast('已复制 '+t);
+});
+
+function dist(){
+  var vals=['ax','ay','az','bx','by','bz'].map(function(id){return num($(id));});
+  var bad=vals.some(function(v){return v===null||isNaN(v);});
+  if(bad){
+    ['dFlat','dFull','dWalk','dSprint'].forEach(function(id){$(id).textContent='—';});
+    return;
+  }
+  var dx=vals[3]-vals[0], dy=vals[4]-vals[1], dz=vals[5]-vals[2];
+  var flat=Math.sqrt(dx*dx+dz*dz), full=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  $('dFlat').textContent=fmt(flat)+' 格';
+  $('dFull').textContent=fmt(full)+' 格';
+  $('dWalk').textContent=dur(flat/4.317);
+  $('dSprint').textContent=dur(flat/5.612);
+}
+function dur(sec){
+  if(sec<1) return '不到 1 秒';
+  var s=Math.round(sec);
+  var m=Math.floor(s/60), h=Math.floor(m/60);
+  if(h>0) return h+' 时 '+(m%60)+' 分';
+  if(m>0) return m+' 分 '+(s%60)+' 秒';
+  return s+' 秒';
+}
+['ax','ay','az','bx','by','bz'].forEach(function(id){ $(id).addEventListener('input',dist); });
+
+render();dist();
+})();
+</script>
+</body>
+</html>

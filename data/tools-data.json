@@ -202,5 +202,65 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mc-coord",
+    "icon": "🌐",
+    "name": "MC 坐标换算",
+    "desc": "主世界 ↔ 下界坐标、区块与两点距离",
+    "tag": "工具",
+    "url": "./tools/mc-coord.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-regex-test",
+    "icon": "🔎",
+    "name": "正则测试",
+    "desc": "边写边高亮，附分组与位置",
+    "tag": "工具",
+    "url": "./tools/regex-test.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-text-kit",
+    "icon": "📄",
+    "name": "文本整理",
+    "desc": "按行去重、排序、大小写与字数",
+    "tag": "工具",
+    "url": "./tools/text-kit.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-hash",
+    "icon": "🔑",
+    "name": "哈希计算",
+    "desc": "SHA-1/256/384/512，文本或文件",
+    "tag": "工具",
+    "url": "./tools/hash.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-cron",
+    "icon": "⏰",
+    "name": "Cron 解释",
+    "desc": "拆解表达式并算接下来 5 次",
+    "tag": "工具",
+    "url": "./tools/cron.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

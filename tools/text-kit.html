@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文本整理 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:12px}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.chk{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:12.5px;
+  background:var(--bg);border:2px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel);cursor:pointer;
+  user-select:none;
+}
+.chk:has(input:checked){border-color:var(--ac);background:var(--acs)}
+.chk input{accent-color:var(--ac);margin:0;width:14px;height:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0}
+.st{background:var(--bg);border:2px solid var(--bd);border-radius:var(--r);padding:9px 10px;box-shadow:var(--bevel);text-align:center}
+.st b{display:block;font-family:var(--mono);font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums}
+.st span{display:block;margin-top:3px;font-size:10.5px;font-weight:800;letter-spacing:.05em;color:var(--faint)}
+.outbox{min-height:120px}
+#src{min-height:150px}
+@media(max-width:640px){
+  .opts{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .chk{padding:8px 10px;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📄 文本整理</h1><p class="sub">按行去重 · 排序 · 大小写 · 顺手看字数</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">原始文本</h2>
+      <div class="fld">
+        <textarea id="src" class="mono" spellcheck="false" placeholder="一行一条，粘进来就行">苹果
+香蕉
+  苹果  
+香蕉
+
+Cherry
+cherry
+date
+Elderberry</textarea>
+      </div>
+      <div class="stats">
+        <div class="st"><b id="sLines">0</b><span>行数</span></div>
+        <div class="st"><b id="sChars">0</b><span>字符</span></div>
+        <div class="st"><b id="sWords">0</b><span>词数</span></div>
+        <div class="st"><b id="sUniq">0</b><span>结果行</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">处理方式</h2>
+      <div class="opts">
+        <div class="fld">
+          <label for="sortBy">排序</label>
+          <select id="sortBy">
+            <option value="none">保持原顺序</option>
+            <option value="asc">字典升序（A→Z）</option>
+            <option value="desc">字典降序（Z→A）</option>
+            <option value="len">按长度（短→长）</option>
+            <option value="lenr">按长度（长→短）</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="caseMode">大小写</label>
+          <select id="caseMode">
+            <option value="keep">不改</option>
+            <option value="upper">全部大写</option>
+            <option value="lower">全部小写</option>
+            <option value="title">每行首字母大写</option>
+          </select>
+        </div>
+      </div>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="optTrim" checked>去掉行首尾空格</label>
+        <label class="chk"><input type="checkbox" id="optEmpty" checked>删掉空行</label>
+        <label class="chk"><input type="checkbox" id="optUniq" checked>去掉重复行</label>
+        <label class="chk"><input type="checkbox" id="optIgnoreCase">去重时忽略大小写</label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="fld">
+        <textarea id="out" class="mono outbox" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制结果</button>
+        <button class="btn" id="btnApply" type="button">↩ 覆盖回原文</button>
+        <button class="btn" id="btnReset" type="button">恢复示例</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 整理名单、日志、导出的表格列特别顺手。<strong>去重是整行精确比对</strong>，勾上「忽略大小写」后
+        <code>Cherry</code> 和 <code>cherry</code> 算同一条。词数按中文单字 + 英文单词统计。
+        全程在本机算，不上传任何内容。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var srcEl=$('src'),outEl=$('out');
+var SAMPLE=srcEl.value;
+
+function countWords(s){
+  var cjk=(s.match(/[\u4e00-\u9fa5]/g)||[]).length;
+  var latin=(s.match(/[A-Za-z0-9_'-]+/g)||[]).length;
+  return cjk+latin;
+}
+
+function process(){
+  var raw=srcEl.value;
+  var lines=raw.split(/\r?\n/);
+  var trim=$('optTrim').checked, dropEmpty=$('optEmpty').checked, uniq=$('optUniq').checked;
+  var ci=$('optIgnoreCase').checked;
+  var sortBy=$('sortBy').value, caseMode=$('caseMode').value;
+
+  /* 统计用原始文本 */
+  $('sLines').textContent=String(lines.length);
+  $('sChars').textContent=String(raw.length);
+  $('sWords').textContent=String(countWords(raw));
+
+  var arr=lines.map(function(l){ return trim ? l.trim() : l; });
+  if(dropEmpty) arr=arr.filter(function(l){ return l!==''; });
+  if(caseMode==='upper') arr=arr.map(function(l){return l.toUpperCase();});
+  else if(caseMode==='lower') arr=arr.map(function(l){return l.toLowerCase();});
+  else if(caseMode==='title') arr=arr.map(function(l){
+    return l.replace(/^(\s*)([a-zA-Z])/,function(_,sp,c){return sp+c.toUpperCase();});
+  });
+
+  if(uniq){
+    var seen=Object.create(null), kept=[];
+    arr.forEach(function(l){
+      var key = ci ? l.toLowerCase() : l;
+      if(seen[key]) return;
+      seen[key]=1; kept.push(l);
+    });
+    arr=kept;
+  }
+
+  if(sortBy==='asc') arr.sort(function(a,b){return a.localeCompare(b,'zh');});
+  else if(sortBy==='desc') arr.sort(function(a,b){return b.localeCompare(a,'zh');});
+  else if(sortBy==='len') arr.sort(function(a,b){return a.length-b.length;});
+  else if(sortBy==='lenr') arr.sort(function(a,b){return b.length-a.length;});
+
+  $('sUniq').textContent=String(arr.length);
+  outEl.value=arr.join('\n');
+}
+
+['src','sortBy','caseMode','optTrim','optEmpty','optUniq','optIgnoreCase'].forEach(function(id){
+  var el=$(id);
+  el.addEventListener('input',process);
+  el.addEventListener('change',process);
+});
+
+$('btnCopy').addEventListener('click',function(){
+  var v=outEl.value;
+  if(!v){toast('结果为空，没什么可复制的');return;}
+  HS.copy(v);toast('已复制 '+v.split('\n').length+' 行');
+});
+
+$('btnApply').addEventListener('click',function(){
+  srcEl.value=outEl.value;
+  process();
+  toast('已覆盖回原文，可以继续处理');
+});
+
+$('btnReset').addEventListener('click',function(){
+  srcEl.value=SAMPLE;
+  process();
+});
+
+process();
+})();
+</script>
+</body>
+</html>

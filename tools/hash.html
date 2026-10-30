@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>哈希计算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.hrow{
+  display:flex;gap:10px;align-items:flex-start;padding:10px 12px;margin-bottom:8px;
+  background:var(--bg);border:2px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel);
+}
+.hrow:last-child{margin-bottom:0}
+.hrow .alg{flex:none;width:66px;font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--faint);padding-top:2px}
+.hrow .hex{flex:1 1 auto;min-width:0;font-family:var(--mono);font-size:12px;line-height:1.65;word-break:break-all;color:var(--text)}
+.hrow .hex.wait{color:var(--faint)}
+.hrow .btn{flex:none}
+.up{text-transform:uppercase}
+.filebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fileinfo{font-size:12.5px;color:var(--muted);font-family:var(--mono);word-break:break-all}
+.notice{font-size:12.5px;color:var(--dgr);margin-top:9px;font-weight:700}
+@media(max-width:640px){
+  .hrow{flex-wrap:wrap;gap:7px}
+  .hrow .alg{width:100%;padding-top:0}
+  .hrow .hex{font-size:11.5px;flex:1 1 100%}
+  .hrow .btn{margin-left:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔑 哈希计算</h1><p class="sub">SHA-1 / 256 / 384 / 512 · 文本或文件，纯本地算</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">文本</h2>
+      <div class="fld">
+        <textarea id="src" class="mono" spellcheck="false" placeholder="要计算哈希的文本">红石的小站 · hsdl03.github.io/HStool</textarea>
+      </div>
+      <div id="textOut"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopyAll" type="button">📋 复制全部（SHA-256 起）</button>
+        <button class="btn" id="btnUpper" type="button">Aa 切换大小写</button>
+      </div>
+      <div class="notice" id="notice" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">文件校验</h2>
+      <div class="filebar">
+        <input type="file" id="file" aria-label="选择文件">
+        <span class="fileinfo" id="fileInfo">未选择文件</span>
+      </div>
+      <div id="fileOut" style="margin-top:12px"></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 校验下载下来的文件有没有损坏 / 被替换，对一下 SHA-256 就行。文本按 UTF-8 编码后计算，
+        算的是<strong>内容</strong>不是文件名。SHA-1 早已不适合做安全签名，这里保留只为对齐老校验值。
+        全部在本机完成，文件不会上传。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var ALGS=['SHA-1','SHA-256','SHA-384','SHA-512'];
+var upper=false;
+var textOut=$('textOut'),fileOut=$('fileOut'),notice=$('notice');
+
+function hex(buf){
+  var b=new Uint8Array(buf),s='',i;
+  for(i=0;i<b.length;i++) s+=(b[i]<16?'0':'')+b[i].toString(16);
+  return upper ? s.toUpperCase() : s;
+}
+
+function makeRows(container){
+  container.textContent='';
+  var rows={};
+  ALGS.forEach(function(a){
+    var row=document.createElement('div');row.className='hrow';
+    var alg=document.createElement('span');alg.className='alg';alg.textContent=a;
+    var val=document.createElement('div');val.className='hex wait';val.textContent='计算中…';
+    var btn=document.createElement('button');
+    btn.type='button';btn.className='btn sm';btn.textContent='复制';
+    btn.addEventListener('click',function(){
+      if(!val.dataset.hex){toast('还没算出来');return;}
+      HS.copy(val.dataset.hex);toast('已复制 '+a);
+    });
+    row.appendChild(alg);row.appendChild(val);row.appendChild(btn);
+    container.appendChild(row);
+    rows[a]=val;
+  });
+  return rows;
+}
+
+function supports(){
+  return !!(window.crypto && window.crypto.subtle && window.TextEncoder);
+}
+
+function hashBuffer(buf,container,token,check){
+  var rows=makeRows(container);
+  ALGS.forEach(function(a){
+    crypto.subtle.digest(a,buf).then(function(d){
+      if(token!==check()) return;
+      var h=hex(d);
+      rows[a].classList.remove('wait');
+      rows[a].textContent=h;
+      rows[a].dataset.hex=h;
+    }).catch(function(){
+      if(token!==check()) return;
+      rows[a].textContent='算不出来（浏览器不支持该算法）';
+      rows[a].classList.remove('wait');
+    });
+  });
+}
+
+/* 文本 */
+var textToken=0;
+function runText(){
+  if(!supports()){ showUnsupported(); return; }
+  notice.hidden=true;
+  var t=++textToken;
+  var bytes=new TextEncoder().encode($('src').value);
+  hashBuffer(bytes,textOut,t,function(){return textToken;});
+}
+
+/* 文件 */
+var fileToken=0;
+$('file').addEventListener('change',function(){
+  var f=this.files && this.files[0];
+  if(!f){ $('fileInfo').textContent='未选择文件'; fileOut.textContent=''; return; }
+  var kb=f.size/1024;
+  $('fileInfo').textContent=f.name+' · '+(kb>=1024?(kb/1024).toFixed(2)+' MB':kb.toFixed(1)+' KB');
+  if(!supports()){ showUnsupported(); return; }
+  var t=++fileToken;
+  var reader=new FileReader();
+  reader.onload=function(){ hashBuffer(reader.result,fileOut,t,function(){return fileToken;}); };
+  reader.onerror=function(){ fileOut.textContent='读取文件失败，换个文件试试'; };
+  reader.readAsArrayBuffer(f);
+});
+
+function showUnsupported(){
+  notice.hidden=false;
+  notice.textContent='当前环境不支持 Web Crypto（需要 https 或 localhost）。请用线上地址打开本页。';
+  textOut.textContent='';
+}
+
+$('btnUpper').addEventListener('click',function(){
+  upper=!upper;
+  this.textContent=upper?'aA 切换大写态':'Aa 切换大小写';
+  runText();
+  if($('file').files && $('file').files[0]) $('file').dispatchEvent(new Event('change'));
+});
+
+$('btnCopyAll').addEventListener('click',function(){
+  var lines=[];
+  Array.prototype.forEach.call(textOut.querySelectorAll('.hex'),function(el){
+    if(el.dataset.hex) lines.push(el.dataset.hex);
+  });
+  if(!lines.length){toast('还没算出来');return;}
+  HS.copy(lines.join('\n'));toast('已复制 '+lines.length+' 条');
+});
+
+var timer=null;
+$('src').addEventListener('input',function(){
+  clearTimeout(timer);
+  timer=setTimeout(runText,200);
+});
+
+runText();
+})();
+</script>
+</body>
+</html>

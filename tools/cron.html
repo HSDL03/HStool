@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cron 解释 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏰</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.cron{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:11px}
+.cron .fld{margin-bottom:0}
+.cron .fld label{text-align:center;font-size:10.5px}
+.cron .fld input{text-align:center;font-family:var(--mono);font-size:1rem;font-weight:700}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.dl{display:flex;flex-direction:column;gap:0}
+.drow{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13px}
+.drow:last-child{border-bottom:0}
+.drow span{flex:none;width:52px;font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--faint)}
+.drow b{font-family:var(--mono);font-weight:700;color:var(--ac)}
+.drow em{font-style:normal;color:var(--muted);font-size:12.5px;flex:1 1 auto;min-width:0}
+.nex{margin-top:4px}
+.nrow{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13px;flex-wrap:wrap}
+.nrow:last-child{border-bottom:0}
+.nrow i{flex:none;font-style:normal;font-family:var(--mono);font-size:11px;font-weight:800;color:var(--faint);width:22px}
+.nrow b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+.nrow em{font-style:normal;font-size:12px;color:var(--muted);margin-left:auto}
+.err{color:var(--dgr);font-weight:700;font-size:13px;padding:8px 0}
+@media(max-width:640px){
+  .cron{grid-template-columns:repeat(3,1fr)}
+  .cron .fld:nth-child(4),.cron .fld:nth-child(5){grid-column:span 1}
+  .nrow em{margin-left:0;flex-basis:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>⏰ Cron 解释</h1><p class="sub">五段表达式拆开讲 · 算出接下来 5 次运行时间</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">表达式</h2>
+      <div class="cron">
+        <div class="fld"><label for="f0">分钟</label><input id="f0" class="mono" value="0" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><label for="f1">小时</label><input id="f1" class="mono" value="9" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><label for="f2">日</label><input id="f2" class="mono" value="*" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><label for="f3">月</label><input id="f3" class="mono" value="*" autocomplete="off" spellcheck="false"></div>
+        <div class="fld"><label for="f4">星期</label><input id="f4" class="mono" value="1-5" autocomplete="off" spellcheck="false"></div>
+      </div>
+      <div class="bar" id="presets"></div>
+      <div class="dl" id="desc"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">接下来 5 次</h2>
+      <div class="nex" id="next"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制表达式</button>
+        <button class="btn" id="btnCopyNext" type="button">📋 复制时间列表</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 五段顺序是<strong>分 时 日 月 周</strong>，星期里 0 和 7 都表示周日。<code>*</code> 任意、<code>*/5</code> 每隔 5、
+        <code>1-5</code> 区间、<code>1,15</code> 列举。<strong>「日」和「星期」都不为 * 时是「或」的关系</strong>
+        ——写 <code>0 0 1 * 1</code> 会在每月 1 号<em>和</em>每周一都触发，这是最反直觉的一条。
+        时间按本机时区推算。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var FIELDS=[
+  {min:0,max:59,name:'分钟'},
+  {min:0,max:23,name:'小时'},
+  {min:1,max:31,name:'日'},
+  {min:1,max:12,name:'月'},
+  {min:0,max:7,name:'星期'}
+];
+var DOW=['周日','周一','周二','周三','周四','周五','周六'];
+var PRESETS=[
+  {n:'每分钟','v':['*','*','*','*','*']},
+  {n:'每 5 分钟','v':['*/5','*','*','*','*']},
+  {n:'每小时整点','v':['0','*','*','*','*']},
+  {n:'每天 0 点','v':['0','0','*','*','*']},
+  {n:'工作日 9 点','v':['0','9','*','*','1-5']},
+  {n:'每月 1 号','v':['0','0','1','*','*']}
+];
+(function(){
+  var box=$('presets');
+  PRESETS.forEach(function(p){
+    var b=document.createElement('button');
+    b.type='button';b.className='btn sm';b.textContent=p.n;
+    b.addEventListener('click',function(){
+      for(var i=0;i<5;i++) $('f'+i).value=p.v[i];
+      run();
+    });
+    box.appendChild(b);
+  });
+})();
+
+function parseField(raw,f){
+  var set={},i;
+  for(i=0;i<=8;i++) set[i]=false;
+  var text=String(raw).trim();
+  if(!text) return {err:f.name+'不能为空'};
+  var parts=text.split(',');
+  for(var p=0;p<parts.length;p++){
+    var part=parts[p].trim();
+    if(!part) return {err:f.name+'里有空的片段'};
+    var step=1,body=part;
+    var sl=part.indexOf('/');
+    if(sl>=0){
+      body=part.slice(0,sl).trim();
+      var st=part.slice(sl+1).trim();
+      if(!/^\d+$/.test(st)) return {err:f.name+'的步长「'+st+'」得是正整数'};
+      step=parseInt(st,10);
+      if(step<1) return {err:f.name+'的步长不能是 0'};
+    }
+    var lo,hi;
+    if(body==='*'){ lo=f.min; hi=f.max; }
+    else if(body.indexOf('-')>0){
+      var ab=body.split('-');
+      if(!/^\d+$/.test(ab[0])||!/^\d+$/.test(ab[1])) return {err:f.name+'里的区间「'+body+'」写得不对'};
+      lo=parseInt(ab[0],10);hi=parseInt(ab[1],10);
+    } else {
+      if(!/^\d+$/.test(body)) return {err:f.name+'里出现了看不懂的「'+body+'」，只支持数字、* 、- 和 ,'};
+      lo=parseInt(body,10);
+      hi = sl>=0 ? f.max : lo;
+    }
+    if(lo<f.min||hi>f.max) return {err:f.name+'超出范围，只能是 '+f.min+'~'+f.max};
+    if(lo>hi) return {err:f.name+'的区间「'+body+'」起点比终点大'};
+    for(i=lo;i<=hi;i+=step) set[i]=true;
+  }
+  /* 星期 7 归一成 0 */
+  if(f.name==='星期' && set[7]) set[0]=true;
+  return {set:set};
+}
+
+function list(set,min,max,labels){
+  var a=[];
+  for(var i=min;i<=max;i++) if(set[i]) a.push(labels?labels[i]:String(i));
+  return a;
+}
+function shortList(arr,max){
+  if(arr.length<=max) return arr.join('、');
+  return arr.slice(0,max).join('、')+' 等 '+arr.length+' 个';
+}
+
+function run(){
+  var vals=[0,1,2,3,4].map(function(i){return $('f'+i).value;});
+  var sets=[],descEl=$('desc'),nextEl=$('next');
+  descEl.textContent='';nextEl.textContent='';
+
+  for(var i=0;i<5;i++){
+    var r=parseField(vals[i],FIELDS[i]);
+    if(r.err){
+      var e=document.createElement('div');e.className='err';e.textContent='✗ '+r.err;
+      descEl.appendChild(e);
+      return;
+    }
+    sets.push(r.set);
+  }
+  var mins=sets[0],hours=sets[1],doms=sets[2],mons=sets[3],dows=sets[4];
+
+  /* 拆解 */
+  var minArr=list(mins,0,59), hourArr=list(hours,0,23);
+  var domArr=list(doms,1,31), monArr=list(mons,1,12), dowArr=list(dows,0,6,DOW);
+  var lines=[
+    ['分钟', vals[0], minArr.length===60?'每小时里每一分钟':shortList(minArr,12)+' 分'],
+    ['小时', vals[1], hourArr.length===24?'每个小时':shortList(hourArr,12)+' 点'],
+    ['日',   vals[2], domArr.length===31?'每天':shortList(domArr,12)+' 号'],
+    ['月',   vals[3], monArr.length===12?'每个月':shortList(monArr,12)+' 月'],
+    ['星期', vals[4], dowArr.length===7?'每天':shortList(dowArr,7)]
+  ];
+  lines.forEach(function(it){
+    var row=document.createElement('div');row.className='drow';
+    var s=document.createElement('span');s.textContent=it[0];
+    var b=document.createElement('b');b.textContent=it[1];
+    var em=document.createElement('em');em.textContent=it[2];
+    row.appendChild(s);row.appendChild(b);row.appendChild(em);
+    descEl.appendChild(row);
+  });
+  var bothSet = String(vals[2]).trim()!=='*' && String(vals[4]).trim()!=='*';
+  if(bothSet){
+    var note=document.createElement('div');
+    note.className='drow';
+    var s2=document.createElement('span');s2.textContent='注意';
+    var em2=document.createElement('em');
+    em2.textContent='「日」和「星期」都限定了，两者取「或」：满足任意一个就触发。';
+    note.appendChild(s2);note.appendChild(em2);
+    descEl.appendChild(note);
+  }
+
+  /* 接下来 5 次 */
+  var hArr=[];for(var h=0;h<24;h++) if(hours[h]) hArr.push(h);
+  var mArr=[];for(var m=0;m<60;m++) if(mins[m]) mArr.push(m);
+  var now=new Date();
+  var base=new Date();base.setHours(0,0,0,0);
+  var found=[];
+  var domRestricted=String(vals[2]).trim()!=='*';
+  var dowRestricted=String(vals[4]).trim()!=='*';
+
+  for(var off=0; off<=1464 && found.length<5; off++){
+    var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+off);
+    if(!mons[d.getMonth()+1]) continue;
+    var domOk=!!doms[d.getDate()], dowOk=!!dows[d.getDay()];
+    var dayOk;
+    if(domRestricted && dowRestricted) dayOk=domOk||dowOk;
+    else if(domRestricted) dayOk=domOk;
+    else if(dowRestricted) dayOk=dowOk;
+    else dayOk=true;
+    if(!dayOk) continue;
+    for(var hi=0;hi<hArr.length && found.length<5;hi++){
+      for(var mi=0;mi<mArr.length && found.length<5;mi++){
+        var cand=new Date(d.getFullYear(),d.getMonth(),d.getDate(),hArr[hi],mArr[mi],0,0);
+        if(cand.getTime()>now.getTime()) found.push(cand);
+      }
+    }
+  }
+
+  if(!found.length){
+    var none=document.createElement('div');none.className='err';
+    none.textContent='未来 4 年内没有可运行的时间点，检查一下日期组合（比如 2 月 30 号）。';
+    nextEl.appendChild(none);
+    return;
+  }
+  found.forEach(function(dt,idx){
+    var row=document.createElement('div');row.className='nrow';
+    var i2=document.createElement('i');i2.textContent=String(idx+1);
+    var b2=document.createElement('b');b2.textContent=fmt(dt);
+    var em=document.createElement('em');em.textContent=rel(dt);
+    row.appendChild(i2);row.appendChild(b2);row.appendChild(em);
+    nextEl.appendChild(row);
+  });
+}
+
+function p2(n){return (n<10?'0':'')+n;}
+function fmt(d){
+  var w=['日','一','二','三','四','五','六'][d.getDay()];
+  return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '
+        +p2(d.getHours())+':'+p2(d.getMinutes())+' 周'+w;
+}
+function rel(d){
+  var ms=d.getTime()-Date.now();
+  var m=Math.round(ms/60000);
+  if(m<60) return m+' 分钟后';
+  var h=Math.round(m/60);
+  if(h<24) return h+' 小时后';
+  return Math.round(h/24)+' 天后';
+}
+
+for(var k=0;k<5;k++) $('f'+k).addEventListener('input',run);
+
+$('btnCopy').addEventListener('click',function(){
+  var s=[0,1,2,3,4].map(function(i){return $('f'+i).value.trim()||'*';}).join(' ');
+  HS.copy(s);toast('已复制 '+s);
+});
+$('btnCopyNext').addEventListener('click',function(){
+  var arr=[];
+  Array.prototype.forEach.call($('next').querySelectorAll('b'),function(b){arr.push(b.textContent);});
+  if(!arr.length){toast('还没有可复制的时间');return;}
+  HS.copy(arr.join('\n'));toast('已复制 '+arr.length+' 条');
+});
+
+run();
+})();
+</script>
+</body>
+</html>

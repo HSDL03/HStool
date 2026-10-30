@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>正则测试 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔎</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.rebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rebar .sl{font-family:var(--mono);font-size:1rem;color:var(--faint);font-weight:700}
+.rebar input.pat{flex:1 1 220px;min-width:0}
+.status{font-size:12.5px;font-weight:700;margin:10px 0 0;color:var(--muted)}
+.status.ok{color:var(--ok)}
+.status.bad{color:var(--dgr)}
+.hl{
+  font-family:var(--mono);font-size:13px;line-height:1.9;white-space:pre-wrap;word-break:break-word;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  padding:11px 13px;max-height:230px;overflow:auto;margin-top:11px;
+}
+.hl mark{background:var(--acs);color:var(--text);border:1px solid var(--ac2);border-radius:2px;padding:0 1px}
+.hl mark.z{background:transparent;border:0;border-left:2px solid var(--warn);padding:0}
+.mlist{margin-top:11px;display:flex;flex-direction:column;gap:6px;max-height:250px;overflow:auto}
+.mrow{display:flex;gap:9px;align-items:baseline;font-size:12.5px;padding:6px 9px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r)}
+.mrow .no{flex:none;font-family:var(--mono);font-weight:800;color:var(--ac);min-width:20px}
+.mrow .txt{font-family:var(--mono);word-break:break-all;flex:1 1 auto;min-width:0}
+.mrow .pos{flex:none;font-family:var(--mono);font-size:11px;color:var(--faint)}
+.mrow .gp{display:block;margin-top:3px;font-size:11.5px;color:var(--muted)}
+.mrow .gp i{font-style:normal;color:var(--faint);margin-right:4px}
+.empty{font-size:12.5px;color:var(--faint);padding:10px 0}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+@media(max-width:640px){
+  .rebar input.pat{flex:1 1 100%}
+  .hl{max-height:180px;font-size:12px}
+  .mrow .pos{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔎 正则测试</h1><p class="sub">边打字边看匹配 · 高亮、分组、位置一次给全</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">表达式</h2>
+      <div class="rebar">
+        <span class="sl">/</span>
+        <input id="pat" class="mono pat" spellcheck="false" autocomplete="off" value="[\w.+-]+@[\w-]+\.[\w.-]+" aria-label="正则表达式">
+        <span class="sl">/</span>
+        <input id="flags" class="mono" style="width:62px" spellcheck="false" autocomplete="off" value="gi" aria-label="修饰符">
+      </div>
+      <div class="presets" id="presets"></div>
+      <p class="status" id="status">—</p>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">测试文本</h2>
+      <div class="fld">
+        <textarea id="text" class="mono" spellcheck="false" placeholder="把要匹配的文本粘进来">联系 alice@example.com 或 bob.lin+dev@mail.example.cn 处理；
+旧邮箱 old-user@test.io 已停用，电话 13812345678。
+官网 https://example.com/docs?page=2 上有说明。</textarea>
+      </div>
+      <div class="hl" id="hl" aria-live="polite"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">匹配明细</h2>
+      <div id="list" class="mlist"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnCopyAll" type="button">📋 复制全部匹配</button>
+        <button class="btn" id="btnClear" type="button">清空文本</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 修饰符 <code>g</code> 全局、<code>i</code> 忽略大小写、<code>m</code> 多行、<code>s</code> 让 <code>.</code> 匹配换行、
+        <code>u</code> Unicode。不加 <code>g</code> 只报第一处匹配，这是最容易踩的坑。
+        零宽匹配（如 <code>(?=x)</code>）会用竖线标出来，不会卡死。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var patEl=$('pat'),flagEl=$('flags'),textEl=$('text'),hlEl=$('hl'),listEl=$('list'),statusEl=$('status');
+var lastMatches=[];
+var MAX_HL=800;
+
+var PRESETS=[
+  {n:'邮箱','p':'[\\w.+-]+@[\\w-]+\\.[\\w.-]+','f':'gi'},
+  {n:'网址','p':'https?://[^\\s"\'<>]+','f':'gi'},
+  {n:'手机号','p':'1[3-9]\\d{9}','f':'g'},
+  {n:'日期','p':'\\d{4}-\\d{2}-\\d{2}','f':'g'},
+  {n:'HTML 标签','p':'</?[a-zA-Z][^>]*>','f':'g'},
+  {n:'中文句子','p':'[\\u4e00-\\u9fa5]+','f':'g'}
+];
+(function(){
+  var box=$('presets');
+  PRESETS.forEach(function(it){
+    var b=document.createElement('button');
+    b.type='button';b.className='btn sm';b.textContent=it.n;
+    b.addEventListener('click',function(){
+      patEl.value=it.p;flagEl.value=it.f;run();
+    });
+    box.appendChild(b);
+  });
+})();
+
+function setStatus(msg,cls){
+  statusEl.textContent=msg;
+  statusEl.className='status'+(cls?' '+cls:'');
+}
+
+function run(){
+  var src=patEl.value, flags=flagEl.value.trim();
+  hlEl.textContent='';listEl.textContent='';lastMatches=[];
+
+  if(!src){ setStatus('先写一个正则表达式','bad'); return; }
+  if(!/^[gimsuyd]*$/.test(flags)){
+    setStatus('修饰符只能是 g i m s u y d，不能重复写别的字符','bad'); return;
+  }
+  var re;
+  try{ re=new RegExp(src,flags); }
+  catch(e){ setStatus('正则写错了：'+e.message,'bad'); return; }
+
+  var text=textEl.value;
+  var global=flags.indexOf('g')>=0;
+  var ms=[],m,guard=0;
+  while((m=re.exec(text))!==null){
+    ms.push({i:m.index,v:m[0],g:m.slice(1)});
+    if(!global) break;
+    if(m[0]===''){ re.lastIndex++; if(re.lastIndex>text.length) break; }
+    if(++guard>5000) break;
+  }
+  lastMatches=ms;
+
+  if(!ms.length){
+    setStatus('没有匹配。共检查 '+text.length+' 个字符','bad');
+    hlEl.textContent=text;
+    var d=document.createElement('div');d.className='empty';d.textContent='试试去掉修饰符 i，或者放宽条件。';
+    listEl.appendChild(d);
+    return;
+  }
+  setStatus('匹配 '+ms.length+' 处'+(guard>5000?'（只统计前 5000 处）':''),'ok');
+
+  /* 高亮：纯 DOM 拼接，文本走 textContent，不拼 HTML 字符串 */
+  var frag=document.createDocumentFragment();
+  var pos=0,shown=0;
+  ms.forEach(function(m){
+    if(shown>=MAX_HL) return;
+    shown++;
+    if(m.i>pos){ frag.appendChild(document.createTextNode(text.slice(pos,m.i))); }
+    var mk=document.createElement('mark');
+    if(m.v===''){ mk.className='z'; mk.textContent=''; }
+    else mk.textContent=m.v;
+    frag.appendChild(mk);
+    pos=m.i+m.v.length;
+  });
+  if(pos<text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+  hlEl.appendChild(frag);
+
+  /* 明细 */
+  var n=0;
+  ms.forEach(function(m){
+    if(n>=200) return;
+    n++;
+    var row=document.createElement('div');row.className='mrow';
+    var no=document.createElement('span');no.className='no';no.textContent='#'+n;
+    var wrap=document.createElement('div');wrap.className='txt';
+    var t=document.createElement('span');
+    t.textContent = m.v==='' ? '（零宽匹配）' : (m.v.length>90 ? m.v.slice(0,90)+'…' : m.v);
+    wrap.appendChild(t);
+    if(m.g.length){
+      var gp=document.createElement('span');gp.className='gp';
+      m.g.forEach(function(g,gi){
+        var it=document.createElement('i');
+        it.textContent='$'+(gi+1)+'=';
+        gp.appendChild(it);
+        gp.appendChild(document.createTextNode(g===undefined?'undefined':(g.length>40?g.slice(0,40)+'…':g)));
+        gp.appendChild(document.createTextNode('  '));
+      });
+      wrap.appendChild(gp);
+    }
+    var p=document.createElement('span');p.className='pos';p.textContent='@'+m.i;
+    row.appendChild(no);row.appendChild(wrap);row.appendChild(p);
+    listEl.appendChild(row);
+  });
+}
+
+var timer=null;
+function later(){
+  clearTimeout(timer);
+  timer=setTimeout(run,140);
+}
+[patEl,flagEl].forEach(function(el){el.addEventListener('input',later);});
+textEl.addEventListener('input',later);
+
+$('btnCopyAll').addEventListener('click',function(){
+  if(!lastMatches.length){toast('还没有匹配项');return;}
+  var out=lastMatches.map(function(m){return m.v;}).join('\n');
+  HS.copy(out);toast('已复制 '+lastMatches.length+' 条');
+});
+$('btnClear').addEventListener('click',function(){
+  textEl.value='';run();textEl.focus();
+});
+
+run();
+})();
+</script>
+</body>
+</html>
