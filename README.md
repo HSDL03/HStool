@@ -22,6 +22,7 @@
 - [快速开始](#快速开始)
 - [目录结构](#目录结构)
 - [页面地图](#页面地图)
+- [离线版 exe](#离线版-exe)
 - [数据文件](#数据文件)
 - [视觉与主题](#视觉与主题)
 - [快捷键](#快捷键)
@@ -136,6 +137,28 @@ python -m http.server 8000     # 或 npx serve .
 | 下载站 | `pages/download.html` | GitHub Releases 聚合 + 手动补录 |
 | 答辩 Wiki | `pages/wiki.html` | 章节树 + 全文搜索 + 阅读进度 |
 | 数据后台 | `pages/admin.html` | 用 GitHub Token 提交 JSON 改动 |
+
+## 离线版 exe
+
+把全部**纯前端**工具打成一个绿色单文件 exe（Electron portable）：双击即用，不安装、不联网、不写注册表、不留服务。
+`needDB` 的页面（聊天室 / 下载站 / 答辩 Wiki / 数据后台 / MC 游戏）不会进包。
+
+- 下载：[Releases](https://github.com/HSDL03/HStool/releases) 里的 `HStool-Offline-<版本>.exe`，或站内[下载站](https://hsdl03.github.io/HStool/pages/download.html)。
+- 重新打包：
+
+```bash
+node scripts/build-offline.mjs          # 只挑 category=noDB 的条目，生成 offline/www
+cd offline
+npm install
+npm run dist                            # → offline/dist/HStool-Offline-<版本>.exe
+```
+
+`build-offline.mjs` 会在最后自检一遍：只要生成的页面里还残留 `http(s)://` 外链就报错退出，
+所以「离线版还能不能真的离线」是构建时就卡住的，不是靠人工检查。
+
+构建脚本挑工具的依据只有一条：`data/tools-data.json` 里 `category === 'noDB'` 且没隐藏/停用。
+新加的工具只要是纯前端，下次打包会自动进离线版，不用改脚本。
+
 
 ## 数据文件
 

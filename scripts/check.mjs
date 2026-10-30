@@ -11,7 +11,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = process.cwd();
-const SKIP_DIRS = new Set(['.git', '.github', '.workbuddy', 'node_modules', 'scripts']);
+const SKIP_DIRS = new Set([
+  '.git', '.github', '.workbuddy', 'node_modules', 'scripts',
+  'dist', 'www'   // 离线版构建产物（electron-builder 输出 / 生成出来的站点快照）
+]);
 const errors = [];
 const warns = [];
 

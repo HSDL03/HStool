@@ -20,5 +20,16 @@
     "version": "v1.0",
     "hidden": false,
     "offline": false
+  },
+  {
+    "releaseTag": "offline-v1.0.0",
+    "fileName": "HStool-Offline-1.0.0.exe",
+    "icon": "🧰",
+    "name": "红石的小站 · 离线版 v1.0.0",
+    "desc": "15 个纯前端工具打包成单个 exe，双击即用、不装不联网",
+    "tag": "工具",
+    "version": "v1.0.0",
+    "hidden": false,
+    "offline": true
   }
 ]
