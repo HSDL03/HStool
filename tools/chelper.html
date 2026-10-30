@@ -33,6 +33,12 @@
   }
   .chead .lnk:hover{color:var(--ac);border-color:var(--ac)}
 
+  /* 隐藏站顶栏后，返回入口缩进到 CH 自己的说明条里，别让路走丢 */
+  .chead .back{display:none}
+  body.bare{padding-top:0}
+  body.bare .topbar{display:none}
+  body.bare .chead .back{display:inline-block}
+
   /* 应用本体：占满剩下的高度，别让它被外层的滚动条挡住 */
   .cframe{
     flex:1;min-height:0;width:100%;display:block;border:0;
@@ -42,6 +48,7 @@
   body.mini .chead{padding:4px 16px}
   body.mini .chead .note,body.mini .chead .dot{display:none}
   body.mini .chead b{font-size:12px}
+  body.bare .chead,body.bare.mini .chead{padding-left:14px}
 
   @media(max-width:680px){
     .chead{padding:6px 12px;gap:4px 10px}
@@ -60,6 +67,7 @@
 </header>
 
 <div class="chead">
+  <a class="lnk back" id="cBack" href="../index.html">← 返回</a>
   <b>CHelper 命令补全</b>
   <span class="dot">|</span>
   <span class="note">
@@ -68,6 +76,7 @@
   </span>
   <span class="acts">
     <button class="lnk" id="cToggle" type="button">收起说明</button>
+    <button class="lnk" id="cTop" type="button">隐藏顶栏</button>
     <a class="lnk" href="https://github.com/Yancey2023/CHelper" target="_blank" rel="noopener">原项目 ↗</a>
   </span>
 </div>
@@ -83,6 +92,35 @@
     btn.addEventListener('click', function () {
       var mini = document.body.classList.toggle('mini');
       btn.textContent = mini ? '展开说明' : '收起说明';
+    });
+  })();
+
+  /* 顶栏可以藏起来：让 CH 占满整屏；藏了以后返回入口缩进说明条最左边 */
+  (function () {
+    var top = document.getElementById('cTop');
+    var back = document.getElementById('cBack');
+    if (!top) return;
+
+    function apply(bare) {
+      document.body.classList.toggle('bare', bare);
+      top.textContent = bare ? '显示顶栏' : '隐藏顶栏';
+      top.title = bare ? '恢复站点顶栏' : '隐藏站点顶栏，让 CH 占满整屏';
+      try { localStorage.setItem('hs-chelper-bare', bare ? '1' : '0'); } catch (e) {}
+    }
+
+    var saved = '0';
+    try { saved = localStorage.getItem('hs-chelper-bare') || '0'; } catch (e) {}
+    apply(saved === '1');
+
+    top.addEventListener('click', function () {
+      apply(!document.body.classList.contains('bare'));
+    });
+
+    /* 从站内点进来的就走浏览器后退，直接输网址来的回首页 */
+    if (back) back.addEventListener('click', function (e) {
+      var same = false;
+      try { same = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (err) {}
+      if (same && history.length > 1) { e.preventDefault(); history.back(); }
     });
   })();
 </script>
