@@ -202,5 +202,17 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-chelper",
+    "icon": "🧩",
+    "name": "CHelper 命令补全",
+    "desc": "我的世界基岩版指令补全，开源构建的站内副本（转载声明见页内）",
+    "tag": "工具",
+    "url": "./tools/chelper.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

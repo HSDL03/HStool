@@ -107,9 +107,14 @@ for (const file of htmls) {
 }
 
 /* ── 4. JS / CSS 附件 ─────────────────────────────────────── */
+/* 第三方构建产物（Vite 打包出来的 ES module）不能当普通脚本用 new Function 解析，
+   它们本来就不是用 <script> 直接跑的。这里只跳过这些目录，自查代码照旧全查。 */
+const VENDOR_JS = ['tools/chelper/assets/'];
 for (const f of files.filter((x) => x.endsWith('.js'))) {
+  const r = rel(f);
+  if (VENDOR_JS.some((d) => r.startsWith(d))) { warns.push(`跳过第三方构建产物：${r}`); continue; }
   try { new Function(fs.readFileSync(f, 'utf8')); }
-  catch (e) { errors.push(`${rel(f)} 语法错误：${e.message}`); }
+  catch (e) { errors.push(`${r} 语法错误：${e.message}`); }
 }
 for (const f of files.filter((x) => x.endsWith('.css'))) {
   const css = fs.readFileSync(f, 'utf8');

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHelper 命令补全 · 红石的小站</title>
+<meta name="description" content="我的世界基岩版命令补全工具 CHelper 的站内副本，基于开源项目 Yancey2023/CHelper 构建。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+  html,body{height:100%}
+  body{
+    padding-top:var(--topbar-h,52px);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+
+  /* 顶部一条说明带：既有标题，也把转载声明摆在明面上 */
+  .chead{
+    flex:none;display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;
+    padding:7px 16px;background:var(--bg2);border-bottom:1px solid var(--bd);
+    font-size:12px;color:var(--muted);position:relative;z-index:3;
+  }
+  .chead b{font-size:13px;font-weight:800;letter-spacing:.02em;color:var(--text)}
+  .chead .dot{color:var(--bd);user-select:none}
+  .chead .note{flex:1 1 320px;min-width:0;font-size:11.5px;line-height:1.5;color:var(--faint)}
+  .chead .note em{font-style:normal;color:var(--muted)}
+  .chead .acts{display:flex;gap:6px;flex:none}
+  .chead .lnk{
+    padding:4px 8px;font-size:11.5px;font-weight:700;line-height:1;white-space:nowrap;
+    color:var(--muted);background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);
+    text-decoration:none;transition:border-color .12s,color .12s;
+  }
+  .chead .lnk:hover{color:var(--ac);border-color:var(--ac)}
+
+  /* 应用本体：占满剩下的高度，别让它被外层的滚动条挡住 */
+  .cframe{
+    flex:1;min-height:0;width:100%;display:block;border:0;
+    position:relative;z-index:2;background:#fff;
+  }
+
+  body.mini .chead{padding:4px 16px}
+  body.mini .chead .note,body.mini .chead .dot{display:none}
+  body.mini .chead b{font-size:12px}
+
+  @media(max-width:680px){
+    .chead{padding:6px 12px;gap:4px 10px}
+    .chead b{font-size:12.5px}
+    .chead .note{flex:1 1 100%;font-size:11px}
+    .chead .acts{width:100%;justify-content:flex-end}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="chead">
+  <b>CHelper 命令补全</b>
+  <span class="dot">|</span>
+  <span class="note">
+    基岩版指令补全，基于开源项目 Yancey2023/CHelper 的构建。
+    <em>本站只是把它放到这里图个方便，非商业用途、未改动署名；如果原作者或权利方不希望被搬运，说一声我立刻下架。</em>
+  </span>
+  <span class="acts">
+    <button class="lnk" id="cToggle" type="button">收起说明</button>
+    <a class="lnk" href="https://github.com/Yancey2023/CHelper" target="_blank" rel="noopener">原项目 ↗</a>
+  </span>
+</div>
+
+<iframe class="cframe" src="./chelper/index.html" title="CHelper 命令补全" allow="clipboard-write"></iframe>
+
+<script src="../assets/js/core.js"></script>
+<script>
+  /* 说明带可收起：收起来就只剩标题，应用能多一点高度 */
+  (function () {
+    var btn = document.getElementById('cToggle');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var mini = document.body.classList.toggle('mini');
+      btn.textContent = mini ? '展开说明' : '收起说明';
+    });
+  })();
+</script>
+</body>
+</html>
