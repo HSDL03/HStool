@@ -7,6 +7,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
 <style>
 *,*::before,*::after{box-sizing:border-box}
+/* .btn / .fstatus 这些设了 display，会把 hidden 属性顶掉，这里统一兜住 */
+[hidden]{display:none!important}
 :root{--bg:#fff;--bg2:#f6f8fa;--bgh:#eef1f4;--text:#1f2328;--muted:#59636e;--bd:#d1d9e0;--ac:#0969da;--acs:#ddf4ff;--dgr:#cf222e;--ok:#1a7f37;--warn:#d4a72c;--sh:0 8px 24px rgba(31,35,40,.12);--r:8px}
 [data-theme=dark]{--bg:#0d1117;--bg2:#161b22;--bgh:#21262d;--text:#e6edf3;--muted:#9198a1;--bd:#30363d;--ac:#4493f8;--acs:#16233a;--dgr:#f85149;--ok:#3fb950;--warn:#d4a72c;--sh:0 8px 24px rgba(0,0,0,.5)}
 
