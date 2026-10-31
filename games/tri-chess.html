@@ -1481,7 +1481,7 @@ function strengthFor(game) { return SPEED[speedKey][game] || SPEED.normal[game];
 const CLOUD = {
   chessApi: 'https://chess-api.com/v1',
   lichess: 'https://lichess.org/api/cloud-eval',
-  depth: 16,      /* 16 层约 2500 分，等待 1~2 秒；18 层要等更久 */
+  depth: 14,      /* 14 层约 2500 分，实测 1~2 秒；16 层要 3~8 秒，等下太久 */
   timeout: 9000
 };
 
