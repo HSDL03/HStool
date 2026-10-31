@@ -79,6 +79,7 @@
 [data-theme^="github-"] .recent-item{border-width:1px;box-shadow:none;border-radius:999px}
 .recent-item:hover{border-color:var(--ac);color:var(--ac);transform:translateY(-1px)}
 .recent-item .ri{font-size:13px}
+.recent-item .ri img{width:18px;height:18px;object-fit:contain;display:block;pointer-events:none}
 
 /* 工具栏 */
 .filters{display:flex;flex-direction:column;gap:8px;margin:0 0 16px}
@@ -415,7 +416,7 @@
     row.innerHTML = items.map(function (t) {
       return '<a class="recent-item" href="' + HS.esc(absUrl(t.url)) + '"' +
         (isExternal(t.url) ? ' target="_blank" rel="noopener"' : '') + '>' +
-        '<span class="ri">' + HS.esc(t.icon) + '</span>' + HS.esc(t.name) + '</a>';
+        '<span class="ri">' + iconHTML(t.icon) + '</span>' + HS.esc(t.name) + '</a>';
     }).join('');
     wrap.hidden = false;
   }
