@@ -1,2 +1,4 @@
+* text=auto
 *.cmd text eol=crlf
 *.bat text eol=crlf
+.gitattributes text eol=lf
