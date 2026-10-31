@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 食物对比 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍖</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:88px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+.kv b.hi{color:var(--ac)}
+.scroll{max-height:360px;overflow:auto;border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{
+  position:sticky;top:0;background:var(--bg3);text-align:left;padding:7px 9px;
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+  border-bottom:2px solid var(--bd2);white-space:nowrap;
+}
+.tbl td{padding:6px 9px;border-bottom:1px dashed var(--bd);font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl td:first-child{font-family:inherit}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr:hover{background:var(--bg3)}
+.tbl tr.on{background:var(--acs)}
+.tbl tr.on td{color:var(--text);font-weight:700}
+.tbl .num{text-align:right}
+@media(max-width:640px){
+  .kv span{width:74px}
+  .tbl{font-size:12px}
+  .tbl th,.tbl td{padding:6px 6px}
+  .grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🍖 MC 食物对比</h1><p class="sub">饥饿值 / 隐藏饱和度 · 算清一顿要吃几个才不浪费</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">先看你要吃几个</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="foodSel">选食物</label>
+          <select id="foodSel"></select>
+        </div>
+        <div class="fld">
+          <label for="hIn">当前饥饿值（0~20）</label>
+          <input id="hIn" type="number" min="0" max="20" step="1" value="14" class="mono">
+        </div>
+      </div>
+      <div class="fld">
+        <label for="sIn">当前饱和度（0~20，看不见的那个隐藏条）</label>
+        <input id="sIn" type="number" min="0" max="20" step="0.1" value="0" class="mono">
+      </div>
+      <div id="out">
+        <div class="kv"><span>这一个</span><b id="oOne">—</b></div>
+        <div class="kv"><span>吃几个</span><b id="oCount" class="hi">—</b></div>
+        <div class="kv"><span>吃完</span><b id="oAfter">—</b></div>
+        <div class="kv"><span>结论</span><b id="oNote" style="font-family:inherit">—</b></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">全部食物（点一行套用）</h2>
+      <div class="scroll">
+        <table class="tbl">
+          <thead><tr>
+            <th>食物</th><th class="num">饥饿</th><th class="num">饱和</th>
+            <th class="num">合计</th><th class="num">饱和/饥饿</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 <b>饥饿值</b>是肉条（0~20，半格算 1 点），<b>饱和度</b>是它下面那层看不见的隐藏条：
+        先消耗饱和度、再掉饥饿值，所以同样 4 点饥饿，饱和度高的食物更抗饿。<br>
+        表格按「饥饿 + 饱和」合计排序，越靠上越顶饱。饱和度上限等于当前饥饿值，所以饥饿满了再吃就白吃 ——
+        这也是为什么要饿到 14 以下再吃金胡萝卜。<br>
+        数值取自游戏内食物属性表；吃几个按「一次吃完、中间不回血」估算，实际进食有动画间隔。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+/* [名称, 饥饿值, 饱和度] —— 按「饥饿+饱和」排序 */
+var FOODS=[
+  ['金胡萝卜',6,14.4],['附魔金苹果',4,9.6],['金苹果',4,9.6],
+  ['熟牛肉（牛排）',8,12.8],['熟猪排',8,12.8],['兔肉煲',10,12.0],
+  ['熟羊肉',6,9.6],['熟鲑鱼',6,9.6],['蘑菇煲',6,7.2],['甜菜汤',6,7.2],
+  ['迷之炖菜',6,7.2],['熟鸡肉',6,7.2],['南瓜派',8,4.8],['蜂蜜瓶',6,1.2],
+  ['烤马铃薯',5,6.0],['面包',5,6.0],['熟鳕鱼',5,6.0],['熟兔肉',5,6.0],
+  ['苹果',4,2.4],['紫颂果',4,2.4],['腐肉',4,0.8],['蜘蛛眼',2,3.2],
+  ['胡萝卜',3,3.6],['生牛肉',3,1.8],['生猪排',3,1.8],['生兔肉',3,1.8],
+  ['蛋糕（每片）',2,0.4],['曲奇',2,0.4],['生鸡肉',2,1.2],['生羊肉',2,1.2],
+  ['生鳕鱼',2,0.4],['生鲑鱼',2,0.4],['毒马铃薯',2,1.2],['甜菜根',1,1.2],
+  ['马铃薯',1,0.6],['干海带',1,0.6],['热带鱼',1,0.2],['河豚',1,0.2]
+];
+
+var sel=$('foodSel'),tbody=$('tbody'),hIn=$('hIn'),sIn=$('sIn');
+var oOne=$('oOne'),oCount=$('oCount'),oAfter=$('oAfter'),oNote=$('oNote');
+
+function n2(v){ return (Math.round(v*100)/100).toString(); }
+function total(f){ return f[1]+f[2]; }
+
+/* 填充下拉 */
+FOODS.forEach(function(f,i){
+  var o=document.createElement('option');
+  o.value=i;
+  o.textContent=f[0]+'（饿 '+f[1]+' / 饱 '+n2(f[2])+'）';
+  sel.appendChild(o);
+});
+
+/* 填充表格 */
+var rows=[];
+FOODS.forEach(function(f,i){
+  var tr=document.createElement('tr');
+  tr.dataset.i=i;
+  tr.innerHTML='<td>'+f[0]+'</td>'
+    +'<td class="num">'+f[1]+'</td>'
+    +'<td class="num">'+n2(f[2])+'</td>'
+    +'<td class="num">'+n2(total(f))+'</td>'
+    +'<td class="num">'+(f[1]?n2(f[2]/f[1]):'—')+'</td>';
+  tr.addEventListener('click',function(){
+    sel.value=String(i);
+    mark(i);
+    calc();
+    toast('已选 '+f[0]);
+  });
+  tbody.appendChild(tr);
+  rows.push(tr);
+});
+function mark(i){
+  rows.forEach(function(r){ r.classList.toggle('on', Number(r.dataset.i)===i); });
+}
+
+/* 吃一个：饥饿先满 20，饱和度上限 = 吃后的饥饿值 */
+function eat(h,s,f){
+  var nh=Math.min(20,h+f[1]);
+  var ns=Math.min(nh,s+f[2]);
+  return [nh,ns];
+}
+
+function calc(){
+  var f=FOODS[Number(sel.value)]||FOODS[0];
+  var h=Number(hIn.value), s=Number(sIn.value);
+  if(!isFinite(h)) h=0;
+  if(!isFinite(s)) s=0;
+  h=Math.max(0,Math.min(20,h));
+  s=Math.max(0,Math.min(20,s));
+  if(s>h){ s=h; sIn.value=n2(s); }
+
+  oOne.textContent='饥饿 +'+f[1]+'，饱和 +'+n2(f[2])+'（合计 '+n2(total(f))+'）';
+
+  if(h>=20){
+    oCount.textContent='0 个';
+    oAfter.textContent='饥饿 20 / 饱和 '+n2(s);
+    oNote.textContent='饥饿值已满，游戏里吃不下 —— 先跑两步掉点饥饿';
+    mark(Number(sel.value));
+    return;
+  }
+
+  var ch=h,cs=s,n=0;
+  /* 饥饿满了就吃不下了，所以循环条件是饥饿没满 */
+  while(n<40 && ch<20 && cs<20){
+    var r=eat(ch,cs,f);
+    if(r[0]===ch && r[1]===cs) break;   /* 已经加不动了 */
+    ch=r[0];cs=r[1];n++;
+  }
+
+  oCount.textContent=n+' 个'+(n>=2?'（成品 '+n+' 份）':'');
+  oAfter.textContent='饥饿 '+n2(ch)+' / 饱和 '+n2(cs);
+
+  var wasteH=(h+f[1]*n)-20;   /* 饥饿溢出量 */
+  if(ch>=20 && cs>=20){
+    oNote.textContent='正好回满，饥饿溢出 '+n2(Math.max(0,wasteH))+' 点';
+  }else if(ch>=20){
+    oNote.textContent='饥饿回满，但饱和只到 '+n2(cs)+' —— 再吃也塞不进去了';
+  }else{
+    oNote.textContent='还没回满，建议再备一份';
+  }
+  mark(Number(sel.value));
+}
+
+sel.addEventListener('change',calc);
+hIn.addEventListener('input',calc);
+sIn.addEventListener('input',calc);
+
+/* 默认：半饿的半饱状态，直接给出可看结论 */
+sel.value='0';
+calc();
+})();
+</script>
+</body>
+</html>

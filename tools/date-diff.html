@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日期差计算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.big{
+  padding:14px 16px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);margin-bottom:11px;
+}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.3rem,4.6vw,1.9rem);font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:88px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.status{font-size:12.5px;margin:8px 0 0;padding:8px 11px;border-radius:var(--r);border-left:3px solid var(--ac);background:var(--bg3);color:var(--muted)}
+.status.err{border-left-color:var(--dgr);color:var(--dgr)}
+@media(max-width:640px){
+  .grid2{grid-template-columns:1fr}
+  .kv span{width:72px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📅 日期差计算</h1><p class="sub">两个日期差几天、几个工作日 · 也能从某天往后推 N 天</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">两个日期之间</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="d1">开始日期</label>
+          <input id="d1" type="date">
+        </div>
+        <div class="fld">
+          <label for="d2">结束日期</label>
+          <input id="d2" type="date">
+        </div>
+      </div>
+      <div class="big">
+        <em>相隔</em><b id="bigDay">—</b>
+        <small id="bigSub">—</small>
+      </div>
+      <div class="kv"><span>按年月日</span><b id="kYmd">—</b></div>
+      <div class="kv"><span>含首尾</span><b id="kIncl">—</b></div>
+      <div class="kv"><span>周 + 天</span><b id="kWeek">—</b></div>
+      <div class="kv"><span>工作日</span><b id="kWork">—</b></div>
+      <div class="kv"><span>周末</span><b id="kRest">—</b></div>
+      <div class="kv"><span>小时 / 分钟</span><b id="kHour">—</b></div>
+      <p class="status" id="status">—</p>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">从某天往后推</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="baseD">基准日期</label>
+          <input id="baseD" type="date">
+        </div>
+        <div class="fld">
+          <label for="offN">偏移量（可为负数，表示往前推）</label>
+          <input id="offN" type="number" value="90" step="1" class="mono">
+        </div>
+      </div>
+      <div class="fld">
+        <label for="unit">单位</label>
+        <select id="unit">
+          <option value="d" selected>天</option>
+          <option value="w">周</option>
+          <option value="m">月</option>
+        </select>
+      </div>
+      <div class="big" style="margin-top:12px">
+        <em>结果日期</em><b id="bigPush">—</b>
+        <small id="pushSub">—</small>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnPush" type="button">推算</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果日期</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 「工作日」按周一到周五算，<b>不含法定节假日与调休</b>，只适合粗估排期；
+        生日、季度这类按「年月日」那一行看更准（它会自动处理大小月和闰年）。<br>
+        含首尾 = 相隔天数 + 1，比如 10 月 1 日到 10 月 7 日算 7 天假期。按「月」推算时，
+        如果目标月没有那一天（比如 1 月 31 日 + 1 个月），会落到该月最后一天。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var d1=$('d1'),d2=$('d2'),baseD=$('baseD'),offN=$('offN'),unitSel=$('unit');
+var bigDay=$('bigDay'),bigSub=$('bigSub');
+var kYmd=$('kYmd'),kIncl=$('kIncl'),kWeek=$('kWeek'),kWork=$('kWork'),kRest=$('kRest'),kHour=$('kHour');
+var bigPush=$('bigPush'),pushSub=$('pushSub'),statusEl=$('status');
+var DAY=86400000;
+
+function p2(n){return (n<10?'0':'')+n;}
+function toISO(d){ return d.getUTCFullYear()+'-'+p2(d.getUTCMonth()+1)+'-'+p2(d.getUTCDate()); }
+function todayUTC(){
+  var n=new Date();
+  return new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate()));
+}
+/* 严格解析 YYYY-MM-DD，2 月 30 日这种会被识破 */
+function parseDate(str){
+  var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(str||''));
+  if(!m) return null;
+  var y=+m[1],mo=+m[2],da=+m[3];
+  if(mo<1||mo>12||da<1||da>31) return null;
+  var d=new Date(Date.UTC(y,mo-1,da));
+  if(d.getUTCFullYear()!==y||d.getUTCMonth()!==mo-1||d.getUTCDate()!==da) return null;
+  return d;
+}
+function fmtFull(d){
+  var w=['日','一','二','三','四','五','六'][d.getUTCDay()];
+  return d.getUTCFullYear()+' 年 '+(d.getUTCMonth()+1)+' 月 '+d.getUTCDate()+' 日 周'+w;
+}
+function weekdayName(n){ return ['周日','周一','周二','周三','周四','周五','周六'][n]; }
+
+function calcDiff(){
+  var a=parseDate(d1.value),b=parseDate(d2.value);
+  if(!a||!b){
+    bigDay.textContent='—';
+    [kYmd,kIncl,kWeek,kWork,kRest,kHour].forEach(function(e){e.textContent='—';});
+    statusEl.textContent='两个日期都要选，格式是 年-月-日';
+    statusEl.className='status err';
+    return;
+  }
+  var sign=1,start=a,end=b;
+  if(a>b){ start=b;end=a;sign=-1; }
+
+  var days=Math.round((end-start)/DAY);
+  var incl=days+1;
+  var weeks=Math.floor(days/7),rest=days%7;
+
+  /* 工作日：从起始日到结束日（不含结束日） */
+  var work=0,holiday=0;
+  for(var i=0;i<days;i++){
+    var wd=new Date(start.getTime()+i*DAY).getUTCDay();
+    if(wd===0||wd===6) holiday++; else work++;
+  }
+
+  bigDay.textContent=days+' 天';
+  bigSub.textContent=sign<0
+    ? '开始日期晚于结束日期，按绝对值算（'+fmtFull(start)+' → '+fmtFull(end)+'）'
+    : fmtFull(start)+' → '+fmtFull(end);
+  kYmd.textContent=(function(){
+    var y=end.getUTCFullYear()-start.getUTCFullYear();
+    var m=end.getUTCMonth()-start.getUTCMonth();
+    var d=end.getUTCDate()-start.getUTCDate();
+    if(d<0){ m--; d+=new Date(Date.UTC(end.getUTCFullYear(),end.getUTCMonth(),0)).getUTCDate(); }
+    if(m<0){ y--; m+=12; }
+    return y+' 年 '+m+' 个月 '+d+' 天';
+  })();
+  kIncl.textContent=incl+' 天';
+  kWeek.textContent=weeks+' 周 '+(rest?rest+' 天':'整');
+  kWork.textContent=work+' 天（周一至周五）';
+  kRest.textContent=holiday+' 天';
+  kHour.textContent=(days*24)+' 小时 / '+(days*24*60)+' 分钟';
+
+  var today=todayUTC();
+  var relDays=Math.round((start-today)/DAY);
+  statusEl.className='status';
+  if(days===0){
+    statusEl.textContent='同一天';
+  }else if(relDays===0){
+    statusEl.textContent='开始日期就是今天'+(sign<0?'（倒着算的）':'');
+  }else{
+    statusEl.textContent='开始日期在今天'+(relDays>0?('之后 '+relDays+' 天'):('之前 '+(-relDays)+' 天'));
+  }
+}
+
+function push(){
+  var b=parseDate(baseD.value);
+  var n=Number(offN.value);
+  if(!b){ bigPush.textContent='—';pushSub.textContent='先选一个基准日期';return; }
+  if(!isFinite(n)||Math.floor(n)!==n){ bigPush.textContent='—';pushSub.textContent='偏移量要填整数';toast('偏移量要填整数');return; }
+  var u=unitSel.value,d;
+  if(u==='d'){ d=new Date(b.getTime()+n*DAY); }
+  else if(u==='w'){ d=new Date(b.getTime()+n*7*DAY); }
+  else{
+    var y=b.getUTCFullYear(),mo=b.getUTCMonth(),da=b.getUTCDate();
+    var tm=new Date(Date.UTC(y,mo+n,1));
+    var lastDay=new Date(Date.UTC(tm.getUTCFullYear(),tm.getUTCMonth()+1,0)).getUTCDate();
+    d=new Date(Date.UTC(tm.getUTCFullYear(),tm.getUTCMonth(),Math.min(da,lastDay)));
+  }
+  bigPush.textContent=toISO(d);
+  pushSub.textContent=fmtFull(d);
+}
+
+$('btnPush').addEventListener('click',function(){push();toast('已推算');});
+$('btnCopy').addEventListener('click',function(){
+  var v=bigPush.textContent;
+  if(!v||v==='—'){toast('先推算一次');return;}
+  HS.copy(v);toast('已复制 '+v);
+});
+[d1,d2].forEach(function(el){el.addEventListener('change',calcDiff);});
+[baseD,offN].forEach(function(el){el.addEventListener('input',push);});
+unitSel.addEventListener('change',push);
+
+/* 默认：今天 → 今天 + 30 天，打开就有结果 */
+var t0=todayUTC();
+d1.value=toISO(t0);
+d2.value=toISO(new Date(t0.getTime()+30*DAY));
+baseD.value=toISO(t0);
+calcDiff();
+push();
+})();
+</script>
+</body>
+</html>

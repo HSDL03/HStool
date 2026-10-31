@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>进制转换 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔢</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;gap:9px}
+.line{
+  display:grid;grid-template-columns:84px 1fr auto;gap:10px;align-items:center;
+  padding:9px 11px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);
+}
+.line .tag{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.line .val{
+  font-family:var(--mono);font-size:14px;font-weight:700;word-break:break-all;
+  font-variant-numeric:tabular-nums;line-height:1.5;
+}
+.line .val.grp{color:var(--muted);font-size:12.5px;font-weight:600}
+.line .cp{
+  height:28px;padding:0 9px;font-size:11.5px;font-weight:700;flex:none;
+  background:var(--bg3);border:1px solid var(--bd);border-radius:6px;color:var(--muted);cursor:pointer;
+}
+.line .cp:hover{border-color:var(--ac);color:var(--ac)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:70px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all}
+.status{font-size:12.5px;margin:10px 0 0;padding:8px 11px;border-radius:var(--r);border-left:3px solid var(--ac);background:var(--bg3);color:var(--muted)}
+.status.err{border-left-color:var(--dgr);color:var(--dgr)}
+@media(max-width:640px){
+  .line{grid-template-columns:1fr auto;gap:4px 8px}
+  .line .tag{grid-column:1/-1}
+  .line .val{font-size:13px}
+  .kv span{width:62px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔢 进制转换</h1><p class="sub">2 / 8 / 10 / 16 / 32 / 36 任意互转 · 大整数不丢精度</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">输入</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="valIn">数值（可带 - 负号，空格和下划线会被忽略）</label>
+          <input id="valIn" class="mono" spellcheck="false" autocomplete="off" value="255" placeholder="255 或 ff 或 0b1010">
+        </div>
+        <div class="fld">
+          <label for="baseIn">源进制</label>
+          <select id="baseIn"></select>
+        </div>
+      </div>
+      <p class="status" id="status">—</p>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="btnSampleDec" type="button">十进制样例</button>
+        <button class="btn" id="btnSampleHex" type="button">十六进制样例</button>
+        <button class="btn" id="btnSwap" type="button">⇄ 把结果当输入</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">换算结果（点「复制」拿走）</h2>
+      <div class="res" id="res">
+        <div class="line"><span class="tag">十进制</span><span class="val" id="v10">—</span><button class="cp" data-t="10" type="button">复制</button></div>
+        <div class="line"><span class="tag">二进制</span><span class="val" id="v2">—</span><button class="cp" data-t="2" type="button">复制</button></div>
+        <div class="line"><span class="tag">八进制</span><span class="val" id="v8">—</span><button class="cp" data-t="8" type="button">复制</button></div>
+        <div class="line"><span class="tag">十六进制</span><span class="val" id="v16">—</span><button class="cp" data-t="16" type="button">复制</button></div>
+        <div class="line"><span class="tag">32 进制</span><span class="val grp" id="v32">—</span><button class="cp" data-t="32" type="button">复制</button></div>
+        <div class="line"><span class="tag">36 进制</span><span class="val grp" id="v36">—</span><button class="cp" data-t="36" type="button">复制</button></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">附带信息</h2>
+      <div class="kv"><span>位数</span><b id="iBits">—</b></div>
+      <div class="kv"><span>字节</span><b id="iBytes">—</b></div>
+      <div class="kv"><span>二进制</span><b id="iGrp">—</b></div>
+      <div class="kv"><span>字符</span><b id="iChar">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 用 <code>BigInt</code> 精确计算，几十位的雪球命令方块坐标也不会被浮点数吃掉末尾。
+        输入里可以有 <code>0x</code>/<code>0b</code>/<code>0o</code> 前缀，会自动识别并覆盖上面的源进制；
+        数字里有非法字符会直接指出来是哪一个。<br>
+        进制 32 和 36 用 <code>0-9a-z</code> 表示，字母超过 9 的位在 32 进制里到 <code>v</code> 为止，36 进制到 <code>z</code> 为止。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var valIn=$('valIn'),baseIn=$('baseIn'),statusEl=$('status');
+var v10=$('v10'),v2=$('v2'),v8=$('v8'),v16=$('v16'),v32=$('v32'),v36=$('v36');
+var iBits=$('iBits'),iBytes=$('iBytes'),iGrp=$('iGrp'),iChar=$('iChar');
+var DIG='0123456789abcdefghijklmnopqrstuvwxyz';
+var NAMES={2:'2 · 二进制',8:'8 · 八进制',10:'10 · 十进制',16:'16 · 十六进制',32:'32 · 三十二进制',36:'36 · 三十六进制'};
+
+for(var b=2;b<=36;b++){
+  var o=document.createElement('option');
+  o.value=String(b);
+  o.textContent=NAMES[b]||(b+' 进制');
+  baseIn.appendChild(o);
+}
+baseIn.value='10';
+
+function setStatus(msg,err){
+  statusEl.textContent=msg;
+  statusEl.className='status'+(err?' err':'');
+}
+
+function clearAll(){
+  [v10,v2,v8,v16,v32,v36].forEach(function(el){el.textContent='—';});
+  iBits.textContent='—';iBytes.textContent='—';iGrp.textContent='—';iChar.textContent='—';
+}
+
+var current=null;
+
+function parse(){
+  var raw=valIn.value.trim();
+  if(!raw){ setStatus('先写一个数值',true); clearAll(); current=null; return; }
+
+  var s=raw.replace(/[\s_,]/g,'');
+  var base=Number(baseIn.value);
+  var neg=false;
+
+  /* 先剥符号，再认前缀 */
+  if(s.charAt(0)==='-'){ neg=true; s=s.slice(1); }
+  else if(s.charAt(0)==='+'){ s=s.slice(1); }
+
+  var lp=s.toLowerCase();
+  if(lp.indexOf('0x')===0){ base=16; s=s.slice(2); }
+  else if(lp.indexOf('0b')===0){ base=2; s=s.slice(2); }
+  else if(lp.indexOf('0o')===0){ base=8; s=s.slice(2); }
+
+  if(!s){ setStatus('只有符号没有数字',true); clearAll(); current=null; return; }
+
+  if(base!==Number(baseIn.value)) baseIn.value=String(base);
+
+  var n=0n,B=BigInt(base);
+  for(var i=0;i<s.length;i++){
+    var idx=DIG.indexOf(s.charAt(i).toLowerCase());
+    if(idx<0||idx>=base){
+      setStatus('第 '+(i+1)+' 个字符 “'+s.charAt(i)+'” 在 '+base+' 进制里不存在',true);
+      clearAll(); current=null;
+      return;
+    }
+    n=n*B+BigInt(idx);
+  }
+  if(neg) n=-n;
+
+  current=n;
+  var abs=n<0n?-n:n;
+
+  v10.textContent=n.toString(10);
+  v2.textContent=n.toString(2);
+  v8.textContent=n.toString(8);
+  v16.textContent=n.toString(16);
+  v32.textContent=n.toString(32);
+  v36.textContent=n.toString(36);
+
+  var bits=abs===0n?1:abs.toString(2).length;
+  iBits.textContent=bits+' 位'+(n<0n?'（负数按绝对值算）':'');
+  iBytes.textContent=Math.ceil(bits/8)+' 字节';
+  iChar.textContent=n.toString(10).length+' 个十进制字符';
+
+  /* 二进制每 8 位分组，从右往左切 */
+  var bin=abs.toString(2);
+  while(bin.length%8) bin='0'+bin;
+  var parts=[];
+  for(var j=0;j<bin.length;j+=8) parts.push(bin.slice(j,j+8));
+  iGrp.textContent=(n<0n?'-':'')+parts.join(' ');
+
+  var low=abs<=0x10FFFFn&&abs>0n?('U+'+abs.toString(16).toUpperCase().padStart(4,'0')):'—';
+  setStatus('已按 '+(NAMES[base]||(base+' 进制'))+' 解析'+(low!=='—'?' · '+low:'')+
+    (n<0n?' · 负数':'')+(/(^|[^a-z0-9])0x/i.test(raw)?' · 识别到 0x 前缀':''));
+}
+
+valIn.addEventListener('input',parse);
+baseIn.addEventListener('change',parse);
+
+Array.prototype.forEach.call(document.querySelectorAll('.cp'),function(btn){
+  btn.addEventListener('click',function(){
+    if(current===null){ toast('先输入一个有效数值'); return; }
+    var t=Number(btn.dataset.t);
+    var txt=current.toString(t);
+    HS.copy(txt);
+    toast('已复制 '+t+' 进制：'+(txt.length>24?txt.slice(0,24)+'…':txt));
+  });
+});
+
+$('btnSampleDec').addEventListener('click',function(){
+  baseIn.value='10';valIn.value='138412032';parse();
+});
+$('btnSampleHex').addEventListener('click',function(){
+  baseIn.value='16';valIn.value='-1a2b3c4d';parse();
+});
+$('btnSwap').addEventListener('click',function(){
+  if(current===null){ toast('先输入一个有效数值'); return; }
+  valIn.value=current.toString(Number(baseIn.value));
+  parse();
+  toast('已换回原进制，可直接改');
+});
+
+parse();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JWT 解析 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎫</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+pre.json{
+  margin:0;padding:11px 13px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  font-family:var(--mono);font-size:12.5px;line-height:1.65;overflow:auto;max-height:300px;
+  white-space:pre;tab-size:2;color:var(--text);
+}
+.status{font-size:13px;margin:0 0 12px;padding:9px 12px;border-radius:var(--r);border-left:3px solid var(--ac);background:var(--bg3);color:var(--muted)}
+.status.err{border-left-color:var(--dgr);color:var(--dgr)}
+.status.ok{border-left-color:var(--ac);color:var(--text)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:84px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all}
+.pj{margin-bottom:10px}
+.pj:last-child{margin-bottom:0}
+.pj .cap{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.pj .cap em{font-style:normal;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.pj .cap button{margin-left:auto}
+@media(max-width:640px){
+  pre.json{font-size:11.5px;max-height:240px}
+  .kv span{width:70px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🎫 JWT 解析</h1><p class="sub">拆开令牌看头部与载荷 · 算过期时间（不验签）</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">粘贴令牌</h2>
+      <div class="fld">
+        <label for="tokIn">JWT（三段用 . 分隔，或只有两段的无签名令牌）</label>
+        <textarea id="tokIn" class="mono" rows="4" spellcheck="false" autocomplete="off" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.xxxxx.yyyyy"></textarea>
+      </div>
+      <p class="status" id="status">—</p>
+      <div class="row">
+        <button class="btn primary" id="btnParse" type="button">解析</button>
+        <button class="btn" id="btnDemo" type="button">放个示例</button>
+        <button class="btn" id="btnClear" type="button">清空</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">时间与结论</h2>
+      <div class="kv"><span>状态</span><b id="kJudge">—</b></div>
+      <div class="kv"><span>签发 iat</span><b id="kIat">—</b></div>
+      <div class="kv"><span>生效 nbf</span><b id="kNbf">—</b></div>
+      <div class="kv"><span>过期 exp</span><b id="kExp">—</b></div>
+      <div class="kv"><span>算法 alg</span><b id="kAlg">—</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Header</h2>
+      <div class="pj">
+        <div class="cap"><em>头部</em><button class="btn sm ghost" id="cpHead" type="button">📋 复制</button></div>
+        <pre class="json" id="outHead">—</pre>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Payload</h2>
+      <div class="pj">
+        <div class="cap"><em>载荷</em><button class="btn sm ghost" id="cpPayload" type="button">📋 复制</button></div>
+        <pre class="json" id="outPayload">—</pre>
+      </div>
+      <div class="kv"><span>自定义</span><b id="kCustom">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 解析只做 Base64URL 解码，<b>不验证签名</b> —— 任何人的令牌都能被拆开看，所以这里的结果只能用来调试，
+        不能当成「令牌是真的」。要做服务端校验就交给后端用密钥验签。<br>
+        时间字段是 Unix 秒：<code>exp</code> 早于现在就是已过期，<code>nbf</code> 晚于现在就是还没生效。
+        令牌里本来就没有签名字段（两段式）时会提示「未签名」。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var tokIn=$('tokIn'),statusEl=$('status');
+var kJudge=$('kJudge'),kIat=$('kIat'),kNbf=$('kNbf'),kExp=$('kExp'),kAlg=$('kAlg'),kCustom=$('kCustom');
+var outHead=$('outHead'),outPayload=$('outPayload');
+var headText='',payText='';
+
+function b64u2str(s){
+  s=String(s).replace(/-/g,'+').replace(/_/g,'/').replace(/\s+/g,'');
+  var pad=s.length%4;
+  if(pad) s+='===='.slice(0,4-pad);
+  var bin=atob(s);
+  var arr=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(arr);
+}
+function str2b64u(str){
+  var bytes=new TextEncoder().encode(str),bin='';
+  for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function p2(n){return (n<10?'0':'')+n;}
+function fmtTs(sec){
+  if(typeof sec!=='number'||!isFinite(sec)) return '—';
+  var d=new Date(sec*1000);
+  if(isNaN(d.getTime())) return '—';
+  return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '
+    +p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds());
+}
+function rel(sec){
+  var diff=Math.round(sec*1000-Date.now());
+  var abs=Math.abs(diff),u,val;
+  if(abs<60000){val=Math.round(abs/1000);u='秒';}
+  else if(abs<3600000){val=Math.round(abs/60000);u='分钟';}
+  else if(abs<86400000){val=Math.round(abs/3600000);u='小时';}
+  else{val=Math.round(abs/86400000);u='天';}
+  return val+' '+u+(diff>0?'后':'前');
+}
+function setStatus(msg,cls){
+  statusEl.textContent=msg;
+  statusEl.className='status'+(cls?' '+cls:'');
+}
+function clearOut(){
+  outHead.textContent='—';outPayload.textContent='—';headText='';payText='';
+  kJudge.textContent='—';kIat.textContent='—';kNbf.textContent='—';kExp.textContent='—';
+  kAlg.textContent='—';kCustom.textContent='—';
+}
+
+function parse(){
+  var raw=tokIn.value.trim();
+  clearOut();
+  if(!raw){ setStatus('还没粘贴令牌','err'); return; }
+
+  var tok=raw.replace(/^Bearer\s+/i,'').replace(/\s+/g,'');
+  var parts=tok.split('.');
+  if(parts.length<2){
+    setStatus('不像 JWT：至少要有一处「.」把头部和载荷分开','err');
+    return;
+  }
+  if(parts.length>3){
+    setStatus('段数不对（'+parts.length+' 段），JWT 最多三段','err');
+    return;
+  }
+  if(!parts[0]||!parts[1]){
+    setStatus('头部或载荷是空的，检查是不是复制时截断了','err');
+    return;
+  }
+
+  var head,pay;
+  try{ head=JSON.parse(b64u2str(parts[0])); }
+  catch(e){ setStatus('头部解不出来：不是合法的 Base64URL JSON','err'); return; }
+  try{ pay=JSON.parse(b64u2str(parts[1])); }
+  catch(e){ setStatus('载荷解不出来：不是合法的 Base64URL JSON','err'); return; }
+
+  headText=JSON.stringify(head,null,2);
+  payText=JSON.stringify(pay,null,2);
+  outHead.textContent=headText;
+  outPayload.textContent=payText;
+
+  kAlg.textContent=(head.alg||'（未声明）')+(parts.length===3?' · 三段有签名':' · 两段无签名');
+
+  function putTime(el,key){
+    var v=pay[key];
+    if(typeof v!=='number'){ el.textContent='（没有）'; return false; }
+    el.textContent=fmtTs(v)+'　'+rel(v);
+    return true;
+  }
+  var hasIat=putTime(kIat,'iat'),hasNbf=putTime(kNbf,'nbf'),hasExp=putTime(kExp,'exp');
+
+  var now=Math.floor(Date.now()/1000);
+  var judge,cls;
+  if(hasExp && pay.exp<=now){ judge='已过期 · '+rel(pay.exp); cls='err'; }
+  else if(hasNbf && pay.nbf>now){ judge='还没生效 · '+rel(pay.nbf); cls='err'; }
+  else if(hasExp){ judge='有效 · '+rel(pay.exp)+'过期'; cls='ok'; }
+  else { judge='没有 exp 字段，无法判断过期'; cls=''; }
+  kJudge.textContent=judge;
+  setStatus(judge,cls);
+
+  var known={iss:1,sub:1,aud:1,exp:1,nbf:1,iat:1,jti:1};
+  var extra=Object.keys(pay).filter(function(k){return !known[k];});
+  kCustom.textContent=extra.length?extra.join('、'):'（都是标准字段）';
+
+  if(parts.length===3){
+    setStatus(judge+'　·　签名段 '+parts[2].length+' 字符（未验证）',cls);
+  }
+  document.title='JWT 解析 · 红石的小站';
+}
+
+function demo(){
+  var now=Math.floor(Date.now()/1000);
+  var h={alg:'HS256',typ:'JWT'};
+  var p={iss:'hs-tools',sub:'demo-1024',name:'红石',scope:['tools','mc'],iat:now-3600,exp:now+7200};
+  var sig=str2b64u('hs-demo-secret-not-a-real-signature');
+  tokIn.value=str2b64u(JSON.stringify(h))+'.'+str2b64u(JSON.stringify(p))+'.'+sig;
+  parse();
+}
+
+$('btnParse').addEventListener('click',parse);
+$('btnDemo').addEventListener('click',function(){demo();toast('已放入示例令牌');});
+$('btnClear').addEventListener('click',function(){
+  tokIn.value='';clearOut();setStatus('已清空，重新粘贴令牌','');
+});
+tokIn.addEventListener('input',parse);
+
+$('cpHead').addEventListener('click',function(){
+  if(!headText){toast('还没有解析出头部');return;}
+  HS.copy(headText);toast('已复制 Header JSON');
+});
+$('cpPayload').addEventListener('click',function(){
+  if(!payText){toast('还没有解析出载荷');return;}
+  HS.copy(payText);toast('已复制 Payload JSON');
+});
+
+demo();
+})();
+</script>
+</body>
+</html>

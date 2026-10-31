@@ -478,5 +478,65 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mc-food",
+    "icon": "🍖",
+    "name": "MC 食物对比",
+    "desc": "饥饿值与隐藏饱和度对比，算一顿吃几个",
+    "tag": "工具",
+    "url": "./tools/mc-food.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-url-parse",
+    "icon": "🔗",
+    "name": "URL 参数拆解",
+    "desc": "把链接参数拆成表格，改完再拼回去",
+    "tag": "工具",
+    "url": "./tools/url-parse.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-radix",
+    "icon": "🔢",
+    "name": "进制转换",
+    "desc": "2/8/10/16/32/36 互转，大整数不丢精度",
+    "tag": "工具",
+    "url": "./tools/radix.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-jwt",
+    "icon": "🎫",
+    "name": "JWT 解析",
+    "desc": "拆头部与载荷，算过期时间（不验签）",
+    "tag": "工具",
+    "url": "./tools/jwt.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-date-diff",
+    "icon": "📅",
+    "name": "日期差计算",
+    "desc": "差几天、几个工作日，或往后推 N 天",
+    "tag": "工具",
+    "url": "./tools/date-diff.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

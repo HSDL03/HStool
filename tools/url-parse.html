@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>URL 参数拆解 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:66px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:600;word-break:break-all}
+.status{font-size:12.5px;margin:0 0 10px;padding:8px 11px;border-radius:var(--r);border-left:3px solid var(--ac);background:var(--bg3);color:var(--muted)}
+.status.err{border-left-color:var(--dgr);color:var(--dgr)}
+.prow{display:grid;grid-template-columns:26px 1fr 1.4fr 34px;gap:8px;align-items:center;margin-bottom:7px}
+.prow input[type=text]{min-width:0}
+.prow .del{
+  height:32px;width:34px;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0;
+}
+.prow .del:hover{border-color:var(--dgr);color:var(--dgr)}
+.prow input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointer;justify-self:center}
+.phead{display:grid;grid-template-columns:26px 1fr 1.4fr 34px;gap:8px;margin-bottom:6px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.out{
+  font-family:var(--mono);font-size:12.5px;line-height:1.65;word-break:break-all;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);padding:10px 12px;
+  color:var(--text);min-height:44px;
+}
+.out .k{color:var(--ac2);font-weight:700}
+.out .sep{color:var(--faint)}
+@media(max-width:640px){
+  .prow,.phead{grid-template-columns:22px 1fr 1fr 30px;gap:5px}
+  .prow .del{width:30px;height:30px;font-size:12px}
+  .prow input[type=text]{padding:0 7px;font-size:12.5px}
+  .out{font-size:11.5px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔗 URL 参数拆解</h1><p class="sub">把一长串链接拆成能改的表格 · 改完原样拼回去</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">粘贴链接</h2>
+      <div class="fld">
+        <label for="inUrl">完整 URL（也接受只有 ?a=1&amp;b=2 的查询串）</label>
+        <textarea id="inUrl" class="mono" rows="3" spellcheck="false" autocomplete="off"></textarea>
+      </div>
+      <p class="status" id="status">—</p>
+      <div class="row">
+        <button class="btn" id="btnReload" type="button">↻ 重新解析</button>
+        <button class="btn" id="btnAdd" type="button">＋ 加一个参数</button>
+        <button class="btn" id="btnClear" type="button">清空</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结构</h2>
+      <div class="kv"><span>协议</span><b id="pProto">—</b></div>
+      <div class="kv"><span>主机</span><b id="pHost">—</b></div>
+      <div class="kv"><span>路径</span><b id="pPath">—</b></div>
+      <div class="kv"><span>片段</span><b id="pHash">—</b></div>
+      <div class="kv"><span>参数</span><b id="pCount">—</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">参数表（取消勾选即从结果里去掉）</h2>
+      <div class="phead"><span>用</span><span>键</span><span>值</span><span></span></div>
+      <div id="plist"></div>
+      <p class="status" id="emptyHint" style="display:none">这个链接没有查询参数，点「加一个参数」自己加。</p>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">拼好的链接</h2>
+      <div class="out" id="outBox">—</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopyUrl" type="button">📋 复制链接</button>
+        <button class="btn" id="btnCopyJson" type="button">复制参数 JSON</button>
+        <button class="btn" id="btnCopyQuery" type="button">只复制查询串</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 参数值里的空格、中文、<code>&amp;</code> 会自动转义成 <code>%20</code> / <code>%E4%B8%AD</code> 之类，
+        所以复制出去的一定是能直接用的编码后链接。重复的键（如 <code>tag=a&amp;tag=b</code>）会各占一行，顺序保持不变。<br>
+        不带 <code>https://</code> 也能识别，会默认补上；只有 <code>?a=1</code> 时按查询串处理，此时只输出 <code>a=1</code>。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var inUrl=$('inUrl'),statusEl=$('status'),plist=$('plist'),outBox=$('outBox'),emptyHint=$('emptyHint');
+var pProto=$('pProto'),pHost=$('pHost'),pPath=$('pPath'),pHash=$('pHash'),pCount=$('pCount');
+
+var state={proto:'',host:'',path:'',hash:'',params:[],ok:false,queryOnly:false};
+
+function enc(s){return encodeURIComponent(s);}
+
+function setStatus(msg,isErr){
+  statusEl.textContent=msg;
+  statusEl.className='status'+(isErr?' err':'');
+}
+
+function parseUrl(){
+  var raw=inUrl.value.trim();
+  state.params=[];
+  if(!raw){
+    state.ok=false;
+    plist.innerHTML='';
+    outBox.textContent='—';
+    setStatus('还没输入链接',true);
+    paintMeta();
+    emptyHint.style.display='none';
+    return;
+  }
+  /* 纯查询串 */
+  if(raw.charAt(0)==='?'){
+    state.queryOnly=true;
+    state.proto='';state.host='';state.path='';state.hash='';
+    var qq=raw.slice(1);
+    var hi=qq.indexOf('#');
+    if(hi>=0){ state.hash=qq.slice(hi); qq=qq.slice(0,hi); }
+    readParams(qq);
+    finish('已按查询串解析，只输出参数部分');
+    return;
+  }
+  state.queryOnly=false;
+  var src=raw;
+  if(!/^[a-z][a-z0-9+.-]*:\/\//i.test(src) && /^[^\s\/?#]+\.[a-z]{2,}/i.test(src)){
+    src='https://'+src;
+  }
+  var u;
+  try{ u=new URL(src); }
+  catch(e){
+    state.ok=false;
+    plist.innerHTML='';
+    outBox.textContent='—';
+    setStatus('这不是一个合法的 URL，检查一下是不是漏了域名或写错了冒号',true);
+    paintMeta();
+    emptyHint.style.display='none';
+    return;
+  }
+  state.proto=u.protocol.replace(':','');
+  state.host=u.host;
+  state.path=u.pathname;
+  state.hash=u.hash;
+
+  var bad=[];
+  try{
+    var sp=new URLSearchParams(u.search);
+    sp.forEach(function(v,k){ state.params.push({k:k,v:v,on:true}); });
+  }catch(e){ bad.push('参数无法解析'); }
+  finish(bad.length?bad.join('；'):'解析成功 · '+state.params.length+' 个参数');
+}
+
+function readParams(qs){
+  qs.split('&').forEach(function(pair){
+    if(!pair) return;
+    var eq=pair.indexOf('=');
+    var k=eq<0?pair:pair.slice(0,eq);
+    var v=eq<0?'':pair.slice(eq+1);
+    try{ k=decodeURIComponent(k.replace(/\+/g,' ')); }catch(e){}
+    try{ v=decodeURIComponent(v.replace(/\+/g,' ')); }catch(e){}
+    state.params.push({k:k,v:v,on:true});
+  });
+}
+
+function finish(msg){
+  state.ok=true;
+  setStatus(msg,false);
+  paintRows();
+  paintMeta();
+  paintOut();
+}
+
+function paintMeta(){
+  pProto.textContent=state.proto?state.proto+'://':'（无）';
+  pHost.textContent=state.host||'（无）';
+  pPath.textContent=state.path||'（无）';
+  pHash.textContent=state.hash||'（无）';
+  var on=state.params.filter(function(p){return p.on;}).length;
+  pCount.textContent=state.params.length+' 个（启用 '+on+' 个）';
+}
+
+function paintRows(){
+  plist.innerHTML='';
+  emptyHint.style.display=state.params.length?'none':'block';
+  state.params.forEach(function(p,i){
+    var row=document.createElement('div');
+    row.className='prow';
+
+    var cb=document.createElement('input');
+    cb.type='checkbox';cb.checked=p.on;
+    cb.title='是否保留这个参数';
+    cb.addEventListener('change',function(){ p.on=cb.checked; paintMeta(); paintOut(); });
+
+    var k=document.createElement('input');
+    k.type='text';k.value=p.k;k.placeholder='键';k.className='mono';k.spellcheck=false;
+    k.addEventListener('input',function(){ p.k=k.value; paintOut(); });
+
+    var v=document.createElement('input');
+    v.type='text';v.value=p.v;v.placeholder='值';v.className='mono';v.spellcheck=false;
+    v.addEventListener('input',function(){ p.v=v.value; paintOut(); });
+
+    var del=document.createElement('button');
+    del.type='button';del.className='del';del.textContent='✕';del.title='删除这个参数';
+    del.addEventListener('click',function(){
+      state.params.splice(i,1);
+      paintRows();paintMeta();paintOut();
+    });
+
+    row.appendChild(cb);row.appendChild(k);row.appendChild(v);row.appendChild(del);
+    plist.appendChild(row);
+  });
+}
+
+function buildQuery(){
+  return state.params.filter(function(p){return p.on && p.k!=='';})
+    .map(function(p){ return enc(p.k)+'='+enc(p.v); }).join('&');
+}
+
+function buildUrl(){
+  var q=buildQuery();
+  if(state.queryOnly) return q;
+  var s=(state.proto?state.proto+'://':'')+state.host+state.path;
+  if(q) s+='?'+q;
+  if(state.hash) s+=state.hash;
+  return s;
+}
+
+function paintOut(){
+  if(!state.ok){ outBox.textContent='—'; return; }
+  var full=buildUrl();
+  if(!full){ outBox.textContent='（空）'; pCount.textContent='0 个'; return; }
+  /* 参数部分高亮 */
+  var qi=full.indexOf('?');
+  if(qi<0){ outBox.textContent=full; }
+  else{
+    var head=full.slice(0,qi+1), rest=full.slice(qi+1);
+    var hashAt=rest.indexOf('#');
+    var body=hashAt<0?rest:rest.slice(0,hashAt);
+    var tail=hashAt<0?'':rest.slice(hashAt);
+    outBox.innerHTML='';
+    outBox.appendChild(document.createTextNode(head));
+    body.split('&').forEach(function(pair,idx){
+      if(idx) outBox.appendChild(document.createTextNode('&'));
+      var eq=pair.indexOf('=');
+      var spanK=document.createElement('span');
+      spanK.className='k';
+      spanK.textContent=eq<0?pair:pair.slice(0,eq);
+      outBox.appendChild(spanK);
+      if(eq>=0){
+        outBox.appendChild(document.createTextNode('='));
+        outBox.appendChild(document.createTextNode(pair.slice(eq+1)));
+      }
+    });
+    if(tail) outBox.appendChild(document.createTextNode(tail));
+  }
+  var on=state.params.filter(function(p){return p.on;}).length;
+  pCount.textContent=state.params.length+' 个（启用 '+on+' 个）';
+}
+
+$('btnReload').addEventListener('click',parseUrl);
+$('btnAdd').addEventListener('click',function(){
+  if(!state.ok){ toast('先把链接解析出来'); return; }
+  state.params.push({k:'',v:'',on:true});
+  paintRows();paintMeta();paintOut();
+  var inputs=plist.querySelectorAll('.prow input[type=text]');
+  if(inputs.length) inputs[inputs.length-2].focus();
+});
+$('btnClear').addEventListener('click',function(){
+  inUrl.value='';
+  state={proto:'',host:'',path:'',hash:'',params:[],ok:false,queryOnly:false};
+  plist.innerHTML='';
+  outBox.textContent='—';
+  paintMeta();
+  setStatus('已清空，重新粘贴一条链接',false);
+});
+inUrl.addEventListener('input',parseUrl);
+
+$('btnCopyUrl').addEventListener('click',function(){
+  if(!state.ok){ toast('还没有可复制的链接'); return; }
+  var s=buildUrl();
+  if(!s){ toast('结果是空的'); return; }
+  HS.copy(s);toast('已复制链接');
+});
+$('btnCopyQuery').addEventListener('click',function(){
+  if(!state.ok){ toast('还没有可复制的参数'); return; }
+  var q=buildQuery();
+  if(!q){ toast('没有启用的参数'); return; }
+  HS.copy(q);toast('已复制查询串');
+});
+$('btnCopyJson').addEventListener('click',function(){
+  if(!state.ok){ toast('还没有参数'); return; }
+  var o={};
+  state.params.forEach(function(p){ if(p.on && p.k) o[p.k]=p.v; });
+  var keys=Object.keys(o);
+  if(!keys.length){ toast('没有启用的参数'); return; }
+  HS.copy(JSON.stringify(o,null,2));
+  toast('已复制 '+keys.length+' 个参数（同名键取最后一个）');
+});
+
+/* 默认值：本站在线地址里带参数的一条真实链接 */
+inUrl.value='https://hsdl03.github.io/HStool/tools/url-parse.html?tab=1&q=mc+%E7%BA%A2%E7%9F%B3&from=index';
+parseUrl();
+})();
+</script>
+</body>
+</html>
