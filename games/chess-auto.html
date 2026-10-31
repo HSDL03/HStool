@@ -285,6 +285,7 @@
           <div class="act">
             <button class="btn" id="btnShare">① 选屏幕 / 窗口</button>
             <button class="btn primary" id="btnScan">② 开始识别</button>
+            <button class="btn" id="btnRebase">重取基线</button>
           </div>
           <div class="scr-stage" id="scrStage">
             <video id="scrVideo" muted playsinline></video>
@@ -293,8 +294,8 @@
           </div>
           <div class="rangeline">
             <span>灵敏度</span>
-            <input type="range" id="scrSens" min="6" max="40" step="1" value="14">
-            <b id="scrSensVal">14</b>
+            <input type="range" id="scrSens" min="3" max="50" step="1" value="9">
+            <b id="scrSensVal">9</b>
           </div>
           <label class="sw" id="scrPinRow" hidden>
             <input type="checkbox" id="scrPin">
@@ -302,7 +303,7 @@
           </label>
           <div class="scr-status" id="scrStatus">在预览上拖一个框，把整块棋盘框进去（含最外圈格子）。</div>
           <div class="scr-hint">框好后点「开始识别」：你在别处照常下，这边自动读出对手走了哪步并给你应手。
-            鼠标扫过棋盘可能误判，把灵敏度往上调一点即可。</div>
+            灵敏度越小越敏感：没反应就往下调，误判（乱认走法）就往上调。</div>
         </div>
 
         <div class="cardbox editor" id="editor">
@@ -1712,7 +1713,8 @@ function updateButtons(){
 var SC = {
   stream: null, video: null, stage: null, boxEl: null, arrowEl: null, statusEl: null,
   box: null, base: null, timer: 0, running: false, expect: null, miss: 0,
-  sens: 14, N: 24, canvas: null, ctx: null
+  sens: 9, N: 32, canvas: null, ctx: null,
+  still: 0, hinted: false, rebasePending: false
 };
 
 function scStatus(html){ if (SC.statusEl) SC.statusEl.innerHTML = html; }
@@ -1757,23 +1759,26 @@ function scSign(){
     0, 0, size, size
   );
   var data = SC.ctx.getImageData(0, 0, size, size).data;
-  var out = new Uint8Array(64 * 9);
-  var B = N / 3;                       /* 每格切成 3×3 小块 */
+  /* 每格切 4×4 块：棋子常常只占格心一块，整格取均值会被四周空格稀释到灵敏度线以下 */
+  var out = new Uint8Array(64 * 16);
+  var B = N / 4;
+  var IN = 1;                          /* 块内缩 1px，避开格线与抗锯齿 */
+  var span = B - 2 * IN;
   for (var sr = 0; sr < 8; sr++){
     for (var sc2 = 0; sc2 < 8; sc2++){
-      var base = (sr * 8 + sc2) * 9;
-      for (var by = 0; by < 3; by++){
-        for (var bx = 0; bx < 3; bx++){
+      var base = (sr * 8 + sc2) * 16;
+      for (var by = 0; by < 4; by++){
+        for (var bx = 0; bx < 4; bx++){
           var sum = 0;
-          for (var y = 0; y < B; y++){
-            var py = sr * N + by * B + y;
-            for (var x = 0; x < B; x++){
-              var px = sc2 * N + bx * B + x;
+          for (var y = 0; y < span; y++){
+            var py = sr * N + by * B + IN + y;
+            for (var x = 0; x < span; x++){
+              var px = sc2 * N + bx * B + IN + x;
               var idx = (py * size + px) * 4;
               sum += (data[idx] * 3 + data[idx + 1] * 6 + data[idx + 2]) / 10;
             }
           }
-          out[base + by * 3 + bx] = Math.round(sum / (B * B));
+          out[base + by * 4 + bx] = Math.round(sum / (span * span));
         }
       }
     }
@@ -1781,34 +1786,52 @@ function scSign(){
   return out;
 }
 
-function scDiff(a, b, sens){
-  var changed = [];
+/* 每格差异 0..255：块差里最大的 6 块取均值（对局部变化敏感，不被空格稀释） */
+function scScores(a, b){
+  var out = new Array(64);
   for (var sq = 0; sq < 64; sq++){
-    var d = 0;
-    for (var k = 0; k < 9; k++) d += Math.abs(a[sq * 9 + k] - b[sq * 9 + k]);
-    if (d / 9 > sens) changed.push(sq);
+    var o = sq * 16, ds = [], k;
+    for (k = 0; k < 16; k++){
+      ds.push(Math.abs(a[o + k] - b[o + k]));
+    }
+    ds.sort(function(x, y){ return y - x; });
+    out[sq] = (ds[0] + ds[1] + ds[2] + ds[3] + ds[4] + ds[5]) / 6;
   }
-  return changed;
+  return out;
 }
 
-/* 变化格 → 合法走法：先严格对齐，再宽容一格噪声 */
-function scMatch(changedSq){
-  if (!S.legal.length || changedSq.length < 2) return null;
-  var set = {};
-  changedSq.forEach(function(x){ set[x] = 1; });
+function scChanged(scores, sens){
+  var out = [];
+  for (var sq = 0; sq < 64; sq++) if (scores[sq] >= sens) out.push(sq);
+  return out;
+}
 
-  var strict = null, loose = null, looseScore = -1;
-  S.legal.forEach(function(m){
-    var keys = [], seen = {};
-    scAffected(m).forEach(function(x){ if (!seen[x]){ seen[x] = 1; keys.push(x); } });
-    var hit = keys.filter(function(x){ return set[x]; }).length;
-    if (hit === keys.length && changedSq.length === keys.length){ strict = m; return; }
-    if (hit === keys.length && changedSq.length - hit <= 2){
-      var sc2 = hit * 10 - (changedSq.length - hit);
-      if (sc2 > looseScore){ looseScore = sc2; loose = m; }
+function scDiff(a, b, sens){ return scChanged(scScores(a, b), sens); }
+
+/* 分数 → 最像的合法走法，返回 {m, score} 或 null。
+   不要求「变化格集合恰好等于走法影响格」：真实棋盘永远多出上一步高亮、鼠标悬停、
+   动画残影、吃子淡出，严格相等几乎撞不上，一撞不上就被当噪声丢掉了。 */
+function scMatch(scores, moves, sens){
+  if (!moves || !moves.length) return null;
+  sens = sens || SC.sens;
+  var thresh = Math.max(6, sens * 1.1);
+  var best = null, bestS = 0, second = 0;
+  for (var i = 0; i < moves.length; i++){
+    var m = moves[i], keys = scAffected(m);
+    var v0 = scores[keys[0]], v1 = scores[keys[1]];
+    var core = v0 < v1 ? v0 : v1;
+    var s = core;
+    if (keys.length > 2){
+      var sum = 0;
+      for (var k = 2; k < keys.length; k++) sum += scores[keys[k]];
+      s += (sum / (keys.length - 2)) * 0.30;
     }
-  });
-  return strict || loose;
+    if (s > bestS){ second = bestS; bestS = s; best = m; }
+    else if (s > second){ second = s; }
+  }
+  if (!best || bestS < thresh) return null;
+  if (second >= thresh && second > bestS * 0.94) return null;   /* 两个候选咬太紧，等下一帧 */
+  return { m: best, score: bestS };
 }
 
 function scArrow(from, to){
@@ -1860,11 +1883,28 @@ function scTick(){
   if (!SC.running || S.busy || S.over || S.edit) return;
   var sig = (SC.signHook && SC.signHook()) || scSign();
   if (!sig) return;
-  if (!SC.base){ SC.base = sig; scStatus('已取基线。你在那边下，我这边看。'); return; }
+  if (!SC.base){ SC.base = sig; SC.still = 0; SC.hinted = false;
+    scStatus('已取基线。你在那边下，我这边看。'); return; }
 
-  var changedScreen = scDiff(SC.base, sig, SC.sens);
-  if (!changedScreen.length){ SC.miss = 0; return; }
+  /* 基线的语义是「真实棋盘上一次确认的画面」：一次对不上绝不丢基线。
+     以前连续 3 帧失败就重取，对手走子的动画中间帧恰好匹配不上，基线一跳就到
+     「已经走完」的画面上，那一步永久丢失，之后每手都因局面错位继续认不出。 */
+  var scores = scScores(SC.base, sig);
+  var sens = SC.sens;
+  var changedScreen = scChanged(scores, sens);
+  SC.still = changedScreen.length ? 0 : SC.still + 1;
   var changed = changedScreen.map(function(sq){ return scCellToSquare(sq >> 3, sq & 7); });
+
+  if (SC.rebasePending && !changed.length && !SC.expect){
+    SC.base = sig; SC.rebasePending = false; SC.hinted = false; return;
+  }
+
+  if (changed.length >= 20){            /* 切窗口 / 被遮挡，不是走子 */
+    SC.base = sig; SC.expect = null;
+    scStatus('画面整体变了，已重新对齐基线。');
+    return;
+  }
+  if (!changed.length){ SC.miss = 0; return; }
 
   /* 我方那手已经算进镜面棋盘了，真实棋盘跟上来就吞掉，不重复应用 */
   if (SC.expect){
@@ -1876,23 +1916,75 @@ function scTick(){
       scStatus('我方这手已在真实棋盘上，继续等对手。');
       return;
     }
-    if (hit) return;                       /* 还在动，等下一帧 */
+    if (hit) return;                    /* 还在动，等下一帧 */
   }
 
-  var m = scMatch(changed);
-  if (!m){
-    if (++SC.miss >= 3){ SC.base = sig; SC.miss = 0; }
+  var res = null, soft = Math.max(3, sens * 0.55);
+
+  /* ── 轮到我方 ──────────────────────────────────────────── */
+  if (S.turn === S.human){
+    /* 画面变化能不能被「我方某一步」完全解释掉（那就是我们给的那手被走掉了） */
+    var mine = scMatch(scores, S.legal, sens);
+    if (mine){
+      var cover = {};
+      scAffected(mine.m).forEach(function(x){ cover[x] = 1; });
+      if (changed.every(function(x){ return cover[x]; })){
+        SC.base = sig; SC.hinted = false; return;
+      }
+    }
+    /* 否则就是对手机漏了一步：用对手方的合法走法再找一次 */
+    var oppLegal = legalMoves(S.board, S.human !== 'w', S);
+    res = scMatch(scores, oppLegal, sens) || (SC.still >= 6 ? scMatch(scores, oppLegal, soft) : null);
+    if (res){
+      SC.base = sig; SC.hinted = false; SC.expect = null;
+      var san2 = toSan(S.board, res.m, S);
+      scStatus('补上漏掉的对手走法：<b>' + san2 + '</b>（吻合 ' + Math.round(res.score) + '）');
+      applyOpponent(res.m);
+    } else {
+      SC.base = sig;
+      if (SC.still >= 20 && !SC.hinted){
+        SC.hinted = true;
+        scStatus('画面变了但对不上任何走法 · 手动补一步，或点「重取基线」');
+      }
+    }
     return;
   }
-  SC.miss = 0;
-  if (S.turn === S.human){                 /* 画面变的是我方那手，只同步基线 */
-    SC.base = sig;
+
+  /* ── 轮到对手 ──────────────────────────────────────────── */
+  res = scMatch(scores, S.legal, sens) || (SC.still >= 6 ? scMatch(scores, S.legal, soft) : null);
+  if (!res){
+    if (SC.still >= 20 && !SC.hinted){
+      SC.hinted = true;
+      scStatus('画面变了但没认出 · 手动补这一步，或点「重取基线」');
+    }
     return;
   }
-  var san = toSan(S.board, m, S);
+  SC.hinted = false;
+  var san = toSan(S.board, res.m, S);
   SC.base = sig;
-  scStatus('读到对手：<b>' + san + '</b>（变化 ' + changed.length + ' 格）');
-  doMove(m);                               /* 会自动触发我方应招 */
+  scStatus('读到对手：<b>' + san + '</b>（吻合 ' + Math.round(res.score) + '）');
+  doMove(res.m);                        /* 会自动触发我方应招 */
+}
+
+/* 把漏识别的一步对手走法补进局面：turn 本来就轮我方，所以不能再切一次手 */
+function applyOpponent(m){
+  S.stack.push(snapshot());
+  var san = toSan(S.board, m, S);
+  var oppColor = S.turn === 'w' ? 'b' : 'w';
+  makeMove(S.board, m, S);
+  if (oppColor === 'b') S.full++;
+  S.log.push({ san: san, color: oppColor });
+  S.lastMove = { from: m.from, to: m.to };
+  S.selected = -1;
+  S.hint = null;
+  S.over = null;
+  S.keys.push(posKey(S.board, S, S.turn));
+  S.legal = legalMoves(S.board, S.turn === 'w', S);
+  render();
+  updateLog();
+  checkEnd();
+  updateTurn(null);
+  updateButtons();
 }
 
 /* 桌面版：列窗口 → 选一个 → 交给主进程 */
@@ -1998,7 +2090,10 @@ function scToggle(){
   SC.base = null;
   SC.expect = null;
   SC.miss = 0;
-  SC.timer = setInterval(scTick, 260);
+  SC.still = 0;
+  SC.hinted = false;
+  SC.rebasePending = false;
+  SC.timer = setInterval(scTick, 120);
   var b = document.getElementById('btnScan');
   b.textContent = '■ 停止识别';
   b.classList.remove('primary');
@@ -2158,6 +2253,14 @@ SC.arrowEl = document.getElementById('scrArrow');
 SC.statusEl = document.getElementById('scrStatus');
 document.getElementById('btnShare').addEventListener('click', scShare);
 document.getElementById('btnScan').addEventListener('click', scToggle);
+document.getElementById('btnRebase').addEventListener('click', function(){
+  SC.base = null;
+  SC.expect = null;
+  SC.still = 0;
+  SC.hinted = false;
+  SC.rebasePending = false;
+  scStatus('已重新对齐基线。');
+});
 document.getElementById('scrSens').addEventListener('input', function(e){
   SC.sens = +e.target.value;
   document.getElementById('scrSensVal').textContent = e.target.value;
@@ -2232,7 +2335,9 @@ window.__CHESS__ = {
   fen: function(){ return toFen(S); },
   sc: {
     diff: function(a, b, sens){ return scDiff(Uint8Array.from(a), Uint8Array.from(b), sens); },
-    match: function(list){ return scMatch(list); },
+    scores: function(a, b){ return scScores(Uint8Array.from(a), Uint8Array.from(b)); },
+    match: function(scores, sens){ var r = scMatch(scores, S.legal, sens); return r ? r.m : null; },
+    matchAny: function(scores, moves, sens){ var r = scMatch(scores, moves, sens); return r ? r.m : null; },
     affected: function(m){ return scAffected(m); },
     box: function(b){ SC.box = b || null; },
     fakeFrame: function(sig){ SC.base = Uint8Array.from(sig); },
