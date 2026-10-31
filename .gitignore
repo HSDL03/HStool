@@ -1,0 +1,7 @@
+offline/.cache/
+desk/*/dist/
+desk/*/app/
+desk/py/build/
+desk/py/dist/
+desk/py/*.spec
+desk/py/__pycache__/

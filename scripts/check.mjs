@@ -13,7 +13,8 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const SKIP_DIRS = new Set([
   '.git', '.github', '.workbuddy', 'node_modules', 'scripts',
-  'dist', 'www'   // 离线版构建产物（electron-builder 输出 / 生成出来的站点快照）
+  'dist', 'www',  // 离线版构建产物（electron-builder 输出 / 生成出来的站点快照）
+  '.cache', 'build', '__pycache__', 'app'  // 打包缓存与打包中间件，不是站点内容
 ]);
 const errors = [];
 const warns = [];
