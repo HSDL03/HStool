@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdown 表格生成 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.two{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.two .fld{margin-bottom:0}
+.outbox{
+  font-family:var(--mono);font-size:12.5px;line-height:1.55;white-space:pre;overflow:auto;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  padding:10px 12px;margin:0;min-height:150px;max-height:340px;tab-size:2;
+}
+.opts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.opts .fld{flex:1 1 160px;margin-bottom:0}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:var(--muted);user-select:none}
+.chk input{width:16px;height:16px;accent-color:var(--ac);flex:none;margin:0}
+.stat{font-size:12px;color:var(--faint);margin-top:8px;font-family:var(--mono)}
+.err{color:var(--dgr);font-size:12.5px;margin-top:8px}
+@media(max-width:640px){
+  .two{grid-template-columns:1fr}
+  .opts .fld{flex:1 1 100%}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📋 Markdown 表格生成</h1><p class="sub">从 Excel / CSV 粘一段，直接得到对齐好的表格源码</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">粘贴数据</h2>
+      <div class="fld">
+        <label for="src">支持制表符（Excel 复制）、逗号、分号、竖线分隔</label>
+        <textarea id="src" class="mono" spellcheck="false" rows="8">方块,硬度,爆炸抗性,需要工具
+石头,1.5,6,镐
+泥土,0.5,0.5,锹
+橡木原木,2,2,斧
+黑曜石,50,1200,钻石镐</textarea>
+      </div>
+      <div class="opts">
+        <div class="fld">
+          <label for="sep">分隔符</label>
+          <select id="sep">
+            <option value="auto">自动识别</option>
+            <option value="\t">制表符 Tab</option>
+            <option value=",">逗号</option>
+            <option value=";">分号</option>
+            <option value="|">竖线</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="align">列对齐</label>
+          <select id="align">
+            <option value="none">不指定（---）</option>
+            <option value="left">左对齐</option>
+            <option value="center">居中</option>
+            <option value="right">右对齐</option>
+          </select>
+        </div>
+        <div class="fld" style="flex:0 0 auto">
+          <label>&nbsp;</label>
+          <label class="chk"><input type="checkbox" id="header" checked> 首行是表头</label>
+        </div>
+        <div class="fld" style="flex:0 0 auto">
+          <label>&nbsp;</label>
+          <label class="chk"><input type="checkbox" id="pad" checked> 用空格补齐列宽</label>
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="btnGen" type="button">生成表格</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制 Markdown</button>
+        <button class="btn ghost sm" id="btnClear" type="button">清空</button>
+      </div>
+      <div class="err" id="err" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Markdown 源码</h2>
+      <pre class="outbox" id="out">—</pre>
+      <div class="stat" id="stat"></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 直接从 Excel / WPS / 飞书表格里复制一片区域粘进来，分隔符会自动识别成制表符。
+        单元格里的 <code>|</code> 会被自动转义成 <code>\|</code>，双引号包裹的字段支持内部逗号和换行。
+        「补齐列宽」只是让源码在编辑器里看着整齐，渲染结果和有没有补空格完全一样。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+function showErr(msg){
+  if(!msg){$('err').hidden=true;$('err').textContent='';return;}
+  $('err').hidden=false;$('err').textContent='⚠ '+msg;
+}
+
+/* 显示宽度：CJK / 全角算 2 */
+function dw(s){
+  var w=0;
+  for(var i=0;i<s.length;i++){
+    var c=s.codePointAt(i);
+    if(c>0xffff) i++;
+    w+=(c>=0x1100&&(c<=0x115f||c===0x2329||c===0x232a||
+       (c>=0x2e80&&c<=0xa4cf&&c!==0x303f)||
+       (c>=0xac00&&c<=0xd7a3)||(c>=0xf900&&c<=0xfaff)||
+       (c>=0xfe30&&c<=0xfe6f)||(c>=0xff00&&c<=0xff60)||
+       (c>=0xffe0&&c<=0xffe6)||(c>=0x1f300&&c<=0x1faff)))?2:1;
+  }
+  return w;
+}
+
+/* 简单 CSV 解析：支持双引号、内部逗号与 "" 转义 */
+function splitLine(line,sep){
+  var out=[],cur='',q=false;
+  for(var i=0;i<line.length;i++){
+    var ch=line.charAt(i);
+    if(q){
+      if(ch==='"'){
+        if(line.charAt(i+1)==='"'){cur+='"';i++;}
+        else q=false;
+      }else cur+=ch;
+    }else{
+      if(ch==='"'&&cur==='') q=true;
+      else if(ch===sep){out.push(cur);cur='';}
+      else cur+=ch;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+function detectSep(text){
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim()!=='';});
+  if(!lines.length) return ',';
+  var head=lines[0];
+  var cands=['\t',',',';','|'];
+  var best=',',bestN=0;
+  cands.forEach(function(s){
+    var n=head.split(s).length-1;
+    if(n>bestN){bestN=n;best=s;}
+  });
+  return bestN>0?best:',';
+}
+
+function parse(text,sep){
+  var rows=[];
+  var lines=text.split(/\r?\n/);
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i];
+    if(line.trim()==='') continue;
+    // 行首行尾的竖线（Markdown 风格）先去掉
+    if(sep==='|'&&/^\s*\|/.test(line)) line=line.replace(/^\s*\|/,'').replace(/\|\s*$/,'');
+    rows.push(splitLine(line,sep).map(function(c){return c.trim();}));
+  }
+  return rows;
+}
+
+function padEnd(s,w){
+  var need=w-dw(s);
+  return need>0?s+new Array(need+1).join(' '):s;
+}
+function padStart(s,w){
+  var need=w-dw(s);
+  return need>0?new Array(need+1).join(' ')+s:s;
+}
+
+function alignRow(widths,mode,pad){
+  return widths.map(function(w){
+    if(!pad){
+      return mode==='center'?':---:':mode==='right'?'---:':mode==='left'?':---':'---';
+    }
+    w=Math.max(3,w);
+    if(mode==='left') return ':'+new Array(w).join('-');
+    if(mode==='right') return new Array(w).join('-')+':';
+    if(mode==='center') return ':'+new Array(Math.max(1,w-2)+1).join('-')+':';
+    return new Array(w+1).join('-');
+  });
+}
+
+function build(){
+  var text=$('src').value;
+  if(!text.trim()){
+    showErr('先粘一点数据进来');
+    $('out').textContent='—';$('stat').textContent='';
+    return;
+  }
+  var sepSel=$('sep').value;
+  var sep=sepSel==='auto'?detectSep(text):sepSel.replace('\\t','\t');
+  var rows=parse(text,sep);
+  if(!rows.length){showErr('没解析出任何行');return;}
+  var cols=Math.max.apply(null,rows.map(function(r){return r.length;}));
+  if(cols<1){showErr('没解析出任何列');return;}
+  if(rows.length===1&&cols===1){
+    showErr('只识别到一列 —— 检查一下分隔符选对没有');
+    return;
+  }
+  showErr('');
+  // 补齐列数
+  rows=rows.map(function(r){
+    while(r.length<cols) r.push('');
+    return r;
+  });
+
+  var useHeader=$('header').checked;
+  var pad=$('pad').checked;
+  var mode=$('align').value;
+
+  var clean=rows.map(function(r){
+    return r.map(function(c){return String(c).replace(/\|/g,'\\|').replace(/\s+/g,' ').trim();});
+  });
+  if(!useHeader) clean.unshift(new Array(cols).fill(''));
+
+  var widths=new Array(cols).fill(3);
+  clean.forEach(function(r){
+    r.forEach(function(c,i){ widths[i]=Math.max(widths[i],dw(c)); });
+  });
+
+  var line=function(cells,padFn){
+    return '| '+cells.map(function(c,i){return padFn(c,widths[i]);}).join(' | ')+' |';
+  };
+
+  var out=[];
+  out.push(line(clean[0],pad?padEnd:function(s){return s;}));
+  out.push(line(alignRow(widths,mode,pad),function(s){return s;}));
+  for(var i=1;i<clean.length;i++) out.push(line(clean[i],pad?padEnd:function(s){return s;}));
+
+  var md=out.join('\n');
+  $('out').textContent=md;
+  $('stat').textContent=clean.length+' 行 × '+cols+' 列 · '+(sep==='\t'?'Tab':sep)+' 分隔 · '+md.length+' 字符';
+}
+
+$('btnGen').addEventListener('click',build);
+$('src').addEventListener('input',build);
+['sep','align','header','pad'].forEach(function(id){
+  $(id).addEventListener('change',build);
+});
+$('btnCopy').addEventListener('click',function(){
+  var t=$('out').textContent;
+  if(!t||t==='—'){toast('还没有生成内容');return;}
+  HS.copy(t);toast('已复制 Markdown 表格');
+});
+$('btnClear').addEventListener('click',function(){
+  $('src').value='';
+  $('out').textContent='—';
+  $('stat').textContent='';
+  showErr('');
+  $('src').focus();
+});
+
+build();
+})();
+</script>
+</body>
+</html>

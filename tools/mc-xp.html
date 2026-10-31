@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 经验等级换算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🟩</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{
+  display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:2px;
+}
+.big{
+  padding:13px 15px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);
+}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.2rem,3.8vw,1.7rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:82px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{padding:7px 9px;text-align:right;border-bottom:1px dashed var(--bd)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.tbl td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl td.hi{color:var(--ac);font-weight:800}
+.err{color:var(--dgr);font-size:12.5px;margin-top:6px}
+@media(max-width:640px){.res{grid-template-columns:1fr}.kv span{width:70px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🟩 MC 经验等级换算</h1><p class="sub">等级 ↔ 经验点数 · 附魔 30 级到底要攒多少</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">等级 → 经验</h2>
+      <div class="fld">
+        <label for="lvIn">目标等级（0 ~ 21863）</label>
+        <input id="lvIn" class="mono" inputmode="numeric" autocomplete="off" value="30">
+      </div>
+      <div class="res">
+        <div class="big"><em>从 0 级攒到这里</em><b id="rTotal">—</b><small>累计经验点数</small></div>
+        <div class="big"><em>本级 → 下一级</em><b id="rNext">—</b><small>再涨这么多点就升级</small></div>
+      </div>
+      <div class="kv"><span>说明</span><b id="rNote">—</b></div>
+      <div class="err" id="lvErr" hidden></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnCopyTotal" type="button">📋 复制累计经验</button>
+        <button class="btn ghost sm" id="btn30" type="button">跳到 30 级</button>
+        <button class="btn ghost sm" id="btn50" type="button">50 级</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">经验 → 等级</h2>
+      <div class="fld">
+        <label for="xpIn">手上的经验点数（绿色经验条总量）</label>
+        <input id="xpIn" class="mono" inputmode="numeric" autocomplete="off" value="1395">
+      </div>
+      <div class="res">
+        <div class="big"><em>能到</em><b id="xLv">—</b><small>级</small></div>
+        <div class="big"><em>还差</em><b id="xGap">—</b><small>点升下一级</small></div>
+      </div>
+      <div class="err" id="xpErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">区间：从 A 级到 B 级</h2>
+      <div class="grid2">
+        <div class="fld"><label for="lvA">起点等级</label><input id="lvA" class="mono" inputmode="numeric" autocomplete="off" value="0"></div>
+        <div class="fld"><label for="lvB">终点等级</label><input id="lvB" class="mono" inputmode="numeric" autocomplete="off" value="30"></div>
+      </div>
+      <div class="kv"><span>需要</span><b id="rRange">—</b></div>
+      <div class="err" id="rangeErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">常用等级对照</h2>
+      <table class="tbl">
+        <thead><tr><th>等级</th><th>累计经验</th><th>本级升级花费</th></tr></thead>
+        <tbody id="refBody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 数值按原版经验曲线算：<code>0–15 级</code>每级 <code>2L+7</code>，<code>16–30 级</code>每级
+        <code>5L−38</code>，<code>31 级起</code>每级 <code>9L−158</code>。所以 30 级刚好 <b>1395</b> 点 ——
+        附魔台 30 级那一档的花费就是它。注意「经验点数」是绿色进度条的累计值，和屏幕左上角的等级数字不是一回事。
+        死亡掉落的经验是「当前等级内已攒的点数」，不会把等级本身的成本退给你。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var MAX_LV=21863;
+
+/* 到达 level 级所需累计经验 */
+function totalXp(lv){
+  if(lv<=16) return lv*lv+6*lv;
+  if(lv<=31) return Math.floor(2.5*lv*lv-40.5*lv+360);
+  return Math.floor(4.5*lv*lv-162.5*lv+2220);
+}
+/* 从 lv 级升到 lv+1 级所需 */
+function stepXp(lv){
+  if(lv<=15) return 2*lv+7;
+  if(lv<=30) return 5*lv-38;
+  return 9*lv-158;
+}
+/* 累计经验 -> {level, rest} */
+function levelFromXp(xp){
+  if(xp<7) return {level:0,rest:xp};
+  // 先粗估再线性修正
+  var lv=xp<=352?Math.floor((-6+Math.sqrt(36+4*xp))/2):0;
+  if(xp>352){
+    lv=Math.floor((40.5+Math.sqrt(40.5*40.5-10*(360-xp)))/5);
+    if(lv<17) lv=17;
+    if(lv>31) lv=Math.floor((162.5+Math.sqrt(162.5*162.5-18*(2220-xp)))/9);
+  }
+  while(lv<MAX_LV && totalXp(lv+1)<=xp) lv++;
+  while(lv>0 && totalXp(lv)>xp) lv--;
+  return {level:lv,rest:xp-totalXp(lv)};
+}
+function fmt(n){return n.toLocaleString('en-US');}
+
+function readInt(el,min,max){
+  var v=String(el.value).trim().replace(/[, _，]/g,'');
+  if(!v) return {err:'还没填数字'};
+  if(!/^\d+$/.test(v)) return {err:'只能填正整数'};
+  var n=Number(v);
+  if(n<min||n>max) return {err:'范围是 '+min+' ~ '+fmt(max)};
+  return {val:n};
+}
+function showErr(el,msg){
+  if(!msg){el.hidden=true;el.textContent='';return;}
+  el.hidden=false;el.textContent='⚠ '+msg;
+}
+
+function calcLevel(){
+  var r=readInt($('lvIn'),0,MAX_LV);
+  if(r.err){
+    showErr($('lvErr'),r.err);
+    $('rTotal').textContent='—';$('rNext').textContent='—';$('rNote').textContent='—';
+    return;
+  }
+  showErr($('lvErr'),'');
+  var lv=r.val;
+  $('rTotal').textContent=fmt(totalXp(lv));
+  if(lv>=MAX_LV){
+    $('rNext').textContent='已封顶';
+    $('rNote').textContent='原版等级上限，再攒也没用';
+  }else{
+    $('rNext').textContent=fmt(stepXp(lv));
+    var tier=lv<=15?'2L+7 段':lv<=30?'5L−38 段':'9L−158 段';
+    $('rNote').textContent='当前在 '+tier+'，累计 '+fmt(totalXp(lv))+' 点';
+  }
+}
+
+function calcXp(){
+  var r=readInt($('xpIn'),0,999999999);
+  if(r.err){
+    showErr($('xpErr'),r.err);
+    $('xLv').textContent='—';$('xGap').textContent='—';
+    return;
+  }
+  showErr($('xpErr'),'');
+  var s=levelFromXp(r.val);
+  $('xLv').textContent=String(s.level);
+  $('xGap').textContent=fmt(stepXp(s.level)-s.rest);
+}
+
+function calcRange(){
+  var a=readInt($('lvA'),0,MAX_LV),b=readInt($('lvB'),0,MAX_LV);
+  if(a.err){showErr($('rangeErr'),'起点：'+a.err);$('rRange').textContent='—';return;}
+  if(b.err){showErr($('rangeErr'),'终点：'+b.err);$('rRange').textContent='—';return;}
+  if(b.val<a.val){showErr($('rangeErr'),'终点不能低于起点');$('rRange').textContent='—';return;}
+  showErr($('rangeErr'),'');
+  var d=totalXp(b.val)-totalXp(a.val);
+  $('rRange').textContent=fmt(d)+' 点经验（'+a.val+' 级 → '+b.val+' 级）';
+}
+
+function buildRef(){
+  var levels=[1,5,10,15,20,25,30,40,50,60,80,100];
+  var rows=levels.map(function(lv){
+    var hi=lv===30?' class="hi"':'';
+    return '<tr><td'+hi+'>'+lv+'</td><td'+hi+'>'+fmt(totalXp(lv))+'</td><td>'+fmt(stepXp(lv))+'</td></tr>';
+  });
+  $('refBody').innerHTML=rows.join('');
+}
+
+$('lvIn').addEventListener('input',calcLevel);
+$('xpIn').addEventListener('input',calcXp);
+$('lvA').addEventListener('input',calcRange);
+$('lvB').addEventListener('input',calcRange);
+$('btn30').addEventListener('click',function(){$('lvIn').value='30';calcLevel();});
+$('btn50').addEventListener('click',function(){$('lvIn').value='50';calcLevel();});
+$('btnCopyTotal').addEventListener('click',function(){
+  var t=$('rTotal').textContent;
+  if(!t||t==='—'){toast('先填一个有效等级');return;}
+  HS.copy(t.replace(/,/g,''));
+  toast('已复制 '+t+' 点');
+});
+
+buildRef();
+calcLevel();
+calcXp();
+calcRange();
+})();
+</script>
+</body>
+</html>

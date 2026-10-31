@@ -262,5 +262,65 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mc-xp",
+    "icon": "🟩",
+    "name": "MC 经验换算",
+    "desc": "等级 ↔ 经验点数 · 附魔 30 级要多少",
+    "tag": "工具",
+    "url": "./tools/mc-xp.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-password",
+    "icon": "🔑",
+    "name": "随机密码生成",
+    "desc": "本地随机 · 字符集与熵评估",
+    "tag": "工具",
+    "url": "./tools/password.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-md-table",
+    "icon": "📋",
+    "name": "Markdown 表格",
+    "desc": "从 Excel/CSV 粘贴生成表格源码",
+    "tag": "工具",
+    "url": "./tools/md-table.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-unit",
+    "icon": "📐",
+    "name": "单位换算",
+    "desc": "长度质量面积体积温度数据速度时间",
+    "tag": "工具",
+    "url": "./tools/unit.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-csv-json",
+    "icon": "🔄",
+    "name": "CSV ↔ JSON",
+    "desc": "表格与 JSON 双向互转",
+    "tag": "工具",
+    "url": "./tools/csv-json.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

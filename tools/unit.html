@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>单位换算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.result{
+  margin-top:14px;padding:14px 16px;background:var(--bg);border:2px solid var(--bd2);
+  border-radius:var(--r);box-shadow:var(--bevel);
+}
+.result em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.result b{display:block;font-family:var(--mono);font-size:clamp(1.25rem,4vw,1.8rem);font-weight:800;word-break:break-all;font-variant-numeric:tabular-nums}
+.result small{display:block;margin-top:5px;font-size:12px;color:var(--muted);font-family:var(--mono);word-break:break-all}
+.list{display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin-top:4px}
+.item{
+  display:flex;justify-content:space-between;gap:10px;padding:6px 0;
+  border-bottom:1px dashed var(--bd);font-size:13px;
+}
+.item span{color:var(--muted);flex:none}
+.item b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;text-align:right;word-break:break-all}
+.item.on b{color:var(--ac)}
+.err{color:var(--dgr);font-size:12.5px;margin-top:8px}
+@media(max-width:640px){
+  .list{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📐 单位换算</h1><p class="sub">长度 · 质量 · 面积 · 体积 · 温度 · 数据 · 速度 · 时间</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">选类别</h2>
+      <div class="seg" id="cats"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">换算</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="val">数值</label>
+          <input id="val" class="mono" inputmode="decimal" autocomplete="off" value="1">
+        </div>
+        <div class="fld">
+          <label for="from">原单位</label>
+          <select id="from"></select>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:11px">
+        <div class="fld">
+          <label for="to">换算成</label>
+          <select id="to"></select>
+        </div>
+        <div class="fld">
+          <label for="btnSwap">&nbsp;</label>
+          <button class="btn" id="btnSwap" type="button" style="width:100%">⇄ 交换两个单位</button>
+        </div>
+      </div>
+      <div class="result">
+        <em>结果</em>
+        <b id="rMain">—</b>
+        <small id="rSub"></small>
+      </div>
+      <div class="err" id="err" hidden></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制结果</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">换算到全部单位</h2>
+      <div class="list" id="list"></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 全部换算走「先折成基准单位、再乘目标系数」两段，中间不四舍五入，所以来回换不会越换越歪。
+        温度不是乘系数，走的是摄氏 / 华氏 / 开尔文的专用公式。<br>
+        数据容量按 <code>1 KB = 1024 B</code>（二进制前缀），要十进制的 1000 就看 <code>kB（1000）</code> 这一项。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+/* factor = 一个该单位等于多少基准单位 */
+var DATA={
+  '长度':{base:'米',units:[
+    ['毫米 mm',0.001],['厘米 cm',0.01],['分米 dm',0.1],['米 m',1],
+    ['千米 km',1000],['英寸 in',0.0254],['英尺 ft',0.3048],['码 yd',0.9144],
+    ['英里 mi',1609.344],['海里 nmi',1852],['光年 ly',9.4607e15]
+  ]},
+  '质量':{base:'千克',units:[
+    ['毫克 mg',1e-6],['克 g',0.001],['千克 kg',1],['吨 t',1000],
+    ['市斤 500g',0.5],['磅 lb',0.45359237],['盎司 oz',0.028349523125]
+  ]},
+  '面积':{base:'平方米',units:[
+    ['平方厘米 cm²',0.0001],['平方米 m²',1],['平方千米 km²',1e6],
+    ['公顷 ha',10000],['亩',666.6667],['平方英尺 ft²',0.09290304],
+    ['平方英里 mi²',2589988.11],['英亩 ac',4046.8564224]
+  ]},
+  '体积':{base:'升',units:[
+    ['毫升 mL',0.001],['升 L',1],['立方米 m³',1000],['立方厘米 cm³',0.001],
+    ['加仑(US) gal',3.785411784],['品脱(US) pt',0.473176473],['液量盎司(US) fl oz',0.0295735296],
+    ['杯(US) cup',0.2365882365]
+  ]},
+  '温度':{base:'摄氏度',units:[['摄氏度 °C',1],['华氏度 °F',1],['开尔文 K',1]]},
+  '数据':{base:'字节',units:[
+    ['比特 bit',0.125],['字节 B',1],['千字节 KiB',1024],['兆字节 MiB',1048576],
+    ['吉字节 GiB',1073741824],['太字节 TiB',1099511627776],
+    ['kB（1000）',1000],['MB（1000²）',1e6],['GB（1000³）',1e9]
+  ]},
+  '速度':{base:'米/秒',units:[
+    ['米/秒 m/s',1],['千米/小时 km/h',0.2777777778],['英里/小时 mph',0.44704],
+    ['节 kn',0.5144444444],['马赫 Mach',340.3],['英尺/秒 ft/s',0.3048]
+  ]},
+  '时间':{base:'秒',units:[
+    ['毫秒 ms',0.001],['秒 s',1],['分钟 min',60],['小时 h',3600],
+    ['天 d',86400],['周 wk',604800],['年(365天) yr',31536000]
+  ]}
+};
+
+var cats=Object.keys(DATA);
+var cur=cats[0];
+
+function toBase(cat,u,v){
+  if(cat==='温度'){
+    if(u===0) return v;                    // °C
+    if(u===1) return (v-32)*5/9;           // °F
+    return v-273.15;                       // K
+  }
+  return v*DATA[cat].units[u][1];
+}
+function fromBase(cat,u,b){
+  if(cat==='温度'){
+    if(u===0) return b;
+    if(u===1) return b*9/5+32;
+    return b+273.15;
+  }
+  return b/DATA[cat].units[u][1];
+}
+
+function fmtNum(n){
+  if(!isFinite(n)) return '—';
+  var a=Math.abs(n);
+  if(a===0) return '0';
+  if(a>=1e12||a<1e-6){
+    return n.toExponential(6).replace(/\.?0+e/,'e');
+  }
+  var s=n.toPrecision(10);
+  if(s.indexOf('e')>=0) return n.toExponential(6);
+  if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,'');
+  return s;
+}
+function withThousands(n){
+  var parts=fmtNum(n).split('.');
+  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  return parts.join('.');
+}
+function showErr(msg){
+  if(!msg){$('err').hidden=true;$('err').textContent='';return;}
+  $('err').hidden=false;$('err').textContent='⚠ '+msg;
+}
+
+function buildCats(){
+  $('cats').innerHTML=cats.map(function(c){
+    return '<button type="button" data-cat="'+c+'" aria-pressed="'+(c===cur?'true':'false')+'">'+c+'</button>';
+  }).join('');
+}
+var DEF={'长度':[3,6],'质量':[2,5],'面积':[1,5],'体积':[1,4],'温度':[0,1],
+         '数据':[3,4],'速度':[1,2],'时间':[3,2]};
+
+function fillSelects(useDefault){
+  var list=DATA[cur].units;
+  var opts=list.map(function(u,i){return '<option value="'+i+'">'+u[0]+'</option>';}).join('');
+  var keepTo=$('to').value,keepFrom=$('from').value;
+  $('from').innerHTML=opts;
+  $('to').innerHTML=opts;
+  var n=list.length;
+  if(useDefault&&DEF[cur]){
+    $('from').value=String(Math.min(DEF[cur][0],n-1));
+    $('to').value=String(Math.min(DEF[cur][1],n-1));
+  }else{
+    $('from').value=keepFrom&&+keepFrom<n?keepFrom:'0';
+    $('to').value=keepTo&&+keepTo<n?keepTo:String(Math.min(1,n-1));
+  }
+}
+
+function sym(name){var p=name.split(' ');return p[p.length-1];}
+function calc(){
+  var raw=$('val').value.trim().replace(/,/g,'');
+  if(!raw){
+    showErr('先填一个数值');
+    $('rMain').textContent='—';$('rSub').textContent='';$('list').innerHTML='';
+    return;
+  }
+  if(!/^-?\d*\.?\d+(e[+-]?\d+)?$/i.test(raw)){
+    showErr('这里只认数字，别带单位');
+    $('rMain').textContent='—';$('rSub').textContent='';$('list').innerHTML='';
+    return;
+  }
+  var v=Number(raw);
+  if(!isFinite(v)){showErr('这个数字太大了');return;}
+  showErr('');
+
+  var cat=cur;
+  if(cat==='温度'){
+    var fu=+$('from').value;
+    if(fu===2&&v<0){showErr('开尔文不会小于 0');}
+    else if(fu===0&&v<-273.15){showErr('低于绝对零度了（-273.15 °C）');}
+    else if(fu===1&&v<-459.67){showErr('低于绝对零度了（-459.67 °F）');}
+    else showErr('');
+  }
+
+  var fi=+$('from').value, ti=+$('to').value;
+  var b=toBase(cat,fi,v);
+  var out=fromBase(cat,ti,b);
+  var un=DATA[cat].units;
+
+  $('rMain').textContent=withThousands(out)+' '+sym(un[ti][0]);
+  $('rSub').textContent='输入 '+withThousands(v)+' '+sym(un[fi][0])+'  ·  基准 '+fmtNum(b)+' '+sym(DATA[cat].base);
+
+  $('list').innerHTML=un.map(function(u,i){
+    var x=fromBase(cat,i,b);
+    return '<div class="item'+(i===ti?' on':'')+'"><span>'+u[0]+'</span><b>'+withThousands(x)+'</b></div>';
+  }).join('');
+}
+
+$('cats').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-cat]');
+  if(!b) return;
+  cur=b.getAttribute('data-cat');
+  Array.prototype.forEach.call($('cats').children,function(x){
+    x.setAttribute('aria-pressed',x===b?'true':'false');
+  });
+  fillSelects(true);
+  calc();
+});
+$('val').addEventListener('input',calc);
+$('from').addEventListener('change',calc);
+$('to').addEventListener('change',calc);
+$('btnSwap').addEventListener('click',function(){
+  var f=$('from').value;
+  $('from').value=$('to').value;
+  $('to').value=f;
+  calc();
+  toast('已交换');
+});
+$('btnCopy').addEventListener('click',function(){
+  var t=$('rMain').textContent;
+  if(!t||t==='—'){toast('还没有结果');return;}
+  HS.copy(t.replace(/,/g,''));
+  toast('已复制 '+t);
+});
+
+buildCats();
+fillSelects(true);
+calc();
+})();
+</script>
+</body>
+</html>
