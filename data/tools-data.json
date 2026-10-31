@@ -542,8 +542,8 @@
   {
     "id": "game-chess-coach",
     "icon": "♟",
-    "name": "国际象棋陪练",
-    "desc": "自动应招 / 提示 / 编辑棋局，完整规则",
+    "name": "国象作弊器",
+    "desc": "输了对手走法就吐最优应手，带评分与深度",
     "tag": "游戏",
     "url": "./games/chess-auto.html",
     "category": "noDB",

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>国际象棋陪练 · 红石的小站</title>
-<meta name="description" content="国际象棋自动应招：你走一步，程序立刻算一步。完整规则（易位 / 吃过路兵 / 升变）、局面评估、提示、悔棋与 FEN。">
+<title>国际象棋 · 自动应招 · 红石的小站</title>
+<meta name="description" content="国际象棋自动应招：把对手刚走的棋输进来，程序直接给出你该走的最优应手。完整规则（易位 / 吃过路兵 / 升变）、评分与深度、FEN 与棋局编辑。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♞</text></svg>">
 <script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="stylesheet" href="../assets/css/core.css">
@@ -199,8 +199,8 @@
 <main class="wrap">
   <div class="page-head">
     <div>
-      <h1>♞ 国际象棋陪练</h1>
-      <p class="sub">你走一步，程序立刻应一手 · 完整规则 + 局面评估 + 提示</p>
+      <h1>♞ 国际象棋 · 自动应招</h1>
+      <p class="sub">对手走了什么就输进来，程序当场给出你的最优应手 · 评分 / 深度 / 完整规则</p>
     </div>
     <div class="actions"><a class="btn" href="./rules.html">📖 玩法说明</a></div>
   </div>
@@ -241,7 +241,7 @@
           <h3>操作</h3>
           <div class="act">
             <button class="btn primary wide" id="btnThink">让程序走一步</button>
-            <button class="btn" id="btnHint">💡 提示</button>
+            <button class="btn" id="btnHint">💡 该走哪步</button>
             <button class="btn" id="btnUndo">↶ 悔棋</button>
             <button class="btn" id="btnNew">＋ 新对局</button>
             <button class="btn" id="btnEdit">✎ 编辑棋局</button>
@@ -270,7 +270,7 @@
         <div class="cardbox">
           <h3>分析</h3>
           <div class="out" id="out">
-            <div class="idle">点击棋盘走棋，或把对手的走法打进上面的输入框。程序会在本机算完立刻应一手，并给出这一步的评分、搜索深度和耗时。</div>
+            <div class="idle">把对手刚走的棋打进上面的输入框（或点棋盘摆到这步），程序在本机算完就给出你该走的一手，并附上评分、搜索深度和耗时。</div>
           </div>
         </div>
 
@@ -1470,7 +1470,7 @@ function hint(){
 
   S.busy = true;
   updateButtons();
-  showThinking('正在给你找个好步…');
+  showThinking('正在算你该走哪一步…');
   setTimeout(function(){
     var res = searchBest(S.board, S.turn === 'w', S, Math.min(4, +document.getElementById('depth').value), 1200);
     S.busy = false;
@@ -1481,7 +1481,7 @@ function hint(){
     S.selected = -1;
     render();
     res.white = S.turn;
-    showMove(res, san, '建议你走');
+    showMove(res, san, '你该走这步');
   }, 30);
 }
 
@@ -1751,7 +1751,7 @@ render();
 updateLog();
 updateTurn(null);
 updateButtons();
-showIdle('点击棋盘走棋，或把对手的走法打进输入框。程序在本机算完会立刻应一手，并给出评分、深度和耗时。');
+showIdle('把对手刚走的棋打进输入框（或点棋盘摆到这步），程序算完就给出你该走的一手，附评分、深度和耗时。');
 
 /* 调试/自测用：perft 走法数、当前局面（不参与界面逻辑） */
 window.__CHESS__ = {

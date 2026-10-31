@@ -84,7 +84,7 @@ python -m http.server 8000     # 或 npx serve .
 │  ├─ index.html           游戏厅：六张棋牌入口
 │  ├─ rules.html           六种玩法说明书（含与标准规则的差别）
 │  ├─ tri-chess.html       围棋 / 中国象棋 / 国际象棋三合一，国象可连云端引擎
-│  ├─ chess-auto.html      国象陪练：自动应招 / 提示 / 编辑棋局 / FEN
+│  ├─ chess-auto.html      国象应招器（作弊向）：自动应招 / 评分 / 编辑棋局
 │  ├─ doudizhu.html        斗地主
 │  ├─ uno.html             UNO
 │  ├─ mahjong.html         麻将
@@ -133,7 +133,7 @@ python -m http.server 8000     # 或 npx serve .
 | --- | --- | --- |
 | 游戏厅 | `games/index.html` | 六张棋牌入口 + 玩法说明书 |
 | 围棋 / 中国象棋 / 国际象棋 | `games/tri-chess.html` | 三合一页面（`#go` / `#xq` / `#ch` 直达），国象可连云端 Stockfish |
-| 国象陪练 | `games/chess-auto.html` | 你走一步它应一手，带评分 / 提示 / 拖拽摆子 / 棋局编辑 |
+| 国象作弊器 | `games/chess-auto.html` | 输了对手走法就给你最优应手，带评分 / 深度 / 拖拽摆子 / 棋局编辑 |
 | 斗地主 · UNO · 麻将 | `games/doudizhu.html` 等 | 单机对局，规则见说明书 |
 | MC 复刻 | `games/mc.html` | three.js 手写体素引擎：区块生成、方块朝向、门、水、活塞、物品栏 |
 | A\* 寻路演示 | `games/astar.html` | 3D 网格画墙铺水，可视化搜索过程；支持批量模拟 1~1000 局 |
