@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文本加密 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.msg{
+  font-size:12.5px;padding:9px 12px;border-radius:var(--r);background:var(--bg3);
+  border-left:3px solid var(--ac);color:var(--muted);line-height:1.6;
+}
+.msg.warn{border-left-color:var(--warn);color:var(--warn)}
+.msg.err{border-left-color:var(--dgr);color:var(--dgr)}
+.state{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:9px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ac);flex:none}
+.dot.bad{background:var(--dgr)}
+.outbox{
+  width:100%;min-height:96px;font-family:var(--mono);font-size:12.5px;line-height:1.6;
+  padding:10px 12px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel-in);color:var(--text);word-break:break-all;white-space:pre-wrap;
+}
+.qr{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔒 文本加密</h1><p class="sub">AES-GCM + 口令派生，密文可复制发给别人</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">模式</h2>
+      <div class="seg" id="seg">
+        <button type="button" data-mode="enc" aria-pressed="true">加密</button>
+        <button type="button" data-mode="dec" aria-pressed="false">解密</button>
+      </div>
+      <div class="fld" style="margin-top:13px">
+        <label for="pwd">口令（对方必须知道同一个）</label>
+        <input id="pwd" type="text" spellcheck="false" autocomplete="off" placeholder="至少 6 个字符">
+      </div>
+      <div class="fld">
+        <label for="src" id="srcLabel">要加密的内容</label>
+        <textarea id="src" spellcheck="false" placeholder="写点什么…"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnRun" type="button">开始加密</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果</button>
+        <button class="btn ghost" id="btnClear" type="button">清空</button>
+      </div>
+      <div class="state"><span class="dot" id="dot"></span><span id="state">正在准备…</span></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="outbox" id="out">—</div>
+      <div class="msg" id="msg" style="margin-top:10px">
+        密文是 Base64 字符串，前缀 <code>v1.</code> 表示格式版本，后面依次是盐、随机向量和密文。
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 用的是浏览器内置的 <code>AES-256-GCM</code>，口令经 <code>PBKDF2-SHA256</code> 迭代 10 万次派生成密钥，
+        每次加密都会生成新的随机盐和向量，所以同样的内容和口令加密两次结果也不同。
+        GCM 自带完整性校验：密文被改过一个字符，解密就会直接失败，不会吐出半截错字。
+        口令没有第三方托管，<b>忘记就解不回来了</b>；真要传重要文件，还是走专门的密码管理器。
+        加解密都在本机进行，不发送任何数据。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var mode='enc';
+var pwdEl=$('pwd'),srcEl=$('src'),outEl=$('out'),msgEl=$('msg');
+var stateEl=$('state'),dotEl=$('dot'),srcLabel=$('srcLabel'),runBtn=$('btnRun');
+var subtle=(window.crypto&&window.crypto.subtle)||null;
+var busy=false;
+
+function b64(buf){
+  var bytes=new Uint8Array(buf),s='',i;
+  for(i=0;i<bytes.length;i+=8192){
+    s+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
+  }
+  return btoa(s);
+}
+function unb64(str){
+  var s=atob(str),bytes=new Uint8Array(s.length);
+  for(var i=0;i<s.length;i++) bytes[i]=s.charCodeAt(i);
+  return bytes;
+}
+
+async function keyFrom(pwd,salt){
+  var base=await subtle.importKey('raw',new TextEncoder().encode(pwd),'PBKDF2',false,['deriveKey']);
+  return subtle.deriveKey(
+    {name:'PBKDF2',salt:salt,iterations:100000,hash:'SHA-256'},
+    base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']
+  );
+}
+
+async function encrypt(text,pwd){
+  var salt=crypto.getRandomValues(new Uint8Array(16));
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  var key=await keyFrom(pwd,salt);
+  var ct=await subtle.encrypt({name:'AES-GCM',iv:iv},key,new TextEncoder().encode(text));
+  var all=new Uint8Array(salt.length+iv.length+ct.byteLength);
+  all.set(salt,0);all.set(iv,salt.length);all.set(new Uint8Array(ct),salt.length+iv.length);
+  return 'v1.'+b64(all);
+}
+
+async function decrypt(payload,pwd){
+  function bad(m){var e=new Error(m);e.own=true;return e;}
+  if(payload.slice(0,3)!=='v1.') throw bad('不是本工具生成的密文（缺少 v1. 前缀）');
+  var raw;
+  try{ raw=unb64(payload.slice(3)); }
+  catch(e){ throw bad('密文不是合法的 Base64，可能有字符在复制时丢了'); }
+  if(raw.length<29) throw bad('密文太短，可能复制时被截断了');
+  var salt=raw.subarray(0,16),iv=raw.subarray(16,28),ct=raw.subarray(28);
+  var key=await keyFrom(pwd,salt);
+  var pt=await subtle.decrypt({name:'AES-GCM',iv:iv},key,ct);
+  return new TextDecoder().decode(pt);
+}
+
+function say(txt,kind){
+  msgEl.className='msg'+(kind?' '+kind:'');
+  msgEl.textContent=txt;
+}
+function setState(txt,bad){
+  stateEl.textContent=txt;
+  dotEl.className='dot'+(bad?' bad':'');
+}
+
+function setMode(m){
+  mode=m;
+  var btns=$('seg').querySelectorAll('button');
+  for(var i=0;i<btns.length;i++){
+    btns[i].setAttribute('aria-pressed',btns[i].dataset.mode===m?'true':'false');
+  }
+  srcLabel.textContent=m==='enc'?'要加密的内容':'要解密的密文（整段粘贴）';
+  runBtn.textContent=m==='enc'?'开始加密':'开始解密';
+  srcEl.placeholder=m==='enc'?'写点什么…':'粘贴 v1. 开头的密文';
+  outEl.textContent='—';
+  say(m==='enc'
+    ?'密文是 Base64 字符串，前缀 v1. 表示格式版本，后面依次是盐、随机向量和密文。'
+    :'把整段密文（含 v1. 前缀）粘进上面的框，口令对上就能还原原文。');
+}
+
+async function run(silent){
+  if(!subtle){
+    say('这个页面运行在非 HTTPS 环境，浏览器禁用了加密接口。请通过 https 或 localhost 打开。','err');
+    setState('加密接口不可用',true);
+    return;
+  }
+  var pwd=pwdEl.value;
+  var src=srcEl.value;
+  if(pwd.length<6){ if(!silent) toast('口令至少 6 个字符'); pwdEl.focus(); return; }
+  if(!src.trim()){ if(!silent) toast(mode==='enc'?'先写点要加密的内容':'先粘贴密文'); srcEl.focus(); return; }
+  if(busy) return;
+  busy=true;runBtn.disabled=true;
+  setState(mode==='enc'?'正在派生密钥…':'正在校验并解密…',false);
+  try{
+    if(mode==='enc'){
+      var c=await encrypt(src,pwd);
+      outEl.textContent=c;
+      say('已加密，共 '+c.length+' 个字符（'+Math.round(c.length/1.37)+' 字节左右）。把整段发给对方，口令另外说。');
+      setState('加密完成');
+    }else{
+      var p=await decrypt(src.trim(),pwd);
+      outEl.textContent=p;
+      say('解密成功，还原出 '+p.length+' 个字符。');
+      setState('解密完成');
+    }
+  }catch(e){
+    var reason=(e&&e.message)?e.message:'';
+    /* 浏览器抛的是英文 DOMException（常常没有 message），统一翻成能看懂的中文 */
+    if(mode==='dec'&&!(e&&e.own)){
+      reason='口令不对，或者密文被改动过（GCM 校验没通过）';
+    }else if(!reason){
+      reason='浏览器没给出原因，换个口令或重新加密一次试试';
+    }
+    outEl.textContent='—';
+    say('失败：'+reason,'err');
+    setState('失败',true);
+    if(silent) return;
+  }finally{
+    busy=false;runBtn.disabled=false;
+  }
+}
+
+$('seg').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-mode]');
+  if(!b) return;
+  setMode(b.dataset.mode);
+});
+runBtn.addEventListener('click',function(){run(false);});
+$('btnCopy').addEventListener('click',function(){
+  var v=outEl.textContent;
+  if(!v||v==='—'){toast('还没有结果');return;}
+  HS.copy(v);toast('已复制');
+});
+$('btnClear').addEventListener('click',function(){
+  srcEl.value='';outEl.textContent='—';
+  say('已清空输入与结果。','');setState('待输入',false);
+});
+
+/* 打开就先把示例跑一遍，让人看见真实输出而不是一排破折号 */
+setMode('enc');
+pwdEl.value='mc-wiki-demo';
+srcEl.value='下午三点在 384,64,-128 集合，带 64 个火把。';
+if(!subtle){
+  say('这个页面运行在非 HTTPS 环境，浏览器禁用了加密接口。请通过 https 或 localhost 打开。','err');
+  setState('加密接口不可用',true);
+}else{
+  run(true);
+}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 红石延迟 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔴</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.result{
+  padding:15px 17px;border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg);
+  box-shadow:var(--bevel);
+}
+.result em{display:block;font-size:10.5px;font-style:normal;font-weight:800;letter-spacing:.06em;color:var(--faint);margin-bottom:3px}
+.result b{display:block;font-family:var(--mono);font-size:clamp(1.3rem,4vw,1.9rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.result small{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cell{padding:10px 12px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);min-width:0}
+.cell em{display:block;font-size:10.5px;font-style:normal;font-weight:800;letter-spacing:.06em;color:var(--faint);margin-bottom:3px}
+.cell b{display:block;font-family:var(--mono);font-size:clamp(.95rem,2.8vw,1.2rem);font-weight:800;word-break:break-all}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:2px}
+.tbl th,.tbl td{padding:7px 6px;border-bottom:1px dashed var(--bd);text-align:left}
+.tbl th{font-size:11px;letter-spacing:.05em;color:var(--faint);font-weight:800}
+.tbl td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.msg{font-size:12.5px;padding:9px 12px;border-radius:var(--r);background:var(--bg3);border-left:3px solid var(--ac);color:var(--muted);line-height:1.6;margin-top:11px}
+.msg.warn{border-left-color:var(--warn);color:var(--warn)}
+.msg.err{border-left-color:var(--dgr);color:var(--dgr)}
+@media(max-width:640px){
+  .stat{grid-template-columns:1fr 1fr}
+  .tbl th:nth-child(4),.tbl td:nth-child(4){display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔴 MC 红石延迟</h1><p class="sub">中继器档位换秒数，也能按频率反推需要几个</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">中继器串联</h2>
+      <div class="fld">
+        <label for="chain">每个中继器的档位（1~4，用空格分隔）</label>
+        <input id="chain" class="mono" spellcheck="false" autocomplete="off" placeholder="4 4 4 4">
+      </div>
+      <div class="result">
+        <em>总延迟</em><b id="delay">—</b><small id="delaySub">—</small>
+      </div>
+      <div class="stat" style="margin-top:11px">
+        <div class="cell"><em>红石刻</em><b id="rt">—</b></div>
+        <div class="cell"><em>游戏刻</em><b id="gt">—</b></div>
+        <div class="cell"><em>频率</em><b id="hz">—</b></div>
+      </div>
+      <div class="msg" id="chainMsg">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">按目标反推</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="target">想要的周期</label>
+          <input id="target" class="mono" type="number" inputmode="decimal" min="0.1" step="0.1" value="1.6">
+        </div>
+        <div class="fld">
+          <label for="unit">单位</label>
+          <select id="unit">
+            <option value="s" selected>秒</option>
+            <option value="ms">毫秒</option>
+            <option value="min">分钟</option>
+            <option value="hz">赫兹（每秒次数）</option>
+          </select>
+        </div>
+      </div>
+      <div class="result">
+        <em>中继器配置</em><b id="plan">—</b><small id="planSub">—</small>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">常见组件的延迟</h2>
+      <table class="tbl">
+        <thead><tr><th>组件</th><th class="num">延迟</th><th class="num">每秒</th><th>备注</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 游戏里 1 游戏刻（tick）= 50 毫秒，1 红石刻 = 2 游戏刻 = 100 毫秒。
+        中继器右键一次加一档，1~4 档分别延迟 1~4 红石刻，也就是 0.1~0.4 秒；
+        比较器固定 1 红石刻。所以四个中继器全开 4 档就是 1.6 秒一轮。
+        反推时按 0.1 秒为最小步长取整，会显示实际值和误差——红石做不到比这更细的整数倍。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+
+var TICK=0.05;          /* 1 游戏刻 = 50ms */
+var RTICK=TICK*2;       /* 1 红石刻 = 100ms */
+
+var chainEl=$('chain'),delayEl=$('delay'),delaySub=$('delaySub');
+var rtEl=$('rt'),gtEl=$('gt'),hzEl=$('hz'),chainMsg=$('chainMsg');
+var targetEl=$('target'),unitEl=$('unit'),planEl=$('plan'),planSub=$('planSub');
+
+function fmtSec(s){
+  if(s<1) return Math.round(s*1000)+' 毫秒';
+  if(s<60) return (Math.round(s*1000)/1000)+' 秒';
+  var m=Math.floor(s/60),r=s-m*60;
+  return m+' 分 '+(Math.round(r*10)/10)+' 秒';
+}
+
+function parseChain(raw){
+  var txt=String(raw||'').trim();
+  if(!txt) return {err:'先填几个档位，比如 4 4 4 4'};
+  var parts=txt.split(/[\s,，]+/).filter(Boolean);
+  var tiers=[];
+  for(var i=0;i<parts.length;i++){
+    if(!/^[1-4]$/.test(parts[i])){
+      return {err:'「'+parts[i]+'」不合法：中继器只有 1~4 档'};
+    }
+    tiers.push(+parts[i]);
+  }
+  if(tiers.length>64) return {err:'一次最多算 64 个中继器'};
+  return {tiers:tiers};
+}
+
+function renderChain(){
+  var r=parseChain(chainEl.value);
+  if(r.err){
+    delayEl.textContent='—';delaySub.textContent='—';
+    rtEl.textContent='—';gtEl.textContent='—';hzEl.textContent='—';
+    chainMsg.className='msg err';chainMsg.textContent='⚠ '+r.err;
+    return;
+  }
+  var total=0;
+  r.tiers.forEach(function(t){total+=t;});
+  var sec=total*RTICK;
+  delayEl.textContent=fmtSec(sec);
+  delaySub.textContent='共 '+r.tiers.length+' 个中继器，合计 '+total+' 档';
+  rtEl.textContent=total;
+  gtEl.textContent=total*2;
+  hzEl.textContent=(1/sec).toFixed(2)+' Hz';
+  chainMsg.className='msg';
+  chainMsg.textContent='按这个延迟，一个时钟周期约 '+fmtSec(sec)
+    +'，也就是每分钟 '+(60/sec).toFixed(1)+' 次。'
+    +(r.tiers.indexOf(4)<0&&r.tiers.length>0?'想把周期调长，优先把低档的中继器加到 4 档。':'');
+}
+
+function planFor(periodSec){
+  if(!(periodSec>0)) return {err:'周期必须是正数'};
+  if(periodSec<RTICK) return {err:'比 1 红石刻（0.1 秒）还短，中继器做不出来，只能用观察者或直接相连'};
+  var need=Math.round(periodSec/RTICK);
+  if(need<1) need=1;
+  if(need>64){
+    return {err:'需要 '+need+' 档，超过 64 个中继器就不实际了。这么慢的周期建议用漏斗计时（每 0.2 秒一个物品）或命令方块。'};
+  }
+  var full=Math.floor(need/4), rest=need%4;
+  var parts=[];
+  if(full) parts.push(full+' 个（4 档）');
+  if(rest) parts.push('1 个（'+rest+' 档）');
+  var actual=need*RTICK;
+  return {text:parts.join(' + '),need:need,actual:actual,err:null};
+}
+
+function renderPlan(){
+  var v=parseFloat(targetEl.value);
+  if(isNaN(v)){
+    planEl.textContent='—';planSub.textContent='—';
+    return;
+  }
+  var unit=unitEl.value, sec;
+  if(unit==='ms') sec=v/1000;
+  else if(unit==='min') sec=v*60;
+  else if(unit==='hz'){
+    if(v<=0){ planEl.textContent='—';planSub.textContent='赫兹必须大于 0'; return; }
+    sec=1/v;
+  }else sec=v;
+
+  var p=planFor(sec);
+  if(p.err){
+    planEl.textContent='—';
+    planSub.textContent=p.err;
+    return;
+  }
+  planEl.textContent=p.text;
+  var diff=p.actual-sec;
+  planSub.textContent='实际周期 '+fmtSec(p.actual)+'，共 '+p.need+' 档'
+    +(Math.abs(diff)<0.0005?'（正好）':'（误差 '+(diff>0?'+':'')+Math.round(diff*1000)+' 毫秒）');
+}
+
+/* 常见组件：只写有把握的整数档位，不猜 */
+var ROWS=[
+  ['中继器（1 档）','0.1 s','10','右键加档，最多 4 档'],
+  ['中继器（4 档）','0.4 s','2.5','串联四个 = 1.6 s'],
+  ['比较器','0.1 s','10','固定 1 红石刻，不受档位影响'],
+  ['观察者输出脉冲','0.05 s','20','1 游戏刻'],
+  ['活塞推 / 拉','0.1 s','10','1 红石刻'],
+  ['漏斗传递一个物品','0.2 s','5','4 游戏刻一个，适合慢速计时']
+];
+$('tbody').innerHTML=ROWS.map(function(r){
+  return '<tr><td>'+r[0]+'</td><td class="num">'+r[1]+'</td><td class="num">'+r[2]+'</td><td>'+r[3]+'</td></tr>';
+}).join('');
+
+chainEl.addEventListener('input',renderChain);
+targetEl.addEventListener('input',renderPlan);
+unitEl.addEventListener('change',renderPlan);
+
+/* 打开就有结果 */
+chainEl.value='4 4 4 4';
+renderChain();
+renderPlan();
+})();
+</script>
+</body>
+</html>

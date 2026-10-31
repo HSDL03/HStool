@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 工具耐久 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px}
+.cell{
+  padding:11px 13px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);min-width:0;
+}
+.cell em{display:block;font-size:10.5px;font-style:normal;font-weight:800;letter-spacing:.06em;color:var(--faint);margin-bottom:3px}
+.cell b{display:block;font-family:var(--mono);font-size:clamp(1rem,3vw,1.3rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.cell small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.bar{height:9px;background:var(--bg3);border:2px solid var(--bd2);border-radius:99px;overflow:hidden;margin:13px 0 4px}
+.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .18s}
+.bar i.mid{background:var(--warn)}
+.bar i.low{background:var(--dgr)}
+.line{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.line b{color:var(--text);font-family:var(--mono)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:2px}
+.tbl th,.tbl td{padding:7px 6px;border-bottom:1px dashed var(--bd);text-align:left}
+.tbl th{font-size:11px;letter-spacing:.05em;color:var(--faint);font-weight:800}
+.tbl td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.tbl tr.on td{color:var(--ac);font-weight:800}
+@media(max-width:640px){
+  .stat{grid-template-columns:1fr 1fr}
+  .tbl th:nth-child(3),.tbl td:nth-child(3){display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>⛏ MC 工具耐久</h1><p class="sub">材质耐久、还能用几次、几个材料能修满</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">工具</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="mat">材质</label>
+          <select id="mat">
+            <option value="wood">木质</option>
+            <option value="stone">石质</option>
+            <option value="iron">铁质</option>
+            <option value="gold" selected>金质</option>
+            <option value="diamond">钻石</option>
+            <option value="netherite">下界合金</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="kind">类型</label>
+          <select id="kind">
+            <option value="pickaxe" selected>镐</option>
+            <option value="axe">斧</option>
+            <option value="shovel">锹</option>
+            <option value="sword">剑</option>
+            <option value="hoe">锄</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fld">
+          <label for="cur">当前耐久</label>
+          <input id="cur" class="mono" type="number" inputmode="numeric" min="0" step="1">
+        </div>
+        <div class="fld">
+          <label for="unb">耐久附魔等级</label>
+          <select id="unb">
+            <option value="0" selected>无</option>
+            <option value="1">耐久 I</option>
+            <option value="2">耐久 II</option>
+            <option value="3">耐久 III</option>
+          </select>
+        </div>
+      </div>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="line"><span>剩余 <b id="pct">—</b></span><span>最大耐久 <b id="max">—</b></span></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">还能用多久</h2>
+      <div class="stat">
+        <div class="cell"><em>还能挖 / 砍</em><b id="uses">—</b><small id="usesUnit">个方块</small></div>
+        <div class="cell"><em>附魔后等效</em><b id="eff">—</b><small>含耐久附魔的期望</small></div>
+        <div class="cell"><em>修满要材料</em><b id="need">—</b><small id="needUnit">个</small></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">材料修复</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="cnt">手里有几个修复材料</label>
+          <input id="cnt" class="mono" type="number" inputmode="numeric" min="1" step="1" value="1">
+        </div>
+        <div class="fld">
+          <label for="unit">材料</label>
+          <input id="unit" readonly value="金锭">
+        </div>
+      </div>
+      <div class="line"><span>修完耐久 <b id="after">—</b></span><span>恢复到 <b id="afterPct">—</b></span></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">各材质对照</h2>
+      <table class="tbl">
+        <thead><tr><th>材质</th><th class="num">耐久</th><th class="num">单位材料修复</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 每种材质、每种工具（镐斧锹剑锄）共用同一个耐久值，每挖 1 个方块或攻击 1 次消耗 1 点。
+        用 <code>材料</code> 在合成格里修，每个材料回复最大耐久的 25%，且不会超过上限。
+        <code>耐久</code> 附魔每级让「不消耗」的概率变成 1/(等级+1)，也就是 I/II/III 分别等效 2/3/4 倍。
+        数字取自原版 Java 的物品属性，金质只有 32 点，所以金工具不要拿去挖矿。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+
+var MAT={
+  wood:{name:'木质',dur:59,mat:'任意木板'},
+  stone:{name:'石质',dur:131,mat:'圆石'},
+  iron:{name:'铁质',dur:250,mat:'铁锭'},
+  gold:{name:'金质',dur:32,mat:'金锭'},
+  diamond:{name:'钻石',dur:1561,mat:'钻石'},
+  netherite:{name:'下界合金',dur:2031,mat:'下界合金锭'}
+};
+var KIND={pickaxe:'个方块',axe:'个方块',shovel:'个方块',sword:'次攻击',hoe:'个方块'};
+
+var matEl=$('mat'),kindEl=$('kind'),curEl=$('cur'),unbEl=$('unb'),cntEl=$('cnt'),unitEl=$('unit');
+var barEl=$('bar'),pctEl=$('pct'),maxEl=$('max'),usesEl=$('uses'),usesUnitEl=$('usesUnit');
+var effEl=$('eff'),needEl=$('need'),needUnitEl=$('needUnit');
+var afterEl=$('after'),afterPctEl=$('afterPct'),tbodyEl=$('tbody');
+
+function num(el,def){
+  var v=parseInt(el.value,10);
+  if(isNaN(v)||v<0) return def;
+  return v;
+}
+
+function render(){
+  var m=MAT[matEl.value];
+  var max=m.dur;
+  var cur=Math.min(num(curEl,max),max);
+  var lvl=parseInt(unbEl.value,10)||0;
+  var cnt=Math.max(1,num(cntEl,1));
+
+  maxEl.textContent=max;
+  var pct=cur/max*100;
+  barEl.style.width=Math.max(0,Math.min(100,pct)).toFixed(1)+'%';
+  barEl.className=pct<15?'low':(pct<40?'mid':'');
+  pctEl.textContent=pct.toFixed(1)+'%';
+
+  usesEl.textContent=cur;
+  usesUnitEl.textContent=KIND[kindEl.value];
+  effEl.textContent=cur*(lvl+1);
+
+  var perMat=Math.floor(max/4);
+  var need=Math.ceil((max-cur)/perMat);
+  needEl.textContent=need;
+  needUnitEl.textContent=m.mat;
+
+  var add=perMat*cnt;
+  var after=Math.min(max,cur+add);
+  afterEl.textContent=after+' / '+max;
+  afterPctEl.textContent=(after/max*100).toFixed(1)+'%';
+
+  unitEl.value=m.mat;
+
+  var rows='';
+  Object.keys(MAT).forEach(function(k){
+    var d=MAT[k];
+    rows+='<tr'+(k===matEl.value?' class="on"':'')+'><td>'+d.name+'</td>'
+      +'<td class="num">'+d.dur+'</td><td class="num">'+Math.floor(d.dur/4)+'</td></tr>';
+  });
+  tbodyEl.innerHTML=rows;
+}
+
+/* 换材质时把耐久拉到新上限，避免「金 → 下界合金」时只剩 32 点看着像 bug */
+var lastDur=MAT[matEl.value].dur;
+function onMatChange(){
+  var oldMax=lastDur;
+  var newMax=MAT[matEl.value].dur;
+  var cur=Math.min(num(curEl,newMax),oldMax);
+  if(cur===oldMax||curEl.value==='') cur=newMax;
+  lastDur=newMax;
+  curEl.value=Math.min(cur,newMax);
+  render();
+}
+
+matEl.addEventListener('change',onMatChange);
+curEl.addEventListener('input',render);
+unbEl.addEventListener('change',render);
+cntEl.addEventListener('input',render);
+kindEl.addEventListener('change',render);
+
+curEl.value=MAT[matEl.value].dur;
+render();
+})();
+</script>
+</body>
+</html>

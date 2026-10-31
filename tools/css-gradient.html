@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSS 渐变 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌈</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.preview{
+  height:170px;border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel-in);
+  display:flex;align-items:flex-end;justify-content:flex-end;padding:9px;
+}
+.preview span{font-size:11px;font-family:var(--mono);padding:3px 7px;border-radius:4px;background:var(--bg);color:var(--muted);border:1px solid var(--bd2)}
+.stops{display:flex;flex-direction:column;gap:7px}
+.stop{display:grid;grid-template-columns:44px 1fr 64px 32px;gap:8px;align-items:center}
+.stop input[type=color]{
+  width:44px;height:32px;padding:2px;border:2px solid var(--bd2);border-radius:6px;
+  background:var(--bg);cursor:pointer;
+}
+.stop input[type=range]{width:100%;accent-color:var(--ac);height:26px}
+.stop .pos{width:100%;height:32px;padding:0 7px;font-family:var(--mono);font-size:12.5px;text-align:center;
+  border:2px solid var(--bd2);border-radius:6px;background:var(--bg);color:var(--text)}
+.stop .del{width:32px;height:32px;border:2px solid var(--bd2);border-radius:6px;background:var(--bg);
+  color:var(--muted);cursor:pointer;font-size:14px;line-height:1}
+.stop .del:hover{border-color:var(--dgr);color:var(--dgr)}
+.code{
+  width:100%;min-height:74px;padding:11px 13px;font-family:var(--mono);font-size:12.5px;line-height:1.7;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel-in);color:var(--text);white-space:pre-wrap;word-break:break-all;
+}
+.presets{display:flex;gap:7px;flex-wrap:wrap}
+.presets button{
+  width:56px;height:32px;border:2px solid var(--bd2);border-radius:6px;cursor:pointer;padding:0;
+  box-shadow:var(--bevel);
+}
+.presets button:hover{border-color:var(--ac)}
+@media(max-width:640px){
+  .stop{grid-template-columns:40px 1fr 56px 30px;gap:6px}
+  .preview{height:140px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🌈 CSS 渐变</h1><p class="sub">拖色标实时预览，复制就能用的 background</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">预览</h2>
+      <div class="preview" id="preview"><span id="pvTag"></span></div>
+      <div class="seg" id="seg" style="margin-top:11px">
+        <button type="button" data-type="linear" aria-pressed="true">线性</button>
+        <button type="button" data-type="radial" aria-pressed="false">径向</button>
+        <button type="button" data-type="conic" aria-pressed="false">锥形</button>
+      </div>
+      <div class="fld" style="margin-top:13px" id="angleField">
+        <label for="angle">角度 <span class="mono" id="angleV">135</span>°</label>
+        <input id="angle" type="range" min="0" max="360" step="1" value="135">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">色标</h2>
+      <div class="stops" id="stops"></div>
+      <div class="row" style="margin-top:11px">
+        <button class="btn" id="btnAdd" type="button">＋ 加一个色标</button>
+        <button class="btn ghost" id="btnEven" type="button">位置均分</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">常用搭配</h2>
+      <div class="presets" id="presets"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">CSS 代码</h2>
+      <div class="code" id="code">—</div>
+      <div class="row" style="margin-top:11px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制代码</button>
+        <button class="btn" id="btnCopyVal" type="button">📋 只复制值</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 线性渐变用角度（0° 向上、90° 向右），径向渐变用 <code>circle at 50% 50%</code> 定位，
+        锥形渐变按角度绕一圈——做进度环很顺手。色标位置用百分比，越小越靠起点；
+        两个色标位置相同会得到硬边分界，这是最快画出对比色块的办法。
+        浏览器都支持，不需要前缀。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var state={
+  type:'linear',
+  angle:135,
+  stops:[{c:'#2e7d32',p:0},{c:'#7cc47f',p:55},{c:'#0d47a1',p:100}]
+};
+
+var stopsEl=$('stops'),previewEl=$('preview'),codeEl=$('code'),angleEl=$('angle'),angleV=$('angleV');
+var angleField=$('angleField'),pvTag=$('pvTag');
+
+function clampP(v){ v=Math.round(v); return v<0?0:(v>100?100:v); }
+
+function cssValue(){
+  var list=state.stops.map(function(s){return s.c+' '+s.p+'%';}).join(', ');
+  if(state.type==='linear') return 'linear-gradient('+state.angle+'deg, '+list+')';
+  if(state.type==='radial') return 'radial-gradient(circle at 50% 50%, '+list+')';
+  return 'conic-gradient(from '+state.angle+'deg, '+list+')';
+}
+
+function renderStops(){
+  var html='';
+  state.stops.forEach(function(s,i){
+    html+='<div class="stop" data-i="'+i+'">'
+      +'<input type="color" value="'+s.c+'" data-k="c" aria-label="第 '+(i+1)+' 个色标颜色">'
+      +'<input type="range" min="0" max="100" step="1" value="'+s.p+'" data-k="p" aria-label="第 '+(i+1)+' 个色标位置">'
+      +'<input class="pos" type="text" inputmode="numeric" value="'+s.p+'" data-k="p2" aria-label="位置百分比">'
+      +'<button class="del" type="button" data-k="del" title="删除这个色标" aria-label="删除色标">✕</button>'
+      +'</div>';
+  });
+  stopsEl.innerHTML=html;
+}
+
+function render(){
+  var v=cssValue();
+  previewEl.style.background=v;
+  pvTag.textContent=(state.type==='linear'?'linear':state.type)+' · '+state.stops.length+' 色';
+  codeEl.textContent='background: '+v+';';
+  angleV.textContent=state.angle;
+  angleField.style.display=state.type==='radial'?'none':'block';
+}
+
+/* 事件委托：色标行是动态生成的 */
+stopsEl.addEventListener('input',function(e){
+  var row=e.target.closest('.stop');
+  if(!row) return;
+  var i=+row.dataset.i,k=e.target.dataset.k;
+  if(k==='c'){ state.stops[i].c=e.target.value; }
+  else if(k==='p'){
+    state.stops[i].p=clampP(+e.target.value);
+    row.querySelector('.pos').value=state.stops[i].p;
+  }else if(k==='p2'){
+    var v=parseInt(e.target.value,10);
+    if(isNaN(v)) return;
+    state.stops[i].p=clampP(v);
+    row.querySelector('input[type=range]').value=state.stops[i].p;
+  }
+  render();
+});
+
+stopsEl.addEventListener('click',function(e){
+  var b=e.target.closest('.del');
+  if(!b) return;
+  if(state.stops.length<=2){toast('至少要留两个色标');return;}
+  var row=b.closest('.stop');
+  state.stops.splice(+row.dataset.i,1);
+  renderStops();render();
+});
+
+$('btnAdd').addEventListener('click',function(){
+  if(state.stops.length>=8){toast('最多 8 个色标，再多就难调了');return;}
+  var last=state.stops[state.stops.length-1];
+  var prev=state.stops[state.stops.length-2]||last;
+  var mid=Math.round((prev.p+last.p)/2)||50;
+  state.stops.push({c:last.c,p:mid});
+  state.stops.sort(function(a,b){return a.p-b.p;});
+  renderStops();render();
+});
+
+$('btnEven').addEventListener('click',function(){
+  var n=state.stops.length;
+  state.stops.forEach(function(s,i){ s.p=Math.round(i*100/(n-1)); });
+  state.stops.sort(function(a,b){return a.p-b.p;});
+  renderStops();render();
+  toast('已按 '+(n-1)+' 等分重排位置');
+});
+
+$('seg').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-type]');
+  if(!b) return;
+  var btns=$('seg').querySelectorAll('button');
+  for(var i=0;i<btns.length;i++) btns[i].setAttribute('aria-pressed',btns[i]===b?'true':'false');
+  state.type=b.dataset.type;
+  render();
+});
+
+angleEl.addEventListener('input',function(){
+  state.angle=+angleEl.value;
+  render();
+});
+
+$('btnCopy').addEventListener('click',function(){
+  HS.copy(codeEl.textContent);
+  toast('已复制整行 CSS');
+});
+$('btnCopyVal').addEventListener('click',function(){
+  HS.copy(cssValue());
+  toast('已复制渐变值');
+});
+
+/* 预设：都是能直接用的常见配色 */
+var PRESETS=[
+  {n:'森林',c:['#1b5e20','#66bb6a','#dcedc8'],a:160},
+  {n:'夜空',c:['#0d1b2a','#1b263b','#415a77'],a:200},
+  {n:'日落',c:['#ff9a3c','#ff5f6d','#4a148c'],a:120},
+  {n:'薄荷',c:['#00b4a6','#7ef2c4'],a:45},
+  {n:'纸张',c:['#f5f0e6','#ded3bd'],a:180},
+  {n:'警示',c:['#ffd54f','#f4511e'],a:90}
+];
+$('presets').innerHTML=PRESETS.map(function(p,i){
+  return '<button type="button" data-p="'+i+'" title="'+p.n+'" aria-label="'+p.n+'"'
+    +' style="background:linear-gradient('+p.a+'deg,'+p.c.join(',')+')"></button>';
+}).join('');
+$('presets').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-p]');
+  if(!b) return;
+  var p=PRESETS[+b.dataset.p];
+  state.type='linear';
+  state.angle=p.a;
+  angleEl.value=p.a;
+  var btns=$('seg').querySelectorAll('button');
+  for(var i=0;i<btns.length;i++) btns[i].setAttribute('aria-pressed',btns[i].dataset.type==='linear'?'true':'false');
+  state.stops=p.c.map(function(c,i){
+    return {c:c,p:Math.round(i*100/(p.c.length-1))};
+  });
+  renderStops();render();
+  toast('已套用「'+p.n+'」');
+});
+
+renderStops();
+render();
+})();
+</script>
+</body>
+</html>

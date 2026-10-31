@@ -538,5 +538,65 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mc-durability",
+    "icon": "⛏",
+    "name": "MC 工具耐久",
+    "desc": "材质耐久、还能用几次、几个材料修满",
+    "tag": "工具",
+    "url": "./tools/mc-durability.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-img-compress",
+    "icon": "📉",
+    "name": "图片压缩",
+    "desc": "本机缩尺寸重编码，前后体积对比",
+    "tag": "工具",
+    "url": "./tools/img-compress.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-mc-redstone",
+    "icon": "🔴",
+    "name": "MC 红石延迟",
+    "desc": "中继器档位换秒数，反推目标频率",
+    "tag": "工具",
+    "url": "./tools/mc-redstone.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-css-gradient",
+    "icon": "🌈",
+    "name": "CSS 渐变",
+    "desc": "可视化调色，直接出 linear/radial 代码",
+    "tag": "工具",
+    "url": "./tools/css-gradient.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-aes-text",
+    "icon": "🔒",
+    "name": "文本加密",
+    "desc": "AES-GCM 口令加密，密文可复制",
+    "tag": "工具",
+    "url": "./tools/aes-text.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

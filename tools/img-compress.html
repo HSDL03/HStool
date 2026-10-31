@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图片压缩 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗜</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.box{
+  border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg);
+  box-shadow:var(--bevel);padding:9px;min-width:0;
+}
+.box em{display:block;font-size:10.5px;font-style:normal;font-weight:800;letter-spacing:.06em;color:var(--faint);margin-bottom:6px}
+.box .pane{
+  height:190px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  border-radius:calc(var(--r) - 2px);background:var(--bg3);
+}
+.box img{max-width:100%;max-height:100%;display:block;min-width:40px}
+.box .meta{margin-top:7px;font-size:12px;color:var(--muted);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.stat{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cell{padding:10px 12px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);min-width:0}
+.cell em{display:block;font-size:10.5px;font-style:normal;font-weight:800;letter-spacing:.06em;color:var(--faint);margin-bottom:3px}
+.cell b{display:block;font-family:var(--mono);font-size:clamp(.95rem,2.8vw,1.15rem);font-weight:800;word-break:break-all}
+.drop{
+  border:2px dashed var(--bd2);border-radius:var(--r);padding:18px 14px;text-align:center;
+  color:var(--muted);font-size:13px;background:var(--bg3);cursor:pointer;
+}
+.drop:hover{border-color:var(--ac);color:var(--text)}
+.drop b{color:var(--ac)}
+input[type=range]{width:100%;accent-color:var(--ac);height:26px}
+@media(max-width:640px){
+  .stage{grid-template-columns:1fr}
+  .stat{grid-template-columns:1fr 1fr}
+  .box .pane{height:150px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🗜 图片压缩</h1><p class="sub">本地重编码 · 缩尺寸降质量，全程不上传</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">选图</h2>
+      <div class="drop" id="drop" role="button" tabindex="0">
+        点这里选一张图，或者把图片拖进来<br>
+        <b>PNG / JPG / WebP 都行</b>
+      </div>
+      <input id="file" type="file" accept="image/*" hidden>
+      <div class="grid2" style="margin-top:13px">
+        <div class="fld">
+          <label for="fmt">输出格式</label>
+          <select id="fmt">
+            <option value="image/jpeg" selected>JPEG（照片首选）</option>
+            <option value="image/webp">WebP（更小，现代浏览器可用）</option>
+            <option value="image/png">PNG（无损，只缩尺寸）</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="maxw">最长边上限（像素）</label>
+          <input id="maxw" type="number" class="mono" inputmode="numeric" min="64" max="4096" step="10" value="1600">
+        </div>
+      </div>
+      <div class="fld">
+        <label for="q">质量 <span id="qv" class="mono">75</span>（PNG 忽略此项）</label>
+        <input id="q" type="range" min="20" max="95" step="1" value="75">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">前后对比</h2>
+      <div class="stat">
+        <div class="cell"><em>原始</em><b id="sOrig">—</b></div>
+        <div class="cell"><em>压缩后</em><b id="sNew">—</b></div>
+        <div class="cell"><em>体积变化</em><b id="sRate">—</b></div>
+        <div class="cell"><em>尺寸</em><b id="sDim">—</b></div>
+      </div>
+      <div class="stage" style="margin-top:12px">
+        <div class="box"><em>原图</em><div class="pane"><img id="imgA" alt="原图预览"></div><div class="meta" id="metaA">—</div></div>
+        <div class="box"><em>压缩后</em><div class="pane"><img id="imgB" alt="压缩结果预览"></div><div class="meta" id="metaB">—</div></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnSave" type="button" disabled>⬇ 保存压缩结果</button>
+        <button class="btn" id="btnReset" type="button">恢复示例图</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 压缩分两步：先把长边缩到上限以内（这一步决定清晰度），再用质量参数重新编码（这一步决定体积）。
+        照片用 JPEG 质量 70~80 通常看不出差别；带透明背景的图选 PNG，否则透明区会变成黑底。
+        整个过程用浏览器的 <code>canvas.toBlob</code> 在本机完成，图片不会离开你的电脑。
+        页面打开时展示的是一张程序生成的示例图，直接就能试。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var fileEl=$('file'),dropEl=$('drop'),fmtEl=$('fmt'),maxwEl=$('maxw'),qEl=$('q'),qvEl=$('qv');
+var imgA=$('imgA'),imgB=$('imgB'),metaA=$('metaA'),metaB=$('metaB');
+var sOrig=$('sOrig'),sNew=$('sNew'),sRate=$('sRate'),sDim=$('sDim'),saveBtn=$('btnSave');
+
+var srcCanvas=null, srcBytes=0, srcName='sample', outBlob=null, timer=0;
+
+function fmtSize(b){
+  if(!b&&b!==0) return '—';
+  if(b<1024) return b+' B';
+  if(b<1024*1024) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(2)+' MB';
+}
+
+/* 打开就能看的示例图：渐变 + 网格 + 文字，编成 PNG 有几百 KB，压起来对比明显 */
+function makeSample(){
+  var W=1400,H=900;
+  var c=document.createElement('canvas');
+  c.width=W;c.height=H;
+  var x=c.getContext('2d');
+  var g=x.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#2e7d32');
+  g.addColorStop(.5,'#66bb6a');
+  g.addColorStop(1,'#0d47a1');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.strokeStyle='rgba(255,255,255,.10)';x.lineWidth=1;
+  for(var i=0;i<W;i+=28){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke();}
+  for(var j=0;j<H;j+=28){x.beginPath();x.moveTo(0,j);x.lineTo(W,j);x.stroke();}
+  x.fillStyle='rgba(255,255,255,.92)';
+  x.font='bold 96px system-ui,sans-serif';
+  x.fillText('示例图片',90,430);
+  x.font='30px system-ui,sans-serif';
+  x.fillStyle='rgba(255,255,255,.75)';
+  x.fillText('拖一张自己的图进来就能压 · 数据不出本机',92,510);
+  return c;
+}
+
+function useCanvas(c,name,origBytes){
+  srcCanvas=c;
+  srcName=name||'image';
+  imgA.src=c.toDataURL('image/png');
+  metaA.textContent=c.width+' × '+c.height+' · 原文件 '+fmtSize(origBytes);
+  srcBytes=origBytes;
+  encode();
+}
+
+function encode(){
+  if(!srcCanvas) return;
+  var maxW=Math.max(64,Math.min(4096,parseInt(maxwEl.value,10)||1600));
+  var w=srcCanvas.width,h=srcCanvas.height;
+  var scale=Math.min(1,maxW/Math.max(w,h));
+  var tw=Math.max(1,Math.round(w*scale)),th=Math.max(1,Math.round(h*scale));
+
+  var oc=document.createElement('canvas');
+  oc.width=tw;oc.height=th;
+  var octx=oc.getContext('2d');
+  var type=fmtEl.value;
+  if(type==='image/jpeg'){octx.fillStyle='#ffffff';octx.fillRect(0,0,tw,th);}
+  octx.imageSmoothingQuality='high';
+  octx.drawImage(srcCanvas,0,0,tw,th);
+
+  var q=parseInt(qEl.value,10)/100;
+  var cb=function(blob){
+    if(!blob){toast('这张图转码失败了，换种格式试试');return;}
+    outBlob=blob;
+    if(imgB.dataset.url){URL.revokeObjectURL(imgB.dataset.url);}
+    var url=URL.createObjectURL(blob);
+    imgB.dataset.url=url;
+    imgB.src=url;
+    sOrig.textContent=fmtSize(srcBytes);
+    sNew.textContent=fmtSize(blob.size);
+    sDim.textContent=tw+'×'+th;
+    var diff=srcBytes>0?(1-blob.size/srcBytes)*100:0;
+    sRate.textContent=(diff>=0?'-':'+')+Math.abs(diff).toFixed(1)+'%';
+    metaB.textContent=type.replace('image/','').toUpperCase()+' · 质量 '+(type==='image/png'?'—':Math.round(q*100))
+      +' · 缩小到 '+Math.round(scale*100)+'%';
+    saveBtn.disabled=false;
+  };
+  if(type==='image/png') oc.toBlob(cb,'image/png');
+  else oc.toBlob(cb,type,q);
+}
+
+function loadFile(f){
+  if(!f) return;
+  if(!/^image\//.test(f.type)){toast('这不是图片文件');return;}
+  if(f.size>20*1024*1024){toast('文件超过 20MB，浏览器可能带不动');return;}
+  var url=URL.createObjectURL(f);
+  var img=new Image();
+  img.onload=function(){
+    var c=document.createElement('canvas');
+    c.width=img.naturalWidth;c.height=img.naturalHeight;
+    c.getContext('2d').drawImage(img,0,0);
+    URL.revokeObjectURL(url);
+    var base=(f.name||'image').replace(/\.[^.]+$/,'');
+    useCanvas(c,base,f.size);
+    toast('已载入 '+f.name);
+  };
+  img.onerror=function(){
+    URL.revokeObjectURL(url);
+    toast('这张图解不开，可能已损坏');
+  };
+  img.src=url;
+}
+
+function schedule(){
+  if(timer) clearTimeout(timer);
+  timer=setTimeout(encode,160);
+}
+
+qEl.addEventListener('input',function(){qvEl.textContent=qEl.value;schedule();});
+fmtEl.addEventListener('change',function(){
+  /* 选 PNG 时质量无意义，禁掉免得用户以为改了有用 */
+  qEl.disabled=fmtEl.value==='image/png';
+  schedule();
+});
+maxwEl.addEventListener('change',schedule);
+
+dropEl.addEventListener('click',function(){fileEl.click();});
+dropEl.addEventListener('keydown',function(e){
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();fileEl.click();}
+});
+fileEl.addEventListener('change',function(){loadFile(fileEl.files&&fileEl.files[0]);});
+['dragenter','dragover'].forEach(function(ev){
+  dropEl.addEventListener(ev,function(e){e.preventDefault();dropEl.style.borderColor='var(--ac)';});
+});
+['dragleave','drop'].forEach(function(ev){
+  dropEl.addEventListener(ev,function(e){e.preventDefault();dropEl.style.borderColor='';});
+});
+dropEl.addEventListener('drop',function(e){
+  var dt=e.dataTransfer;
+  if(dt&&dt.files&&dt.files.length) loadFile(dt.files[0]);
+});
+
+saveBtn.addEventListener('click',function(){
+  if(!outBlob){toast('还没有压缩结果');return;}
+  var ext=fmtEl.value==='image/png'?'png':(fmtEl.value==='image/webp'?'webp':'jpg');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(outBlob);
+  a.download=srcName+'-compressed.'+ext;
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+  toast('已开始下载 '+fmtSize(outBlob.size));
+});
+
+$('btnReset').addEventListener('click',function(){
+  var c=makeSample();
+  c.toBlob(function(b){
+    useCanvas(c,'sample',b?b.size:0);
+    fileEl.value='';
+    metaA.textContent=c.width+' × '+c.height+' · 原文件 '+fmtSize(b?b.size:0);
+  },'image/png');
+});
+
+/* 初始：示例图 + 立即压一次 */
+var sample=makeSample();
+sample.toBlob(function(b){
+  useCanvas(sample,'sample',b?b.size:0);
+},'image/png');
+})();
+</script>
+</body>
+</html>
