@@ -624,18 +624,6 @@
     "hidden": false
   },
   {
-    "id": "tool-id-card",
-    "icon": "📇",
-    "name": "身份证校验",
-    "desc": "校验位 · 生日性别年龄与归属省",
-    "tag": "工具",
-    "url": "./tools/id-card.html",
-    "category": "noDB",
-    "deprecated": false,
-    "disabled": false,
-    "hidden": false
-  },
-  {
     "id": "tool-url-parse",
     "icon": "🔗",
     "name": "URL 参数拆解",
@@ -779,11 +767,66 @@
     "disabled": false,
     "hidden": false
   },
-  {"id":"tool-mc-craft","icon":"🧱","name":"MC 合成计算","desc":"要做什么先说，算出全部基础材料","tag":"工具","url":"./tools/mc-craft.html","category":"noDB","deprecated":false,"disabled":false,"hidden":false},
-  {"id":"tool-uuid","icon":"🆔","name":"UUID 工具","desc":"批量生成 v4/v7 并解析版本","tag":"工具","url":"./tools/uuid.html","category":"noDB","deprecated":false,"disabled":false,"hidden":false},
-  {"id":"tool-img-split","icon":"🖼","name":"九宫格切图","desc":"图片切成九宫格并逐张下载","tag":"工具","url":"./tools/img-split.html","category":"noDB","deprecated":false,"disabled":false,"hidden":false},
-  {"id":"tool-mc-time","icon":"🌗","name":"MC 时间换算","desc":"tick ↔ 游戏时刻 ↔ 现实分钟","tag":"工具","url":"./tools/mc-time.html","category":"noDB","deprecated":false,"disabled":false,"hidden":false},
-  {"id":"tool-mc-light","icon":"🕯","name":"MC 光照规划","desc":"亮度衰减、防刷怪间距与数量","tag":"工具","url":"./tools/mc-light.html","category":"noDB","deprecated":false,"disabled":false,"hidden":false},
+  {
+    "id": "tool-mc-craft",
+    "icon": "🧱",
+    "name": "MC 合成计算",
+    "desc": "要做什么先说，算出全部基础材料",
+    "tag": "工具",
+    "url": "./tools/mc-craft.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-uuid",
+    "icon": "🆔",
+    "name": "UUID 工具",
+    "desc": "批量生成 v4/v7 并解析版本",
+    "tag": "工具",
+    "url": "./tools/uuid.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-img-split",
+    "icon": "🖼",
+    "name": "九宫格切图",
+    "desc": "图片切成九宫格并逐张下载",
+    "tag": "工具",
+    "url": "./tools/img-split.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-mc-time",
+    "icon": "🌗",
+    "name": "MC 时间换算",
+    "desc": "tick ↔ 游戏时刻 ↔ 现实分钟",
+    "tag": "工具",
+    "url": "./tools/mc-time.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-mc-light",
+    "icon": "🕯",
+    "name": "MC 光照规划",
+    "desc": "亮度衰减、防刷怪间距与数量",
+    "tag": "工具",
+    "url": "./tools/mc-light.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
   {
     "id": "tool-mc-chunk",
     "icon": "🧭",
