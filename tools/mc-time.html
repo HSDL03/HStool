@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 时间换算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌗</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.big{
+  padding:14px 16px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);
+}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.25rem,4.2vw,1.8rem);font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:88px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+table.presets{width:100%;border-collapse:collapse;font-size:13.5px}
+table.presets th{
+  text-align:left;padding:6px 8px;font-size:11px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--faint);border-bottom:2px solid var(--bd2);
+}
+table.presets td{padding:7px 8px;border-bottom:1px dashed var(--bd);font-family:var(--mono);font-variant-numeric:tabular-nums}
+table.presets tr:last-child td{border-bottom:0}
+table.presets td.n{cursor:pointer}
+table.presets td.n:hover{color:var(--ac)}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+@media(max-width:640px){
+  .grid2{grid-template-columns:1fr}
+  .kv span{width:100%}
+  table.presets{font-size:12.5px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🌗 时间换算</h1><p class="sub">游戏 tick ↔ 游戏内时刻 ↔ 现实分钟 · 一天 24000 tick = 20 分钟</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">tick → 游戏内时间</h2>
+      <div class="fld">
+        <label for="tick">世界时间 tick（0 ~ 23999 是完整一天）</label>
+        <input id="tick" class="mono" type="number" min="0" step="1" value="6000">
+      </div>
+      <div class="grid2" style="margin-bottom:11px">
+        <div class="big"><em>游戏内时刻</em><b id="clock">—</b><small id="phase">—</small></div>
+        <div class="big"><em>现实已过（当天）</em><b id="real">—</b><small id="left">—</small></div>
+      </div>
+      <div class="kv"><span>/time set</span><b id="cmd">—</b></div>
+      <div class="kv"><span>命中预设</span><b id="preset">—</b></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制 /time set</button>
+        <button class="btn" id="btnNoon" type="button">跳到正午</button>
+        <button class="btn" id="btnNight" type="button">跳到夜晚</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">现实时间 → tick</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="mins">现实分钟数</label>
+          <input id="mins" class="mono" type="number" min="0" step="0.5" value="5">
+        </div>
+        <div class="fld">
+          <label>换算结果</label>
+          <input id="minsOut" class="mono" readonly value="">
+        </div>
+      </div>
+      <div class="hint" id="minsHint">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">常用 /time set 值（点一下填进去）</h2>
+      <table class="presets">
+        <thead><tr><th>阶段</th><th>tick</th><th>游戏内时刻</th></tr></thead>
+        <tbody id="presetBody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 换算基准（Java 版）：1 秒 = 20 tick，1 tick = 50 毫秒；整天 24000 tick = 1200 秒 = 20 分钟，
+        其中白天约 10 分钟、夜晚约 7 分钟。tick 0 对应游戏内 6:00，所以「游戏小时 = tick ÷ 1000 + 6」。
+        床在 12542 ~ 23459 之间才能睡（太早会提示「你现在不能休息」）。服务器若用 <code>/gamerule doDaylightCycle</code>
+        关掉了昼夜循环，时间就停住不动了。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var PRESETS=[
+  {n:'日出（白天开始）',t:0},
+  {n:'上午',t:1000},
+  {n:'正午',t:6000},
+  {n:'下午',t:9000},
+  {n:'日落',t:12000},
+  {n:'夜幕降临',t:13000},
+  {n:'可以睡觉',t:12542},
+  {n:'午夜',t:18000},
+  {n:'黎明前',t:23000}
+];
+
+function clockOf(tick){
+  var mins=Math.floor(tick/1000*60);
+  var h=Math.floor(mins/60)+6,m=mins%60;
+  h=((h%24)+24)%24;
+  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+}
+function phaseOf(t){
+  if(t<1000) return '日出，天色正在亮';
+  if(t<6000) return '上午，光照充足';
+  if(t<12000) return '下午，正午已过';
+  if(t<13000) return '日落，天正在黑';
+  if(t<18000) return '夜晚，怪物成片刷';
+  if(t<23000) return '深夜，离天亮还早';
+  return '黎明前，快天亮了';
+}
+function realMin(t){ return t/20/60; }
+
+function render(){
+  var t=Number($('tick').value);
+  if(!isFinite(t)||t<0){ t=0; }
+  t=Math.floor(t);
+  var day=Math.floor(t/24000),inDay=t%24000;
+  $('clock').textContent=clockOf(inDay);
+  $('phase').textContent=phaseOf(inDay)+(day>0?' · 第 '+(day+1)+' 天':'');
+  var rm=realMin(inDay);
+  $('real').textContent=rm.toFixed(1)+' 分钟';
+  var toNight=inDay<13000?(13000-inDay):0;
+  var toDawn=inDay<24000?(24000-inDay):0;
+  $('left').textContent=inDay<13000
+    ? '距天黑了还要 '+realMin(toNight).toFixed(1)+' 分钟'
+    : '距天亮还要 '+realMin(toDawn).toFixed(1)+' 分钟';
+  $('cmd').textContent='/time set '+t;
+  var hit='—';
+  for(var i=0;i<PRESETS.length;i++){ if(PRESETS[i].t===inDay){ hit=PRESETS[i].n; break; } }
+  $('preset').textContent=hit;
+}
+
+$('tick').addEventListener('input',render);
+$('btnNoon').addEventListener('click',function(){ $('tick').value=6000; render(); toast('已填正午'); });
+$('btnNight').addEventListener('click',function(){ $('tick').value=13000; render(); toast('已填夜晚'); });
+$('btnCopy').addEventListener('click',function(){
+  HS.copy($('cmd').textContent);
+  toast('已复制 '+$('cmd').textContent);
+});
+
+function renderMins(){
+  var m=parseFloat($('mins').value);
+  if(!isFinite(m)||m<0){ $('minsOut').value='分钟数要 ≥ 0'; $('minsHint').textContent='—'; return; }
+  var tick=Math.round(m*60*20);
+  $('minsOut').value=tick+' tick';
+  $('minsHint').textContent='= 世界时间前进 '+tick+' tick（约 '+(tick/24000).toFixed(2)
+    +' 天，游戏内时钟走 '+(tick/1000).toFixed(1)+' 小时）';
+}
+$('mins').addEventListener('input',renderMins);
+
+(function buildPresets(){
+  var html='';
+  for(var i=0;i<PRESETS.length;i++){
+    html+='<tr><td>'+PRESETS[i].n+'</td><td class="n" data-t="'+PRESETS[i].t+'">'
+      +PRESETS[i].t+'</td><td>'+clockOf(PRESETS[i].t)+'</td></tr>';
+  }
+  $('presetBody').innerHTML=html;
+})();
+$('presetBody').addEventListener('click',function(e){
+  var cell=e.target.closest('td[data-t]');
+  if(!cell) return;
+  $('tick').value=cell.getAttribute('data-t');
+  render();
+  toast('已填入 '+cell.getAttribute('data-t'));
+});
+
+render();
+renderMins();
+})();
+</script>
+</body>
+</html>

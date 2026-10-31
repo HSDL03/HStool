@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 光照规划 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.big{
+  padding:14px 16px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);
+}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.3rem,4.4vw,1.9rem);font-weight:800;font-variant-numeric:tabular-nums}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.big.ok{border-color:var(--ac)}
+.big.warn{border-color:var(--warn)}
+.big.bad{border-color:var(--dgr)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:92px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+table.ls{width:100%;border-collapse:collapse;font-size:13px}
+table.ls th{
+  text-align:right;padding:6px 8px;font-size:11px;font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--faint);border-bottom:2px solid var(--bd2);white-space:nowrap;
+}
+table.ls th:first-child,table.ls td:first-child{text-align:left}
+table.ls td{padding:6px 8px;border-bottom:1px dashed var(--bd);text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.ls tbody tr{cursor:pointer}
+table.ls tbody tr:hover td{background:var(--bg3)}
+table.ls tr.on td{background:var(--acs)}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:640px){
+  .grid2{grid-template-columns:1fr}
+  .kv span{width:100%}
+  table.ls{font-size:12px}
+  table.ls th,table.ls td{padding:5px 6px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🕯 光照规划</h1><p class="sub">这个点还剩几级亮度、会不会刷怪、隔几格插火把 · 1.18+ 敌对生物只刷在方块光照 0</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">某一点还剩多少亮度</h2>
+      <div class="fld">
+        <label for="src">光源</label>
+        <select id="src"></select>
+      </div>
+      <div class="grid2">
+        <div class="fld">
+          <label for="dx">水平距离（格）</label>
+          <input id="dx" class="mono" type="number" min="0" max="30" step="1" value="6">
+        </div>
+        <div class="fld">
+          <label for="dy">高度差（格，地面到光源）</label>
+          <input id="dy" class="mono" type="number" min="0" max="30" step="1" value="1">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="big" id="lvBox"><em>该点亮度</em><b id="lv">—</b><small id="lvNote">—</small></div>
+        <div class="big" id="safeBox"><em>会不会刷怪</em><b id="safe">—</b><small id="safeNote">—</small></div>
+      </div>
+      <div class="kv"><span>安全半径</span><b id="radius">—</b></div>
+      <div class="kv"><span>平地最大间距</span><b id="gap">—</b></div>
+      <div class="hint" id="assume">按「每格 −1、斜向算 2 格」的曼哈顿衰减估算，不考虑墙体和遮挡。</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">房间要放几个</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="rl">房间长（格）</label>
+          <input id="rl" class="mono" type="number" min="1" max="200" step="1" value="15">
+        </div>
+        <div class="fld">
+          <label for="rw">房间宽（格）</label>
+          <input id="rw" class="mono" type="number" min="1" max="200" step="1" value="15">
+        </div>
+      </div>
+      <div class="kv"><span>需要数量</span><b id="cnt">—</b></div>
+      <div class="kv"><span>摆放方式</span><b id="layout">—</b></div>
+      <div class="hint" id="roomHint">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">常见光源亮度（点一行就用它算）</h2>
+      <div class="tblwrap">
+        <table class="ls">
+          <thead><tr><th>光源</th><th>亮度</th><th>安全半径</th><th>建议间距</th></tr></thead>
+          <tbody id="lsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 亮度每向外传一格就 −1，斜着走相当于两格，所以平坦地面上「离开光源 13 格」就是亮度 1（火把）。
+        Java 1.18 起敌对生物只在这种位置生成：<b>方块光照 0</b>（天光不算），所以亮度 ≥1 就安全；
+        1.17 及更早则是方块光照 ≤7 才会刷怪，老存档请按老版本算。
+        间距是按平地无遮挡推出来的理论上限，洞穴顶面、台阶、水流都会挡光，实际最好留一两格余量，
+        或者干脆把顶封住、地面铺满光源。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var LIGHTS=[
+  {n:'火把',v:14},
+  {n:'灵魂火把',v:10},
+  {n:'灯笼',v:15},
+  {n:'灵魂灯笼',v:10},
+  {n:'营火',v:15},
+  {n:'荧石',v:15},
+  {n:'海晶灯',v:15},
+  {n:'红石灯（点亮）',v:15},
+  {n:'南瓜灯',v:15},
+  {n:'信标',v:15},
+  {n:'蛙明灯',v:15},
+  {n:'末地烛',v:14},
+  {n:'岩浆 / 岩浆块',v:15},
+  {n:'蜡烛 ×1',v:3},
+  {n:'蜡烛 ×2',v:6},
+  {n:'蜡烛 ×3',v:9},
+  {n:'蜡烛 ×4',v:12},
+  {n:'发光地衣',v:7}
+];
+
+(function buildSelect(){
+  var html='';
+  for(var i=0;i<LIGHTS.length;i++){
+    html+='<option value="'+i+'">'+LIGHTS[i].n+' · 亮度 '+LIGHTS[i].v+'</option>';
+  }
+  $('src').innerHTML=html;
+})();
+
+function curLight(){ return LIGHTS[Number($('src').value)]||LIGHTS[0]; }
+
+function render(){
+  var L=curLight(),L0=L.v;
+  var dx=Math.max(0,Math.floor(Number($('dx').value)||0));
+  var dy=Math.max(0,Math.floor(Number($('dy').value)||0));
+  if(dx>30){ dx=30; $('dx').value=30; }
+  if(dy>30){ dy=30; $('dy').value=30; }
+  var lv=L0-(dx+dy);
+
+  $('lv').textContent=lv>0?String(lv):'0';
+  $('lvNote').textContent=L.n+' 亮度 '+L0+' −（'+dx+' 水平 + '+dy+' 垂直）';
+  $('lvBox').className='big '+(lv<=0?'bad':(lv<=3?'warn':'ok'));
+
+  var safe=lv>=1;
+  $('safe').textContent=safe?'安全':'会刷怪';
+  $('safeNote').textContent=safe
+    ? '方块光照 '+lv+' ≥ 1，1.18+ 敌对生物不会在这里生成'
+    : '方块光照 0，1.18+ 这里会刷僵尸、苦力怕';
+  $('safeBox').className='big '+(safe?'ok':'bad');
+
+  var r=Math.max(0,L0-1);
+  $('radius').textContent=r+' 格（平坦地面、无遮挡）';
+  $('gap').textContent=(2*r)+' 格（两个光源之间），实际建议 ≤ '+Math.max(1,2*r-2)+' 格';
+
+  renderRoom(L0);
+}
+
+function renderRoom(L0){
+  var r=Math.max(1,L0-1);
+  var len=Math.max(1,Math.floor(Number($('rl').value)||1));
+  var wid=Math.max(1,Math.floor(Number($('rw').value)||1));
+  if(len>200){ len=200; $('rl').value=200; }
+  if(wid>200){ wid=200; $('rw').value=200; }
+  var step=r*2;
+  var nx=Math.ceil(len/step*1.0),ny=Math.ceil(wid/step*1.0);
+  var total=nx*ny;
+  $('cnt').textContent=total+' 个';
+  $('layout').textContent=nx+' 列 × '+ny+' 排，每 '+step+' 格一个';
+  var per=Math.round(step);
+  $('roomHint').textContent='从墙角往里半个间距开始铺（约 '+(Math.floor(step/2))+' 格），'
+    +'纵横都每隔 '+per+' 格放一个，边缘处再补一圈更保险。';
+}
+
+$('src').addEventListener('change',render);
+$('dx').addEventListener('input',render);
+$('dy').addEventListener('input',render);
+$('rl').addEventListener('input',render);
+$('rw').addEventListener('input',render);
+
+(function buildTable(){
+  var html='';
+  for(var i=0;i<LIGHTS.length;i++){
+    var L=LIGHTS[i],r=Math.max(0,L.v-1);
+    html+='<tr data-i="'+i+'"><td>'+L.n+'</td><td>'+L.v+'</td><td>'+r
+      +' 格</td><td>'+(2*r)+' 格</td></tr>';
+  }
+  $('lsBody').innerHTML=html;
+})();
+$('lsBody').addEventListener('click',function(e){
+  var tr=e.target.closest('tr[data-i]');
+  if(!tr) return;
+  $('src').value=tr.getAttribute('data-i');
+  var all=$('lsBody').querySelectorAll('tr');
+  for(var i=0;i<all.length;i++) all[i].className=all[i]===tr?'on':'';
+  render();
+  toast('已切换：'+(LIGHTS[Number(tr.getAttribute('data-i'))]||{}).n);
+});
+
+render();
+})();
+</script>
+</body>
+</html>
