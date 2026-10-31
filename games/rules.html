@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>玩法说明 · 红石的小站</title>
+<meta name="description" content="游戏厅里每个棋类、牌类的完整规则与操作说明：三合一棋、五子棋、斗地主、UNO、麻将、方块战场、MC 复刻。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+  .toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+  .toc a{
+    display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:12.5px;font-weight:700;
+    color:var(--text);text-decoration:none;background:var(--bg);
+    border:2px solid var(--bd);border-radius:var(--r);box-shadow:var(--bevel);
+  }
+  .toc a:hover{border-color:var(--ac);color:var(--ac)}
+  .toc a span{font-size:15px;flex:none}
+  .rule h3{margin:18px 0 8px;font-size:14px;font-weight:800}
+  .rule h3:first-child{margin-top:0}
+  .rule p{margin:0 0 9px;font-size:13px;line-height:1.75;color:var(--text)}
+  .rule ul,.rule ol{margin:0 0 10px;padding-left:20px;font-size:13px;line-height:1.8}
+  .rule li{margin:2px 0}
+  .rule .note{font-size:12px;line-height:1.7;color:var(--muted);border-left:3px solid var(--bd2);padding:2px 0 2px 10px;margin:10px 0}
+  .rule kbd{
+    display:inline-block;padding:1px 6px;margin:0 1px;font-family:var(--mono);font-size:11.5px;
+    background:var(--bg);border:1px solid var(--bd2);border-bottom-width:2px;border-radius:4px;
+  }
+  .rule table{margin:0 0 10px}
+  .rule table th,.rule table td{font-size:12.5px}
+  .backline{margin:0 0 14px}
+  .backline a{font-size:12px;font-weight:700;color:var(--ac);text-decoration:none}
+  .backline a:hover{text-decoration:underline}
+  @media(max-width:640px){
+    .toc{grid-template-columns:1fr 1fr}
+    .rule p,.rule ul,.rule ol{font-size:12.5px}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <a class="iconbtn" href="./index.html" title="回游戏厅" aria-label="回游戏厅" style="text-decoration:none">🎮</a>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<main class="wrap">
+  <div class="page-head">
+    <div>
+      <h1>📖 玩法说明</h1>
+      <p class="sub">游戏厅里每个玩法的规则、操作，以及本实现和"标准规则"的差别</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 class="panel-title">目录</h2>
+    <div class="toc">
+      <a href="#chess-games"><span>♟️</span>三合一棋</a>
+      <a href="#go"><span>⚪</span>围棋</a>
+      <a href="#xiangqi"><span>🀄</span>中国象棋</a>
+      <a href="#chess"><span>♞</span>国际象棋</a>
+      <a href="#doudizhu"><span>🃏</span>斗地主</a>
+      <a href="#uno"><span>🎴</span>UNO</a>
+      <a href="#mahjong"><span>🀄</span>麻将</a>
+    </div>
+  </div>
+
+  <div class="panel rule" id="common">
+    <h2 class="panel-title">通用操作</h2>
+    <ul>
+      <li>右上角 <kbd>🎨</kbd> 切换主题（8 套，跟着整站走）；<kbd>🎮</kbd> 回游戏厅。</li>
+      <li>所有对局都在浏览器本地计算，<b>不联网、不上传</b>；刷新页面 = 重开一局。</li>
+      <li>手机能玩，横屏更舒服；棋盘和牌会按屏幕宽度自动缩放。</li>
+    </ul>
+  </div>
+
+  <!-- ══════════════ 三合一棋 ══════════════ -->
+  <div class="panel rule" id="chess-games">
+    <h2 class="panel-title">♟️ 三合一棋</h2>
+    <p>同一页里放了三副棋，顶部按钮切换：<b>围棋（9 路）· 中国象棋 · 国际象棋</b>。三种棋共用一套操作：</p>
+    <ul>
+      <li><b>我先行 / AI 先行</b>：下拉框选择谁先下，切换后需要点「新局」生效。</li>
+      <li><b>悔棋</b>：撤销你和 AI 的上一步（回到你上一次该走的局面）。</li>
+      <li><b>停一手</b>：只有围棋有，等于「虚手 / pass」。</li>
+      <li><b>认输</b>：直接结束本局，AI 获胜。</li>
+      <li>右侧是引擎数据（搜索深度、模拟次数、局面评估、用时）和着法记录，看得懂就看，看不懂也不影响下棋。</li>
+    </ul>
+    <div class="note">AI 跑在你本机的 Web Worker 里，所以思考时页面不会卡；强度是「能陪练」级别，不是职业棋手。</div>
+
+    <h3 id="go">围棋（9 路）</h3>
+    <ul>
+      <li><b>棋盘</b>：9×9 = 81 个交叉点，黑先白后，轮流把子下在<b>空的交叉点</b>上。</li>
+      <li><b>气</b>：一个子上下左右相邻的空点是它的气；一块棋共用气。气被填满，整块棋被提掉。</li>
+      <li><b>禁着点</b>：下完之后自己没有气、又不提对方子的地方不能下。</li>
+      <li><b>打劫</b>：刚提完对方一子，对方不能马上回提，必须先在其他地方走一手（本实现只做单劫判断）。</li>
+      <li><b>结束</b>：双方各点一次「停一手」，进入数目。黑棋目数 vs 白棋目数 + 贴目 <b>6.5</b>，多者胜。</li>
+    </ul>
+    <div class="note">本实现不做双活、循环劫、让子等复杂判定；终局按盘面点数结算，不抠半目细节。</div>
+
+    <h3 id="xiangqi">中国象棋</h3>
+    <ul>
+      <li><b>棋盘</b>：9 列 × 10 行，中间是「河界」，两端各有 3×3 的九宫。</li>
+      <li><b>走法</b>：车走直线任意格；马走「日」且不能蹩马腿；象走「田」且不能塞象眼、不能过河；士斜走一格不出九宫；将/帅在九宫里直走一格；炮走直线、吃子必须隔一个棋子；兵/卒只能向前，过河后可以左右走。</li>
+      <li><b>胜负</b>：将死对方（无路可走且被将军）即胜；自己被将死则负。不能走出「自己送将」的棋。</li>
+    </ul>
+    <div class="note">本实现不做长将长捉判负、不变作和等竞赛细则；也暂不含和棋判定。</div>
+
+    <h3 id="chess">国际象棋</h3>
+    <ul>
+      <li><b>棋盘</b>：8×8，白先黑后。你执白。</li>
+      <li><b>棋子</b>：王（一格任意方向）、后（直线斜线任意格）、车（直线）、象（斜线）、马（走「日」，可越子）、兵（向前一格，首步可两格，斜前方吃子）。</li>
+      <li><b>特殊规则</b>：王车易位（王和车都没动过、中间无子、王不经过被攻击格）、吃过路兵、兵到底线升变。</li>
+      <li><b>胜负</b>：将死对方即胜；自己王被将死则负。王不能走到被攻击的格子上。</li>
+    </ul>
+    <div class="note">本实现以「将死」定胜负，长将、三次重复局面、50 回合等提和规则没有做。</div>
+    <div class="backline" style="margin-top:12px"><a href="./tri-chess.html">→ 去下棋</a></div>
+  </div>
+
+  <!-- ══════════════ 斗地主 ══════════════ -->
+  <div class="panel rule" id="doudizhu">
+    <h2 class="panel-title">🃏 斗地主</h2>
+    <h3>准备</h3>
+    <ul>
+      <li>一副 54 张（含大小王），你 + 两个 AI 各发 17 张，剩 3 张作底牌。</li>
+      <li><b>叫分</b>：三家轮流叫 1 分、2 分、3 分或不叫，<b>叫得最高的人当地主</b>，拿走 3 张底牌共 20 张；三家都不叫就重新发牌。</li>
+    </ul>
+    <h3>牌型</h3>
+    <table>
+      <tr><th>牌型</th><th>说明</th><th>例子</th></tr>
+      <tr><td>单张</td><td>任意一张</td><td>7</td></tr>
+      <tr><td>对子</td><td>两张点数相同</td><td>99</td></tr>
+      <tr><td>三张</td><td>三张点数相同</td><td>888</td></tr>
+      <tr><td>三带一 / 三带二</td><td>三张 + 任意单张 / 一个对子</td><td>888+7 · 888+77</td></tr>
+      <tr><td>顺子</td><td>≥5 张连续单牌，不能含 2 和王</td><td>3-4-5-6-7</td></tr>
+      <tr><td>双顺（连对）</td><td>≥3 组连续对子，不能含 2 和王</td><td>33-44-55</td></tr>
+      <tr><td>飞机</td><td>≥2 组连续三张，可各带一张单牌或一对</td><td>333-444+7+9</td></tr>
+      <tr><td>四带二</td><td>四张 + 两张单牌，或四张 + 两个对子</td><td>8888+3+5</td></tr>
+      <tr><td>炸弹</td><td>四张点数相同，能压任何非炸弹牌型</td><td>8888</td></tr>
+      <tr><td>王炸</td><td>小王 + 大王，最大</td><td>🃏+🃏</td></tr>
+    </table>
+    <h3>出牌与大小</h3>
+    <ul>
+      <li>地主先出。轮到你时，可以出一手<b>同牌型、同张数且更大</b>的牌压上家，或者点「不要」；没人压过的时候不能不要。</li>
+      <li>其他两家连续「不要」，就由最后出牌的人重新自由出牌。</li>
+      <li>点数大小：<b>3 &lt; 4 &lt; … &lt; K &lt; A &lt; 2 &lt; 小王 &lt; 大王</b>。花色不影响大小。</li>
+      <li>「提示」会替你在手里找一手能压过当前的牌；没有就提示要不起。</li>
+    </ul>
+    <h3>计分</h3>
+    <ul>
+      <li>底分 1 × 叫分 × 倍数。每出现一个炸弹或王炸翻一倍；<b>春天</b>（地主打完农民一张没出）再翻一倍。</li>
+      <li>地主先出完牌：地主赢；任意一个农民先出完：农民方赢。</li>
+    </ul>
+    <div class="backline"><a href="./doudizhu.html">→ 去打一局</a></div>
+  </div>
+
+  <!-- ══════════════ UNO ══════════════ -->
+  <div class="panel rule" id="uno">
+    <h2 class="panel-title">🎴 UNO</h2>
+    <h3>牌组（108 张）</h3>
+    <ul>
+      <li>红、黄、绿、蓝四色：每色 0 一张、1–9 各两张 = 76 张。</li>
+      <li>功能牌：<b>跳过（Skip）</b>、<b>反转（Reverse）</b>、<b>+2</b> 三种，每色各两张 = 24 张。</li>
+      <li>万能牌（Wild）、<b>王牌 +4（Wild Draw Four）</b> 各四张 = 8 张。</li>
+    </ul>
+    <h3>怎么打</h3>
+    <ul>
+      <li>每人 7 张，翻开一张作为起始牌。轮到你时，出的牌必须和弃牌堆<b>同色或同数字/同功能</b>，或者出万能牌。</li>
+      <li>不能出就<b>摸一张</b>：摸到能出的可以马上出，不能出就过。</li>
+      <li><b>跳过</b>：下家失去这一轮。<b>反转</b>：出牌方向掉头（剩两人时相当于跳过）。<b>+2</b>：下家摸 2 张并跳过。</li>
+      <li><b>万能</b>：随时可出，出完指定颜色。<b>+4</b>：下家摸 4 张、跳过，并指定颜色。</li>
+    </ul>
+    <h3>UNO 宣言</h3>
+    <p>你出完牌后手里只剩 1 张时，必须在有限时间内点一次 <b>UNO!</b> 按钮；忘喊被抓到罚摸 2 张。AI 会自动喊。</p>
+    <h3>计分与胜负</h3>
+    <ul>
+      <li>一局结束时，按其他玩家手里剩牌算分给你：数字牌按面值，跳过/反转/+2 记 20 分，万能 / +4 记 50 分。</li>
+      <li>累计先到 <b>500 分</b>，或打满 <b>5 局</b>，分高者胜。</li>
+    </ul>
+    <div class="note">本实现的几个约定：+4 必须手里没有当前颜色才能出；+2 / +4 <b>不能叠加</b>；最后一张功能牌不再结算额外的罚摸。这些和线下玩法略有出入，页面里也照着这个规则判。</div>
+    <div class="backline"><a href="./uno.html">→ 去打一局</a></div>
+  </div>
+
+  <!-- ══════════════ 麻将 ══════════════ -->
+  <div class="panel rule" id="mahjong">
+    <h2 class="panel-title">🀄 麻将（推倒胡简化版）</h2>
+    <h3>牌组</h3>
+    <ul>
+      <li>136 张：万 / 条 / 筒 各 1–9，每种 4 张；字牌 东、南、西、北、中、发、白，每种 4 张。</li>
+      <li><b>没有花牌，也没有「吃」</b>——只做碰、杠、胡。这一点和很多地方麻将不同，页面里不会出现吃牌按钮。</li>
+    </ul>
+    <h3>流程</h3>
+    <ul>
+      <li>4 人，每人 13 张，庄家 14 张先打。按顺序摸牌、打牌。</li>
+      <li><b>碰</b>：别人打出的牌，你手里有两张一样的，可以碰（本实现任意一家都能碰，不限于下家）。</li>
+      <li><b>明杠</b>：别人打出的牌你手里有三张；<b>补杠</b>：已经碰过的牌又摸到第四张；<b>暗杠</b>：自己手里四张一样。</li>
+      <li>杠完从牌墙补一张再打。</li>
+    </ul>
+    <h3>胡牌</h3>
+    <ul>
+      <li><b>平胡</b>：4 组面子（刻子或顺子）+ 1 对将。</li>
+      <li><b>七对</b>：7 个对子（4 张一样的算两对）。</li>
+      <li><b>自摸</b>：自己摸到的那张凑成胡牌；<b>点炮</b>：别人打出的牌让你胡。</li>
+    </ul>
+    <h3>计分</h3>
+    <ul>
+      <li>底分 1 × 自摸 2 × 门清 2 × 七对 4，可叠乘，<b>封顶 8 倍</b>。</li>
+      <li>自摸：三家各付；点炮：只由放炮的那家付。</li>
+      <li>牌墙摸到 0 张仍无人胡，流局，0 分。</li>
+    </ul>
+    <div class="note">本实现不做抢杠、一炮多响、连庄和算番细则；杠上开花按普通自摸算。</div>
+    <div class="backline"><a href="./mahjong.html">→ 去开一局</a></div>
+  </div>
+
+  <div class="panel">
+    <div class="tip">
+      💡 说明里的规则和页面里的实现是同一套：凡是我们简化过的地方（比如麻将没有吃、UNO 的 +4 不能叠加），上面都单独标了出来。
+      发现哪里对不上，直接说，我改代码或改说明。
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="fl">
+    <span>📖 玩法说明</span>
+    <a href="./index.html">游戏厅</a>
+    <a href="../index.html">工具台</a>
+  </div>
+  <div class="fr"><span>© <span data-year>2026</span></span></div>
+</footer>
+
+<script src="../assets/js/core.js"></script>
+</body>
+</html>

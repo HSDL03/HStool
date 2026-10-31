@@ -322,5 +322,101 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "game-hall",
+    "icon": "🎮",
+    "name": "游戏厅",
+    "desc": "棋类 · 牌类 · 小游戏，全部在浏览器里跑",
+    "tag": "游戏",
+    "url": "./games/index.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "game-go",
+    "icon": "⚪",
+    "name": "围棋",
+    "desc": "9 路棋盘对 AI，贴目 6.5，可停一手悔棋",
+    "tag": "游戏",
+    "url": "./games/tri-chess.html#go",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "game-xiangqi",
+    "icon": "🀄",
+    "name": "中国象棋",
+    "desc": "完整走子规则，将死定胜负，支持悔棋",
+    "tag": "游戏",
+    "url": "./games/tri-chess.html#xq",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "game-chess",
+    "icon": "♞",
+    "name": "国际象棋",
+    "desc": "含易位 / 吃过路兵 / 升变，对 AI 下棋",
+    "tag": "游戏",
+    "url": "./games/tri-chess.html#ch",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "game-doudizhu",
+    "icon": "🃏",
+    "name": "斗地主",
+    "desc": "你 vs 两个 AI，叫分抢地主，牌型判全",
+    "tag": "游戏",
+    "url": "./games/doudizhu.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "game-uno",
+    "icon": "🎴",
+    "name": "UNO",
+    "desc": "你 + 3 个 AI，108 张标准牌，500 分制",
+    "tag": "游戏",
+    "url": "./games/uno.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "game-mahjong",
+    "icon": "🀄",
+    "name": "麻将",
+    "desc": "4 人推倒胡：碰 / 杠 / 自摸点炮，含七对",
+    "tag": "游戏",
+    "url": "./games/mahjong.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "game-rules",
+    "icon": "📖",
+    "name": "玩法说明",
+    "desc": "所有棋牌的规则、操作与简化说明",
+    "tag": "游戏",
+    "url": "./games/rules.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

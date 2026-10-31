@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>游戏厅 · 红石的小站</title>
+<meta name="description" content="围棋、中国象棋、国际象棋、斗地主、UNO、麻将，全部在浏览器里跑，AI 也在本机。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+  .gs{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px}
+  .g{
+    display:flex;gap:12px;align-items:center;
+    padding:13px 15px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
+    box-shadow:var(--bevel);text-decoration:none;color:inherit;min-width:0;
+    transition:transform .12s,border-color .12s,box-shadow .12s;
+  }
+  .g:hover{border-color:var(--ac);transform:translateY(-2px);box-shadow:0 6px 0 rgba(0,0,0,.10)}
+  .gico{
+    flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+    font-size:24px;line-height:1;background:var(--bg);border:2px solid var(--bd);border-radius:10px;
+  }
+  .gmain{flex:1;min-width:0}
+  .gmain b{display:block;font-size:15px;font-weight:800;letter-spacing:-.01em;margin-bottom:2px}
+  .gmain p{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+  .gtags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+  .garrow{flex:none;font-size:13px;font-weight:800;color:var(--ac)}
+  .hero-note{
+    display:flex;gap:11px;align-items:center;flex-wrap:wrap;
+    padding:12px 15px;margin:0 0 20px;background:var(--bg2);border:2px solid var(--bd2);
+    border-radius:var(--r);box-shadow:var(--bevel);font-size:12.5px;color:var(--muted);
+  }
+  .hero-note b{color:var(--text)}
+  .hero-note .grow{flex:1;min-width:190px}
+  @media(max-width:640px){
+    .gs{grid-template-columns:1fr}
+    .g{padding:12px 13px}
+    .gico{width:38px;height:38px;font-size:21px}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<main class="wrap">
+  <div class="page-head">
+    <div>
+      <h1>🎮 游戏厅</h1>
+      <p class="sub">三棋三牌 · 全部在浏览器里跑，AI 也在本机</p>
+    </div>
+    <div class="actions"><a class="btn primary" href="./rules.html">📖 玩法说明</a></div>
+  </div>
+
+  <div class="hero-note">
+    <span>🧠</span>
+    <span class="grow"><b>不用注册、不用联网</b>：六个玩法都是跟电脑打，引擎跑在你的浏览器里，关掉页面即结束。</span>
+    <a class="btn" href="../index.html">← 回工具台</a>
+  </div>
+
+  <div class="sec-title">棋类 <span class="count">3</span></div>
+  <div class="gs">
+    <a class="g" href="./tri-chess.html#go">
+      <span class="gico">⚪</span>
+      <div class="gmain">
+        <b>围棋</b>
+        <p>9 路棋盘，贴目 6.5；可停一手、悔棋、换先</p>
+        <div class="gtags"><span class="badge">对 AI</span><span class="badge ok">离线可玩</span></div>
+      </div>
+      <span class="garrow">→</span>
+    </a>
+
+    <a class="g" href="./tri-chess.html#xq">
+      <span class="gico">🀄</span>
+      <div class="gmain">
+        <b>中国象棋</b>
+        <p>完整走子规则，将死定胜负；支持悔棋与换先</p>
+        <div class="gtags"><span class="badge">对 AI</span><span class="badge ok">离线可玩</span></div>
+      </div>
+      <span class="garrow">→</span>
+    </a>
+
+    <a class="g" href="./tri-chess.html#ch">
+      <span class="gico">♞</span>
+      <div class="gmain">
+        <b>国际象棋</b>
+        <p>含王车易位、吃过路兵、兵升变；将死定胜负</p>
+        <div class="gtags"><span class="badge">对 AI</span><span class="badge ok">离线可玩</span></div>
+      </div>
+      <span class="garrow">→</span>
+    </a>
+  </div>
+
+  <div class="sec-title">牌类 <span class="count">3</span></div>
+  <div class="gs">
+    <a class="g" href="./doudizhu.html">
+      <span class="gico">🃏</span>
+      <div class="gmain">
+        <b>斗地主</b>
+        <p>你 vs 两个 AI，叫分抢地主，牌型判全</p>
+        <div class="gtags"><span class="badge">对 AI</span><span class="badge">计分</span><span class="badge ok">离线可玩</span></div>
+      </div>
+      <span class="garrow">→</span>
+    </a>
+
+    <a class="g" href="./uno.html">
+      <span class="gico">🎴</span>
+      <div class="gmain">
+        <b>UNO</b>
+        <p>你 + 3 个 AI，108 张标准牌，先到 500 分</p>
+        <div class="gtags"><span class="badge">对 AI</span><span class="badge">5 局</span><span class="badge ok">离线可玩</span></div>
+      </div>
+      <span class="garrow">→</span>
+    </a>
+
+    <a class="g" href="./mahjong.html">
+      <span class="gico">🀄</span>
+      <div class="gmain">
+        <b>麻将</b>
+        <p>4 人推倒胡：碰 / 杠 / 自摸点炮，含七对</p>
+        <div class="gtags"><span class="badge">对 AI</span><span class="badge">推倒胡</span><span class="badge ok">离线可玩</span></div>
+      </div>
+      <span class="garrow">→</span>
+    </a>
+  </div>
+
+  <div class="panel" style="margin-top:26px">
+    <div class="tip">
+      💡 三个棋共用一页（顶部切换，也可以直接点上面的卡片进对应棋种）。完整规则、操作方式和
+      「本实现和标准规则的差别」都在 <a href="./rules.html" style="color:var(--ac);font-weight:700">玩法说明</a> 里。
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="fl">
+    <span>🎮 游戏厅</span>
+    <a href="../index.html">工具台</a>
+    <a href="./rules.html">玩法说明</a>
+  </div>
+  <div class="fr"><span>© <span data-year>2026</span></span></div>
+</footer>
+
+<script src="../assets/js/core.js"></script>
+</body>
+</html>
