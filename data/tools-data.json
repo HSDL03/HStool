@@ -85,7 +85,7 @@
   },
   {
     "id": "tool-muqdbdxs-lqgs",
-    "icon": "💡",
+    "icon": "./assets/mc-icons/mcname.png",
     "name": "MC名称随机器",
     "desc": "？！狂笑的蛇写作文？！",
     "tag": "工具",
@@ -97,7 +97,7 @@
   },
   {
     "id": "tool-mc-coord",
-    "icon": "🌐",
+    "icon": "./assets/mc-icons/mc-coord.png",
     "name": "MC 坐标换算",
     "desc": "主世界 ↔ 下界坐标、区块与两点距离",
     "tag": "工具",
@@ -109,7 +109,7 @@
   },
   {
     "id": "tool-mc-xp",
-    "icon": "🟩",
+    "icon": "./assets/mc-icons/mc-xp.png",
     "name": "MC 经验换算",
     "desc": "等级 ↔ 经验点数 · 附魔 30 级要多少",
     "tag": "工具",
@@ -121,7 +121,7 @@
   },
   {
     "id": "tool-mc-anvil",
-    "icon": "⚒",
+    "icon": "./assets/mc-icons/mc-anvil.png",
     "name": "MC 铁砧成本",
     "desc": "惩罚值翻倍规则 · 算几次合并就太贵",
     "tag": "工具",
@@ -133,7 +133,7 @@
   },
   {
     "id": "tool-mc-food",
-    "icon": "🍖",
+    "icon": "./assets/mc-icons/mc-food.png",
     "name": "MC 食物对比",
     "desc": "饥饿值与隐藏饱和度对比，算一顿吃几个",
     "tag": "工具",
@@ -145,7 +145,7 @@
   },
   {
     "id": "tool-mc-durability",
-    "icon": "⛏",
+    "icon": "./assets/mc-icons/mc-durability.png",
     "name": "MC 工具耐久",
     "desc": "材质耐久、还能用几次、几个材料修满",
     "tag": "工具",
@@ -157,7 +157,7 @@
   },
   {
     "id": "tool-mc-redstone",
-    "icon": "🔴",
+    "icon": "./assets/mc-icons/mc-redstone.png",
     "name": "MC 红石延迟",
     "desc": "中继器档位换秒数，反推目标频率",
     "tag": "工具",
@@ -169,7 +169,7 @@
   },
   {
     "id": "tool-mc-enchant",
-    "icon": "🪄",
+    "icon": "./assets/mc-icons/mc-enchant.png",
     "name": "MC 附魔台等级",
     "desc": "书架数→三档等级，30 级要几个书架",
     "tag": "工具",
@@ -181,7 +181,7 @@
   },
   {
     "id": "tool-mc-brew",
-    "icon": "🧪",
+    "icon": "./assets/mc-icons/mc-brew.png",
     "name": "MC 药水酿造",
     "desc": "选材料出效果、等级、时长与变体",
     "tag": "工具",
@@ -193,7 +193,7 @@
   },
   {
     "id": "tool-mc-signal",
-    "icon": "🔴",
+    "icon": "./assets/mc-icons/mc-signal.png",
     "name": "MC 红石信号规划",
     "desc": "传 N 格要几个中继器、整条链路延迟",
     "tag": "工具",
@@ -205,7 +205,7 @@
   },
   {
     "id": "tool-mc-mine",
-    "icon": "⛏",
+    "icon": "./assets/mc-icons/mc-mine.png",
     "name": "MC 挖掘时间",
     "desc": "硬度×工具×附魔，这方块几秒挖掉",
     "tag": "工具",
@@ -217,7 +217,7 @@
   },
   {
     "id": "tool-mc-damage",
-    "icon": "🛡",
+    "icon": "./assets/mc-icons/mc-damage.png",
     "name": "MC 伤害与护甲",
     "desc": "摔落岩浆加护甲，这一下掉几颗心",
     "tag": "工具",
@@ -229,7 +229,7 @@
   },
   {
     "id": "tool-mc-stack",
-    "icon": "📦",
+    "icon": "./assets/mc-icons/mc-stack.png",
     "name": "MC 堆叠与箱子",
     "desc": "物品↔组↔箱子槽位，搬仓库先算清",
     "tag": "工具",
@@ -241,7 +241,7 @@
   },
   {
     "id": "tool-mc-fuel",
-    "icon": "🔥",
+    "icon": "./assets/mc-icons/mc-fuel.png",
     "name": "MC 熔炉燃料",
     "desc": "烧 N 个要多少燃料，反过来也算",
     "tag": "工具",
@@ -253,7 +253,7 @@
   },
   {
     "id": "tool-mc-beacon",
-    "icon": "🔦",
+    "icon": "./assets/mc-icons/mc-beacon.png",
     "name": "MC 信标范围",
     "desc": "层数→效果半径，要挖多少矿物块",
     "tag": "工具",
@@ -265,7 +265,7 @@
   },
   {
     "id": "tool-mc-slime",
-    "icon": "🟩",
+    "icon": "./assets/mc-icons/mc-slime.png",
     "name": "MC 史莱姆区块",
     "desc": "种子+区块，按 Java 版算法判断",
     "tag": "工具",
@@ -277,7 +277,7 @@
   },
   {
     "id": "tool-mc-command",
-    "icon": "⌨️",
+    "icon": "./assets/mc-icons/mc-command.png",
     "name": "MC 指令生成器",
     "desc": "搜物品直接出 /give、/tp、/effect",
     "tag": "工具",

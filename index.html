@@ -353,6 +353,14 @@
   });
 
   /* ── 卡片 ── */
+  /* 卡片图标：emoji 直接当文字画；写成图片路径（如 ./assets/mc-icons/x.png）就渲成 <img> */
+  function iconHTML(icon) {
+    var s = String(icon || '');
+    if (/\.(png|jpe?g|webp|gif|svg)$/i.test(s)) {
+      return '<img src="' + HS.esc(absUrl(s)) + '" alt="" loading="lazy" decoding="async">';
+    }
+    return HS.esc(s);
+  }
   function cardHTML(t, delay) {
     var external = isExternal(t.url);
     var dbBadge = t.category === 'needDB'
@@ -363,7 +371,7 @@
       ' data-id="' + HS.esc(t.id) + '" style="transition-delay:' + Math.min(delay, 280) + 'ms">' +
       '<span class="glow"></span>' +
       '<div class="card-body">' +
-      '<div class="cico">' + HS.esc(t.icon) + '</div>' +
+      '<div class="cico">' + iconHTML(t.icon) + '</div>' +
       '<div class="cinfo">' +
       '<div class="cname">' + HS.esc(t.name) + '</div>' +
       (t.desc ? '<div class="cdesc">' + HS.esc(t.desc) + '</div>' : '') +
