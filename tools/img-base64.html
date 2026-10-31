@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图片 ↔ Base64 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.drop{
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 16px;text-align:center;
+  background:var(--bg);border:2px dashed var(--bd2);border-radius:var(--r);cursor:pointer;transition:.15s;
+}
+.drop:hover,.drop.hot{border-color:var(--ac);background:var(--bg3)}
+.drop b{font-size:14px}
+.drop span{font-size:12px;color:var(--muted)}
+.preview{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
+.preview img{
+  max-width:100%;min-width:104px;height:auto;max-height:190px;border:2px solid var(--bd2);
+  border-radius:var(--r);background:var(--bg);image-rendering:pixelated;
+}
+.meta{flex:1;min-width:150px;font-size:12.5px;color:var(--muted);line-height:1.85}
+.meta b{font-family:var(--mono);color:var(--text);font-variant-numeric:tabular-nums}
+.code{width:100%;min-height:120px;max-height:230px}
+.small{font-size:11.5px;color:var(--faint);margin-top:7px;line-height:1.6}
+@media(max-width:640px){
+  .preview{flex-direction:column}
+  .preview img{max-height:150px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🖼 图片 ↔ Base64</h1><p class="sub">转成 data URI 内联进代码，或把 Base64 还原成图片下载 · 全在本地跑</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">图片 → Base64</h2>
+      <div class="drop" id="drop" tabindex="0" role="button">
+        <b>点击选图片，或把文件拖进来</b>
+        <span>PNG / JPG / GIF / WebP / SVG · 建议 300KB 以内，再大塞进 HTML 会很难看</span>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+      <div class="preview" id="pv">
+        <img id="thumb" alt="预览">
+        <div class="meta" id="meta">还没有图片。</div>
+      </div>
+      <div class="fld" style="margin-top:12px">
+        <label for="out">Base64 / Data URI</label>
+        <textarea id="out" class="mono code" spellcheck="false" readonly placeholder="选一张图，这里会出现 data:image/png;base64,..."></textarea>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnCopyUri" type="button">📋 复制 Data URI</button>
+        <button class="btn" id="btnCopyRaw" type="button">复制纯 Base64</button>
+        <button class="btn" id="btnDownload" type="button">⬇ 下载这张图</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Base64 → 图片</h2>
+      <div class="fld">
+        <label for="in">粘贴 Base64 或 data:image/…;base64,… （允许含换行）</label>
+        <textarea id="in" class="mono code" spellcheck="false" placeholder="iVBORw0KGgoAAAANSUhEUgAA..."></textarea>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnDecode" type="button">还原预览</button>
+        <button class="btn" id="btnUseSample" type="button">载入示例</button>
+      </div>
+      <div class="preview" id="pv2" style="display:none">
+        <img id="thumb2" alt="还原结果">
+        <div class="meta" id="meta2"></div>
+      </div>
+      <div class="row" id="dlRow" style="display:none;margin-top:10px">
+        <button class="btn" id="btnSave2" type="button">⬇ 保存还原的图片</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 Base64 会让体积涨约 <b>33%</b>（3 字节变 4 字符），适合小图标、分隔线、占位图。
+        超过 300KB 的图别内联，老老实实放文件走 <code>&lt;img src&gt;</code>，不然 HTML 又大又不能缓存。
+        所有转换都在浏览器里完成，图片不会上传到任何地方。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var drop=$('drop'),file=$('file'),thumb=$('thumb'),meta=$('meta'),out=$('out');
+var inBox=$('in'),thumb2=$('thumb2'),meta2=$('meta2'),pv2=$('pv2'),dlRow=$('dlRow');
+var curUri='';
+
+function fmtBytes(n){
+  if(n<1024) return n+' B';
+  if(n<1048576) return (n/1024).toFixed(1)+' KB';
+  return (n/1048576).toFixed(2)+' MB';
+}
+function pct(a,b){return b?(Math.round(a/b*1000)/10)+'%':'—';}
+function esc(s){
+  return String(s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+
+function handleFile(f){
+  if(!f) return;
+  if(!/^image\//.test(f.type)){ toast('这不是图片文件'); return; }
+  if(f.size>8*1024*1024){ toast('图片超过 8MB，浏览器处理会很卡'); return; }
+  var fr=new FileReader();
+  fr.onload=function(){
+    curUri=String(fr.result);
+    thumb.src=curUri;
+    thumb.style.display='';
+    out.value=curUri;
+    var b64=curUri.split(',')[1]||'';
+    meta.innerHTML='文件名：<b>'+esc(f.name)+'</b><br>'
+      +'类型：<b>'+f.type+'</b><br>'
+      +'原文件：<b>'+fmtBytes(f.size)+'</b><br>'
+      +'Base64：<b>'+fmtBytes(b64.length)+'</b>（涨到 '+pct(b64.length,f.size)+'）<br>'
+      +'尺寸：<b id="dim">读取中…</b>';
+    var probe=new Image();
+    probe.onload=function(){
+      var d=$('dim'); if(d) d.textContent=probe.naturalWidth+' × '+probe.naturalHeight+' px';
+    };
+    probe.src=curUri;
+    toast('转换完成');
+  };
+  fr.onerror=function(){ toast('文件读不出来，换一张试试'); };
+  fr.readAsDataURL(f);
+}
+
+drop.addEventListener('click',function(){ file.click(); });
+drop.addEventListener('keydown',function(e){
+  if(e.key==='Enter'||e.key===' '){ e.preventDefault(); file.click(); }
+});
+file.addEventListener('change',function(){ if(file.files[0]) handleFile(file.files[0]); });
+['dragenter','dragover'].forEach(function(ev){
+  drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.add('hot'); });
+});
+['dragleave','drop'].forEach(function(ev){
+  drop.addEventListener(ev,function(e){ e.preventDefault(); drop.classList.remove('hot'); });
+});
+drop.addEventListener('drop',function(e){
+  var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+  handleFile(f);
+});
+
+$('btnCopyUri').addEventListener('click',function(){
+  if(!out.value){ toast('先选一张图'); return; }
+  HS.copy(out.value).then(function(){ toast('已复制 Data URI'); },function(){ toast('复制失败'); });
+});
+$('btnCopyRaw').addEventListener('click',function(){
+  var raw=out.value.split(',')[1];
+  if(!raw){ toast('先选一张图'); return; }
+  HS.copy(raw).then(function(){ toast('已复制纯 Base64'); },function(){ toast('复制失败'); });
+});
+$('btnDownload').addEventListener('click',function(){
+  if(!curUri){ toast('先选一张图'); return; }
+  var a=document.createElement('a');
+  a.href=curUri;
+  a.download='image.'+(curUri.match(/^data:image\/([a-z0-9.+-]+)/i)||[,'png'])[1].replace('svg+xml','svg');
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+/* 文本 → 图片 */
+function decodeText(raw){
+  var t=String(raw||'').trim();
+  if(!t) return null;
+  var mime='image/png',isSvg=false;
+  var m=t.match(/^data:([^;,]+)(;base64)?,[\s\S]*$/i);
+  if(m){
+    mime=m[1].toLowerCase();
+    if(!/;base64/i.test(m[2]||'')){
+      /* data:image/svg+xml,<svg…>  未编码形式 */
+      isSvg=true;
+      return {uri:t};
+    }
+    t=t.slice(t.indexOf(',')+1);
+  }
+  t=t.replace(/\s+/g,'');
+  if(t.length<8){ return null; }
+  if(!/^[A-Za-z0-9+/]+={0,2}$/.test(t)){ return null; }
+  if(!isSvg && !/^image\//.test(mime)) mime='image/png';
+  return {uri:'data:'+mime+';base64,'+t};
+}
+
+$('btnDecode').addEventListener('click',function(){
+  var r=decodeText(inBox.value);
+  if(!r){ toast('这段不是有效的 Base64 图片数据'); pv2.style.display='none'; dlRow.style.display='none'; return; }
+  var probe=new Image();
+  probe.onload=function(){
+    thumb2.src=r.uri;
+    pv2.style.display='flex'; dlRow.style.display='flex';
+    var bytes=Math.round((r.uri.split(',')[1]||'').replace(/=/g,'').length*3/4);
+    meta2.innerHTML='尺寸：<b>'+probe.naturalWidth+' × '+probe.naturalHeight+' px</b><br>'
+      +'估算大小：<b>'+fmtBytes(bytes)+'</b><br>'
+      +'字符数：<b>'+r.uri.length+'</b>';
+    thumb2.dataset.uri=r.uri;
+    toast('已还原');
+  };
+  probe.onerror=function(){
+    pv2.style.display='none'; dlRow.style.display='none';
+    toast('解出来的不是能显示的图片，检查是否被截断');
+  };
+  probe.src=r.uri;
+});
+
+$('btnSave2').addEventListener('click',function(){
+  var uri=thumb2.dataset.uri;
+  if(!uri){ toast('先还原一次'); return; }
+  var a=document.createElement('a');
+  a.href=uri;
+  var ext=(uri.match(/^data:image\/([a-z0-9.+-]+)/i)||[,'png'])[1].replace('svg+xml','svg');
+  a.download='decoded.'+ext;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+/* 首屏示例：本地画一张 32×32 图，真数据不是占位 */
+function sample(){
+  var c=document.createElement('canvas');c.width=32;c.height=32;
+  var g=c.getContext('2d');
+  for(var y=0;y<32;y++)for(var x=0;x<32;x++){
+    var inBox_=(x>7&&x<24&&y>7&&y<24);
+    g.fillStyle=inBox_?((x+y)%2?'#5fbb46':'#3f8a2e'):'#2b2b2b';
+    g.fillRect(x,y,1,1);
+  }
+  var uri=c.toDataURL('image/png');
+  curUri=uri; thumb.src=uri; out.value=uri;
+  var b64=uri.split(',')[1];
+  meta.innerHTML='示例图（页面本地生成）：<b>32 × 32 px</b><br>'
+    +'PNG 大小：<b>'+fmtBytes(Math.round(b64.replace(/=/g,'').length*3/4))+'</b><br>'
+    +'Base64 字符数：<b>'+b64.length+'</b><br>'
+    +'<span style="color:var(--faint)">换成你自己的图看真实体积</span>';
+}
+$('btnUseSample').addEventListener('click',function(){
+  if(!out.value){ toast('上面还没有图，先选一张'); return; }
+  inBox.value=out.value;
+  $('btnDecode').click();
+});
+sample();
+})();
+</script>
+</body>
+</html>

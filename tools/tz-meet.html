@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时区会议对照 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.cities{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.cit{
+  display:flex;align-items:center;gap:7px;padding:8px 10px;background:var(--bg);
+  border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  font-size:13px;cursor:pointer;user-select:none;transition:.15s;
+}
+.cit:hover{border-color:var(--ac)}
+.cit[aria-pressed="true"]{border-color:var(--ac);background:var(--bg3);font-weight:800}
+.cit span.t{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.cit[aria-pressed="true"] span.t{color:var(--text)}
+.list{display:flex;flex-direction:column;gap:9px}
+.row-c{
+  display:grid;grid-template-columns:minmax(96px,1.1fr) 92px 1fr 34px;
+  align-items:center;gap:10px;padding:10px 12px;background:var(--bg);
+  border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+}
+.row-c .nm{font-size:13.5px;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-c .nm small{display:block;font-weight:600;font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+.row-c .tm{font-family:var(--mono);font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.row-c .wd{font-size:11.5px;color:var(--muted)}
+.row-c .tag{
+  font-size:11px;font-weight:800;text-align:center;padding:3px 0;border-radius:4px;
+  border:1px solid var(--bd);color:var(--muted);
+}
+.row-c.awake{background:var(--bg3);border-color:var(--ac)}
+.row-c.awake .tag{background:var(--ac);color:var(--on-ac);border-color:var(--ac)}
+.row-c.night .tm{color:var(--muted)}
+.row-c.night .tag{color:var(--dgr);border-color:var(--dgr)}
+.shift{font-size:10.5px;font-weight:800;color:var(--warn);margin-left:4px}
+.note{font-size:12px;color:var(--faint);margin-top:9px;line-height:1.6}
+@media(max-width:640px){
+  .cities{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:6px}
+  .cit{padding:7px 8px;font-size:12px}
+  .row-c{grid-template-columns:1fr 76px 40px;grid-template-areas:"nm tm tag" "wd wd wd";gap:4px 8px}
+  .row-c .nm{grid-area:nm}.row-c .tm{grid-area:tm;font-size:16px}
+  .row-c .wd{grid-area:wd;font-size:11px}.row-c .tag{grid-area:tag}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🌍 时区会议对照</h1><p class="sub">一个时间点，看清各地几点几号 · 顺手挑出大家都能开会的那几小时</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">选时间</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="dt">日期与时间（与你选的基准城市同时区）</label>
+          <input id="dt" type="datetime-local" step="60">
+        </div>
+        <div class="fld">
+          <label for="base">基准城市</label>
+          <select id="base"></select>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" id="btnNow" type="button">跳到现在</button>
+        <button class="btn" id="btnWork" type="button">对齐到下一个整点工作时段</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制对照表</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">参会城市</h2>
+      <div class="cities" id="cities"></div>
+      <div class="note">点一下选中/取消。绿色表示当地 9:00–18:00，灰色是已经下班，红色是半夜。</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">同一时刻，各地几点</h2>
+      <div class="list" id="list"></div>
+      <div class="note" id="summary">—</div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 时间按各地真实时区算（含夏令时，走浏览器的 <code>Intl</code> 时区库），不是简单差几个小时。
+        跨日的会在时间后面标 <code>+1</code> / <code>-1</code>，别把周二看成周一。挑会议时间时优先保证所有人都落在 9–18 点。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var POOL=[
+  {n:'北京',z:'Asia/Shanghai'},
+  {n:'东京',z:'Asia/Tokyo'},
+  {n:'首尔',z:'Asia/Seoul'},
+  {n:'新加坡',z:'Asia/Singapore'},
+  {n:'孟买',z:'Asia/Kolkata'},
+  {n:'迪拜',z:'Asia/Dubai'},
+  {n:'莫斯科',z:'Europe/Moscow'},
+  {n:'柏林',z:'Europe/Berlin'},
+  {n:'巴黎',z:'Europe/Paris'},
+  {n:'伦敦',z:'Europe/London'},
+  {n:'纽约',z:'America/New_York'},
+  {n:'芝加哥',z:'America/Chicago'},
+  {n:'洛杉矶',z:'America/Los_Angeles'},
+  {n:'圣保罗',z:'America/Sao_Paulo'},
+  {n:'悉尼',z:'Australia/Sydney'},
+  {n:'奥克兰',z:'Pacific/Auckland'}
+];
+var DEFAULT_ON=['北京','伦敦','纽约','洛杉矶'];
+var on={};
+var sel=$('base'),dt=$('dt'),citiesEl=$('cities'),listEl=$('list'),sumEl=$('summary');
+
+function localZone(){
+  try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Shanghai'; }
+  catch(e){ return 'Asia/Shanghai'; }
+}
+var MINE=localZone();
+var BASE_DEFAULT=(POOL.filter(function(c){return c.z===MINE;})[0]||POOL[0]).z;
+
+POOL.forEach(function(c){
+  var o=new Option(c.n+(c.z===MINE?'（本机）':''),c.z);
+  sel.appendChild(o);
+});
+sel.value=BASE_DEFAULT;
+DEFAULT_ON.forEach(function(n){on[n]=true;});
+if(!POOL.some(function(c){return c.z===MINE;})) on['北京']=true;
+
+/* ── 时区换算 ───────────────────────────────── */
+function parts(ms,tz){
+  var f=new Intl.DateTimeFormat('en-US',{
+    timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',
+    hourCycle:'h23',weekday:'short'
+  });
+  var o={},arr=f.formatToParts(new Date(ms));
+  for(var i=0;i<arr.length;i++) o[arr[i].type]=arr[i].value;
+  return {
+    y:+o.year,mo:+o.month,d:+o.day,h:+o.hour,mi:+o.minute,s:+o.second,
+    wd:o.weekday
+  };
+}
+function offsetMs(ms,tz){
+  var p=parts(ms,tz);
+  return Date.UTC(p.y,p.mo-1,p.d,p.h,p.mi,p.s)-ms;
+}
+function fromWall(tz,y,mo,d,h,mi){
+  var guess=Date.UTC(y,mo-1,d,h,mi,0);
+  var off=offsetMs(guess,tz);
+  var t=guess-off;
+  var off2=offsetMs(t,tz);
+  if(off2!==off) t=guess-off2;
+  return t;
+}
+var WD={Sun:'周日',Mon:'周一',Tue:'周二',Wed:'周三',Thu:'周四',Fri:'周五',Sat:'周六'};
+function p2(n){return (n<10?'0':'')+n;}
+
+function dayDiff(baseDay,otherDay){
+  return Math.round((Date.UTC(otherDay[0],otherDay[1]-1,otherDay[2])
+                   -Date.UTC(baseDay[0],baseDay[1]-1,baseDay[2]))/86400000);
+}
+
+/* ── 输入框 ↔ 基准时区的墙钟 ───────────────────── */
+function fillInput(ms){
+  var p=parts(ms,sel.value);
+  dt.value=p.y+'-'+p2(p.mo)+'-'+p2(p.d)+'T'+p2(p.h)+':'+p2(p.mi);
+}
+function readInput(){
+  var v=dt.value;
+  var m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v);
+  if(!m) return null;
+  var t=fromWall(sel.value,+m[1],+m[2],+m[3],+m[4],+m[5]);
+  return isFinite(t)?t:null;
+}
+
+/* ── 城市选择 ───────────────────────────────── */
+function renderCities(){
+  var ms=readInput()||Date.now();
+  var html='';
+  POOL.forEach(function(c){
+    var p=parts(ms,c.z);
+    var key=c.n;
+    html+='<div class="cit" role="button" tabindex="0" data-n="'+key+'" aria-pressed="'
+      +(on[key]?'true':'false')+'">'+c.n
+      +'<span class="t">'+p2(p.h)+':'+p2(p.mi)+'</span></div>';
+  });
+  citiesEl.innerHTML=html;
+}
+citiesEl.addEventListener('click',function(e){
+  var el=e.target.closest('.cit');
+  if(!el) return;
+  var n=el.dataset.n;
+  on[n]=!on[n];
+  if(!Object.keys(on).some(function(k){return on[k];})){ on[n]=true; toast('至少留一个城市'); }
+  renderCities();render();
+});
+citiesEl.addEventListener('keydown',function(e){
+  if(e.key!=='Enter'&&e.key!==' ') return;
+  var el=e.target.closest('.cit');
+  if(el){ e.preventDefault(); el.click(); }
+});
+
+/* ── 主渲染 ─────────────────────────────────── */
+function render(){
+  var ms=readInput();
+  if(ms===null){
+    listEl.innerHTML='<div class="row-c"><div class="nm">时间没填对</div></div>';
+    sumEl.textContent='请选择一个有效的日期时间。';
+    return;
+  }
+  var base=parts(ms,sel.value);
+  var baseDay=[base.y,base.mo,base.d];
+  var rows='',count=0,awake=0,names=[];
+  POOL.forEach(function(c){
+    if(!on[c.n]) return;
+    count++;
+    var p=parts(ms,c.z);
+    var dd=dayDiff(baseDay,[p.y,p.mo,p.d]);
+    var shift=dd>0?'<span class="shift">+'+dd+'</span>':(dd<0?'<span class="shift">'+dd+'</span>':'');
+    var isAwake=p.h>=9&&p.h<18;
+    var isNight=p.h>=23||p.h<6;
+    if(isAwake) awake++;
+    names.push(c.n+' '+p2(p.h)+':'+p2(p.mi));
+    rows+='<div class="row-c'+(isAwake?' awake':'')+(isNight?' night':'')+'">'
+      +'<div class="nm">'+c.n+'<small>'+c.z+'</small></div>'
+      +'<div class="tm">'+p2(p.h)+':'+p2(p.mi)+shift+'</div>'
+      +'<div class="wd">'+WD[p.wd]+' · '+p.y+'-'+p2(p.mo)+'-'+p2(p.d)+'</div>'
+      +'<div class="tag">'+(isAwake?'在班':(isNight?'深夜':'休息'))+'</div>'
+      +'</div>';
+  });
+  listEl.innerHTML=rows||'<div class="row-c"><div class="nm">还没选城市</div></div>';
+
+  if(!count){ sumEl.textContent='先在上面选几个城市。'; return; }
+  var okAll=awake===count;
+  sumEl.innerHTML='共 '+count+' 个城市，<b>'+awake+'</b> 个落在 9:00–18:00。'
+    +(okAll?' 大家都能开会，就这个时间。':' 有人要迁就一下。');
+}
+
+/* 找一个所有选中城市都在 9–18 点的整点；找不到就退而求其次说明 */
+$('btnWork').addEventListener('click',function(){
+  var start=readInput()||Date.now();
+  start=Math.ceil(start/3600000)*3600000;
+  var picked=POOL.filter(function(c){return on[c.n];});
+  var best=null,bestScore=-1;
+  for(var i=0;i<48;i++){
+    var t=start+i*3600000;
+    var ok=0,worst=0;
+    picked.forEach(function(c){
+      var p=parts(t,c.z);
+      var dist=Math.abs(p.h-13);   /* 离下午 1 点越近越舒服 */
+      worst=Math.max(worst,dist);
+      if(p.h>=9&&p.h<18) ok++;
+    });
+    var score=ok*100-worst;
+    if(score>bestScore){ bestScore=score; best=t; }
+    if(ok===picked.length&&worst<=4) break;   /* 全员在班且都靠近中午，收工 */
+  }
+  if(best===null){ toast('算不出合适的时间'); return; }
+  fillInput(best);
+  renderCities();render();
+  var b=parts(best,sel.value);
+  toast('已对齐到 '+p2(b.h)+':'+p2(b.mi)+'（基准城市时间）');
+});
+
+$('btnNow').addEventListener('click',function(){
+  fillInput(Date.now());renderCities();render();toast('已跳到现在');
+});
+sel.addEventListener('change',function(){
+  var ms=readInput();
+  fillInput(ms===null?Date.now():ms);
+  renderCities();render();
+});
+dt.addEventListener('input',function(){ renderCities();render(); });
+
+$('btnCopy').addEventListener('click',function(){
+  var ms=readInput();
+  if(ms===null){ toast('先填一个有效时间'); return; }
+  var base=parts(ms,sel.value);
+  var baseDay=[base.y,base.mo,base.d];
+  var lines=['会议时间（基准：'+sel.options[sel.selectedIndex].text+'）'];
+  POOL.forEach(function(c){
+    if(!on[c.n]) return;
+    var p=parts(ms,c.z);
+    var dd=dayDiff(baseDay,[p.y,p.mo,p.d]);
+    lines.push('· '+c.n+'  '+p2(p.h)+':'+p2(p.mi)+'  '+WD[p.wd]+' '+(dd?('('+(dd>0?'+':'')+dd+' 天)'):''));
+  });
+  HS.copy(lines.join('\n')).then(function(){toast('已复制对照表');},function(){toast('复制失败');});
+});
+
+/* 首屏：现在 + 每 30 秒跟着走一次（用户改过时间就停下） */
+var touched=false;
+dt.addEventListener('input',function(){touched=true;});
+sel.addEventListener('change',function(){touched=true;});
+fillInput(Date.now());
+renderCities();render();
+var timer=setInterval(function(){
+  if(touched||document.hidden) return;
+  fillInput(Date.now());renderCities();render();
+},30000);
+window.addEventListener('beforeunload',function(){clearInterval(timer);});
+})();
+</script>
+</body>
+</html>

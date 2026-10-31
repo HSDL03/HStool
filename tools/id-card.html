@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>身份证校验 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📇</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.state{padding:12px 14px;border-radius:var(--r);border-left:3px solid var(--ac);background:var(--bg3);font-size:13.5px;line-height:1.7;margin-bottom:13px}
+.state.bad{border-left-color:var(--dgr)}
+.state b{font-weight:800}
+.kv{display:flex;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:86px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.kv b.plain{font-family:inherit;font-weight:700}
+.hintline{font-size:11.5px;color:var(--faint);margin-top:8px}
+.bits{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.bits i{
+  font-style:normal;font-family:var(--mono);font-size:12.5px;font-weight:700;
+  padding:5px 7px;border:1px solid var(--bd);border-radius:4px;background:var(--bg);color:var(--text);
+}
+.bits i.c1{border-color:var(--ac);color:var(--ac)}
+.bits i.c2{border-color:var(--warn);color:var(--warn)}
+@media(max-width:640px){
+  .kv span{width:64px;font-size:10.5px}
+  .bits i{font-size:11px;padding:4px 5px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📇 身份证校验</h1><p class="sub">18 位号查校验位、出生日期、性别与归属省份 · 只在本地算，不上传</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">输入号码</h2>
+      <div class="fld">
+        <label for="idIn">身份证号（18 位，也认 15 位旧号）</label>
+        <input id="idIn" class="mono" maxlength="18" spellcheck="false" autocomplete="off" placeholder="11010519900307…">
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnCheck" type="button">校验</button>
+        <button class="btn" id="btnClear" type="button">清空</button>
+      </div>
+      <div class="hintline">粘贴后会自动校验，不需要点按钮。号码不会被发送到任何服务器。</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结论</h2>
+      <div class="state" id="state">填入一个号码，这里给结论。</div>
+      <div class="kv"><span>归属地</span><b class="plain" id="rProv">—</b></div>
+      <div class="kv"><span>出生日期</span><b id="rBirth">—</b></div>
+      <div class="kv"><span>性别</span><b class="plain" id="rSex">—</b></div>
+      <div class="kv"><span>年龄</span><b id="rAge">—</b></div>
+      <div class="kv"><span>校验位</span><b id="rChk">—</b></div>
+      <div class="bits" id="bits"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">从 17 位补校验位</h2>
+      <div class="fld">
+        <label for="preIn">前 17 位（第 18 位会自动算出来）</label>
+        <input id="preIn" class="mono" maxlength="17" spellcheck="false" autocomplete="off" placeholder="11010519900307123">
+      </div>
+      <div class="kv"><span>完整号码</span><b id="rFull">—</b></div>
+      <div class="row">
+        <button class="btn" id="btnCopyFull" type="button">📋 复制完整号码</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 18 位号是 <code>6 位地区 + 8 位生日 + 3 位顺序码 + 1 位校验位</code>。校验位按 ISO 7064:1983 MOD 11-2 算：
+        前 17 位分别乘权重 7 9 10 5 8 4 2 1 6 3 7 9 10 5 8 4 2，求和后查余数表。
+        第 17 位决定性别（奇男偶女）。15 位旧号没有校验位，世纪一律按 19xx 补全。
+        校验通过只说明号码格式自洽，<b>不代表真实存在</b>——别拿它当实名认证。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var WEIGHT=[7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];
+var CHECK=['1','0','X','9','8','7','6','5','4','3','2'];
+var PROV={
+  '11':'北京市','12':'天津市','13':'河北省','14':'山西省','15':'内蒙古自治区',
+  '21':'辽宁省','22':'吉林省','23':'黑龙江省',
+  '31':'上海市','32':'江苏省','33':'浙江省','34':'安徽省','35':'福建省','36':'江西省','37':'山东省',
+  '41':'河南省','42':'湖北省','43':'湖南省','44':'广东省','45':'广西壮族自治区','46':'海南省',
+  '50':'重庆市','51':'四川省','52':'贵州省','53':'云南省','54':'西藏自治区',
+  '61':'陕西省','62':'甘肃省','63':'青海省','64':'宁夏回族自治区','65':'新疆维吾尔自治区',
+  '71':'台湾省','81':'香港特别行政区','82':'澳门特别行政区','91':'国外'
+};
+
+var idIn=$('idIn'),stateEl=$('state'),bitsEl=$('bits');
+var rProv=$('rProv'),rBirth=$('rBirth'),rSex=$('rSex'),rAge=$('rAge'),rChk=$('rChk');
+var preIn=$('preIn'),rFull=$('rFull');
+
+function checksum(first17){
+  var s=0;
+  for(var i=0;i<17;i++) s+=(+first17.charAt(i))*WEIGHT[i];
+  return CHECK[s%11];
+}
+function p2(n){return (n<10?'0':'')+n;}
+function validDate(y,m,d){
+  if(m<1||m>12||d<1||d>31) return false;
+  var dt=new Date(Date.UTC(y,m-1,d));
+  return dt.getUTCFullYear()===y&&dt.getUTCMonth()===m-1&&dt.getUTCDate()===d;
+}
+function show(ok,msg){
+  stateEl.className=ok?'state':'state bad';
+  stateEl.innerHTML=msg;
+}
+function blank(){
+  rProv.textContent='—';rBirth.textContent='—';rSex.textContent='—';
+  rAge.textContent='—';rChk.textContent='—';bitsEl.innerHTML='';
+}
+
+function check(){
+  var raw=idIn.value.toUpperCase().replace(/[\s-]/g,'');
+  if(!raw){ blank(); show(true,'填入一个号码，这里给结论。'); return; }
+  blank();
+
+  if(!/^\d{15}$|^\d{17}[\dX]$/.test(raw)){
+    show(false,'<b>格式不对。</b>18 位号应为 17 位数字 + 1 位数字或 X；15 位旧号全是数字。现在有 '+raw.length+' 个字符。');
+    return;
+  }
+
+  var y,mo,d,first17;
+  if(raw.length===15){
+    /* 15 位：6 地区 + 6 生日(YYMMDD) + 3 顺序 */
+    first17=raw.slice(0,6)+'19'+raw.slice(6,12)+raw.slice(12,15);
+    y=1900+ (+raw.substr(6,2)); mo=+raw.substr(8,2); d=+raw.substr(10,2);
+    show(true,'<b>15 位旧号，格式合法</b>（无校验位，按 19xx 补全出生年）。建议换成 18 位号。');
+    rChk.textContent='旧号无校验位';
+  }else{
+    first17=raw.slice(0,17);
+    var exp=checksum(first17),got=raw.charAt(17);
+    y=+raw.substr(6,4); mo=+raw.substr(10,2); d=+raw.substr(12,2);
+    if(got!==exp){
+      rChk.textContent='应为 '+exp+'，实际 '+got;
+      show(false,'<b>校验位不通过。</b>按前 17 位算出来应该是 <b>'+exp+'</b>，你给的是 <b>'+got
+        +'</b>。多半是抄错或改过一位。');
+      return;
+    }
+    rChk.textContent=exp+(exp==='X'?'（罗马数字十）':'');
+    if(!validDate(y,mo,d)){
+      show(false,'<b>校验位对了，但出生日期不存在。</b>'+y+'-'+p2(mo)+'-'+p2(d)+' 这一天并不存在。');
+      rProv.textContent=PROV[raw.slice(0,2)]||'未知编码';
+      return;
+    }
+    show(true,'<b>校验通过。</b>格式、日期、校验位三者自洽。注意这只证明号码本身没写错，'
+      +'不代表这个人在系统里真实存在。');
+  }
+
+  if(!validDate(y,mo,d)){
+    show(false,'<b>出生日期不存在。</b>'+y+'-'+p2(mo)+'-'+p2(d));
+    return;
+  }
+  var now=new Date();
+  var age=now.getFullYear()-y;
+  if(now.getMonth()+1<mo||(now.getMonth()+1===mo&&now.getDate()<d)) age--;
+  var seq=raw.length===18?raw.charAt(16):raw.charAt(14);
+
+  rProv.textContent=(PROV[raw.slice(0,2)]||'未知编码')+'（'+raw.slice(0,2)+'）';
+  rBirth.textContent=y+'-'+p2(mo)+'-'+p2(d);
+  rSex.textContent=(+seq%2?'男':'女')+'（顺序码 '+seq+'）';
+  rAge.textContent=age+' 岁'+(age<0?'（日期在未来）':'');
+  if(raw.length===18) rChk.textContent=checksum(first17);
+
+  /* 分段着色：地区 / 生日 / 顺序 / 校验 */
+  var parts=raw.length===18
+    ? [[raw.slice(0,6),'c1'],[raw.slice(6,14),'c2'],[raw.slice(14,17),''],[raw.charAt(17),'c1']]
+    : [[raw.slice(0,6),'c1'],['19'+raw.slice(6,12),'c2'],[raw.slice(12,15),''],['—','']];
+  bitsEl.innerHTML=parts.map(function(p){return '<i class="'+p[1]+'">'+p[0]+'</i>';}).join('');
+}
+
+idIn.addEventListener('input',function(){
+  var v=idIn.value.toUpperCase().replace(/[^0-9X]/g,'');
+  if(v!==idIn.value) idIn.value=v;
+  check();
+});
+
+function fillFull(){
+  var v=preIn.value.replace(/[^0-9]/g,'');
+  preIn.value=v;
+  if(v.length!==17){
+    rFull.textContent=v.length?'还差 '+(17-v.length)+' 位':'—';
+    return;
+  }
+  rFull.textContent=v+checksum(v);
+}
+preIn.addEventListener('input',fillFull);
+$('btnCopyFull').addEventListener('click',function(){
+  var v=preIn.value.replace(/[^0-9]/g,'');
+  if(v.length!==17){ toast('先填满 17 位'); return; }
+  HS.copy(v+checksum(v)).then(function(){toast('已复制完整号码');},function(){toast('复制失败');});
+});
+$('btnCheck').addEventListener('click',function(){check();toast('已校验');});
+$('btnClear').addEventListener('click',function(){
+  idIn.value='';preIn.value='';blank();rFull.textContent='—';
+  show(true,'填入一个号码，这里给结论。');idIn.focus();
+});
+
+/* 首屏：拿一个自洽的示例号码（110105 = 北京朝阳，生日 1990-03-07，顺序码 123） */
+(function init(){
+  var base='11010519900307123';
+  preIn.value=base;
+  idIn.value=base+checksum(base);
+  fillFull();
+  check();
+})();
+})();
+</script>
+</body>
+</html>

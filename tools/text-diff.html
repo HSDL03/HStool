@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文本差异对比 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔀</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px}
+.pill{
+  font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;
+  border:1px solid var(--bd);color:var(--muted);background:var(--bg);
+  font-family:var(--mono);font-variant-numeric:tabular-nums;
+}
+.pill.add{color:var(--ac);border-color:var(--ac)}
+.pill.del{color:var(--dgr);border-color:var(--dgr)}
+.diff{
+  font-family:var(--mono);font-size:12.5px;line-height:1.6;overflow:auto;max-height:420px;
+  border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg);box-shadow:var(--bevel);
+}
+.diff div{display:flex;white-space:pre-wrap;word-break:break-word}
+.diff div:hover{background:var(--bg3)}
+.diff .no{
+  flex:none;width:44px;padding:1px 6px;text-align:right;color:var(--faint);
+  font-size:11px;user-select:none;border-right:1px solid var(--bd);
+}
+.diff .sg{flex:none;width:18px;text-align:center;font-weight:800}
+.diff .tx{flex:1;padding:1px 8px 1px 2px}
+.diff .same .sg{color:var(--faint)}
+.diff .add{background:color-mix(in srgb,var(--ac) 14%,transparent)}
+.diff .add .sg{color:var(--ac)}
+.diff .del{background:color-mix(in srgb,var(--dgr) 14%,transparent)}
+.diff .del .sg{color:var(--dgr)}
+.opts{display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
+.opts label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);cursor:pointer}
+.opts input{width:15px;height:15px;accent-color:var(--ac)}
+.empty{font-size:12.5px;color:var(--faint);padding:14px}
+@media(max-width:640px){
+  .pair{grid-template-columns:1fr}
+  .diff{max-height:340px;font-size:11.5px}
+  .diff .no{width:34px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔀 文本差异对比</h1><p class="sub">按行比出新增与删除 · 改配置、对文案、看改动</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">两段文本</h2>
+      <div class="pair">
+        <div class="fld">
+          <label for="oldT">旧版本</label>
+          <textarea id="oldT" class="mono" spellcheck="false"></textarea>
+        </div>
+        <div class="fld">
+          <label for="newT">新版本</label>
+          <textarea id="newT" class="mono" spellcheck="false"></textarea>
+        </div>
+      </div>
+      <div class="opts">
+        <label><input type="checkbox" id="optSpace"> 忽略行首尾空格</label>
+        <label><input type="checkbox" id="optCase"> 忽略大小写</label>
+        <label><input type="checkbox" id="optBlank"> 忽略空行</label>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnRun" type="button">开始对比</button>
+        <button class="btn" id="btnSwap" type="button">⇄ 交换两边</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="stats">
+        <span class="pill add" id="sAdd">+0 新增</span>
+        <span class="pill del" id="sDel">−0 删除</span>
+        <span class="pill" id="sSame">=0 相同</span>
+        <span class="pill" id="sRatio">相似度 —</span>
+      </div>
+      <div class="diff" id="diff"><div class="empty">两边都有内容后点「开始对比」。</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 按行比对，用最长公共子序列算出最小改动集，不是逐字硬套。对齐时会自动合并连续的增删，
+        适合对配置文件、SQL、文案改动。行数超过 1500 会拒绝计算（O(n·m) 太吃内存）。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var oldT=$('oldT'),newT=$('newT'),diffEl=$('diff');
+var MAXL=1500;
+
+var SAMPLE_A=[
+  '# 站点配置',
+  'name: 红石的小站',
+  'theme: mc-wiki',
+  'lang: zh-CN',
+  '',
+  '[server]',
+  'port: 8080',
+  'timeout: 30',
+  'retry: 2',
+  '',
+  '## 已废弃',
+  'legacy: true'
+].join('\n');
+var SAMPLE_B=[
+  '# 站点配置',
+  'name: 红石的小站',
+  'theme: mc-night',
+  'lang: zh-CN',
+  'font: system',
+  '',
+  '[server]',
+  'port: 8080',
+  'timeout: 60',
+  'retry: 3',
+  'keepalive: on',
+  '',
+  '## 已废弃',
+  'legacy: false'
+].join('\n');
+
+function norm(s){
+  if($('optSpace').checked) s=s.replace(/^\s+|\s+$/g,'');
+  if($('optCase').checked) s=s.toLowerCase();
+  return s;
+}
+function splitLines(txt){
+  var arr=txt.replace(/\r\n?/g,'\n').split('\n');
+  if($('optBlank').checked) arr=arr.filter(function(l){return l.trim()!=='';});
+  if(arr.length&&arr[arr.length-1]===''&&txt.slice(-1)==='\n') arr.pop();
+  return arr;
+}
+
+/* LCS：返回 [{t:'same'|'add'|'del', line, noA, noB}] */
+function diffRows(A,B){
+  var n=A.length,m=B.length;
+  var ka=A.map(norm),kb=B.map(norm);
+  var w=m+1;
+  var dp=new Uint32Array((n+1)*w);
+  for(var i=n-1;i>=0;i--){
+    for(var j=m-1;j>=0;j--){
+      dp[i*w+j]= ka[i]===kb[j] ? dp[(i+1)*w+j+1]+1 : Math.max(dp[(i+1)*w+j],dp[i*w+j+1]);
+    }
+  }
+  var out=[],x=0,y=0;
+  while(x<n&&y<m){
+    if(ka[x]===kb[y]){ out.push({t:'same',line:A[x],na:x+1,nb:y+1});x++;y++; }
+    else if(dp[(x+1)*w+y]>=dp[x*w+y+1]){ out.push({t:'del',line:A[x],na:x+1,nb:''});x++; }
+    else { out.push({t:'add',line:B[y],na:'',nb:y+1});y++; }
+  }
+  while(x<n){ out.push({t:'del',line:A[x],na:x+1,nb:''});x++; }
+  while(y<m){ out.push({t:'add',line:B[y],na:'',nb:y+1});y++; }
+  return out;
+}
+
+function esc(s){
+  return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});
+}
+
+function run(silent){
+  var a=splitLines(oldT.value),b=splitLines(newT.value);
+  if(!a.length&&!b.length){ diffEl.innerHTML='<div class="empty">两边都是空的，没得比。</div>';
+    $('sAdd').textContent='+0 新增';$('sDel').textContent='−0 删除';$('sSame').textContent='=0 相同';
+    $('sRatio').textContent='相似度 —'; return false; }
+  if(a.length>MAXL||b.length>MAXL){
+    toast('行数太多（上限 '+MAXL+'），先拆小一点');
+    diffEl.innerHTML='<div class="empty">行数超过 '+MAXL+'，为了不把浏览器卡死就不算了。</div>';
+    return false;
+  }
+  var rows=diffRows(a,b);
+  var add=0,del=0,same=0,html='';
+  rows.forEach(function(r){
+    if(r.t==='add') add++; else if(r.t==='del') del++; else same++;
+    var no=(r.na||'')+(r.nb?'·'+r.nb:'');
+    var sg=r.t==='add'?'+':(r.t==='del'?'−':' ');
+    html+='<div class="'+r.t+'"><span class="no">'+no+'</span><span class="sg">'+sg+'</span>'
+      +'<span class="tx">'+(r.line===''?'<span style="color:var(--faint)">（空行）</span>':esc(r.line))+'</span></div>';
+  });
+  diffEl.innerHTML=html;
+  $('sAdd').textContent='+'+add+' 新增';
+  $('sDel').textContent='−'+del+' 删除';
+  $('sSame').textContent='='+same+' 相同';
+  var total=add+del+same;
+  $('sRatio').textContent='相似度 '+(total?Math.round(same/total*1000)/10:0)+'%';
+  if(!silent) toast(add||del?('比完了：+'+add+' / −'+del):'两边完全一样');
+  return true;
+}
+
+$('btnRun').addEventListener('click',function(){run();});
+$('btnSwap').addEventListener('click',function(){
+  var t=oldT.value;oldT.value=newT.value;newT.value=t;run(true);
+});
+$('btnCopy').addEventListener('click',function(){
+  var a=splitLines(oldT.value),b=splitLines(newT.value);
+  if(a.length>MAXL||b.length>MAXL){ toast('行数太多，先拆小'); return; }
+  var rows=diffRows(a,b),txt=[];
+  rows.forEach(function(r){
+    txt.push((r.t==='add'?'+ ':r.t==='del'?'- ':'  ')+r.line);
+  });
+  HS.copy(txt.join('\n')).then(function(){toast('已复制 diff');},function(){toast('复制失败');});
+});
+
+[oldT,newT].forEach(function(el){
+  el.addEventListener('input',function(){
+    clearTimeout(el._tm);
+    el._tm=setTimeout(function(){run(true);},220);
+  });
+});
+['optSpace','optCase','optBlank'].forEach(function(id){
+  $(id).addEventListener('change',function(){run(true);});
+});
+
+/* 首屏给一份真能比的默认文本 */
+oldT.value=SAMPLE_A;
+newT.value=SAMPLE_B;
+run(true);
+})();
+</script>
+</body>
+</html>

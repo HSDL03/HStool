@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 铁砧成本 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚒</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.card{padding:12px 13px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
+.card em{display:block;font-size:10.5px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.card b{display:block;font-family:var(--mono);font-size:clamp(1.2rem,3.4vw,1.55rem);font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15;word-break:break-all}
+.card small{display:block;margin-top:4px;font-size:11px;color:var(--muted);line-height:1.5}
+.verdict{margin-top:12px;padding:11px 13px;border-radius:var(--r);border-left:3px solid var(--ac);background:var(--bg3);font-size:13px;line-height:1.7}
+.verdict.bad{border-left-color:var(--dgr)}
+.verdict.warn{border-left-color:var(--warn)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{padding:7px 8px;border-bottom:1px solid var(--bd);text-align:left}
+.tbl th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:800}
+.tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr:hover{background:var(--bg3)}
+.bad-c{color:var(--dgr);font-weight:800}
+.ok-c{color:var(--ac);font-weight:800}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:10px;cursor:pointer;user-select:none}
+.chk input{width:16px;height:16px;accent-color:var(--ac);flex:none}
+@media(max-width:640px){.res{grid-template-columns:1fr 1fr}.tbl th,.tbl td{padding:6px 5px;font-size:12px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>⚒ MC 铁砧成本</h1><p class="sub">算清一次合并要几级、还能不能再叠 · 按原版 RepairCost 机制</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">两件物品</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="leftN">左格物品 · 上过几次铁砧</label>
+          <select id="leftN"></select>
+        </div>
+        <div class="fld">
+          <label for="rightN">右格物品 · 上过几次铁砧</label>
+          <select id="rightN"></select>
+        </div>
+      </div>
+      <div class="fld">
+        <label for="enchCost">附魔总成本（每级成本 × 等级，自己加总，0 表示不叠附魔）</label>
+        <input id="enchCost" class="mono" type="number" min="0" max="200" step="1" value="8" inputmode="numeric">
+      </div>
+      <label class="chk"><input type="checkbox" id="renamed" checked> 这次要点「重命名」（每件被改名的物品 +1 级）</label>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结算</h2>
+      <div class="res">
+        <div class="card"><em>左边惩罚</em><b id="rPL">—</b><small id="rNL">—</small></div>
+        <div class="card"><em>右边惩罚</em><b id="rPR">—</b><small id="rNR">—</small></div>
+        <div class="card"><em>合计等级</em><b id="rTotal">—</b><small>生存模式消耗</small></div>
+        <div class="card"><em>合并后惩罚</em><b id="rNew">—</b><small>记在新物品上</small></div>
+      </div>
+      <div class="verdict" id="verdict">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">继续叠下去</h2>
+      <table class="tbl">
+        <thead><tr><th>再合并第几次</th><th class="n">等级消耗</th><th class="n">物品惩罚值</th><th>能否操作</th></tr></thead>
+        <tbody id="fut"></tbody>
+      </table>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnReset" type="button">重置</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结论</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 原版机制：物品身上记着一个 <code>RepairCost</code>，初始 0；每次上铁砧合并后变成
+        <code>max(左, 右) × 2 + 1</code>。一次合并的等级消耗 = <code>左惩罚 + 右惩罚 + 附魔成本 + 改名</code>。
+        消耗 <b>≥ 40 级</b>时生存模式会显示「过于昂贵！」，直接不让操作（创造模式不受限）。
+        所以一件东西叠到第 6 次基本就废了 —— 想清楚再往上加。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var MAXN=9,LIMIT=40;
+function rcOf(n){return Math.pow(2,n)-1;}          /* 上过 n 次铁砧后的惩罚值 = 2^n - 1 */
+function nextRc(a,b){var m=Math.max(a,b);return m>=LIMIT?m:m*2+1;}  /* 原版封顶行为 */
+
+var leftN=$('leftN'),rightN=$('rightN'),ench=$('enchCost'),ren=$('renamed');
+var rPL=$('rPL'),rPR=$('rPR'),rTotal=$('rTotal'),rNew=$('rNew'),verdict=$('verdict');
+var rNL=$('rNL'),rNR=$('rNR'),fut=$('fut');
+
+(function fillSel(){
+  for(var i=0;i<=MAXN;i++){
+    var label=i+' 次'+(i===0?'（全新）':'');
+    leftN.appendChild(new Option(label,String(i)));
+    rightN.appendChild(new Option(label,String(i)));
+  }
+  leftN.value='1';rightN.value='0';
+})();
+
+function readN(sel){
+  var v=parseInt(sel.value,10);
+  return (isNaN(v)||v<0)?0:Math.min(v,MAXN);
+}
+function readEnch(){
+  var v=Number(ench.value);
+  if(!isFinite(v)||v<0) return 0;
+  return Math.min(Math.round(v),200);
+}
+
+function calc(){
+  var nl=readN(leftN),nr=readN(rightN);
+  var pl=rcOf(nl),pr=rcOf(nr);
+  var ec=readEnch();
+  var total=pl+pr+ec+(ren.checked?1:0);
+  var after=nextRc(pl,pr);
+
+  rPL.textContent=String(pl);rNL.textContent='上过 '+nl+' 次';
+  rPR.textContent=String(pr);rNR.textContent='上过 '+nr+' 次';
+  rTotal.textContent=String(total);
+  rNew.textContent=String(after);
+
+  verdict.className='verdict';
+  if(total>=LIMIT){
+    verdict.className='verdict bad';
+    verdict.innerHTML='❌ <b>'+total+' 级，超过上限。</b>生存模式下铁砧会显示「过于昂贵！」，'
+      +'这个操作做不了。想继续用就换一件新的，或者把惩罚值清零（创造模式 / 指令）。';
+  }else if(total>=LIMIT-8){
+    verdict.className='verdict warn';
+    verdict.innerHTML='⚠️ <b>'+total+' 级，已经很贵。</b>再叠一次大概率越线：'
+      +'按当前惩罚值，下一次至少 '+(after+pr)+' 级起。';
+  }else{
+    verdict.innerHTML='✅ <b>'+total+' 级，可以做。</b>做完之后这件物品的惩罚值变成 '+after
+      +'，下次和全新物品合并最少要 '+after+' 级。';
+  }
+
+  /* 未来 6 次：把它和全新物品（惩罚 0）反复合并 */
+  var rows='',rc=after;
+  for(var k=1;k<=6;k++){
+    var cost=rc+0+ec+(ren.checked?1:0);
+    var ok=cost<LIMIT;
+    rows+='<tr><td>第 '+k+' 次</td><td class="n">'+cost+'</td><td class="n">'+rc+'</td>'
+      +'<td class="'+(ok?'ok-c':'bad-c')+'">'+(ok?'可行':'过于昂贵')+'</td></tr>';
+    rc=nextRc(rc,0);
+  }
+  fut.innerHTML=rows;
+}
+
+[leftN,rightN,ench,ren].forEach(function(el){
+  el.addEventListener('input',calc);
+  el.addEventListener('change',calc);
+});
+
+function summary(){
+  var nl=readN(leftN),nr=readN(rightN);
+  var pl=rcOf(nl),pr=rcOf(nr),ec=readEnch();
+  var total=pl+pr+ec+(ren.checked?1:0);
+  return '铁砧：左(上过 '+nl+' 次, 惩罚 '+pl+') + 右(上过 '+nr+' 次, 惩罚 '+pr+') + 附魔 '
+    +ec+(ren.checked?' + 改名 1':'')+' = '+total+' 级，'
+    +(total>=LIMIT?'超出上限，生存不可操作':'可以操作')
+    +'；合并后惩罚值 '+nextRc(pl,pr)+'。';
+}
+
+$('btnReset').addEventListener('click',function(){
+  leftN.value='0';rightN.value='0';ench.value='8';ren.checked=true;calc();toast('已重置');
+});
+$('btnCopy').addEventListener('click',function(){
+  HS.copy(summary()).then(function(){toast('已复制结论');},function(){toast('复制失败，手动选中吧');});
+});
+
+calc();
+})();
+</script>
+</body>
+</html>

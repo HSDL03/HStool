@@ -418,5 +418,65 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mc-anvil",
+    "icon": "⚒",
+    "name": "MC 铁砧成本",
+    "desc": "惩罚值翻倍规则 · 算几次合并就太贵",
+    "tag": "工具",
+    "url": "./tools/mc-anvil.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-img-base64",
+    "icon": "🖼",
+    "name": "图片 ↔ Base64",
+    "desc": "图片转 Data URI，或把 Base64 还原存图",
+    "tag": "工具",
+    "url": "./tools/img-base64.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-tz-meet",
+    "icon": "🌍",
+    "name": "时区会议对照",
+    "desc": "一个时刻看各地几点，挑全员在班的点",
+    "tag": "工具",
+    "url": "./tools/tz-meet.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-text-diff",
+    "icon": "🔀",
+    "name": "文本差异对比",
+    "desc": "按行比出新增删除，估相似度",
+    "tag": "工具",
+    "url": "./tools/text-diff.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-id-card",
+    "icon": "📇",
+    "name": "身份证校验",
+    "desc": "校验位 · 生日性别年龄与归属省",
+    "tag": "工具",
+    "url": "./tools/id-card.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]
