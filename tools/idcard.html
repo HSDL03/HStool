@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>身份证校验 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🆔</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.verdict{
+  display:flex;align-items:center;gap:10px;padding:13px 15px;margin-bottom:12px;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  font-size:14px;font-weight:800;
+}
+.verdict .dot{width:12px;height:12px;flex:none;background:var(--ac);box-shadow:var(--bevel)}
+.verdict.bad{color:var(--warn)}
+.verdict.bad .dot{background:var(--warn)}
+.verdict.ok{color:var(--ac)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap;min-width:0}
+.kv span{flex:none;width:78px;font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all;min-width:0}
+.err{font-size:12.5px;color:var(--warn);margin-top:8px;min-height:16px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}.kv span{width:66px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🆔 身份证校验</h1><p class="sub">18 位号码校验位验算 · 顺带读出生日、性别、省份</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">号码</h2>
+      <div class="fld">
+        <label for="idIn">身份证号（18 位，或 15 位老号码自动升位）</label>
+        <input id="idIn" class="mono" spellcheck="false" autocomplete="off" maxlength="24"
+               placeholder="11010519491231002X" value="11010519491231002X">
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnCheck" type="button">校验</button>
+        <button class="btn" id="btnUp15" type="button">15 位升 18 位</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果</button>
+      </div>
+      <div class="err" id="err">示例号码为虚构，仅演示格式校验，不对应真实个人。</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">解析结果</h2>
+      <div class="verdict" id="verdict"><span class="dot"></span><span id="verdictText">等待输入</span></div>
+      <div class="grid">
+        <div class="kv"><span>出生日期</span><b id="rBirth">—</b></div>
+        <div class="kv"><span>性别</span><b id="rSex">—</b></div>
+        <div class="kv"><span>周岁</span><b id="rAge">—</b></div>
+        <div class="kv"><span>省份</span><b id="rProv">—</b></div>
+        <div class="kv"><span>顺序码</span><b id="rSeq">—</b></div>
+        <div class="kv"><span>校验位</span><b id="rChk">—</b></div>
+      </div>
+      <div class="kv" style="border-bottom:0"><span>标准化</span><b id="rNorm">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 18 位 = <code>6 位地址</code> + <code>8 位生日</code> + <code>3 位顺序码</code> + <code>1 位校验码</code>。
+        校验位由前 17 位按加权因子 <code>7 9 10 5 8 4 2 1 6 3 7 9 10 5 8 4 2</code> 求和，
+        再对 11 取余，按 <code>1 0 X 9 8 7 6 5 4 3 2</code> 取对应字符 —— 算不对就是录错了。
+        顺序码的最后一位奇数为男、偶数为女。15 位老号码没有校验位，年份也只有两位，本工具统一按 <code>19xx</code> 补全。
+        <b>号码全程只在本机计算，不会发到任何服务器。</b>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var inEl=$('idIn'),errEl=$('err');
+
+var PROV = {
+  '11':'北京市','12':'天津市','13':'河北省','14':'山西省','15':'内蒙古自治区',
+  '21':'辽宁省','22':'吉林省','23':'黑龙江省','31':'上海市','32':'江苏省',
+  '33':'浙江省','34':'安徽省','35':'福建省','36':'江西省','37':'山东省',
+  '41':'河南省','42':'湖北省','43':'湖南省','44':'广东省','45':'广西壮族自治区',
+  '46':'海南省','50':'重庆市','51':'四川省','52':'贵州省','53':'云南省',
+  '54':'西藏自治区','61':'陕西省','62':'甘肃省','63':'青海省','64':'宁夏回族自治区',
+  '65':'新疆维吾尔自治区','71':'台湾省','81':'香港特别行政区','82':'澳门特别行政区',
+  '91':'国外'
+};
+var W = [7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];
+var CODE = '10X98765432';
+
+function checksum(first17){
+  var s = 0;
+  for(var i = 0; i < 17; i++) s += (first17.charCodeAt(i) - 48) * W[i];
+  return CODE.charAt(s % 11);
+}
+function up15to18(v15){
+  if(!/^\d{15}$/.test(v15)) return null;
+  var body = v15.slice(0, 6) + '19' + v15.slice(6);
+  return body + checksum(body);
+}
+function daysIn(y, m){
+  return new Date(y, m, 0).getDate();
+}
+function parseDate(s){
+  var y = parseInt(s.slice(0,4),10), m = parseInt(s.slice(4,6),10), d = parseInt(s.slice(6,8),10);
+  if(m < 1 || m > 12) return null;
+  if(d < 1 || d > daysIn(y, m)) return null;
+  if(y < 1900 || y > new Date().getFullYear()) return null;
+  return {y:y, m:m, d:d};
+}
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+
+var lastCopy = '';
+
+function clearAll(){
+  ['rBirth','rSex','rAge','rProv','rSeq','rChk','rNorm'].forEach(function(id){ $(id).textContent = '—'; });
+}
+
+function check(){
+  errEl.textContent = '';
+  clearAll();
+  var raw = String(inEl.value).replace(/\s/g, '').toUpperCase();
+  var vd = $('verdict'), vt = $('verdictText');
+  if(!raw){
+    vd.className = 'verdict'; vt.textContent = '等待输入';
+    errEl.textContent = '先把号码填进来';
+    return;
+  }
+  var notes = [];
+
+  if(/^\d{15}$/.test(raw)){
+    var up = up15to18(raw);
+    notes.push('15 位老号码已按 19' + raw.slice(6,8) + ' 年补全，18 位为 ' + up);
+    raw = up;
+  } else if(!/^\d{17}[\dX]$/.test(raw)){
+    vd.className = 'verdict bad'; vt.textContent = '格式不对';
+    errEl.textContent = '18 位号码应该是 17 位数字 + 1 位数字或 X';
+    return;
+  }
+
+  var birth = parseDate(raw.slice(6, 14));
+  var weightSum = 0;
+  for(var i = 0; i < 17; i++) weightSum += (raw.charCodeAt(i) - 48) * W[i];
+  var want = CODE.charAt(weightSum % 11);
+  var got = raw.charAt(17);
+  var ok = want === got;
+
+  if(!birth){
+    vd.className = 'verdict bad'; vt.textContent = '生日段不成立';
+    errEl.textContent = '第 7~14 位不是有效日期：' + raw.slice(6, 14);
+    $('rChk').textContent = got + '（应为 ' + want + '）';
+    return;
+  }
+
+  var now = new Date();
+  var age = now.getFullYear() - birth.y;
+  if(now.getMonth() + 1 < birth.m || (now.getMonth() + 1 === birth.m && now.getDate() < birth.d)) age--;
+
+  var provCode = raw.slice(0, 2);
+  var prov = PROV[provCode];
+  var seq = raw.slice(14, 17);
+  var sexDigit = parseInt(raw.charAt(16), 10);
+
+  $('rBirth').textContent = birth.y + '-' + pad(birth.m) + '-' + pad(birth.d);
+  $('rSex').textContent = sexDigit % 2 === 1 ? '男' : '女';
+  $('rAge').textContent = age + ' 岁';
+  $('rProv').textContent = prov ? prov + '（' + provCode + '）' : '未知代码 ' + provCode;
+  $('rSeq').textContent = seq + '（第 ' + sexDigit + ' 位定性别）';
+  $('rChk').textContent = got + (ok ? ' ✓ 与计算值一致' : ' ✗ 应为 ' + want);
+  $('rNorm').textContent = raw;
+
+  if(!prov) notes.push('前两位 ' + provCode + ' 不在省级代码表里');
+  if(age < 0) notes.push('生日在未来');
+
+  if(ok){
+    vd.className = 'verdict ok'; vt.textContent = '校验通过 · 号码格式合法';
+  }else{
+    vd.className = 'verdict bad'; vt.textContent = '校验位不匹配（' + got + ' 应为 ' + want + '）';
+  }
+  errEl.textContent = notes.join('；');
+
+  lastCopy = '身份证 ' + raw + '｜' + (prov || provCode) + '｜' + $('rBirth').textContent
+    + '｜' + $('rSex').textContent + '｜' + age + ' 岁｜校验' + (ok ? '通过' : '失败');
+}
+
+$('btnCheck').addEventListener('click', function(){ check(); toast('已校验'); });
+inEl.addEventListener('input', check);
+
+$('btnUp15').addEventListener('click', function(){
+  var v = String(inEl.value).replace(/\s/g, '');
+  if(!/^\d{15}$/.test(v)){ toast('当前不是 15 位号码'); return; }
+  var up = up15to18(v);
+  inEl.value = up;
+  check();
+  toast('已升为 18 位：' + up);
+});
+
+$('btnCopy').addEventListener('click', function(){
+  if(!lastCopy){ toast('先校验一个号码'); return; }
+  HS.copy(lastCopy); toast('已复制解析结果');
+});
+
+check();
+})();
+</script>
+</body>
+</html>

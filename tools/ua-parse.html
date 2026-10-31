@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UA 解析 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.verdict{
+  display:flex;align-items:center;gap:11px;padding:14px 16px;margin-bottom:13px;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+}
+.verdict .em{font-size:22px;line-height:1}
+.verdict b{display:block;font-size:15px;font-weight:800}
+.verdict small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:84px;font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all;min-width:0}
+.err{font-size:12.5px;color:var(--warn);margin-top:8px;min-height:16px}
+@media(max-width:640px){.kv span{width:100%}.row .btn{flex:1 1 auto}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧭 UA 解析</h1><p class="sub">从 User-Agent 里读出浏览器、内核、系统、设备</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">User-Agent</h2>
+      <div class="fld">
+        <label for="uaIn">粘贴 UA 字符串（默认填的是你当前这台设备的）</label>
+        <textarea id="uaIn" class="mono" spellcheck="false" rows="4" placeholder="Mozilla/5.0 (...)"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnParse" type="button">解析</button>
+        <button class="btn" id="btnMine" type="button">用我的 UA</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制 JSON</button>
+      </div>
+      <div class="err" id="err"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="verdict">
+        <span class="em" id="rEmoji">🧭</span>
+        <div><b id="rTitle">—</b><small id="rSub">—</small></div>
+      </div>
+      <div class="kv"><span>浏览器</span><b id="rBrowser">—</b></div>
+      <div class="kv"><span>内核</span><b id="rEngine">—</b></div>
+      <div class="kv"><span>系统</span><b id="rOs">—</b></div>
+      <div class="kv"><span>设备</span><b id="rDevice">—</b></div>
+      <div class="kv"><span>架构</span><b id="rArch">—</b></div>
+      <div class="kv"><span>爬虫</span><b id="rBot">—</b></div>
+      <div class="kv"><span>长度</span><b id="rLen">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 UA 是客户端自己报的，<b>可以随便伪造</b>，只能当线索不能当鉴权依据。iOS 上所有浏览器都被强制套 WebKit，
+        所以 Chrome、Firefox 在 iPhone 上也显示 Safari 的内核；Android 微信则是 Blink。
+        Windows 10 和 11 的 UA 都是 <code>Windows NT 10.0</code>，光看 UA 分不出来 —— 这点得靠客户端提示（Client Hints）。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var uaIn=$('uaIn'), errEl=$('err'), lastJson='';
+
+function detectBrowser(ua){
+  var m;
+  if(/MicroMessenger\/([\d.]+)/i.test(ua)) return ['微信内置浏览器', RegExp.$1, '💬'];
+  if(/QQBrowser\/([\d.]+)/i.test(ua)) return ['QQ 浏览器', RegExp.$1, '🐧'];
+  if(/UCBrowser\/([\d.]+)/i.test(ua)) return ['UC 浏览器', RegExp.$1, '🌐'];
+  if(/(Edg|EdgA|EdgiOS)\/([\d.]+)/i.test(ua)) return ['Microsoft Edge', RegExp.$2, '🌊'];
+  if(/(OPR|Opera)\/([\d.]+)/i.test(ua)) return ['Opera', RegExp.$2, '🎭'];
+  if((m = /Firefox\/([\d.]+)/i.exec(ua))) return ['Firefox', m[1], '🦊'];
+  if((m = /HeadlessChrome\/([\d.]+)/i.exec(ua))) return ['Headless Chrome', m[1], '👻'];
+  if((m = /Chrome\/([\d.]+)/i.exec(ua))) return ['Chrome', m[1], '🟢'];
+  if((m = /Version\/([\d.]+).*Safari/i.exec(ua))) return ['Safari', m[1], '🧭'];
+  if(/MSIE ([\d.]+)/i.test(ua)) return ['Internet Explorer', RegExp.$1, '🪟'];
+  if(/Trident\/7/.test(ua)) return ['Internet Explorer', '11', '🪟'];
+  if(/curl\/([\d.]+)/i.test(ua)) return ['curl', RegExp.$1, '⌨'];
+  if(/python-requests\/([\d.]+)/i.test(ua)) return ['python-requests', RegExp.$1, '🐍'];
+  return ['未知', '', '❓'];
+}
+function detectEngine(ua, browser, os){
+  if(/Trident\//.test(ua)) return 'Trident';
+  if(/Gecko\/\d/.test(ua) && /Firefox/.test(ua)) return 'Gecko';
+  if(/AppleWebKit\//.test(ua) && /iPhone|iPad|iPod/.test(ua)) return 'WebKit（iOS 强制）';
+  if(/AppleWebKit\//.test(ua) && /Chrome|Chromium|Edg|OPR|MicroMessenger/.test(ua)) return 'Blink';
+  if(/AppleWebKit\//.test(ua)) return 'WebKit';
+  return '未知';
+}
+function detectOs(ua){
+  var m;
+  if((m = /Windows NT ([\d.]+)/.exec(ua))){
+    var map = {'10.0':'Windows 10 / 11','6.3':'Windows 8.1','6.2':'Windows 8','6.1':'Windows 7','6.0':'Windows Vista','5.1':'Windows XP'};
+    return map[m[1]] || ('Windows NT ' + m[1]);
+  }
+  if(/HarmonyOS/i.test(ua)) return 'HarmonyOS';
+  if((m = /Android ([\d.]+)/.exec(ua))) return 'Android ' + m[1];
+  if((m = /(?:iPhone|CPU) OS ([\d_]+)/.exec(ua))) return 'iOS ' + m[1].replace(/_/g, '.');
+  if((m = /Mac OS X ([\d_]+)/.exec(ua))) return 'macOS ' + m[1].replace(/_/g, '.');
+  if(/CrOS/.test(ua)) return 'ChromeOS';
+  if(/Ubuntu/.test(ua)) return 'Ubuntu';
+  if(/Linux/.test(ua)) return 'Linux';
+  return '未知';
+}
+function detectDevice(ua){
+  if(/iPad|Tablet/i.test(ua) || (/Android/.test(ua) && !/Mobile/.test(ua))) return ['平板', '📱'];
+  if(/Mobi|iPhone|iPod|Android.*Mobile|Windows Phone/i.test(ua)) return ['手机', '📱'];
+  return ['桌面', '🖥'];
+}
+function detectArch(ua){
+  if(/arm64|aarch64/i.test(ua)) return 'ARM64';
+  if(/arm/i.test(ua)) return 'ARM';
+  if(/WOW64|Win64|x64|x86_64/.test(ua)) return 'x86_64';
+  if(/x86|i686|Intel/.test(ua)) return 'x86';
+  return '未标明';
+}
+
+function parse(){
+  errEl.textContent = '';
+  var ua = String(uaIn.value).trim();
+  if(!ua){
+    errEl.textContent = '先把 UA 字符串粘进来';
+    ['rBrowser','rEngine','rOs','rDevice','rArch','rBot','rLen'].forEach(function(id){ $(id).textContent = '—'; });
+    $('rTitle').textContent = '—'; $('rSub').textContent = '—';
+    return;
+  }
+  if(ua.length < 10){
+    errEl.textContent = '这段太短了，不像一个完整的 UA';
+  }
+  var b = detectBrowser(ua);
+  var engine = detectEngine(ua, b[0]);
+  var os = detectOs(ua);
+  var dev = detectDevice(ua);
+  var arch = detectArch(ua);
+  var bot = /bot\b|spider|crawler|slurp|bingpreview|headless|phantom|curl\/|wget|python-requests|okhttp/i.test(ua);
+
+  $('rEmoji').textContent = b[2];
+  $('rTitle').textContent = b[0] + (b[1] ? ' ' + b[1] : '');
+  $('rSub').textContent = os + ' · ' + dev[0] + ' · ' + engine;
+  $('rBrowser').textContent = b[0] + (b[1] ? '（版本 ' + b[1] + '）' : '');
+  $('rEngine').textContent = engine;
+  $('rOs').textContent = os;
+  $('rDevice').textContent = dev[0];
+  $('rArch').textContent = arch;
+  $('rBot').textContent = bot ? '是（很可能是脚本 / 爬虫）' : '否';
+  $('rLen').textContent = ua.length + ' 字符';
+
+  lastJson = JSON.stringify({
+    browser: b[0], version: b[1] || null, engine: engine, os: os,
+    device: dev[0], arch: arch, bot: bot, ua: ua
+  }, null, 2);
+}
+
+$('btnParse').addEventListener('click', function(){ parse(); toast('已解析'); });
+uaIn.addEventListener('input', parse);
+$('btnMine').addEventListener('click', function(){
+  uaIn.value = navigator.userAgent;
+  parse(); toast('已填入当前浏览器的 UA');
+});
+$('btnCopy').addEventListener('click', function(){
+  if(!lastJson){ toast('还没有解析结果'); return; }
+  HS.copy(lastJson); toast('已复制 JSON');
+});
+
+uaIn.value = navigator.userAgent;
+parse();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOTP 动态口令 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.code{
+  padding:18px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  text-align:center;
+}
+.code b{
+  display:block;font-family:var(--mono);font-weight:800;letter-spacing:.22em;
+  font-size:clamp(2rem,9vw,3.2rem);line-height:1.1;color:var(--ac);font-variant-numeric:tabular-nums;
+  user-select:all;cursor:pointer;
+}
+.code small{display:block;margin-top:8px;font-size:12px;color:var(--muted)}
+.bar{height:8px;margin-top:11px;background:var(--bg3);border:1px solid var(--bd2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac);width:100%;transition:width .2s linear}
+.bar.low i{background:var(--warn)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:96px;font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all;font-size:15px}
+.err{font-size:12.5px;color:var(--warn);margin-top:8px;min-height:16px}
+.opt{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin-top:4px}
+.opt select{padding:5px 8px;font-size:12.5px;background:var(--bg);color:var(--text);
+  border:2px solid var(--bd2);border-radius:var(--r);outline:none}
+@media(max-width:640px){.kv span{width:100%}.row .btn{flex:1 1 auto}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔐 TOTP 动态口令</h1><p class="sub">用 Base32 密钥在本机算出两步验证码 · 不联网</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">密钥</h2>
+      <div class="fld">
+        <label for="secret">Base32 密钥（A-Z、2-7，空格和 - 会被忽略）</label>
+        <input id="secret" class="mono" spellcheck="false" autocomplete="off" value="JBSWY3DPEHPK3PXP"
+               placeholder="JBSWY3DPEHPK3PXP">
+      </div>
+      <div class="opt">
+        <label>位数
+          <select id="digits">
+            <option value="6" selected>6 位</option>
+            <option value="8">8 位</option>
+          </select>
+        </label>
+        <label>周期
+          <select id="period">
+            <option value="30" selected>30 秒</option>
+            <option value="60">60 秒</option>
+          </select>
+        </label>
+      </div>
+      <div class="err" id="err"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">当前口令</h2>
+      <div class="code">
+        <b id="code" title="点击复制">------</b>
+        <small id="codeSub">还剩 — 秒</small>
+        <div class="bar" id="bar"><i id="barIn"></i></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制口令</button>
+        <button class="btn" id="btnPause" type="button">暂停刷新</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">细节</h2>
+      <div class="kv"><span>算法</span><b>HMAC-SHA1（RFC 6238）</b></div>
+      <div class="kv"><span>下一个</span><b id="nextCode">—</b></div>
+      <div class="kv"><span>计数器</span><b id="counter">—</b></div>
+      <div class="kv"><span>密钥长度</span><b id="keyLen">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 服务端给你的是 <code>otpauth://</code> 链接或一串 Base32 密钥，把 <code>secret=</code> 后面那段贴进来就行。
+        口令 = <code>HMAC-SHA1(密钥, 时间计数器)</code> 后做动态截断取末几位，所以<b>本机算和手机 App 算的结果一致</b>，
+        全程不联网、密钥不出浏览器。默认那串是 RFC 6238 公开的示例密钥，别拿它绑真实账号。
+        系统时间不准会算出对不上的码，差 30 秒以上基本全错。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var secretEl=$('secret'), digitEl=$('digits'), periodEl=$('period'), errEl=$('err');
+var codeEl=$('code'), codeSub=$('codeSub'), barEl=$('bar'), barIn=$('barIn');
+var nextEl=$('nextCode'), counterEl=$('counter'), keyLenEl=$('keyLen');
+var paused=false, lastKey='', lastCode='', secretBytes=null, cachedSecret='';
+
+function base32(str){
+  var s = String(str).toUpperCase().replace(/[\s-]/g, '').replace(/=+$/, '');
+  if(!s) throw new Error('密钥不能为空');
+  if(!/^[A-Z2-7]+$/.test(s)) throw new Error('密钥里有非法字符，Base32 只允许 A-Z 和 2-7');
+  var out = [], bits = 0, val = 0;
+  for(var i = 0; i < s.length; i++){
+    var c = s.charAt(i);
+    var idx = c >= 'A' && c <= 'Z' ? c.charCodeAt(0) - 65 : c.charCodeAt(0) - 24;
+    val = (val << 5) | idx;
+    bits += 5;
+    if(bits >= 8){
+      out.push((val >>> (bits - 8)) & 0xff);
+      bits -= 8;
+      val &= (1 << bits) - 1;
+    }
+  }
+  if(!out.length) throw new Error('密钥太短，解不出一个字节');
+  return new Uint8Array(out);
+}
+
+async function hotp(bytes, counter, digits){
+  var key = await crypto.subtle.importKey('raw', bytes, {name:'HMAC', hash:'SHA-1'}, false, ['sign']);
+  var buf = new ArrayBuffer(8), dv = new DataView(buf);
+  dv.setUint32(0, Math.floor(counter / 4294967296));
+  dv.setUint32(4, counter >>> 0);
+  var sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, buf));
+  var off = sig[sig.length - 1] & 0x0f;
+  var bin = ((sig[off] & 0x7f) << 24) | (sig[off+1] << 16) | (sig[off+2] << 8) | sig[off+3];
+  var mod = Math.pow(10, digits);
+  var code = String(bin % mod);
+  while(code.length < digits) code = '0' + code;
+  return code;
+}
+
+function readSecret(){
+  var raw = secretEl.value;
+  if(raw === cachedSecret) return secretBytes;
+  secretBytes = base32(raw);
+  cachedSecret = raw;
+  keyLenEl.textContent = secretBytes.length + ' 字节';
+  return secretBytes;
+}
+
+async function tick(){
+  if(paused) return;
+  errEl.textContent = '';
+  var bytes;
+  try{ bytes = readSecret(); }
+  catch(e){
+    errEl.textContent = e.message;
+    codeEl.textContent = '------';
+    codeSub.textContent = '密钥有问题，先改一下上面的输入';
+    return;
+  }
+  if(!crypto || !crypto.subtle){
+    errEl.textContent = '当前环境不支持 Web Crypto，换 https 或 localhost 打开再试';
+    return;
+  }
+  var period = parseInt(periodEl.value, 10);
+  var digits = parseInt(digitEl.value, 10);
+  var now = Date.now() / 1000;
+  var counter = Math.floor(now / period);
+  var left = period - (now - counter * period);
+  var key = counter + '/' + digits + '/' + period + '/' + cachedSecret;
+
+  try{
+    if(key !== lastKey){
+      lastKey = key;
+      lastCode = await hotp(bytes, counter, digits);
+      codeEl.textContent = lastCode;
+      nextEl.textContent = await hotp(bytes, counter + 1, digits);
+      counterEl.textContent = String(counter);
+    }
+  }catch(e){
+    errEl.textContent = '计算失败：' + e.message;
+    return;
+  }
+  var pct = Math.max(0, Math.min(100, (left / period) * 100));
+  barIn.style.width = pct.toFixed(1) + '%';
+  barEl.className = 'bar' + (left <= 5 ? ' low' : '');
+  codeSub.textContent = '还剩 ' + Math.ceil(left) + ' 秒 · 每 ' + period + ' 秒换一次';
+}
+
+$('btnCopy').addEventListener('click', function(){
+  if(!lastCode){ toast('还没算出有效口令'); return; }
+  HS.copy(lastCode); toast('已复制口令 ' + lastCode);
+});
+codeEl.addEventListener('click', function(){
+  if(!lastCode) return;
+  HS.copy(lastCode); toast('已复制口令 ' + lastCode);
+});
+$('btnPause').addEventListener('click', function(){
+  paused = !paused;
+  this.textContent = paused ? '继续刷新' : '暂停刷新';
+  if(!paused){ lastKey = ''; tick(); }
+  else codeSub.textContent = '已暂停，口令停在这一秒';
+});
+secretEl.addEventListener('input', function(){ lastKey = ''; tick(); });
+digitEl.addEventListener('change', function(){ lastKey = ''; tick(); });
+periodEl.addEventListener('change', function(){ lastKey = ''; tick(); });
+
+tick();
+setInterval(tick, 250);
+})();
+</script>
+</body>
+</html>

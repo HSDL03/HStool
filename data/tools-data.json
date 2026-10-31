@@ -958,5 +958,65 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mc-hopper",
+    "icon": "📥",
+    "name": "MC 漏斗吞吐",
+    "desc": "漏斗与熔炉阵列的搬运耗时估算",
+    "tag": "工具",
+    "url": "./tools/mc-hopper.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-idcard",
+    "icon": "🆔",
+    "name": "身份证校验",
+    "desc": "18 位号码校验位验算与解读",
+    "tag": "工具",
+    "url": "./tools/idcard.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-gitignore",
+    "icon": "🚫",
+    "name": ".gitignore 生成器",
+    "desc": "按技术栈拼出能用的忽略规则",
+    "tag": "工具",
+    "url": "./tools/gitignore.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-totp",
+    "icon": "🔐",
+    "name": "TOTP 动态口令",
+    "desc": "本地计算两步验证动态口令",
+    "tag": "工具",
+    "url": "./tools/totp.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-ua-parse",
+    "icon": "🧭",
+    "name": "UA 解析",
+    "desc": "读出浏览器内核系统与设备",
+    "tag": "工具",
+    "url": "./tools/ua-parse.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

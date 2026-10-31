@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 漏斗吞吐 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📥</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.rbox{padding:13px 15px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
+.rbox i{display:block;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.rbox b{display:block;font-family:var(--mono);font-size:clamp(1.15rem,4vw,1.5rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.rbox small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.rbox.wide{grid-column:1 / -1}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:104px;font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700}
+.err{font-size:12px;color:var(--warn);margin-top:8px;min-height:16px}
+@media(max-width:640px){.res{grid-template-columns:1fr}.kv span{width:100%}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📥 MC 漏斗吞吐</h1><p class="sub">漏斗 / 熔炉阵列搬完一批货要多久 · 顺带算需要几个箱子</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">产线</h2>
+      <div class="seg" id="modeSeg">
+        <button type="button" data-mode="hopper" aria-pressed="true">漏斗搬运</button>
+        <button type="button" data-mode="furnace" aria-pressed="false">熔炉烧炼</button>
+      </div>
+      <div class="grid2" style="margin-top:13px">
+        <div class="fld"><label for="count">物品总数（件）</label>
+          <input id="count" class="mono" type="number" min="1" step="1" value="3456" inputmode="numeric">
+        </div>
+        <div class="fld"><label for="par" id="parLabel">并行漏斗数</label>
+          <input id="par" class="mono" type="number" min="1" max="512" step="1" value="1" inputmode="numeric">
+        </div>
+      </div>
+      <div class="fld"><label for="box">目标容器</label>
+        <select id="box">
+          <option value="3456">大箱子（54 格 · 3456 件）</option>
+          <option value="1728">箱子 / 木桶 / 潜影盒（27 格 · 1728 件）</option>
+          <option value="576">发射器 / 投掷器（9 格 · 576 件）</option>
+          <option value="320">漏斗 / 熔炉（5 格 · 320 件）</option>
+        </select>
+      </div>
+      <div class="err" id="err"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="res">
+        <div class="rbox wide"><i>总耗时</i><b id="rTime">—</b><small id="rTimeSub"></small></div>
+        <div class="rbox"><i>吞吐</i><b id="rRate">—</b><small>件 / 秒</small></div>
+        <div class="rbox"><i>需要容器</i><b id="rBox">—</b><small id="rBoxSub">个</small></div>
+        <div class="rbox"><i>每分流</i><b id="rPer">—</b><small>件 / 秒</small></div>
+        <div class="rbox"><i>满箱耗时</i><b id="rFull">—</b><small>装满一个容器</small></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">参考数值</h2>
+      <div class="kv"><span>漏斗传输</span><b>每 8 游戏刻（0.4 秒）传 1 件 → 2.5 件/秒</b></div>
+      <div class="kv"><span>漏斗容量</span><b>5 格 · 320 件（不可堆叠物品只有 5 件）</b></div>
+      <div class="kv"><span>熔炉烧炼</span><b>每件 200 游戏刻（10 秒）→ 0.1 件/秒</b></div>
+      <div class="kv"><span>煤炭燃烧</span><b>1600 游戏刻 → 1 块煤可烧 8 件</b></div>
+      <div class="kv"><span>串联瓶颈</span><b>多级漏斗串联仍是 2.5 件/秒，提速只能加并行</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 漏斗的 0.4 秒是<b>写死在方块逻辑里</b>的冷却，和红石信号快慢无关 —— 想更快只能并行多路，
+        或者用投掷器 / 水流这类不受漏斗冷却限制的搬运方式。熔炉阵列的真实瓶颈通常在燃料和输出漏斗，
+        所以炉子数量翻倍不等于产量翻倍。里边的数值按 Java 版默认刻率（20 刻/秒）算。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var mode='hopper';
+var countEl=$('count'),parEl=$('par'),boxEl=$('box'),errEl=$('err'),parLabel=$('parLabel');
+
+function fmtDur(sec){
+  if(!isFinite(sec)) return '—';
+  if(sec<1) return '不到 1 秒';
+  var s=Math.round(sec);
+  var d=Math.floor(s/86400); s-=d*86400;
+  var h=Math.floor(s/3600); s-=h*3600;
+  var m=Math.floor(s/60); s-=m*60;
+  var out=[];
+  if(d) out.push(d+' 天');
+  if(h) out.push(h+' 小时');
+  if(m) out.push(m+' 分');
+  if(s || !out.length) out.push(s+' 秒');
+  return out.join(' ');
+}
+function fmtNum(n){
+  if(n>=1000) return n.toLocaleString('en-US');
+  return String(n);
+}
+function readInt(el,min,max,name){
+  var raw=String(el.value).trim();
+  if(!raw){ errEl.textContent='请填写「'+name+'」'; return null; }
+  if(!/^\d+$/.test(raw)){ errEl.textContent='「'+name+'」只能是正整数'; return null; }
+  var v=parseInt(raw,10);
+  if(v<min){ errEl.textContent='「'+name+'」不能小于 '+min; return null; }
+  if(max && v>max){ errEl.textContent='「'+name+'」最多 '+max; return null; }
+  return v;
+}
+
+function run(){
+  errEl.textContent='';
+  var n=readInt(countEl,1,1e9,'物品总数');
+  var p=readInt(parEl,1,512,mode==='hopper'?'并行漏斗数':'熔炉数');
+  if(n===null||p===null) return;
+  var perUnit = mode==='hopper' ? 2.5 : 0.1;
+  var rate = perUnit*p;
+  var cap = parseFloat(boxEl.value)||3456;
+
+  var sec = n/rate;
+  $('rTime').textContent = fmtDur(sec);
+  $('rTimeSub').textContent = fmtNum(Math.round(sec)) + ' 秒 · ' + p + ' 路 × ' + perUnit + ' 件/秒';
+  $('rRate').textContent = (Math.round(rate*100)/100).toString();
+  $('rPer').textContent = perUnit.toString();
+  var boxes = Math.ceil(n/cap);
+  $('rBox').textContent = String(boxes);
+  $('rBoxSub').textContent = '个 · 每箱 ' + fmtNum(cap) + ' 件';
+  $('rFull').textContent = fmtDur(cap/rate);
+}
+
+$('modeSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-mode]');
+  if(!b) return;
+  mode=b.getAttribute('data-mode');
+  [].forEach.call(this.querySelectorAll('button'),function(x){
+    x.setAttribute('aria-pressed', x===b ? 'true' : 'false');
+  });
+  parLabel.textContent = mode==='hopper' ? '并行漏斗数' : '熔炉数';
+  if(mode==='furnace' && parEl.value==='1') parEl.value='8';
+  run();
+});
+
+[countEl,parEl,boxEl].forEach(function(el){
+  el.addEventListener('input',run);
+  el.addEventListener('change',run);
+});
+
+run();
+})();
+</script>
+</body>
+</html>

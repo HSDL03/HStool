@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>.gitignore 生成器 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚫</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.grp{margin-bottom:14px}
+.grp h3{margin:0 0 7px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;
+  padding:6px 11px;font-size:13px;font-weight:600;color:var(--text);
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);transition:border-color .14s,background .14s;
+}
+.chip:hover{border-color:var(--ac)}
+.chip input{display:none}
+.chip.on{background:var(--ac);color:var(--on-ac);border-color:var(--ac)}
+.chip.on::after{content:"✓";font-size:11px}
+.out{
+  width:100%;min-height:260px;margin:0;padding:13px 15px;resize:vertical;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  color:var(--text);font-family:var(--mono);font-size:12.8px;line-height:1.6;white-space:pre;overflow:auto;outline:none;
+}
+.out:focus{border-color:var(--ac)}
+.meta{font-size:12px;color:var(--faint);margin-top:8px}
+@media(max-width:640px){
+  .chip{padding:7px 12px;font-size:12.5px}
+  .out{min-height:200px;font-size:12px}
+  .row .btn{flex:1 1 auto}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🚫 .gitignore 生成器</h1><p class="sub">勾一下技术栈和编辑器 · 直接拿到能用的忽略规则</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">选择</h2>
+      <div class="grp" id="gStack"></div>
+      <div class="grp" id="gEnv"></div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" id="btnAll" type="button">全选</button>
+        <button class="btn" id="btnNone" type="button">全清</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <textarea class="out" id="out" spellcheck="false" readonly></textarea>
+      <div class="meta" id="meta">—</div>
+      <div class="row" style="margin-top:11px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制</button>
+        <button class="btn" id="btnDl" type="button">⬇ 下载 .gitignore</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 规则按「技术栈 → 操作系统 → 编辑器」分组排列，组与组之间空一行，方便以后手工加。
+        已经写进 <code>!.vscode/settings.json</code> 这类反向规则的，别随手删 —— 那些是想提交的配置。
+        真不该进仓库的密钥建议连 <code>.env.example</code> 一起提交，只忽略 <code>.env</code> 本体。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var GROUPS = [
+  { key:'stack', title:'技术栈 / 框架', items:[
+    { id:'node', name:'Node.js', lines:[
+      'node_modules/','npm-debug.log*','yarn-debug.log*','yarn-error.log*','pnpm-debug.log*',
+      'dist/','coverage/','.cache/','.env','.env.local','*.log'
+    ]},
+    { id:'python', name:'Python', lines:[
+      '__pycache__/','*.py[cod]','*.egg-info/','.venv/','venv/','build/','dist/',
+      '.pytest_cache/','.mypy_cache/','.ruff_cache/','.env'
+    ]},
+    { id:'java', name:'Java / Maven / Gradle', lines:[
+      '*.class','target/','build/','.gradle/','*.jar','!gradle/wrapper/gradle-wrapper.jar','hs_err_pid*'
+    ]},
+    { id:'go', name:'Go', lines:['*.exe','*.exe~','*.dll','*.so','*.dylib','*.test','*.out','bin/']},
+    { id:'rust', name:'Rust', lines:['target/','**/*.rs.bk','*.pdb']},
+    { id:'php', name:'PHP', lines:['vendor/','*.log','.env','.phpunit.result.cache']},
+    { id:'flutter', name:'Flutter / Dart', lines:['.dart_tool/','.packages','build/','.flutter-plugins','.flutter-plugins-dependencies','*.iml']},
+    { id:'unity', name:'Unity', lines:[
+      '[Ll]ibrary/','[Tt]emp/','[Oo]bj/','[Bb]uild/','[Bb]uilds/','[Ll]ogs/','[Mm]emoryCaptures/',
+      '[Uu]ser[Ss]ettings/','*.csproj','*.sln','*.user','*.unityproj','*.pidb','*.booproj'
+    ]},
+    { id:'weapp', name:'微信小程序', lines:['node_modules/','miniprogram_npm/','project.private.config.json','.DS_Store']}
+  ]},
+  { key:'env', title:'操作系统 / 编辑器', items:[
+    { id:'macos', name:'macOS', lines:['.DS_Store','.AppleDouble','.LSOverride','._*','.Spotlight-V100','.Trashes']},
+    { id:'windows', name:'Windows', lines:['Thumbs.db','ehthumbs.db','Desktop.ini','$RECYCLE.BIN/']},
+    { id:'linux', name:'Linux', lines:['*~','.directory','.fuse_hidden*']},
+    { id:'vscode', name:'VS Code', lines:['.vscode/*','!.vscode/settings.json','!.vscode/extensions.json','!.vscode/launch.json','*.code-workspace']},
+    { id:'jetbrains', name:'JetBrains', lines:['.idea/','*.iml','*.iws','*.ipr','out/']},
+    { id:'vim', name:'Vim', lines:['*.swp','*.swo','*.swn']},
+    { id:'sublime', name:'Sublime', lines:['*.sublime-workspace']}
+  ]}
+];
+
+var DEFAULT = ['macos','node','vscode'];
+var selected = {};
+DEFAULT.forEach(function(k){ selected[k] = true; });
+
+function renderChips(){
+  GROUPS.forEach(function(g){
+    var box = $(g.key === 'stack' ? 'gStack' : 'gEnv');
+    box.innerHTML = '<h3>' + g.title + '</h3>';
+    var wrap = document.createElement('div');
+    wrap.className = 'chips';
+    g.items.forEach(function(it){
+      var lab = document.createElement('label');
+      lab.className = 'chip' + (selected[it.id] ? ' on' : '');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!selected[it.id];
+      cb.addEventListener('change', function(){
+        selected[it.id] = cb.checked;
+        lab.className = 'chip' + (cb.checked ? ' on' : '');
+        build();
+      });
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(it.name));
+      wrap.appendChild(lab);
+    });
+    box.appendChild(wrap);
+  });
+}
+
+function build(){
+  var blocks = [], picked = 0;
+  GROUPS.forEach(function(g){
+    g.items.forEach(function(it){
+      if(!selected[it.id]) return;
+      picked++;
+      blocks.push('# ' + it.name + '\n' + it.lines.join('\n'));
+    });
+  });
+  var text = blocks.length ? blocks.join('\n\n') + '\n' : '';
+  $('out').value = text;
+  $('meta').textContent = blocks.length
+    ? '已选 ' + picked + ' 项 · ' + text.split('\n').length + ' 行 · ' + text.length + ' 字符'
+    : '什么都没选，先勾几个吧';
+}
+
+$('btnAll').addEventListener('click', function(){
+  GROUPS.forEach(function(g){ g.items.forEach(function(it){ selected[it.id] = true; }); });
+  renderChips(); build(); toast('已全选');
+});
+$('btnNone').addEventListener('click', function(){
+  selected = {};
+  renderChips(); build(); toast('已清空选择');
+});
+$('btnCopy').addEventListener('click', function(){
+  var t = $('out').value;
+  if(!t){ toast('还没生成内容'); return; }
+  HS.copy(t); toast('已复制，粘到仓库根目录的 .gitignore 里');
+});
+$('btnDl').addEventListener('click', function(){
+  var t = $('out').value;
+  if(!t){ toast('还没生成内容'); return; }
+  var blob = new Blob([t], {type:'text/plain;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '.gitignore.txt';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1200);
+  toast('已下载，重命名去掉 .txt 即可');
+});
+
+renderChips();
+build();
+})();
+</script>
+</body>
+</html>
