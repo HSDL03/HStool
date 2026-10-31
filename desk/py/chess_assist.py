@@ -21,7 +21,7 @@ import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from PIL import ImageGrab, ImageTk
+from PIL import Image, ImageGrab, ImageTk
 
 # ─────────────────────────── 常量 ───────────────────────────
 FILES = "abcdefgh"
@@ -589,37 +589,58 @@ def perft(board, st, depth, white=True):
 
 
 # ─────────────────────────── 识图 ───────────────────────────
-N = 24                      # 每格采样分辨率
-CELL_BLK = N // 3           # 3×3 小块
+N = 32              # 每格采样分辨率（32×32）
+BLK = 4             # 每格切 4×4 块
+BLK_PX = N // BLK   # 每块 8×8
+INSET = 1           # 每块向内缩 1px，避开格线与相邻格的抗锯齿
 
 
 def img_signature(img):
-    """把框内的棋盘压成 8×8 格、每格 3×3 灰度均值（576 字节）。"""
-    g = img.convert("L").resize((N * 8, N * 8))
+    """框内棋盘 → 8×8 格 × 4×4 块灰度（1024 字节）。
+
+    比以前整格取 3×3 均值细一档：棋子常常只占格心一块，整格均值会被四周空格稀释，
+    差异掉到灵敏度线以下就漏检。按块存，只要有任何一块明显变了就能抓到。
+    """
+    g = img.convert("L").resize((N * 8, N * 8), Image.BILINEAR)
     px = g.load()
-    sig = bytearray(64 * 9)
+    sig = bytearray(64 * BLK * BLK)
+    span = BLK_PX - 2 * INSET
     for sr in range(8):
         for sc in range(8):
-            base = (sr * 8 + sc) * 9
-            for by in range(3):
-                for bx in range(3):
-                    s = 0
-                    for y in range(CELL_BLK):
-                        py = sr * N + by * CELL_BLK + y
-                        for x in range(CELL_BLK):
-                            px_x = sc * N + bx * CELL_BLK + x
-                            s += px[px_x, py]
-                    sig[base + by * 3 + bx] = s // (CELL_BLK * CELL_BLK)
+            o = (sr * 8 + sc) * (BLK * BLK)
+            for by in range(BLK):
+                for bx in range(BLK):
+                    y0 = sr * N + by * BLK_PX + INSET
+                    x0 = sc * N + bx * BLK_PX + INSET
+                    tot = 0
+                    for y in range(y0, y0 + span):
+                        for x in range(x0, x0 + span):
+                            tot += px[x, y]
+                    sig[o + by * BLK + bx] = tot // (span * span)
     return sig
 
 
-def diff_squares(a, b, sens):
-    out = []
+def sign_diff(a, b):
+    """每格差异（0..255）：块差里最大的 6 块取均值。
+
+    取「最大的几块」而不是全块平均：棋子挪走后格心会整片变白/变黑，这一块的差异
+    接近 200，四周格角几乎不变——平均下来不到 30，正好卡在阈值附近；取峰值就稳了。
+    """
+    out = [0.0] * 64
     for sq in range(64):
-        d = sum(abs(a[sq * 9 + k] - b[sq * 9 + k]) for k in range(9)) / 9.0
-        if d > sens:
-            out.append(sq)
+        o = sq * (BLK * BLK)
+        ds = sorted((abs(a[o + k] - b[o + k]) for k in range(BLK * BLK)), reverse=True)
+        out[sq] = sum(ds[:6]) / 6.0
     return out
+
+
+def changed_squares(scores, sens):
+    return [sq for sq in range(64) if scores[sq] >= sens]
+
+
+def diff_squares(a, b, sens):
+    """兼容旧调用：直接给变化格列表。"""
+    return changed_squares(sign_diff(a, b), sens)
 
 
 def affected_squares(m, flip):
@@ -641,22 +662,36 @@ def affected_squares(m, flip):
     return [screen(x) for x in dict.fromkeys(sqs)]
 
 
-def match_move(changed_screen, moves, flip):
-    if len(changed_screen) < 2 or not moves:
-        return None
-    changed = set(changed_screen)
-    strict, loose, loose_score = None, None, -1
+def match_move(scores, moves, flip, sens=9):
+    """按分数挑最像的合法走法，返回 (走法, 分数) 或 (None, 分数)。
+
+    以前要求「变化的格子集合恰好等于走法影响的格子」，但真实棋盘上永远多出几格：
+    上一步的黄色高亮、鼠标悬停、走子动画的残影、吃子后的淡出。严格相等基本撞不上，
+    一撞不上就被当噪声丢掉，那一步就永久漏了。
+
+    这里改成打分：from / to 两格都必须明显变化（取两者的较小值，防止一边没动也通过），
+    易位、吃过路兵的第三四格只当加分项，多出来的格子一律不管。
+    最后要求最高分明显高于次高分，噪声里蒙不中。
+    """
+    if not moves:
+        return None, 0.0
+    thresh = max(6.0, float(sens) * 1.1)
+    best, best_s, second = None, 0.0, 0.0
     for m in moves:
-        keys = affected_squares(m, flip)
-        hit = sum(1 for k in keys if k in changed)
-        if hit == len(keys) and len(changed_screen) == len(keys):
-            strict = m
-            break
-        if hit == len(keys) and len(changed_screen) - hit <= 2:
-            score = hit * 10 - (len(changed_screen) - hit)
-            if score > loose_score:
-                loose, loose_score = m, score
-    return strict or loose
+        vals = [scores[k] for k in affected_squares(m, flip)]
+        core = vals[0] if vals[0] < vals[1] else vals[1]
+        extra = (sum(vals[2:]) / (len(vals) - 2)) if len(vals) > 2 else 0.0
+        sc = core + extra * 0.30
+        if sc > best_s:
+            second = best_s
+            best_s, best = sc, m
+        elif sc > second:
+            second = sc
+    if best is None or best_s < thresh:
+        return None, best_s
+    if second >= thresh and second > best_s * 0.94:
+        return None, best_s          # 两个候选咬得太紧，等下一帧更清楚的画面
+    return best, best_s
 
 
 # ─────────────────────────── 鼠标 ───────────────────────────
@@ -713,11 +748,14 @@ class App(tk.Tk):
         self.depth = 4
         self.busy = False
         self.over = ""
-        self.expect = None
+        self.expect = None            # 我方刚走那手在真实棋盘上的变化格
+        self.expect_at = 0.0
+        self.our_move_at = 0.0
+        self.rebase_pending = False   # 手动补录后要求重取基线
         self.region = None
         self.shot_base = None
         self.running = False
-        self.sens = 14
+        self.sens = 9
         self.search_engine = Searcher()
         self.ui_queue = queue.Queue()      # 工作线程只往这里塞回调，UI 一律在主线程改
 
@@ -793,6 +831,7 @@ class App(tk.Tk):
         self.btn_scan = tk.Button(row3, text="② 开始识别", command=self.toggle_scan)
         self.btn_scan.pack(side="left", padx=6)
         tk.Button(row3, text="清区域", command=self.clear_region).pack(side="left")
+        tk.Button(row3, text="重取基线", command=self.rebase).pack(side="left", padx=6)
         row4 = tk.Frame(g2, bg="#fbf7ec")
         row4.pack(fill="x", padx=8, pady=(0, 6))
         tk.Checkbutton(row4, text="自动落子（模拟鼠标）", variable=tk.BooleanVar(value=False),
@@ -800,9 +839,10 @@ class App(tk.Tk):
         self.play_var = tk.BooleanVar(value=False)
         row4.winfo_children()[-1].configure(variable=self.play_var)
         tk.Label(row4, text="灵敏度", bg="#fbf7ec").pack(side="left", padx=(14, 4))
-        self.sens_var = tk.IntVar(value=14)
-        tk.Scale(row4, from_=6, to=40, orient="horizontal", variable=self.sens_var,
-                 showvalue=True, length=120, bg="#fbf7ec", highlightthickness=0
+        self.sens_var = tk.IntVar(value=9)
+        tk.Scale(row4, from_=3, to=50, orient="horizontal", variable=self.sens_var,
+                 showvalue=True, length=120, bg="#fbf7ec", highlightthickness=0,
+                 command=lambda v: setattr(self, "sens", int(float(v)))
                  ).pack(side="left")
         self.region_label = tk.Label(g2, text="未选择区域", bg="#fbf7ec", fg="#8a8266",
                                      font=("Consolas", 9), anchor="w")
@@ -827,7 +867,8 @@ class App(tk.Tk):
         ent.bind("<Return>", lambda e: self.apply_input())
         tk.Button(row5, text="走这步", command=self.apply_input).pack(side="left")
 
-        self.hint = tk.Label(self, text="把对手的棋在棋盘上点出来（或拖），轮到你就自动算；也可直接输 e2e4 / Nf3 / O-O。",
+        self.hint = tk.Label(self, text="把对手的棋在棋盘上点出来（或拖），轮到你就自动算；也可直接输 e2e4 / Nf3 / O-O。"
+                                        "识图没反应就点「重取基线」，或把灵敏度往左调（越小越敏感）。",
                              bg="#fbf7ec", fg="#7d7660", font=("Microsoft YaHei UI", 9), anchor="w")
         self.hint.pack(side="bottom", fill="x", padx=14, pady=(0, 10))
 
@@ -837,7 +878,8 @@ class App(tk.Tk):
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 cfg = json.load(f)
             self.region = tuple(cfg["region"]) if cfg.get("region") else None
-            self.sens_var.set(int(cfg.get("sens", 14)))
+            self.sens_var.set(int(cfg.get("sens", 9)))
+            self.sens = int(cfg.get("sens", 9))
             self.depth_var.set(int(cfg.get("depth", 4)))
             self.play_var.set(bool(cfg.get("auto_play", False)))
             if self.region:
@@ -849,7 +891,7 @@ class App(tk.Tk):
         try:
             os.makedirs(CONFIG_DIR, exist_ok=True)
             with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-                json.dump({"region": self.region, "sens": self.sens_var.get(),
+                json.dump({"region": self.region, "sens": int(self.sens),
                            "depth": self.depth_var.get(), "auto_play": self.play_var.get()}, f)
         except OSError:
             pass
@@ -996,6 +1038,10 @@ class App(tk.Tk):
         self.check_end()
         if score is not None:
             self.show_score(score, san)
+        # 手动把对手那步补进来时，真实棋盘早就停在那儿了：让识别重取一次基线，
+        # 否则落后的基线会一直跟画面对不上，后面每一手都认不出。
+        self.rebase_pending = True
+        self.our_move_at = time.time()
         self._maybe_reply()
 
     def check_end(self):
@@ -1010,6 +1056,28 @@ class App(tk.Tk):
             self.over = "子力不足 · 和棋"
         if self.over:
             self.status.set(self.over)
+
+    def apply_opponent(self, m):
+        """把漏识别的一步对手走法补进局面。
+
+        内部局面停在「对手还没走」，turn 也已经是轮我方——所以这里不能走 do_move
+        （那会再切一次手），只把棋子走上去、记进棋谱，turn 保持不变。
+        """
+        self.stack.append(self.snapshot())
+        san = to_san(self.st["board"], self.st, m)
+        black_moved = m[2].islower()
+        make_move(self.st["board"], self.st, m)
+        if black_moved:
+            self.st["full"] += 1
+        self.log.append(san)
+        self.last_move = (m[0], m[1])
+        self.selected = -1
+        self.over = ""
+        self.push_key()
+        self.refresh_legal()
+        self.refresh_log()
+        self.draw()
+        self.status.set("轮到你 · 对手：%s" % san)
 
     def _insufficient(self):
         pieces = {}
@@ -1087,8 +1155,9 @@ class App(tk.Tk):
             txt = "程序替你走：%s（%s）" % (san, "将杀" if res["score"] > 0 else "被将杀")
         self.result.config(text=txt)
 
-        if self.running:
+        if self.running and self.play_var.get() and not m[3]:
             self.expect = set(affected_squares(m, self.flip()))
+            self.expect_at = time.time()
 
         if self.play_var.get() and self.region:
             self._auto_play(m)
@@ -1258,58 +1327,145 @@ class App(tk.Tk):
         self.running = True
         self.shot_base = None
         self.expect = None
+        self._scan_still = 0
+        self._scan_hinted = False
         self.btn_scan.config(text="■ 停止识别")
         self.result.config(text="识别中：你在那边下，我这边读。")
         threading.Thread(target=self._scan_loop, daemon=True).start()
+
+    def rebase(self):
+        """把基线对齐到当前画面：漏了一步、或棋盘被拖动/缩放过后手动点一下。"""
+        self.shot_base = None
+        self.expect = None
+        self.expect_at = 0.0
+        self.rebase_pending = False
+        self._set_result("已重新对齐基线。")
 
     def _grab(self):
         x1, y1, x2, y2 = self.region
         return ImageGrab.grab(bbox=(x1, y1, x2, y2), all_screens=True)
 
     def _scan_loop(self):
-        miss = 0
+        """每 0.12 秒截一次，交给 _scan_step 判断。"""
+        self._scan_still = 0
+        self._scan_hinted = False
         while self.running:
-            time.sleep(0.26)
+            time.sleep(0.12)
             if self.busy or self.over:
                 continue
             try:
                 sig = img_signature(self._grab())
-            except Exception:            # noqa: BLE001
+            except Exception:                # noqa: BLE001
                 continue
-            if self.shot_base is None:
-                self.shot_base = sig
-                self._set_result("已取基线，等你那边落子。")
-                continue
-            changed = diff_squares(self.shot_base, sig, self.sens_var.get())
-            if not changed:
-                miss = 0
-                continue
+            try:
+                self._scan_step(sig)
+            except Exception as e:           # noqa: BLE001
+                # 识别线程绝不能因为一次异常就悄悄死掉（那表现出来就是「他走了我这边没反应」）
+                print("识图出错:", e)
+                time.sleep(0.3)
 
-            if self.expect:
-                hit = len([c for c in changed if c in self.expect])
-                if hit == len(self.expect) and len(changed) <= len(self.expect) + 1:
-                    self.shot_base = sig
-                    self.expect = None
-                    self._set_result("我方那手已在真实棋盘上，继续等对手。")
-                    continue
-                if hit:
-                    continue
+    def _scan_step(self, sig):
+        """拿当前帧跟基线比。基线只代表「真实棋盘上一次确认的画面」。
 
-            m = match_move(changed, self.legal, self.flip())
-            if not m:
-                miss += 1
-                if miss >= 3:
-                    self.shot_base = sig
-                    miss = 0
-                continue
-            miss = 0
-            if self.st["turn"] == self.human:
-                self.shot_base = sig
-                continue
-            san = to_san(self.st["board"], self.st, m)
+        关键点：基线的语义是「真实棋盘上一帧已确认的样子」，它绝不因为某一次没对上
+        就被丢掉。以前是连续 3 帧匹配失败就重取基线，而对手走子的动画中间帧恰好匹配
+        不上，基线一跳就变成「已经走完」的画面，那一步永久丢失——表现就是对面都走完
+        了，这边还在傻等，而且之后每一手都因局面错位继续认不出。
+        现在对不上就保留基线等下一帧（动画总会停下来），只有画面静止很久仍带着没消化
+        的变化才提示你手动补一步。
+        """
+        if self.shot_base is None:
             self.shot_base = sig
-            self._set_result("读到对手：%s（变化 %d 格）" % (san, len(changed)))
-            self.ui_queue.put(lambda: self.do_move(m))
+            self._scan_still = 0
+            self._scan_hinted = False
+            self._set_result("已取基线，等你那边落子。")
+            return
+
+        scores = sign_diff(self.shot_base, sig)
+        sens = float(self.sens)
+        changed = changed_squares(scores, sens)
+
+        # 「稳定」按有没有格子在变来算，而不是按两张图逐字节相等：
+        # 鼠标闪、时钟跳这种一两格的抖动会让逐字节比较永远不相等。
+        settled = not changed
+        self._scan_still = self._scan_still + 1 if settled else 0
+
+        # 手动补录之后：等画面停下来再对齐，免得把刚发生的变化当成对手的下一手
+        if self.rebase_pending and settled and not self.expect:
+            self.shot_base = sig
+            self.rebase_pending = False
+            self._scan_hinted = False
+            return
+
+        if len(changed) >= 20:
+            # 半块棋盘都在变：窗口被拖动/切换/遮挡，不是走子。重新对齐，别乱认。
+            self.shot_base = sig
+            self.expect = None
+            self._set_result("画面整体变了，已重新对齐基线。")
+            return
+
+        if self.expect:
+            # 我方那手是不是已经落到真实棋盘上了
+            if all(scores[c] >= sens * 0.7 for c in self.expect):
+                self.shot_base = sig
+                self.expect = None
+                self._set_result("我方那手已在真实棋盘上，继续等对手。")
+                return
+            if self.expect_at and time.time() - self.expect_at > 4.0:
+                # 落子后 4 秒真实棋盘还没动：模拟点击多半没生效（窗口没焦点 / 坐标偏）
+                self.expect = None
+                self._set_result("自动落子好像没落到棋盘上，请手动走我方那手。")
+
+        # ── 轮到我方 ──────────────────────────────────────────────
+        # 画面却变了，只可能是两件事：我们刚给的那手被你在真实棋盘走掉了，
+        # 或者对手那步漏了（程序算棋的时候它已经走完）。都要认出来，不能傻等。
+        if self.st["turn"] == self.human:
+            # 先看我方那些走法里有没有能把画面变化全解释掉的（那就是我们给的那手
+            # 被你在真实棋盘走掉了），有就只对齐基线，不重复落子。
+            my_m, _ = match_move(scores, self.legal, self.flip(), sens)
+            if my_m and set(affected_squares(my_m, self.flip())) >= set(changed):
+                self.shot_base = sig
+                return
+
+            opp_white = (self.human != "w")
+            opp_legal = legal_moves(self.st["board"], opp_white, self.st)
+            om, osc = match_move(scores, opp_legal, self.flip(), sens)
+            if not om and self._scan_still >= 6:
+                # 每 0.7 秒把整块棋盘重扫一遍，阈值降到 55%：
+                # 单独捞那种图案偏淡、刚好卡在阈值下的走法
+                om, osc = match_move(scores, opp_legal, self.flip(), max(3.0, sens * 0.55))
+            if om:
+                self.shot_base = sig
+                self._scan_hinted = False
+                san = to_san(self.st["board"], self.st, om)
+                self._set_result("补上漏掉的对手走法：%s（吻合 %.0f）" % (san, osc))
+                self.ui_queue.put(lambda mm=om: self.apply_opponent(mm))
+            else:
+                self.shot_base = sig
+                if self._scan_still >= 20 and not self._scan_hinted:
+                    self._scan_hinted = True
+                    self._set_result("画面变了但对不上任何走法（最高 %.0f）· 手动补一步，"
+                                     "或点「重取基线」" % osc)
+            return
+
+        # ── 轮到对手：正常识别 ────────────────────────────────────
+        m, sc = match_move(scores, self.legal, self.flip(), sens)
+        if not m and changed and self._scan_still >= 6:
+            m, sc = match_move(scores, self.legal, self.flip(), max(3.0, sens * 0.55))
+        if not m:
+            if changed and self._scan_still >= 20 and not self._scan_hinted:
+                # 画面静止 2.5 秒还留着对不上的变化：提示一次，让人手动补
+                self._scan_hinted = True
+                self._set_result("画面变了但没认出（最高 %.0f）· 手动补这一步，或点「重取基线」"
+                                 % sc)
+            return
+
+        self._scan_hinted = False
+        san = to_san(self.st["board"], self.st, m)
+        self.shot_base = sig
+        self.expect = None
+        self._set_result("读到对手：%s（吻合 %.0f）" % (san, sc))
+        self.ui_queue.put(lambda mm=m: self.do_move(mm))
 
     def _set_result(self, text):
         self.ui_queue.put(lambda: self.result.config(text=text))
@@ -1367,12 +1523,23 @@ def selftest(path):
             d.ellipse([cx - 22, cy - 22, cx + 22, cy + 22], fill="#17171a")
         return img
 
-    ch = diff_squares(img_signature(frame([(1, 4)])), img_signature(frame([(3, 4)])), 14)
+    # 识图：e7→e5，且画面上多出两格「上一步高亮」噪声（真实棋盘一定有）
+    base = img_signature(frame([(1, 4)]))
+    after = frame([(3, 4)])
+    dd = ImageDraw.Draw(after)
+    for (r, c2) in [(6, 2), (0, 5)]:
+        dd.rectangle([c2 * 64 + 3, r * 64 + 3, c2 * 64 + 60, r * 64 + 60],
+                     outline="#f2d24a", width=5)
+    sc_all = sign_diff(base, img_signature(after))
     stt = new_state()
     stt["turn"] = "b"
-    mm = match_move(ch, legal_moves(stt["board"], False, stt), False)
+    mm, mscore = match_move(sc_all, legal_moves(stt["board"], False, stt), False, 12)
     san = sq_name(mm[0]) + sq_name(mm[1]) if mm else None
-    lines.append("识图 e7e5 -> %s %s" % (san, san == "e7e5"))
+    lines.append("识图 e7e5（含 2 格高亮）-> %s 分数 %.0f %s" % (san, mscore, san == "e7e5"))
+
+    # 画面没动时必须认不出任何东西（不能靠噪声蒙）
+    mm2, ms2 = match_move(sign_diff(base, base), legal_moves(stt["board"], False, stt), False, 12)
+    lines.append("静止画面不误判 -> %s %s" % (mm2 is None, mm2 is None))
     lines.append("搜索 -> %s" % (Searcher().best_move(list(START), True, new_state(), 4, 1200),))
     text = "\n".join(lines)
     with open(path, "w", encoding="utf-8") as f:
