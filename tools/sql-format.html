@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL 格式化 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗄</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.out{
+  margin:0;padding:13px 14px;min-height:180px;max-height:460px;overflow:auto;
+  font-family:var(--mono);font-size:12.5px;line-height:1.7;white-space:pre;tab-size:2;
+  background:var(--bg);color:var(--text);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+}
+.out .kw{color:var(--ac2);font-weight:800}
+.out .str{color:var(--dgr)}
+.out .cmt{color:var(--faint);font-style:italic}
+.out .num{color:var(--warn)}
+.meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:12px;color:var(--faint);font-family:var(--mono)}
+.meta b{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🗄 SQL 格式化</h1><p class="sub">一键缩进换行、关键字大写，也能压成一行</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">原始 SQL</h2>
+      <div class="fld">
+        <label for="src">粘贴 SQL（字符串、注释不会被改坏）</label>
+        <textarea id="src" class="mono" spellcheck="false" rows="8"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnFmt" type="button">格式化</button>
+        <button class="btn" id="btnMin" type="button">压缩成一行</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果</button>
+        <button class="btn" id="btnClear" type="button">清空</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <pre class="out" id="out"></pre>
+      <div class="meta"><span>行数 <b id="mLine">0</b></span><span>字符 <b id="mChar">0</b></span><span id="mMsg"></span></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 只做排版，不校验语义：<code>SELECT / FROM / WHERE / JOIN / GROUP BY</code> 这类子句另起一行，
+        <code>AND / OR</code> 缩进两级，括号内再缩进，单行超 76 字符时在逗号处折行。
+        字符串里的 <code>--</code>、关键字不会被误伤；压缩模式会顺手去掉注释。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var src=$('src'), out=$('out'), mLine=$('mLine'), mChar=$('mChar'), mMsg=$('mMsg');
+
+var SAMPLE =
+'select u.id, u.name, count(o.id) as cnt, sum(o.amount) as total\n' +
+'from users u left join orders o on o.user_id = u.id\n' +
+'where u.status = \'active\' and (o.amount > 100 or o.amount is null)\n' +
+ 'group by u.id, u.name having count(o.id) > 0 order by total desc limit 20;';
+
+/* ── 切词：字符串 / 注释 / 单词 / 数字 / 符号 ─────────────── */
+function tokenize(s){
+  var t=[], i=0;
+  while(i<s.length){
+    var c=s.charAt(i);
+    if(/\s/.test(c)){ i++; continue; }
+    if(c==='\''||c==='"'||c==='`'){
+      var j=i+1;
+      while(j<s.length){
+        if(s.charAt(j)==='\\'){ j+=2; continue; }
+        if(s.charAt(j)===c){ if(s.charAt(j+1)===c){ j+=2; continue; } break; }
+        j++;
+      }
+      t.push({k:'str',v:s.slice(i,Math.min(j+1,s.length))}); i=j+1; continue;
+    }
+    if(c==='-'&&s.charAt(i+1)==='-'){
+      var e=s.indexOf('\n',i); if(e<0) e=s.length;
+      t.push({k:'cmt',v:s.slice(i,e).replace(/\s+$/,'')}); i=e; continue;
+    }
+    if(c==='/'&&s.charAt(i+1)==='*'){
+      var e2=s.indexOf('*/',i+2); e2 = e2<0 ? s.length : e2+2;
+      t.push({k:'cmt',v:s.slice(i,e2)}); i=e2; continue;
+    }
+    if(/[A-Za-z_@$#]/.test(c)){
+      var j2=i+1;
+      while(j2<s.length && /[A-Za-z0-9_@$#]/.test(s.charAt(j2))) j2++;
+      t.push({k:'word',v:s.slice(i,j2)}); i=j2; continue;
+    }
+    if(/[0-9]/.test(c)){
+      var j3=i+1;
+      while(j3<s.length && /[0-9.eE]/.test(s.charAt(j3))) j3++;
+      t.push({k:'num',v:s.slice(i,j3)}); i=j3; continue;
+    }
+    var two=s.substr(i,2);
+    if(two==='<='||two==='>='||two==='<>'||two==='!='||two==='||'||two==='::'||two==='->'||two==='>='){
+      t.push({k:'p',v:two}); i+=2; continue;
+    }
+    t.push({k:'p',v:c}); i++;
+  }
+  return t;
+}
+
+var WORDS = ('SELECT FROM WHERE GROUP BY ORDER HAVING LIMIT OFFSET UNION ALL INSERT INTO VALUES UPDATE SET '+
+  'DELETE JOIN LEFT RIGHT INNER OUTER FULL CROSS ON AND OR NOT IS IN BETWEEN LIKE EXISTS CASE WHEN THEN ELSE END '+
+  'DISTINCT AS ASC DESC CREATE TABLE VIEW INDEX PRIMARY FOREIGN REFERENCES DEFAULT CONSTRAINT UNIQUE ALTER ADD '+
+  'COLUMN DROP TRUNCATE WITH RECURSIVE USING EXPLAIN IF NULL TRUE FALSE NULLS OVER PARTITION WINDOW RETURNING '+
+  'BEGIN COMMIT ROLLBACK').split(' ');
+var KW = {}; WORDS.forEach(function(w){ KW[w]=1; });
+
+/* 需要另起一行的子句（长的放前面，优先匹配） */
+var BREAKS = ['LEFT OUTER JOIN','RIGHT OUTER JOIN','FULL OUTER JOIN','LEFT JOIN','RIGHT JOIN',
+  'INNER JOIN','CROSS JOIN','OUTER JOIN','GROUP BY','ORDER BY','UNION ALL','INSERT INTO',
+  'DELETE FROM','CREATE TABLE','CREATE VIEW','CREATE INDEX','ALTER TABLE','SELECT','FROM',
+  'WHERE','HAVING','LIMIT','OFFSET','VALUES','UPDATE','SET','UNION','JOIN','RETURNING'];
+
+function peek(t,i,n){
+  /* 把位置 i 起的 n 个单词拼起来（要求它们彼此相邻，仅隔空格） */
+  var parts=[];
+  var k=i;
+  while(parts.length<n && k<t.length && t[k].k==='word'){
+    parts.push(t[k].v.toUpperCase()); k++;
+  }
+  return parts;
+}
+
+function run(minify){
+  var t=tokenize(src.value), lines=[], cur='', depth=0;
+  function indentOf(extra){ return (depth*2 + (extra||0)); }
+  function flush(extra){
+    var s=cur.replace(/\s+$/,'');
+    if(s) lines.push(new Array(indentOf(extra)+1).join(' ')+s.replace(/^\s+/,''));
+    cur='';
+  }
+  function add(str, space){
+    if(space && cur) cur+=' ';
+    cur+=str;
+  }
+  var i=0;
+  while(i<t.length){
+    var tk=t[i], v=tk.v, up=tk.k==='word'?v.toUpperCase():'';
+
+    if(tk.k==='cmt'){
+      if(minify){ i++; continue; }
+      flush(0); add(v,false); flush(0); i++; continue;
+    }
+    if(tk.k==='p'){
+      if(v==='('){
+        var prevWord = i>0 && t[i-1].k==='word' ? t[i-1].v.toUpperCase() : '';
+        add('(', KW[prevWord]===1 && prevWord!=='');
+        depth++;
+      }else if(v===')'){
+        cur=cur.replace(/\s+$/,'');
+        depth = Math.max(0,depth-1);
+        add(')',false);
+      }else if(v===','){
+        cur=cur.replace(/\s+$/,'')+',';
+        if(!minify && cur.replace(/^\s+/,'').length>70){ flush(1); }
+      }else if(v===';'){
+        cur=cur.replace(/\s+$/,'')+';';
+        flush(0);
+      }else if(v==='.'){
+        cur=cur.replace(/\s+$/,'')+'.';
+      }else{
+        add(v,true);
+      }
+      i++; continue;
+    }
+    /* 单词 / 数字 / 字符串 */
+    if(tk.k==='word' && !minify){
+      var three=peek(t,i,3).join(' ')||'';
+      var two=peek(t,i,2).join(' ')||'';
+      var hit=null, len=0;
+      for(var b=0;b<BREAKS.length;b++){
+        if(three===BREAKS[b]){hit=BREAKS[b];len=3;break;}
+        if(two===BREAKS[b]){hit=BREAKS[b];len=2;break;}
+        if(up===BREAKS[b]){hit=BREAKS[b];len=1;break;}
+      }
+      if(hit){
+        flush(0); add(hit,false);
+        i+=len; continue;
+      }
+      if(up==='AND'||up==='OR'){
+        flush(1); add(up,false); i++; continue;
+      }
+      if(up==='ON'){
+        flush(1); add('ON',false); i++; continue;
+      }
+    }
+    var text = tk.k==='word' ? (KW[up]===1?up:v) : v;
+    var noSpaceBefore = /^[),;.]/.test(text.charAt(0));
+    add(text, !noSpaceBefore);
+    i++;
+  }
+  flush(0);
+  var text=minify ? lines.join(' ').replace(/\s+/g,' ').trim() : lines.join('\n');
+  return text;
+}
+
+/* 高亮：只给输出上色，不参与排版 */
+function paint(sql){
+  var t=tokenize(sql);
+  var html='';
+  for(var i=0;i<t.length;i++){
+    var tk=t[i], v=tk.v;
+    var cls='';
+    if(tk.k==='str') cls='str';
+    else if(tk.k==='cmt') cls='cmt';
+    else if(tk.k==='num') cls='num';
+    else if(tk.k==='word' && KW[tk.v.toUpperCase()]===1) cls='kw';
+    var safe=HS.esc(v);
+    html += cls ? '<span class="'+cls+'">'+safe+'</span>' : safe;
+  }
+  return html;
+}
+
+var last='';
+function show(text, msg){
+  last=text;
+  out.innerHTML = text ? paint(text) : '<span class="cmt">还没有结果，点上面的「格式化」。</span>';
+  var lines = text ? text.split('\n').length : 0;
+  mLine.textContent=String(lines);
+  mChar.textContent=String(text.length);
+  mMsg.textContent=msg||'';
+}
+
+function doFormat(){
+  if(!src.value.trim()){ toast('先粘贴一段 SQL'); src.focus(); return; }
+  var r=run(false);
+  if(!r.trim()){ toast('没解析出语句，检查一下括号是否配对'); return; }
+  var open=(src.value.match(/\(/g)||[]).length, close=(src.value.match(/\)/g)||[]).length;
+  show(r, open!==close ? '⚠ 括号 '+open+' 个 ( 对 '+close+' 个 )，可能没写全' : '');
+}
+function doMin(){
+  if(!src.value.trim()){ toast('先粘贴一段 SQL'); src.focus(); return; }
+  show(run(true), '已压缩，注释已去掉');
+}
+
+$('btnFmt').addEventListener('click',doFormat);
+$('btnMin').addEventListener('click',doMin);
+$('btnCopy').addEventListener('click',function(){
+  if(!last){ toast('还没有可复制的结果'); return; }
+  HS.copy(last); toast('已复制 SQL');
+});
+$('btnClear').addEventListener('click',function(){
+  src.value=''; last=''; show(''); src.focus();
+});
+src.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); doFormat(); }
+});
+
+src.value=SAMPLE;
+doFormat();
+})();
+</script>
+</body>
+</html>

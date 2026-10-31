@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 建筑预览 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧱</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.prevbox{
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);padding:8px;overflow:hidden;
+}
+.prevbox canvas{display:block;margin:0 auto;width:100%;height:auto;image-rendering:pixelated}
+.cap{margin:9px 2px 12px;font-size:12.5px;color:var(--muted);line-height:1.6}
+.cap b{color:var(--text);font-weight:700}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+.total{
+  display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:8px;
+  padding:12px 14px;background:var(--bg3);border-radius:var(--r);
+}
+.total b{font-family:var(--mono);font-size:clamp(1.4rem,5.5vw,1.9rem);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.total i{font-style:normal;font-size:12.5px;color:var(--muted)}
+.warn{margin-top:10px;font-size:12.5px;color:var(--dgr);min-height:18px}
+@media(max-width:640px){
+  .prevbox{padding:6px}
+  .kv{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧱 MC 建筑预览</h1><p class="sub">先看清要建什么形状 · 再算要挖多少方块</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">尺寸与材质</h2>
+      <div class="fld">
+        <label>结构</label>
+        <div class="seg" id="modeSeg">
+          <button type="button" data-mode="shell" aria-pressed="true">空心盒</button>
+          <button type="button" data-mode="room" aria-pressed="false">四壁+地板</button>
+          <button type="button" data-mode="walls" aria-pressed="false">只有四壁</button>
+          <button type="button" data-mode="solid" aria-pressed="false">实心</button>
+          <button type="button" data-mode="floor" aria-pressed="false">只要地板</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fld">
+          <label for="len">长（格）</label>
+          <input id="len" type="number" inputmode="numeric" min="1" max="128" step="1" value="16">
+        </div>
+        <div class="fld">
+          <label for="wid">宽（格）</label>
+          <input id="wid" type="number" inputmode="numeric" min="1" max="128" step="1" value="16">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fld">
+          <label for="hei">高（格）</label>
+          <input id="hei" type="number" inputmode="numeric" min="1" max="128" step="1" value="5">
+        </div>
+        <div class="fld">
+          <label for="mat">方块材质</label>
+          <select id="mat"></select>
+        </div>
+      </div>
+      <div class="warn" id="err"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结构预览</h2>
+      <div class="prevbox"><canvas id="prev" width="600" height="360" role="img" aria-label="结构预览图"></canvas></div>
+      <div class="cap" id="cap">—</div>
+      <div class="row">
+        <div class="seg" id="viewSeg">
+          <button type="button" data-view="iso" aria-pressed="true">等距</button>
+          <button type="button" data-view="flat" aria-pressed="false">平面</button>
+        </div>
+        <button class="btn sm" id="btnMirror" type="button">↔ 转个角度</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">用料估算</h2>
+      <div class="total"><b id="rBlocks">—</b><i>个方块</i></div>
+      <div class="kv"><span>折合组（64 个一组）</span><b id="rStack">—</b></div>
+      <div class="kv"><span>潜影盒（27 组 / 1728 个）</span><b id="rShulker">—</b></div>
+      <div class="kv"><span>大箱子（54 组 / 3456 个）</span><b id="rChest">—</b></div>
+      <div class="fld" style="margin-top:12px">
+        <label for="loss">预留损耗</label>
+        <select id="loss">
+          <option value="0">不预留</option>
+          <option value="5">5%（常用）</option>
+          <option value="10">10%</option>
+          <option value="15">15%</option>
+        </select>
+      </div>
+      <div class="row"><button class="btn primary" id="btnCopy" type="button">📋 复制清单</button></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 预览用的都是游戏原版 16×16 贴图，按等距投影一格一格拼出来，所以看到的就是实际形状：
+        空心盒是六面外壳、四壁+地板不封顶（中间那块是地板）、只有四壁则能看穿中间。<br>
+        用料按 1 格 1 个方块计算，棱和角只算一次；预留 5% 用来补拆改和边角。
+        <b>平面</b>视角适合核对占地尺寸，<b>等距</b>适合看进深。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var MATS=[
+  {id:'oak_planks',name:'橡木木板',top:'oak_planks',side:'oak_planks'},
+  {id:'stone',name:'石头',top:'stone',side:'stone'},
+  {id:'cobblestone',name:'圆石',top:'cobblestone',side:'cobblestone'},
+  {id:'stone_bricks',name:'石砖',top:'stone_bricks',side:'stone_bricks'},
+  {id:'bricks',name:'砖块',top:'bricks',side:'bricks'},
+  {id:'sandstone',name:'砂岩',top:'sandstone',side:'sandstone'},
+  {id:'deepslate_tiles',name:'深板岩砖',top:'deepslate_tiles',side:'deepslate_tiles'},
+  {id:'quartz',name:'石英块',top:'quartz_block_top',side:'quartz_block_side'},
+  {id:'oak_log',name:'橡木原木',top:'oak_log_top',side:'oak_log'},
+  {id:'white_wool',name:'白色羊毛',top:'white_wool',side:'white_wool'},
+  {id:'iron_block',name:'铁块',top:'iron_block',side:'iron_block'},
+  {id:'glass',name:'玻璃',top:'glass',side:'glass'},
+  {id:'grass',name:'草方块',top:'grass_block_top',tint:'#91bd59',side:'grass_block_side'},
+  {id:'dirt',name:'泥土',top:'dirt',side:'dirt'},
+  {id:'nether_bricks',name:'下界砖',top:'nether_bricks',side:'nether_bricks'}
+];
+var MODE_NAME={shell:'空心盒',room:'四壁+地板',walls:'只有四壁',solid:'实心',floor:'只要地板'};
+var TEX_URL='../assets/mc-textures/';
+
+var lenEl=$('len'),widEl=$('wid'),heiEl=$('hei'),matEl=$('mat'),lossEl=$('loss'),errEl=$('err');
+var canvas=$('prev'),capEl=$('cap');
+var mode='shell',view='iso',mirror=false;
+
+/* ── 贴图缓存：按 file|亮度 存 16px canvas ─────────────── */
+var TEX={};
+function shade(src,f){
+  var c=document.createElement('canvas');
+  c.width=src.width;c.height=src.height;
+  var g=c.getContext('2d');
+  g.drawImage(src,0,0);
+  if(f<1){
+    g.globalCompositeOperation='source-atop';
+    g.fillStyle='rgba(0,0,0,'+(1-f)+')';
+    g.fillRect(0,0,c.width,c.height);
+  }
+  return c;
+}
+var pending={};
+function tex(file,f,tint){
+  var key=file+'|'+f+'|'+(tint||'');
+  if(TEX[key]!==undefined) return TEX[key];
+  var base=TEX[file+'|raw'];
+  if(!base){
+    if(!pending[file]){
+      pending[file]=true;
+      var im=new Image();
+      im.onload=function(){
+        var c=document.createElement('canvas');
+        c.width=im.width;c.height=im.height;
+        c.getContext('2d').drawImage(im,0,0);
+        TEX[file+'|raw']=c;
+        pending[file]=false;
+        draw();
+      };
+      im.onerror=function(){ pending[file]=false; TEX[file+'|raw']=null; };
+      im.src=TEX_URL+file+'.png';
+    }
+    return null;
+  }
+  if(base===null) return null;
+  var src=base;
+  if(tint){
+    var t=document.createElement('canvas');
+    t.width=base.width;t.height=base.height;
+    var tg=t.getContext('2d');
+    tg.drawImage(base,0,0);
+    tg.globalCompositeOperation='multiply';
+    tg.fillStyle=tint;
+    tg.fillRect(0,0,t.width,t.height);
+    src=t;
+  }
+  var out=shade(src,f);
+  TEX[key]=out;
+  return out;
+}
+
+function matOf(){ for(var i=0;i<MATS.length;i++) if(MATS[i].id===matEl.value) return MATS[i]; return MATS[0]; }
+
+function intOf(el,label){
+  var raw=String(el.value).trim();
+  if(raw==='') throw new Error(label+'不能为空');
+  if(!/^\d+$/.test(raw)) throw new Error(label+'只能是正整数');
+  var n=parseInt(raw,10);
+  if(n<1) throw new Error(label+'至少 1 格');
+  if(n>128) throw new Error(label+'最多 128 格');
+  return n;
+}
+function dims(){
+  return {L:intOf(lenEl,'长'),W:intOf(widEl,'宽'),H:intOf(heiEl,'高')};
+}
+
+function count(l,w,h,m){
+  var vol=l*w*h;
+  if(m==='solid') return vol;
+  if(m==='floor') return l*w;
+  var il=Math.max(0,l-2),iw=Math.max(0,w-2),ih=0;
+  if(m==='shell') ih=Math.max(0,h-2);
+  else if(m==='room') ih=Math.max(0,h-1);
+  else if(m==='walls') ih=h;
+  return Math.max(0,vol-il*iw*ih);
+}
+function fmt(n){ return n.toLocaleString('zh-CN'); }
+
+/* 顶面每格该画什么：normal 实心/顶盖，floor 可见地板，air 空气 */
+function cellKind(i,j,L,W,m){
+  var edge=(i===0||j===0||i===L-1||j===W-1);
+  if(m==='room') return edge?'top':'floor';
+  if(m==='walls') return edge?'top':'air';
+  return 'top';
+}
+
+/* ── 等距渲染 ──────────────────────────────────────────── */
+function drawIso(L,W,H,mat){
+  var box=canvas.parentNode;
+  var maxW=Math.max(240,box.clientWidth-16);
+  var maxH=Math.max(180,Math.min(340,Math.round(maxW*0.8)));
+  var a=Math.min((maxW-16)/(L+W),(maxH-16)/((L+W)/2+H));
+  a=Math.max(a,0.6);
+  var pad=8;
+  var cw=Math.round((L+W)*a+pad*2), ch=Math.round(((L+W)/2+H)*a+pad*2);
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  canvas.width=Math.round(cw*dpr);canvas.height=Math.round(ch*dpr);
+  canvas.style.width=cw+'px';canvas.style.height=ch+'px';
+  var ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cw,ch);
+  ctx.imageSmoothingEnabled=false;
+  if(mirror){ ctx.translate(cw,0); ctx.scale(-1,1); }
+
+  var cx=pad+W*a, cy=pad+H*a;
+  var topImg=tex(mat.top,1,mat.tint), sideImg=tex(mat.side,0.82);
+  var sideDark=tex(mat.side,0.62), floorImg=tex(mat.top,0.55,mat.tint);
+  if(!topImg||!sideImg||!sideDark||!floorImg) return;
+
+  function tile(ctx2,img,i,j){ ctx2.drawImage(img,i,j,1,1); }
+
+  /* 顶面 */
+  ctx.save();
+  ctx.transform(a,a/2,-a,a/2,cx,cy-H*a);
+  for(var i=0;i<L;i++) for(var j=0;j<W;j++){
+    var k=cellKind(i,j,L,W,mode);
+    if(k==='top') tile(ctx,topImg,i,j);
+    else if(k==='floor') tile(ctx,floorImg,i,j);
+  }
+  ctx.restore();
+
+  /* 左侧面 z=W */
+  ctx.save();
+  ctx.transform(a,a/2,0,a,pad, pad+W*a/2);
+  for(i=0;i<L;i++) for(var k2=0;k2<H;k2++) tile(ctx,sideImg,i,k2);
+  ctx.restore();
+
+  /* 右侧面 x=L */
+  ctx.save();
+  ctx.transform(-a,a/2,0,a,pad+(L+W)*a, pad+L*a/2);
+  for(var j2=0;j2<W;j2++) for(k2=0;k2<H;k2++) tile(ctx,sideDark,j2,k2);
+  ctx.restore();
+}
+
+/* ── 平面渲染 ──────────────────────────────────────────── */
+function drawFlat(L,W,mat){
+  var box=canvas.parentNode;
+  var maxW=Math.max(240,box.clientWidth-16);
+  var maxH=Math.max(180,Math.min(340,Math.round(maxW*0.8)));
+  var cell=Math.max(0.6,Math.min((maxW-16)/L,(maxH-16)/W));
+  var pad=8;
+  var cw=Math.round(L*cell+pad*2), ch=Math.round(W*cell+pad*2);
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  canvas.width=Math.round(cw*dpr);canvas.height=Math.round(ch*dpr);
+  canvas.style.width=cw+'px';canvas.style.height=ch+'px';
+  var ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cw,ch);
+  ctx.imageSmoothingEnabled=false;
+  if(mirror){ ctx.translate(cw,0); ctx.scale(-1,1); }
+
+  var topImg=tex(mat.top,1,mat.tint), floorImg=tex(mat.top,0.55,mat.tint);
+  if(!topImg||!floorImg) return;
+  for(var i=0;i<L;i++) for(var j=0;j<W;j++){
+    var k=cellKind(i,j,L,W,mode);
+    if(k==='air') continue;
+    ctx.drawImage(k==='top'?topImg:floorImg, pad+i*cell, pad+j*cell, cell, cell);
+  }
+}
+
+function draw(){
+  var d;
+  try{ d=dims(); }catch(e){ return; }
+  canvas.style.width='100%';canvas.style.height='';
+  if(view==='iso') drawIso(d.L,d.W,d.H,matOf());
+  else drawFlat(d.L,d.W,matOf());
+
+  var m=matOf();
+  var note={shell:'六面外壳，内部掏空',room:'不封顶，中间是地板',walls:'不封顶也不铺地，中间是空气',
+            solid:'整块填满',floor:'只有一层地板'}[mode];
+  capEl.innerHTML='<b>'+MODE_NAME[mode]+'</b> · '+d.L+'×'+d.W+'×'+d.H+' · '+m.name
+    +'<br>'+note+'（'+(view==='iso'?'等距':'平面')+'视图）';
+}
+
+function render(){
+  errEl.textContent='';
+  var d;
+  try{
+    d=dims();
+  }catch(e){
+    errEl.textContent='⚠ '+e.message;
+    $('rBlocks').textContent='—';
+    ['rStack','rShulker','rChest'].forEach(function(id){$(id).textContent='—';});
+    return;
+  }
+  var base=count(d.L,d.W,d.H,mode);
+  var loss=parseInt(lossEl.value,10)||0;
+  var need=Math.ceil(base*(1+loss/100));
+  $('rBlocks').textContent=fmt(need);
+  $('rStack').textContent=Math.ceil(need/64)+' 组';
+  $('rShulker').textContent=(need/1728).toFixed(2)+' 盒';
+  $('rChest').textContent=(need/3456).toFixed(2)+' 箱';
+  draw();
+  save();
+}
+
+/* ── 交互 ──────────────────────────────────────────────── */
+MATS.forEach(function(m){
+  var o=document.createElement('option');
+  o.value=m.id;o.textContent=m.name;
+  matEl.appendChild(o);
+});
+
+$('modeSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-mode]');
+  if(!b) return;
+  mode=b.getAttribute('data-mode');
+  var kids=this.querySelectorAll('button');
+  for(var i=0;i<kids.length;i++) kids[i].setAttribute('aria-pressed',String(kids[i]===b));
+  render();
+});
+$('viewSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-view]');
+  if(!b) return;
+  view=b.getAttribute('data-view');
+  var kids=this.querySelectorAll('button');
+  for(var i=0;i<kids.length;i++) kids[i].setAttribute('aria-pressed',String(kids[i]===b));
+  render();
+});
+$('btnMirror').addEventListener('click',function(){ mirror=!mirror; render(); });
+
+[lenEl,widEl,heiEl].forEach(function(el){
+  var t=null;
+  el.addEventListener('input',function(){
+    clearTimeout(t);
+    t=setTimeout(render,260);
+  });
+  el.addEventListener('change',render);
+});
+matEl.addEventListener('change',render);
+lossEl.addEventListener('change',render);
+
+$('btnCopy').addEventListener('click',function(){
+  var d;
+  try{ d=dims(); }catch(e){ toast('尺寸填错了：'+e.message); return; }
+  var base=count(d.L,d.W,d.H,mode);
+  var loss=parseInt(lossEl.value,10)||0;
+  var need=Math.ceil(base*(1+loss/100));
+  var m=matOf();
+  HS.copy([
+    '【MC 建筑】'+MODE_NAME[mode]+' '+d.L+'×'+d.W+'×'+d.H+' · '+m.name,
+    '需方块：'+need+' 个'+(loss?'（含 '+loss+'% 损耗）':'（不含损耗）'),
+    '折合 '+Math.ceil(need/64)+' 组 / '+(need/1728).toFixed(2)+' 潜影盒 / '+(need/3456).toFixed(2)+' 大箱子'
+  ].join('\n'));
+  toast('清单已复制');
+});
+
+var rt=null;
+window.addEventListener('resize',function(){
+  clearTimeout(rt);
+  rt=setTimeout(draw,180);
+});
+
+function save(){
+  try{
+    localStorage.setItem('hs-mcbuild',JSON.stringify({
+      l:lenEl.value,w:widEl.value,h:heiEl.value,loss:lossEl.value,m:mode,v:view,mat:matEl.value
+    }));
+  }catch(e){}
+}
+function restore(){
+  try{
+    var s=JSON.parse(localStorage.getItem('hs-mcbuild')||'null');
+    if(!s) return;
+    if(s.l) lenEl.value=s.l;
+    if(s.w) widEl.value=s.w;
+    if(s.h) heiEl.value=s.h;
+    if(s.loss!=null) lossEl.value=String(s.loss);
+    if(s.m&&MODE_NAME[s.m]) mode=s.m;
+    if(s.v==='flat') view='flat';
+    if(s.mat&&document.querySelector('option[value="'+s.mat+'"]')) matEl.value=s.mat;
+  }catch(e){}
+}
+function syncSeg(){
+  var ids=[['modeSeg','data-mode',mode],['viewSeg','data-view',view]];
+  ids.forEach(function(p){
+    var kids=$(p[0]).querySelectorAll('button');
+    for(var i=0;i<kids.length;i++){
+      kids[i].setAttribute('aria-pressed',String(kids[i].getAttribute(p[1])===p[2]));
+    }
+  });
+}
+
+restore();
+syncSeg();
+render();
+})();
+</script>
+</body>
+</html>

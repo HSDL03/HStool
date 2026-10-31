@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>批量改名计划 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+table th,table td{padding:6px 9px;border-bottom:1px solid var(--bd);text-align:left}
+table th{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);background:var(--bg3);white-space:nowrap}
+table td{font-family:var(--mono);word-break:break-all}
+table td.arrow{color:var(--faint);width:22px;text-align:center;font-family:inherit}
+table tbody tr:hover td{background:var(--bg3)}
+tr.bad td{color:var(--dgr)}
+.sum{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.7}
+.sum b{color:var(--text);font-family:var(--mono)}
+.warn{margin-top:9px;font-size:12.5px;color:var(--dgr);min-height:18px}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.chk input{width:16px;height:16px;accent-color:var(--ac);margin:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:640px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📝 批量改名计划</h1><p class="sub">先看清改成什么样，再给你现成的改名命令</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">文件清单</h2>
+      <div class="fld">
+        <label for="files">每行一个文件名</label>
+        <textarea id="files" class="mono" spellcheck="false" rows="6">IMG_2024_01.JPG
+IMG_2024_02.JPG
+IMG_2024_03.JPG
+IMG_2024_04.JPG</textarea>
+      </div>
+      <div class="warn" id="warn1"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">改名规则</h2>
+      <div class="two">
+        <div class="fld">
+          <label for="find">查找</label>
+          <input id="find" value="IMG_" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="fld">
+          <label for="rep">替换成</label>
+          <input id="rep" value="照片_" spellcheck="false" autocomplete="off">
+        </div>
+      </div>
+      <label class="chk" style="margin-bottom:13px">
+        <input type="checkbox" id="useRe"> 查找内容按正则表达式处理
+      </label>
+      <div class="two">
+        <div class="fld">
+          <label for="prefix">加前缀</label>
+          <input id="prefix" value="" spellcheck="false" autocomplete="off" placeholder="例如 2026_">
+        </div>
+        <div class="fld">
+          <label for="suffix">加后缀（扩展名前）</label>
+          <input id="suffix" value="" spellcheck="false" autocomplete="off" placeholder="例如 _final">
+        </div>
+      </div>
+      <div class="two">
+        <div class="fld">
+          <label for="numStart">序号起始（空 = 不加）</label>
+          <input id="numStart" type="number" inputmode="numeric" min="0" step="1" placeholder="1">
+        </div>
+        <div class="fld">
+          <label for="numPad">序号位数</label>
+          <input id="numPad" type="number" inputmode="numeric" min="1" max="6" step="1" value="2">
+        </div>
+      </div>
+      <div class="fld">
+        <label for="casemode">英文字母大小写</label>
+        <select id="casemode">
+          <option value="none">保持原样</option>
+          <option value="lower">全部小写</option>
+          <option value="upper">全部大写</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label for="shell">命令格式</label>
+        <select id="shell">
+          <option value="sh">Linux / macOS（mv）</option>
+          <option value="win">Windows（ren）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">预览</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>原文件名</th><th></th><th>新文件名</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="sum" id="sum">—</div>
+      <div class="warn" id="warn2"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCmd" type="button">📋 复制改名命令</button>
+        <button class="btn" id="btnList" type="button">📋 复制新文件名</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 规则按「查找替换 → 大小写 → 前缀 + 主体 + 序号 + 后缀 + 扩展名」的顺序套用。
+        扩展名保持不变（最后一个点之后算扩展名）。<br>
+        命令复制到终端里执行，<b>执行前先确认预览没有重名</b>——重名会被标红，强行执行会互相覆盖。
+        不确定就先 <code>cp</code> 一份目录再改名。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var filesEl=$('files'),findEl=$('find'),repEl=$('rep'),reEl=$('useRe');
+var preEl=$('prefix'),sufEl=$('suffix'),numEl=$('numStart'),padEl=$('numPad');
+var caseEl=$('casemode'),shellEl=$('shell'),tbody=$('tbody'),sumEl=$('sum');
+var warn1=$('warn1'),warn2=$('warn2');
+
+function splitName(name){
+  var i=name.lastIndexOf('.');
+  if(i<=0||i===name.length-1) return {base:name,ext:''};
+  return {base:name.slice(0,i),ext:name.slice(i)};
+}
+
+function build(){
+  warn1.textContent='';warn2.textContent='';tbody.innerHTML='';
+  var lines=filesEl.value.split(/\r?\n/).map(function(s){return s.trim();}).filter(Boolean);
+  if(!lines.length){
+    sumEl.textContent='—';
+    warn1.textContent='⚠ 先在上面填文件名，一行一个';
+    return;
+  }
+  if(lines.length>500){
+    warn1.textContent='⚠ 一次最多 500 个文件，已只取前 500 个';
+    lines=lines.slice(0,500);
+  }
+
+  var rx=null,find=findEl.value;
+  if(find){
+    if(reEl.checked){
+      try{ rx=new RegExp(find,'g'); }
+      catch(e){
+        warn2.textContent='⚠ 正则写错了：'+e.message;
+        sumEl.textContent='—';
+        return;
+      }
+    }
+  }
+
+  var start=numEl.value.trim()===''?null:parseInt(numEl.value,10);
+  if(start!==null&&(!/^\d+$/.test(numEl.value.trim())||start<0)){
+    warn2.textContent='⚠ 序号起始要填 0 或正整数';
+    sumEl.textContent='—';
+    return;
+  }
+  var pad=parseInt(padEl.value,10);
+  if(isNaN(pad)||pad<1||pad>6) pad=2;
+
+  var seen={},rows=[],dupes=0,changed=0;
+  lines.forEach(function(name,idx){
+    var p=splitName(name),base=p.base;
+    if(find){
+      base = rx ? base.replace(rx,repEl.value) : base.split(find).join(repEl.value);
+    }
+    var cm=caseEl.value;
+    if(cm==='lower') base=base.toLowerCase();
+    else if(cm==='upper') base=base.toUpperCase();
+
+    var num='';
+    if(start!==null) num=String(start+idx).padStart(pad,'0');
+    var out=preEl.value+base+num+sufEl.value+p.ext;
+    if(out!==name) changed++;
+    if(seen[out]) dupes++;
+    seen[out]=true;
+    rows.push({from:name,to:out});
+  });
+
+  /* 第二遍标注重名 */
+  var cnt={};
+  rows.forEach(function(r){ cnt[r.to]=(cnt[r.to]||0)+1; });
+  var html='';
+  rows.forEach(function(r){
+    var conflict=cnt[r.to]>1;
+    if(conflict) r.dup=true;
+    html+='<tr'+(conflict?' class="bad"':'')+'><td>'+esc(r.from)+'</td><td class="arrow">→</td><td>'+esc(r.to)
+        +(conflict?' ⚠ 重名':'')+'</td></tr>';
+  });
+  tbody.innerHTML=html;
+
+  sumEl.innerHTML='共 <b>'+rows.length+'</b> 个文件，其中 <b>'+changed+'</b> 个名字会变'
+    + (dupes ? '，<b style="color:var(--dgr)">有 '+dupes+' 处重名，请调整规则</b>' : '，没有重名');
+  window.__rows=rows;
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function cmdFor(rows){
+  var win=shellEl.value==='win';
+  return rows.filter(function(r){return r.from!==r.to;}).map(function(r){
+    return win ? 'ren "'+r.from+'" "'+r.to+'"' : "mv -- '"+r.from.replace(/'/g,"'\\''")+"' '"+r.to.replace(/'/g,"'\\''")+"'";
+  }).join('\n');
+}
+
+$('btnCmd').addEventListener('click',function(){
+  var rows=window.__rows||[];
+  var cmd=cmdFor(rows);
+  if(!cmd){toast('没有需要改名的文件');return;}
+  HS.copy(cmd);
+  toast('已复制 '+cmd.split('\n').length+' 条命令');
+});
+$('btnList').addEventListener('click',function(){
+  var rows=window.__rows||[];
+  if(!rows.length){toast('还没有文件名');return;}
+  HS.copy(rows.map(function(r){return r.to;}).join('\n'));
+  toast('已复制新文件名列表');
+});
+
+[filesEl,findEl,repEl,preEl,sufEl,numEl,padEl].forEach(function(el){
+  el.addEventListener('input',function(){
+    clearTimeout(el._t);
+    el._t=setTimeout(build,220);
+  });
+});
+[reEl,caseEl,shellEl].forEach(function(el){ el.addEventListener('change',build); });
+
+/* 记住上次用的规则 */
+try{
+  var s=JSON.parse(localStorage.getItem('hs-rename')||'null');
+  if(s){
+    if(s.find!=null) findEl.value=s.find;
+    if(s.rep!=null) repEl.value=s.rep;
+    if(s.pre!=null) preEl.value=s.pre;
+    if(s.suf!=null) sufEl.value=s.suf;
+    if(s.pad) padEl.value=s.pad;
+    if(s.cm) caseEl.value=s.cm;
+  }
+}catch(e){}
+function save(){
+  try{
+    localStorage.setItem('hs-rename',JSON.stringify({
+      find:findEl.value,rep:repEl.value,pre:preEl.value,suf:sufEl.value,pad:padEl.value,cm:caseEl.value
+    }));
+  }catch(e){}
+}
+[findEl,repEl,preEl,sufEl,padEl].forEach(function(el){el.addEventListener('change',save);});
+caseEl.addEventListener('change',save);
+
+build();
+})();
+</script>
+</body>
+</html>

@@ -6,14 +6,16 @@
 
 [![站点自检](https://github.com/HSDL03/HStool/actions/workflows/check.yml/badge.svg)](https://github.com/HSDL03/HStool/actions/workflows/check.yml)
 [![在线访问](https://img.shields.io/badge/在线访问-hsdl03.github.io%2FHStool-3d521f?style=flat-square)](https://hsdl03.github.io/HStool/)
+[![收录条目](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FHSDL03%2FHStool%2Fmain%2Fdata%2Ftools-data.json&query=%24.length&label=%E6%94%B6%E5%BD%95%E6%9D%A1%E7%9B%AE&color=3d521f&style=flat-square)](data/tools-data.json)
 [![纯静态](https://img.shields.io/badge/部署-GitHub%20Pages-222?style=flat-square&logo=githubpages&logoColor=white)](https://hsdl03.github.io/HStool/)
 [![AI 制作](https://img.shields.io/badge/本项目由-AI%20制作-8b5cf6?style=flat-square)](#声明)
 
 </div>
 
-一个纯静态的个人站点：没有框架、没有构建步骤，`push` 到 `main` 后 GitHub Pages 自动上线。
-所有页面共用一套设计系统（`assets/css/core.css`）和一份公共能力（`assets/js/core.js`），
-新页面只写自己的业务逻辑。
+一个纯静态的个人站点：**没有框架、没有构建步骤**，`push` 到 `main` 后 GitHub Pages 自动上线（30~60 秒生效）。
+所有页面共用一套设计系统（`assets/css/core.css`）和一份公共能力（`assets/js/core.js`），新页面只写自己的业务逻辑。
+
+> **数字一览**：收录 75 个条目、可见 68 个 —— 59 个工具（其中 22 个 MC 相关）、游戏厅 + 棋牌室、聊天室、下载站、Wiki、数据后台。
 
 ---
 
@@ -53,7 +55,7 @@ python -m http.server 8000     # 或 npx serve .
 
 ```text
 .
-├─ index.html              工具箱首页：搜索 / 分类筛选 / 排序 / 命令面板
+├─ index.html              工具箱首页：搜索 / 分类筛选 / 收藏置顶 / 命令面板
 ├─ 404.html                自定义 404（必须留在根目录）
 ├─ .nojekyll               关掉 Jekyll，保证下划线开头的路径也能发布
 ├─ README.md
@@ -61,8 +63,10 @@ python -m http.server 8000     # 或 npx serve .
 ├─ assets/
 │  ├─ css/core.css         设计系统：8 套主题令牌 + 通用组件（.tool/.panel/.fld/.btn…）
 │  ├─ js/core.js           主题引擎 / 命令面板 / 装饰背景 / Toast / 数据三级回落
-│  ├─ vendor/              本地化的第三方库（three.js、supabase.js），缺失才回落 CDN
+│  ├─ vendor/              本地化的第三方库（three.js、supabase.js、qrcode.js），缺失才回落 CDN
 │  ├─ mc-*.js              MC 复刻用的方块 / 模型 / 配方 / 贴图索引数据
+│  ├─ mc-icons/            工具卡片用的 MC 官方渲染图（zh.minecraft.wiki）
+│  ├─ mc-gui/              MC 原版 GUI 贴图与控件素材
 │  ├─ mc-textures/         MC 原版贴图（16px 图集、GUI、实体）
 │  └─ mc-sounds/           MC 原版音效
 │
@@ -72,31 +76,35 @@ python -m http.server 8000     # 或 npx serve .
 │  ├─ admin.html           数据后台：用 GitHub Token 直接读写 JSON
 │  └─ chat.html            聊天室（Supabase）
 │
-├─ tools/                  单文件小工具，每页一个 .html
-│  ├─ bigcalc.html         计算器（大数 / 表达式）
-│  ├─ qrcode.html          二维码生成器
-│  ├─ mcname.html          MC 名称随机器
-│  ├─ gacha.html           挖矿抽卡：单抽十连、保底与图鉴
-│  ├─ pixel.html           像素画板：16×16 手绘，导出 PNG
-│  ├─ color.html           颜色工具：HEX / RGB / HSL 互转与对比度
-│  ├─ json.html            JSON 格式化：格式化 / 压缩 / 报错定位行列
-│  ├─ codec.html           编解码：Base64 / URL / HTML 实体 / 十六进制
-│  └─ timestamp.html       时间戳转换：Unix ↔ 本地时间
+├─ tools/                  单文件小工具，每页一个 .html（61 个文件）
+│                          通用：计算器 / JSON / 编解码 / 时间戳 / 颜色 / 正则 / JWT…
+│                          MC 专区：附魔 / 酿造 / 红石 / 挖掘 / 伤害 / 合成 / 指令…共 22 个
 │
 ├─ games/
+│  ├─ index.html           游戏厅：六张棋牌入口
+│  ├─ rules.html           六种玩法说明书（含与标准规则的差别）
+│  ├─ tri-chess.html       围棋 / 中国象棋 / 国际象棋三合一，国象可连云端引擎
+│  ├─ chess-auto.html      国象陪练：自动应招 / 提示 / 编辑棋局 / FEN
+│  ├─ doudizhu.html        斗地主
+│  ├─ uno.html             UNO
+│  ├─ mahjong.html         麻将
 │  ├─ mc.html              MC 复刻（three.js，主战场）
 │  ├─ astar.html           A* 寻路 3D 演示
 │  ├─ pvpga.html           PVP 小游戏
-│  ├─ wuzi_game.html       五子棋对局
-│  └─ wuzi_hotel.html      五子棋大厅（Supabase）
+│  └─ wuzi_game/hotel.html 五子棋对局 + 联机大厅（Supabase）
 │
 ├─ data/
-│  ├─ tools-data.json      工具卡片
+│  ├─ tools-data.json      工具卡片（顺序即首页渲染顺序）
 │  ├─ wiki-data.json       Wiki 条目
 │  ├─ download-data.json   资源补录
 │  └─ announcement.json    公告
 │
-├─ scripts/check.mjs       站点自检脚本（CI 与本地共用）
+├─ scripts/
+│  ├─ check.mjs            站点自检脚本（CI 与本地共用）
+│  ├─ build-offline.mjs    离线版打包（只挑 noDB 条目）
+│  └─ guard.mjs            命令熔断器（超时自动杀进程换方案）
+│
+├─ offline/                Electron 打包工程（构建产物不入库）
 └─ .github/workflows/check.yml   push / PR 时自动跑自检
 ```
 
@@ -106,37 +114,41 @@ python -m http.server 8000     # 或 npx serve .
 
 ## 页面地图
 
-### 工具箱（纯前端，`noDB`）
+### 工具（⚡ 纯前端，`noDB`）
 
-| 工具 | 路径 | 说明 |
+59 个可见工具，其中 **22 个 MC 相关**，大致分四类：
+
+| 类别 | 代表 | 说明 |
 | --- | --- | --- |
-| 计算器 | `tools/bigcalc.html` | 表达式计算，支持大数 |
-| 二维码生成器 | `tools/qrcode.html` | 文本转二维码，可下载图片 |
-| MC 名称随机器 | `tools/mcname.html` | 随机生成 MC 风格名字 |
-| 挖矿抽卡 | `tools/gacha.html` | 单抽 / 十连，带保底与图鉴 |
-| 像素画板 | `tools/pixel.html` | 16×16 手绘，导出 PNG |
-| 颜色工具 | `tools/color.html` | HEX / RGB / HSL 互转，对比度检查 |
-| JSON 格式化 | `tools/json.html` | 格式化、压缩、报错定位到行列 |
-| 编解码工具 | `tools/codec.html` | Base64 / URL / HTML 实体 / 十六进制 |
-| 时间戳转换 | `tools/timestamp.html` | Unix 时间戳 ↔ 本地时间，秒 / 毫秒都认 |
+| MC 数值换算 | 坐标 · 经验 · 时间 · 区块 · 光照 | 游戏内数值 ↔ 现实数值 |
+| MC 规划计算 | 红石信号 · 信标范围 · 史莱姆区块 · 合成 | 提前算好再去游戏里造 |
+| MC 查询参考 | 附魔等级 · 药水酿造 · 燃料 · 食物 · 耐久 | 原版数值表 + 计算 |
+| 通用工具 | JSON · 编解码 · 正则 · 时间戳 · 颜色 · JWT · 二维码 | 开发者日常 |
+
+首页支持搜索、分类筛选、**右键收藏 / 置顶 / 隐藏**（隐藏的收进右上角设置里）。
 
 ### 游戏
 
 | 页面 | 路径 | 说明 |
 | --- | --- | --- |
+| 游戏厅 | `games/index.html` | 六张棋牌入口 + 玩法说明书 |
+| 围棋 / 中国象棋 / 国际象棋 | `games/tri-chess.html` | 三合一页面（`#go` / `#xq` / `#ch` 直达），国象可连云端 Stockfish |
+| 国象陪练 | `games/chess-auto.html` | 你走一步它应一手，带评分 / 提示 / 拖拽摆子 / 棋局编辑 |
+| 斗地主 · UNO · 麻将 | `games/doudizhu.html` 等 | 单机对局，规则见说明书 |
 | MC 复刻 | `games/mc.html` | three.js 手写体素引擎：区块生成、方块朝向、门、水、活塞、物品栏 |
 | A\* 寻路演示 | `games/astar.html` | 3D 网格画墙铺水，可视化搜索过程；支持批量模拟 1~1000 局 |
-| PVP 小游戏 | `games/pvpga.html` | 双人对战 |
-| 五子棋 | `games/wuzi_game.html` / `wuzi_hotel.html` | 单机对局 + 联机大厅 |
+| PVP / 五子棋 | `games/pvpga.html` / `wuzi_*.html` | 双人对战；五子棋带联机大厅 |
+| 挖矿抽卡 | `tools/gacha.html` | 单抽 / 十连，带保底与图鉴 |
 
-### 需要后端（`needDB`，Supabase）
+### 需要后端（☁ `needDB`）
 
-| 页面 | 路径 | 说明 |
-| --- | --- | --- |
-| 聊天室 | `pages/chat.html` | 实时消息 |
-| 下载站 | `pages/download.html` | GitHub Releases 聚合 + 手动补录 |
-| 答辩 Wiki | `pages/wiki.html` | 章节树 + 全文搜索 + 阅读进度 |
-| 数据后台 | `pages/admin.html` | 用 GitHub Token 提交 JSON 改动 |
+| 页面 | 说明 |
+| --- | --- |
+| MC 复刻 | 登录与存档走 Supabase |
+| 聊天室 / 点击游戏 / 五子棋大厅 | Supabase 实时能力 |
+| 下载站 | GitHub Releases 聚合 + 手动补录 |
+| 答辩 Wiki | 章节树 + 全文搜索 + 阅读进度 |
+| 数据后台 | 用 GitHub Token 提交 JSON 改动 |
 
 ## 离线版 exe
 
@@ -159,7 +171,6 @@ npm run dist                            # → offline/dist/HStool-Offline-<版�
 构建脚本挑工具的依据只有一条：`data/tools-data.json` 里 `category === 'noDB'` 且没隐藏/停用。
 新加的工具只要是纯前端，下次打包会自动进离线版，不用改脚本。
 
-
 ## 数据文件
 
 | 文件 | 用途 | 主要字段 |
@@ -179,16 +190,19 @@ npm run dist                            # → offline/dist/HStool-Offline-<版�
 - 内置 8 套主题：MC Wiki / 夜晚 / 下界 / 末地 / 樱花 / 海洋 / GitHub 浅色 / 深色，外加「跟随系统」。
 - 主题存在 `localStorage: hs-theme`（兼容读取旧键 `wiki-theme`），切主题只改 `<html data-theme>`。
 - 页面里**只用 CSS 变量**（`--bg / --bg2 / --bd / --bd2 / --ac / --text / --muted …`），写死颜色换主题就会花。
+- 动效遵循系统「减弱动态效果」设置；触屏设备自动关掉鼠标跟随光晕这类桌面专属效果。
 
 ## 快捷键
 
 | 键 | 作用 |
 | --- | --- |
-| `/` | 聚焦搜索框 |
-| `Ctrl / ⌘ + K` | 命令面板（搜索页面、工具、条目、操作） |
-| `T` | 打开主题选择器 |
-| `Ctrl + B` | Wiki 页展开 / 收起目录 |
-| `Esc` | 关闭面板或清空搜索 |
+| <kbd>/</kbd> | 聚焦搜索框 |
+| <kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>K</kbd> | 命令面板（搜索页面、工具、条目、操作） |
+| <kbd>T</kbd> | 打开主题选择器 |
+| <kbd>Ctrl</kbd> + <kbd>B</kbd> | Wiki 页展开 / 收起目录 |
+| <kbd>Esc</kbd> | 关闭面板或清空搜索 |
+
+卡片上**右键**（手机长按）可以收藏 / 置顶 / 隐藏。
 
 ## 代码怎么接
 

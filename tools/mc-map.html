@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 地图坐标 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:96px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.kv b.ok{color:var(--ok)}
+.kv b.no{color:var(--dgr)}
+.px{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px}
+.px div{padding:10px 12px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
+.px em{display:block;font-size:10.5px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+.px b{font-family:var(--mono);font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.hint{font-size:12px;color:var(--faint);margin-top:9px}
+@media(max-width:640px){.px{grid-template-columns:1fr}.kv span{width:100%}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🗺 MC 地图坐标</h1><p class="sub">地图像素 ↔ 世界坐标 · 缩放等级覆盖范围 · 铺满要几张图</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">地图参数</h2>
+      <div class="grid2">
+        <div class="fld"><label for="cx">地图中心 X</label><input id="cx" class="mono" inputmode="numeric" autocomplete="off" value="0"></div>
+        <div class="fld"><label for="cz">地图中心 Z</label><input id="cz" class="mono" inputmode="numeric" autocomplete="off" value="0"></div>
+      </div>
+      <div class="fld">
+        <label for="zoom">缩放等级（制图台放大一次 +1，0 最细）</label>
+        <select id="zoom">
+          <option value="0">0 · 128×128 方块，1 像素 = 1 方块</option>
+          <option value="1">1 · 256×256 方块，1 像素 = 2 方块</option>
+          <option value="2">2 · 512×512 方块，1 像素 = 4 方块</option>
+          <option value="3">3 · 1024×1024 方块，1 像素 = 8 方块</option>
+          <option value="4">4 · 2048×2048 方块，1 像素 = 16 方块</option>
+        </select>
+      </div>
+      <div class="kv"><span>地图边长</span><b id="oSide">—</b></div>
+      <div class="kv"><span>覆盖 X</span><b id="oRangeX">—</b></div>
+      <div class="kv"><span>覆盖 Z</span><b id="oRangeZ">—</b></div>
+      <div class="kv"><span>覆盖区块</span><b id="oChunk">—</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">坐标 → 地图像素</h2>
+      <div class="grid2">
+        <div class="fld"><label for="tx">目标 X</label><input id="tx" class="mono" inputmode="numeric" autocomplete="off" value="120"></div>
+        <div class="fld"><label for="tz">目标 Z</label><input id="tz" class="mono" inputmode="numeric" autocomplete="off" value="-80"></div>
+      </div>
+      <div class="kv"><span>是否在图内</span><b id="oInside">—</b></div>
+      <div class="px">
+        <div><em>像素 X（0~127）</em><b id="oPx">—</b></div>
+        <div><em>像素 Y（0~127）</em><b id="oPy">—</b></div>
+        <div><em>该像素中心</em><b id="oPc">—</b></div>
+      </div>
+      <div class="hint">像素从地图左上角开始数，X 往东、Y 往南（坐标 Z 增大方向）。</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnPx" type="button">📋 复制像素坐标</button>
+        <button class="btn" id="btnCenter" type="button">用这个点当中心</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">铺满一片区域要几张图</h2>
+      <div class="grid2">
+        <div class="fld"><label for="ax1">区域最小 X</label><input id="ax1" class="mono" inputmode="numeric" autocomplete="off" value="-500"></div>
+        <div class="fld"><label for="ax2">区域最大 X</label><input id="ax2" class="mono" inputmode="numeric" autocomplete="off" value="500"></div>
+        <div class="fld"><label for="az1">区域最小 Z</label><input id="az1" class="mono" inputmode="numeric" autocomplete="off" value="-500"></div>
+        <div class="fld"><label for="az2">区域最大 Z</label><input id="az2" class="mono" inputmode="numeric" autocomplete="off" value="500"></div>
+      </div>
+      <div class="kv"><span>区域尺寸</span><b id="oArea">—</b></div>
+      <div class="kv"><span>需要张数</span><b id="oSheets">—</b></div>
+      <div class="hint" id="oSheetHint">—</div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 地图边长 = <code>128 × 2^缩放</code>，以中心点向四周各扩 <code>64 × 2^缩放</code> 格。
+        缩放每升一级，边长翻倍、一张图能盖的范围乘以四。制图台放大后原来的墙上的图不会跟着变，
+        需要重新挂一张新图。区域张数按整张图对齐估算，实际会多出一点边角。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var cx=$('cx'),cz=$('cz'),zoom=$('zoom'),tx=$('tx'),tz=$('tz');
+var ax1=$('ax1'),ax2=$('ax2'),az1=$('az1'),az2=$('az2');
+
+function num(el){
+  var s=String(el.value).trim();
+  if(s==='') return null;
+  if(!/^-?\d+(\.\d+)?$/.test(s)) return null;
+  return Math.round(Number(s));
+}
+function mark(el,bad){
+  el.style.borderColor = bad ? 'var(--dgr)' : '';
+}
+
+function render(){
+  var X=num(cx), Z=num(cz), lv=Number(zoom.value);
+  mark(cx,X===null); mark(cz,Z===null);
+  if(X===null||Z===null){
+    $('oSide').textContent='中心坐标要填整数';
+    $('oRangeX').textContent='—';$('oRangeZ').textContent='—';$('oChunk').textContent='—';
+    $('oInside').textContent='—';$('oPx').textContent='—';$('oPy').textContent='—';$('oPc').textContent='—';
+    return;
+  }
+  var s=1<<lv;              // 每像素覆盖的方块数
+  var side=128*s;           // 地图边长
+  var half=64*s;            // 中心到边缘
+  var left=X-half, right=X+half-1;
+  var top=Z-half, bottom=Z+half-1;
+  $('oSide').textContent=side+' × '+side+' 方块（1 像素 = '+s+' 方块）';
+  $('oRangeX').textContent=left+' ~ '+right;
+  $('oRangeZ').textContent=top+' ~ '+bottom;
+  var cw=Math.ceil(side/16);
+  $('oChunk').textContent=cw+' × '+cw+' = '+(cw*cw)+' 个区块';
+
+  /* 目标点 */
+  var px=num(tx), pz=num(tz);
+  mark(tx,px===null); mark(tz,pz===null);
+  var insideEl=$('oInside');
+  if(px===null||pz===null){
+    insideEl.textContent='目标坐标要填整数';insideEl.className='no';
+    $('oPx').textContent='—';$('oPy').textContent='—';$('oPc').textContent='—';
+  }else{
+    var cxPix=Math.floor((px-left)/s), cyPix=Math.floor((pz-top)/s);
+    var inside=px>=left&&px<=right&&pz>=top&&pz<=bottom;
+    insideEl.textContent = inside ? '在图内' : '超出这张图';
+    insideEl.className = inside ? 'ok' : 'no';
+    $('oPx').textContent=inside?String(cxPix):'超出';
+    $('oPy').textContent=inside?String(cyPix):'超出';
+    $('oPc').textContent = inside ? (left+cxPix*s+s/2)+', '+(top+cyPix*s+s/2) : '—';
+  }
+
+  /* 区域张数 */
+  var x1=num(ax1),x2=num(ax2),z1=num(az1),z2=num(az2);
+  [ax1,ax2,az1,az2].forEach(function(el){
+    mark(el, num(el)===null);
+  });
+  if(x1===null||x2===null||z1===null||z2===null){
+    $('oArea').textContent='四个角都要填整数';$('oSheets').textContent='—';$('oSheetHint').textContent='—';
+    return;
+  }
+  var w=Math.abs(x2-x1)+1, d=Math.abs(z2-z1)+1;
+  var nx=Math.ceil(w/side), nz=Math.ceil(d/side);
+  $('oArea').textContent=w+' × '+d+' 方块';
+  $('oSheets').textContent=(nx*nz)+' 张（横 '+nx+' × 纵 '+nz+'）';
+  $('oSheetHint').textContent='用 '+lv+' 级缩放，约合 '+(nx*nz)+' 张空地图；缩放降到 '+
+    (lv<4?lv+1:'4')+' 级只需 '+Math.ceil(w/(128*(1<<Math.min(lv+1,4))))*Math.ceil(d/(128*(1<<Math.min(lv+1,4))))+' 张。';
+}
+
+[cx,cz,tx,tz,ax1,ax2,az1,az2].forEach(function(el){el.addEventListener('input',render);});
+zoom.addEventListener('change',render);
+
+$('btnPx').addEventListener('click',function(){
+  var a=$('oPx').textContent, b=$('oPy').textContent;
+  if(a==='超出'||a==='—'||b==='—'){toast('目标点不在这张图里');return;}
+  HS.copy(a+', '+b); toast('已复制像素坐标 '+a+', '+b);
+});
+$('btnCenter').addEventListener('click',function(){
+  var a=num(tx), b=num(tz);
+  if(a===null||b===null){toast('目标坐标要填整数');return;}
+  cx.value=a; cz.value=b; render(); toast('中心已改成 '+a+', '+b);
+});
+
+render();
+})();
+</script>
+</body>
+</html>

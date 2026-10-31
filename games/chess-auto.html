@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>国际象棋陪练 · 红石的小站</title>
+<meta name="description" content="国际象棋自动应招：你走一步，程序立刻算一步。完整规则（易位 / 吃过路兵 / 升变）、局面评估、提示、悔棋与 FEN。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♞</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+  /* 页面专属：棋盘是「内容」，木头色不跟主题跳；面板全部用 core.css 令牌 */
+  .tool{max-width:1000px}
+  .page-head{margin-bottom:14px}
+  .page-head .sub{margin:4px 0 0}
+
+  .lab{display:grid;grid-template-columns:minmax(0,1fr) 328px;gap:18px;align-items:start}
+
+  /* ── 棋盘 ── */
+  .board-box{min-width:0}
+  .board-wrap{
+    position:relative;width:min(100%,520px);margin:0 auto;
+    border:2px solid var(--bd2);border-radius:var(--r);overflow:hidden;
+    box-shadow:var(--bevel),0 10px 26px rgba(0,0,0,.14);
+  }
+  .board{
+    --sq: min(60px, calc((100vw - 80px) / 8));
+    display:grid;grid-template-columns:repeat(8,var(--sq));grid-template-rows:repeat(8,var(--sq));
+    width:calc(var(--sq) * 8);user-select:none;-webkit-user-select:none;
+  }
+  @media(min-width:900px){ .board{--sq:62px;width:496px} }
+  .cell{
+    position:relative;display:grid;place-items:center;cursor:pointer;
+    font-size:calc(var(--sq) * .76);line-height:1;
+    transition:filter .12s;
+  }
+  .cell.lt{background:#e9d6b3}
+  .cell.dk{background:#b28460}
+  .cell:hover{filter:brightness(1.05)}
+  .cell.from{box-shadow:inset 0 0 0 3px rgba(61,82,31,.75)}
+  .cell.to{box-shadow:inset 0 0 0 3px var(--ac), inset 0 0 34px rgba(80,140,60,.35)}
+  .cell.sel{box-shadow:inset 0 0 0 3px #d9a520}
+  .cell.hint{box-shadow:inset 0 0 0 3px #3f7fd4, inset 0 0 30px rgba(63,127,212,.28)}
+  .cell.check{background-image:radial-gradient(circle,rgba(200,40,40,.55),transparent 68%)}
+  .cell .dot{
+    position:absolute;width:22%;height:22%;border-radius:50%;
+    background:rgba(40,60,20,.32);pointer-events:none;
+  }
+  .cell .ring{
+    position:absolute;inset:6%;border-radius:50%;
+    border:4px solid rgba(160,40,40,.45);pointer-events:none;
+  }
+  .cell .coord{
+    position:absolute;font:800 calc(var(--sq) * .2)/1 var(--mono);
+    pointer-events:none;letter-spacing:.02em;
+  }
+  .cell.lt .coord{color:rgba(70,52,26,.62)}
+  .cell.dk .coord{color:rgba(255,248,236,.66)}
+  .cell .coord.f{bottom:2px;right:3px}
+  .cell .coord.r{top:2px;left:3px}
+  .piece{pointer-events:none;display:block;transform:translateY(-2%)}
+  .piece.w{color:#fff;text-shadow:0 0 1px #333,1px 1px 0 #4a4a4a,-1px -1px 0 #4a4a4a,1px -1px 0 #4a4a4a,-1px 1px 0 #4a4a4a}
+  .piece.b{color:#191b1f;text-shadow:0 0 1px #000,1px 1px 0 rgba(255,255,255,.35),-1px -1px 0 rgba(255,255,255,.2)}
+  .arrow-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+  .board-foot{
+    display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
+    margin:10px auto 0;max-width:520px;min-height:26px;text-align:center;
+  }
+  .turnline{font:800 12.5px var(--mono);color:var(--muted)}
+  .turnline b{color:var(--ac)}
+  .evalbar{
+    position:relative;width:100%;max-width:520px;height:8px;margin:10px auto 0;
+    background:#1d1d1b;border:1px solid var(--bd2);border-radius:99px;overflow:hidden;
+  }
+  .evalbar i{position:absolute;top:0;bottom:0;left:50%;width:0;background:var(--ac);transition:left .28s,width .28s}
+
+  /* ── 右侧面板 ── */
+  .side{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .cardbox{background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);padding:11px 12px}
+  .cardbox h3{margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+
+  .seg{display:flex;gap:0;background:var(--bg);border:2px solid var(--bd);border-radius:var(--r);overflow:hidden}
+  .seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:8px 6px;font:700 12.5px inherit;font-family:inherit;cursor:pointer;transition:.15s}
+  .seg button:hover{color:var(--text);background:var(--bg3)}
+  .seg button[aria-pressed="true"]{background:var(--ac);color:var(--bg)}
+
+  .sw{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--text);cursor:pointer;margin-top:9px}
+  .sw input{appearance:none;flex:none;width:38px;height:21px;border-radius:99px;background:var(--bg);border:2px solid var(--bd);position:relative;cursor:pointer;transition:.18s}
+  .sw input::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--muted);transition:.18s}
+  .sw input:checked{background:var(--acs);border-color:var(--ac)}
+  .sw input:checked::after{left:19px;background:var(--ac)}
+
+  .act{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+  .act .btn{justify-content:center;font-size:12.5px;padding:8px 6px}
+  .act .wide{grid-column:1 / -1}
+
+  .rangeline{display:flex;align-items:center;gap:8px;font:700 12px var(--mono);color:var(--muted);margin-top:9px}
+  .rangeline input{flex:1;min-width:0;accent-color:var(--ac)}
+  .rangeline b{color:var(--text);min-width:14px;text-align:right}
+
+  .movein{display:flex;gap:6px;margin-top:2px}
+  .movein input{
+    flex:1;min-width:0;padding:8px 10px;font:700 13px var(--mono);color:var(--text);
+    background:var(--bg);border:2px solid var(--bd);border-radius:var(--r);outline:none;transition:border-color .15s;
+  }
+  .movein input:focus{border-color:var(--ac)}
+  .movein .btn{flex:none;font-size:12.5px;padding:8px 12px}
+
+  .out{min-height:56px}
+  .out .idle{font-size:12.5px;line-height:1.65;color:var(--muted)}
+  .out .big{font:800 22px/1.2 var(--mono);color:var(--ac);letter-spacing:.5px}
+  .out .sub2{font:700 12px var(--mono);color:var(--muted);margin-top:5px;line-height:1.6}
+  .out .warn{font-size:12.5px;line-height:1.6;color:var(--warn)}
+  .out .dgr{font-size:12.5px;line-height:1.6;color:var(--dgr)}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--bd2);border-top-color:var(--ac);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .mlog{
+    max-height:168px;overflow-y:auto;background:var(--bg);border:2px solid var(--bd);border-radius:var(--r);
+    padding:6px 8px;font:700 12.5px/1.55 var(--mono);
+  }
+  .ml-row{display:flex;gap:6px;color:var(--text)}
+  .ml-num{width:26px;flex:none;text-align:right;color:var(--faint)}
+  .ml-w,.ml-b{width:62px;flex:none}
+  .ml-empty{color:var(--faint);font:400 12px var(--mono)}
+  .mlog-foot{display:flex;gap:6px;margin-top:7px}
+  .mlog-foot .btn{flex:1;justify-content:center;font-size:11.5px;padding:5px 4px}
+
+  /* ── 升变选择 ── */
+  .promo{
+    position:fixed;inset:0;z-index:600;display:none;place-items:center;
+    background:rgba(0,0,0,.42);backdrop-filter:blur(2px);
+  }
+  .promo.show{display:grid}
+  .promo .box{background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:0 18px 50px rgba(0,0,0,.35);padding:14px 16px;text-align:center}
+  .promo .box p{margin:0 0 10px;font-size:12.5px;color:var(--muted)}
+  .promo .opts{display:flex;gap:8px}
+  .promo .opts button{
+    width:54px;height:54px;font-size:30px;line-height:1;cursor:pointer;
+    background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);color:var(--text);
+    transition:transform .12s,border-color .12s;
+  }
+  .promo .opts button:hover{transform:translateY(-2px);border-color:var(--ac)}
+
+  .kbd{font:700 11px var(--mono);padding:1px 5px;border:1px solid var(--bd2);border-bottom-width:2px;border-radius:3px;color:var(--muted)}
+
+  /* ── 拖动 ── */
+  .cell.taken{opacity:.32}
+  .ghost{
+    position:fixed;z-index:700;pointer-events:none;display:grid;place-items:center;
+    line-height:1;transform:translate(-50%,-50%) scale(1.08);
+    filter:drop-shadow(0 7px 10px rgba(0,0,0,.35));
+  }
+  .ghost.w{color:#fff;text-shadow:0 0 1px #333,1px 1px 0 #4a4a4a,-1px -1px 0 #4a4a4a,1px -1px 0 #4a4a4a,-1px 1px 0 #4a4a4a}
+  .ghost.b{color:#191b1f;text-shadow:0 0 1px #000,1px 1px 0 rgba(255,255,255,.35)}
+  .board.dragging .cell{cursor:grabbing}
+
+  /* ── 棋局编辑 ── */
+  .editor{display:none}
+  .editor.show{display:block}
+  .palette{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+  .palette button{
+    aspect-ratio:1/1;display:grid;place-items:center;font-size:20px;line-height:1;cursor:pointer;
+    background:var(--bg);border:2px solid var(--bd);border-radius:var(--r);color:var(--text);
+    transition:transform .1s,border-color .1s,background .1s;
+  }
+  .palette button:hover{transform:translateY(-1px);border-color:var(--ac2)}
+  .palette button.on{border-color:var(--ac);background:var(--acs);box-shadow:inset 0 0 0 1px var(--ac)}
+  .palette button.erase{grid-column:1 / -1;aspect-ratio:auto;padding:7px;font:700 12px inherit;font-family:inherit}
+  .palette .wp{color:#fff;text-shadow:0 0 1px #333,1px 1px 0 #4a4a4a,-1px -1px 0 #4a4a4a}
+  .palette .bp{color:#191b1f;text-shadow:0 0 1px #000,1px 1px 0 rgba(255,255,255,.4)}
+  .ed-tip{font-size:11.5px;line-height:1.6;color:var(--muted);margin-top:8px}
+
+  @media(max-width:900px){
+    .lab{grid-template-columns:1fr;gap:12px}
+    .side{max-width:520px;margin:0 auto;width:100%}
+    .board-wrap{width:100%}
+    .board{--sq:calc((100vw - 46px) / 8);width:100%}
+    .cell{font-size:calc(var(--sq) * .72)}
+  }
+  @media(max-width:400px){
+    .board{--sq:calc((100vw - 40px) / 8)}
+    .cell .coord{font-size:9px}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <a class="btn" href="./index.html">🎮 游戏厅</a>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<main class="wrap">
+  <div class="page-head">
+    <div>
+      <h1>♞ 国际象棋陪练</h1>
+      <p class="sub">你走一步，程序立刻应一手 · 完整规则 + 局面评估 + 提示</p>
+    </div>
+    <div class="actions"><a class="btn" href="./rules.html">📖 玩法说明</a></div>
+  </div>
+
+  <div class="tool">
+    <div class="lab">
+      <div class="board-box">
+        <div class="board-wrap">
+          <div id="board" class="board" role="grid" aria-label="国际象棋棋盘"></div>
+          <svg id="arrowLayer" class="arrow-layer" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+        </div>
+        <div class="evalbar" aria-hidden="true"><i id="evalFill"></i></div>
+        <div class="board-foot">
+          <span class="turnline" id="turnLine">白方走棋</span>
+          <button class="btn" id="btnFlip" title="翻转棋盘">⇅ 翻转</button>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="cardbox">
+          <h3>对局设置</h3>
+          <div class="seg" id="colorSeg" role="group" aria-label="你执哪一方">
+            <button data-val="w" aria-pressed="true">你执白</button>
+            <button data-val="b" aria-pressed="false">你执黑</button>
+          </div>
+          <label class="sw">
+            <input type="checkbox" id="autoChk" checked>
+            <span>你走完自动应招</span>
+          </label>
+          <div class="rangeline">
+            <span>深度</span>
+            <input type="range" id="depth" min="2" max="7" step="1" value="4">
+            <b id="depthVal">4</b>
+          </div>
+        </div>
+
+        <div class="cardbox">
+          <h3>操作</h3>
+          <div class="act">
+            <button class="btn primary wide" id="btnThink">让程序走一步</button>
+            <button class="btn" id="btnHint">💡 提示</button>
+            <button class="btn" id="btnUndo">↶ 悔棋</button>
+            <button class="btn" id="btnNew">＋ 新对局</button>
+            <button class="btn" id="btnEdit">✎ 编辑棋局</button>
+          </div>
+          <div class="movein">
+            <input type="text" id="moveInput" placeholder="输入走法：e2e4 / Nf3 / O-O" autocomplete="off" spellcheck="false">
+            <button class="btn" id="btnSubmit">走这步</button>
+          </div>
+        </div>
+
+        <div class="cardbox editor" id="editor">
+          <h3>编辑棋局</h3>
+          <div class="palette" id="palette"></div>
+          <div class="seg" id="turnSeg" role="group" aria-label="轮到哪方走" style="margin-top:8px">
+            <button data-val="w" aria-pressed="true">轮到白</button>
+            <button data-val="b" aria-pressed="false">轮到黑</button>
+          </div>
+          <div class="act">
+            <button class="btn primary wide" id="btnApply">✓ 应用并开始</button>
+            <button class="btn" id="btnStartPos">标准开局</button>
+            <button class="btn" id="btnClearBoard">清空棋盘</button>
+          </div>
+          <div class="ed-tip">点格子放子（也可以按住拖动摆位），两个王都放好才能开始。易位权、吃过路兵会按摆出来的局面自动重置。</div>
+        </div>
+
+        <div class="cardbox">
+          <h3>分析</h3>
+          <div class="out" id="out">
+            <div class="idle">点击棋盘走棋，或把对手的走法打进上面的输入框。程序会在本机算完立刻应一手，并给出这一步的评分、搜索深度和耗时。</div>
+          </div>
+        </div>
+
+        <div class="cardbox">
+          <h3>着法记录</h3>
+          <div class="mlog" id="moveLog"></div>
+          <div class="mlog-foot">
+            <button class="btn" id="btnCopyLog">复制棋谱</button>
+            <button class="btn" id="btnFen">复制 FEN</button>
+            <button class="btn" id="btnLoadFen">载入 FEN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="promo" id="promo">
+  <div class="box">
+    <p>升变选择</p>
+    <div class="opts" id="promoOpts"></div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   常量与工具
+   ========================================================= */
+var FILES = 'abcdefgh';
+var GLYPH = { k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
+var START = 'rnbqkbnrpppppppp................................PPPPPPPPRNBQKBNR'.split('');
+var FEN_START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+var MATE = 100000;
+
+var rowOf = function(i){ return i >> 3; };
+var colOf = function(i){ return i & 7; };
+var inb = function(r,c){ return r >= 0 && r < 8 && c >= 0 && c < 8; };
+var sqName = function(i){ return FILES[colOf(i)] + (8 - rowOf(i)); };
+var isWhitePiece = function(p){ return p === p.toUpperCase(); };
+
+var KNIGHT_D = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+var KING_D   = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+var BISHOP_D = [[-1,-1],[-1,1],[1,-1],[1,1]];
+var ROOK_D   = [[-1,0],[1,0],[0,-1],[0,1]];
+var QUEEN_D  = BISHOP_D.concat(ROOK_D);
+
+/* =========================================================
+   走法生成（含易位 / 吃过路兵 / 升变）
+   ========================================================= */
+function addPawn(list, from, to, piece, promo){
+  if (promo){
+    var set = piece === 'P' ? ['Q','R','B','N'] : ['q','r','b','n'];
+    for (var i = 0; i < 4; i++) list.push({ from:from, to:to, piece:piece, promo:set[i], flag:null });
+  } else {
+    list.push({ from:from, to:to, piece:piece, promo:null, flag:null });
+  }
+}
+
+function genPseudo(b, white, st){
+  var list = [], i, j, q, r, c, nr, nc, d, p, t;
+  for (i = 0; i < 64; i++){
+    p = b[i];
+    if (p === '.') continue;
+    if (isWhitePiece(p) !== white) continue;
+    t = p.toLowerCase();
+    r = rowOf(i); c = colOf(i);
+
+    if (t === 'p'){
+      var dir = white ? -1 : 1;
+      var startRow = white ? 6 : 1;
+      var promoRow = white ? 0 : 7;
+      nr = r + dir;
+      if (nr >= 0 && nr < 8){
+        var one = nr * 8 + c;
+        if (b[one] === '.'){
+          addPawn(list, i, one, p, nr === promoRow);
+          if (r === startRow){
+            var two = (r + 2 * dir) * 8 + c;
+            if (b[two] === '.') list.push({ from:i, to:two, piece:p, promo:null, flag:'double' });
+          }
+        }
+        var dc = [-1, 1];
+        for (var k = 0; k < 2; k++){
+          nc = c + dc[k];
+          if (nc < 0 || nc > 7) continue;
+          j = nr * 8 + nc;
+          q = b[j];
+          if (q !== '.'){
+            if (isWhitePiece(q) !== white) addPawn(list, i, j, p, nr === promoRow);
+          } else if (j === st.ep){
+            list.push({ from:i, to:j, piece:p, promo:null, flag:'ep' });
+          }
+        }
+      }
+    } else if (t === 'n'){
+      for (var a = 0; a < 8; a++){
+        d = KNIGHT_D[a]; nr = r + d[0]; nc = c + d[1];
+        if (!inb(nr, nc)) continue;
+        j = nr * 8 + nc; q = b[j];
+        if (q === '.' || isWhitePiece(q) !== white) list.push({ from:i, to:j, piece:p, promo:null, flag:null });
+      }
+    } else if (t === 'k'){
+      for (var a2 = 0; a2 < 8; a2++){
+        d = KING_D[a2]; nr = r + d[0]; nc = c + d[1];
+        if (!inb(nr, nc)) continue;
+        j = nr * 8 + nc; q = b[j];
+        if (q === '.' || isWhitePiece(q) !== white) list.push({ from:i, to:j, piece:p, promo:null, flag:null });
+      }
+      /* 易位：权利在、中间空、起点与经过格不被攻击 */
+      var rank = white ? 7 : 0;
+      var ksq = rank * 8 + 4;
+      if (i === ksq && !attacked(b, ksq, !white)){
+        var kRight = white ? st.castling.K : st.castling.k;
+        var qRight = white ? st.castling.Q : st.castling.q;
+        var rk = white ? 'R' : 'r';
+        if (kRight && b[rank*8+7] === rk && b[rank*8+5] === '.' && b[rank*8+6] === '.' &&
+            !attacked(b, rank*8+5, !white)){
+          list.push({ from:ksq, to:rank*8+6, piece:p, promo:null, flag:'o-o' });
+        }
+        if (qRight && b[rank*8] === rk && b[rank*8+1] === '.' && b[rank*8+2] === '.' && b[rank*8+3] === '.' &&
+            !attacked(b, rank*8+3, !white)){
+          list.push({ from:ksq, to:rank*8+2, piece:p, promo:null, flag:'o-o-o' });
+        }
+      }
+    } else {
+      var dirs = t === 'b' ? BISHOP_D : t === 'r' ? ROOK_D : QUEEN_D;
+      for (var a3 = 0; a3 < dirs.length; a3++){
+        d = dirs[a3]; nr = r + d[0]; nc = c + d[1];
+        while (inb(nr, nc)){
+          j = nr * 8 + nc; q = b[j];
+          if (q === '.'){
+            list.push({ from:i, to:j, piece:p, promo:null, flag:null });
+          } else {
+            if (isWhitePiece(q) !== white) list.push({ from:i, to:j, piece:p, promo:null, flag:null });
+            break;
+          }
+          nr += d[0]; nc += d[1];
+        }
+      }
+    }
+  }
+  return list;
+}
+
+function attacked(b, sq, byWhite){
+  var r = rowOf(sq), c = colOf(sq), i, d, nr, nc, p;
+  var pr = byWhite ? r + 1 : r - 1;
+  if (pr >= 0 && pr < 8){
+    var pl = byWhite ? 'P' : 'p';
+    if (c > 0 && b[pr*8+c-1] === pl) return true;
+    if (c < 7 && b[pr*8+c+1] === pl) return true;
+  }
+  var kn = byWhite ? 'N' : 'n';
+  for (i = 0; i < 8; i++){
+    d = KNIGHT_D[i]; nr = r + d[0]; nc = c + d[1];
+    if (inb(nr, nc) && b[nr*8+nc] === kn) return true;
+  }
+  var kg = byWhite ? 'K' : 'k';
+  for (i = 0; i < 8; i++){
+    d = KING_D[i]; nr = r + d[0]; nc = c + d[1];
+    if (inb(nr, nc) && b[nr*8+nc] === kg) return true;
+  }
+  var bi = byWhite ? 'B' : 'b', qu = byWhite ? 'Q' : 'q';
+  for (i = 0; i < 4; i++){
+    d = BISHOP_D[i]; nr = r + d[0]; nc = c + d[1];
+    while (inb(nr, nc)){
+      p = b[nr*8+nc];
+      if (p !== '.'){
+        if (p === bi || p === qu) return true;
+        break;
+      }
+      nr += d[0]; nc += d[1];
+    }
+  }
+  var ro = byWhite ? 'R' : 'r';
+  for (i = 0; i < 4; i++){
+    d = ROOK_D[i]; nr = r + d[0]; nc = c + d[1];
+    while (inb(nr, nc)){
+      p = b[nr*8+nc];
+      if (p !== '.'){
+        if (p === ro || p === qu) return true;
+        break;
+      }
+      nr += d[0]; nc += d[1];
+    }
+  }
+  return false;
+}
+
+function findKing(b, white){
+  var k = white ? 'K' : 'k';
+  for (var i = 0; i < 64; i++) if (b[i] === k) return i;
+  return -1;
+}
+
+function inCheck(b, white){
+  var k = findKing(b, white);
+  return k >= 0 && attacked(b, k, !white);
+}
+
+/* 走子 / 撤销：st 里的易位权、吃过路兵格、半步计数都在这里维护 */
+function makeMove(b, m, st){
+  var white = isWhitePiece(m.piece);
+  var undo = { cap: b[m.to], capSq: m.to, castle: { K:st.castling.K, Q:st.castling.Q, k:st.castling.k, q:st.castling.q }, ep: st.ep, half: st.half };
+
+  b[m.from] = '.';
+  if (m.flag === 'ep'){
+    var capSq = m.to + (white ? 8 : -8);
+    undo.cap = b[capSq];
+    undo.capSq = capSq;
+    b[capSq] = '.';
+  }
+  b[m.to] = m.promo || m.piece;
+
+  if (m.flag === 'o-o'){
+    var rk = (white ? 7 : 0) * 8;
+    b[rk+5] = b[rk+7]; b[rk+7] = '.';
+  } else if (m.flag === 'o-o-o'){
+    var rq = (white ? 7 : 0) * 8;
+    b[rq+3] = b[rq+0]; b[rq+0] = '.';
+  }
+
+  if (m.piece === 'K'){ st.castling.K = false; st.castling.Q = false; }
+  if (m.piece === 'k'){ st.castling.k = false; st.castling.q = false; }
+  if (m.from === 63 || m.to === 63) st.castling.K = false;
+  if (m.from === 56 || m.to === 56) st.castling.Q = false;
+  if (m.from === 7  || m.to === 7)  st.castling.k = false;
+  if (m.from === 0  || m.to === 0)  st.castling.q = false;
+
+  st.ep = m.flag === 'double' ? (m.from + m.to) / 2 : -1;
+  st.half = (m.piece.toLowerCase() === 'p' || undo.cap !== '.') ? 0 : st.half + 1;
+  return undo;
+}
+
+function unmakeMove(b, m, undo, st){
+  var white = isWhitePiece(m.piece);
+  b[m.from] = m.piece;
+  if (undo.capSq !== m.to){
+    /* 吃过路兵：被吃掉的兵不在落点上，落点必须还原成空格 */
+    b[undo.capSq] = undo.cap;
+    b[m.to] = '.';
+  } else {
+    b[m.to] = undo.cap;
+  }
+
+  if (m.flag === 'o-o'){
+    var rk = (white ? 7 : 0) * 8;
+    b[rk+7] = b[rk+5]; b[rk+5] = '.';
+  } else if (m.flag === 'o-o-o'){
+    var rq = (white ? 7 : 0) * 8;
+    b[rq] = b[rq+3]; b[rq+3] = '.';
+  }
+  st.castling = undo.castle;
+  st.ep = undo.ep;
+  st.half = undo.half;
+}
+
+function legalMoves(b, white, st){
+  var pseudo = genPseudo(b, white, st), out = [], i, m, u, k;
+  for (i = 0; i < pseudo.length; i++){
+    m = pseudo[i];
+    u = makeMove(b, m, st);
+    k = findKing(b, white);
+    if (k < 0 || !attacked(b, k, !white)) out.push(m);
+    unmakeMove(b, m, u, st);
+  }
+  return out;
+}
+
+/* =========================================================
+   评估（子力 + 位置表）
+   ========================================================= */
+var VAL = { p:100, n:320, b:330, r:500, q:900, k:0 };
+var PST = {
+  p:[  0,  0,  0,  0,  0,  0,  0,  0,
+      50, 50, 50, 50, 50, 50, 50, 50,
+      10, 10, 20, 30, 30, 20, 10, 10,
+       5,  5, 10, 25, 25, 10,  5,  5,
+       0,  0,  0, 20, 20,  0,  0,  0,
+       5, -5,-10,  0,  0,-10, -5,  5,
+       5, 10, 10,-20,-20, 10, 10,  5,
+       0,  0,  0,  0,  0,  0,  0,  0],
+  n:[-50,-40,-30,-30,-30,-30,-40,-50,
+     -40,-20,  0,  0,  0,  0,-20,-40,
+     -30,  0, 10, 15, 15, 10,  0,-30,
+     -30,  5, 15, 20, 20, 15,  5,-30,
+     -30,  0, 15, 20, 20, 15,  0,-30,
+     -30,  5, 10, 15, 15, 10,  5,-30,
+     -40,-20,  0,  5,  5,  0,-20,-40,
+     -50,-40,-30,-30,-30,-30,-40,-50],
+  b:[-20,-10,-10,-10,-10,-10,-10,-20,
+     -10,  0,  0,  0,  0,  0,  0,-10,
+     -10,  0,  5, 10, 10,  5,  0,-10,
+     -10,  5,  5, 10, 10,  5,  5,-10,
+     -10,  0, 10, 10, 10, 10,  0,-10,
+     -10, 10, 10, 10, 10, 10, 10,-10,
+     -10,  5,  0,  0,  0,  0,  5,-10,
+     -20,-10,-10,-10,-10,-10,-10,-20],
+  r:[  0,  0,  0,  0,  0,  0,  0,  0,
+       5, 10, 10, 10, 10, 10, 10,  5,
+      -5,  0,  0,  0,  0,  0,  0, -5,
+      -5,  0,  0,  0,  0,  0,  0, -5,
+      -5,  0,  0,  0,  0,  0,  0, -5,
+      -5,  0,  0,  0,  0,  0,  0, -5,
+      -5,  0,  0,  0,  0,  0,  0, -5,
+       0,  0,  0,  5,  5,  0,  0,  0],
+  q:[-20,-10,-10, -5, -5,-10,-10,-20,
+     -10,  0,  0,  0,  0,  0,  0,-10,
+     -10,  0,  5,  5,  5,  5,  0,-10,
+      -5,  0,  5,  5,  5,  5,  0, -5,
+       0,  0,  5,  5,  5,  5,  0, -5,
+     -10,  5,  5,  5,  5,  5,  0,-10,
+     -10,  0,  5,  0,  0,  0,  0,-10,
+     -20,-10,-10, -5, -5,-10,-10,-20],
+  k:[-30,-40,-40,-50,-50,-40,-40,-30,
+     -30,-40,-40,-50,-50,-40,-40,-30,
+     -30,-40,-40,-50,-50,-40,-40,-30,
+     -30,-40,-40,-50,-50,-40,-40,-30,
+     -20,-30,-30,-40,-40,-30,-30,-20,
+     -10,-20,-20,-20,-20,-20,-20,-10,
+      20, 20,  0,  0,  0,  0, 20, 20,
+      20, 30, 10,  0,  0, 10, 30, 20]
+};
+
+function evaluate(b){
+  var score = 0, i, p, white, t, v;
+  for (i = 0; i < 64; i++){
+    p = b[i];
+    if (p === '.') continue;
+    white = isWhitePiece(p);
+    t = p.toLowerCase();
+    v = VAL[t] + PST[t][white ? i : (i ^ 56)];
+    score += white ? v : -v;
+  }
+  return score;
+}
+
+/* =========================================================
+   搜索：迭代加深 + 静态搜索 + 吃子排序
+   ========================================================= */
+var nodes = 0, deadline = 0, stopped = false;
+
+function timeUp(){
+  if ((nodes & 1023) === 0 && Date.now() > deadline) stopped = true;
+  return stopped;
+}
+
+function orderMoves(b, moves){
+  var i, m, cap, s;
+  for (i = 0; i < moves.length; i++){
+    m = moves[i]; s = 0;
+    cap = b[m.to];
+    if (cap !== '.') s = 10 * VAL[cap.toLowerCase()] - VAL[m.piece.toLowerCase()] + 1000;
+    if (m.promo) s += 900 + VAL[m.promo.toLowerCase()] / 10;
+    if (m.flag === 'ep') s += 1000;
+    m._s = s;
+  }
+  moves.sort(function(x, y){ return y._s - x._s; });
+}
+
+function quiesce(b, alpha, beta, white, st, ply){
+  nodes++;
+  if (timeUp()) return (white ? 1 : -1) * evaluate(b);
+
+  var stand = (white ? 1 : -1) * evaluate(b);
+  if (stand >= beta) return beta;
+  if (stand > alpha) alpha = stand;
+  if (ply > 10) return alpha;
+
+  var moves = genPseudo(b, white, st), i, m, u, sc, k;
+  var caps = [];
+  for (i = 0; i < moves.length; i++){
+    m = moves[i];
+    if (b[m.to] !== '.' || m.promo || m.flag === 'ep') caps.push(m);
+  }
+  orderMoves(b, caps);
+
+  for (i = 0; i < caps.length; i++){
+    m = caps[i];
+    u = makeMove(b, m, st);
+    k = findKing(b, white);
+    if (k >= 0 && attacked(b, k, !white)){ unmakeMove(b, m, u, st); continue; }
+    sc = -quiesce(b, -beta, -alpha, !white, st, ply + 1);
+    unmakeMove(b, m, u, st);
+    if (stopped) return alpha;
+    if (sc >= beta) return beta;
+    if (sc > alpha) alpha = sc;
+  }
+  return alpha;
+}
+
+function negamax(b, depth, alpha, beta, white, st, ply){
+  nodes++;
+  if (timeUp()) return (white ? 1 : -1) * evaluate(b);
+  if (depth <= 0) return quiesce(b, alpha, beta, white, st, 0);
+
+  var moves = legalMoves(b, white, st);
+  if (!moves.length) return inCheck(b, white) ? -MATE + ply : 0;
+  orderMoves(b, moves);
+
+  var best = -Infinity, i, m, u, sc;
+  for (i = 0; i < moves.length; i++){
+    m = moves[i];
+    u = makeMove(b, m, st);
+    sc = -negamax(b, depth - 1, -beta, -alpha, !white, st, ply + 1);
+    unmakeMove(b, m, u, st);
+    if (stopped) break;
+    if (sc > best) best = sc;
+    if (sc > alpha) alpha = sc;
+    if (alpha >= beta) break;
+  }
+  return best === -Infinity ? alpha : best;
+}
+
+function searchBest(b0, white, st0, maxDepth, timeMs){
+  var b = b0.slice();
+  var st = { castling: { K:st0.castling.K, Q:st0.castling.Q, k:st0.castling.k, q:st0.castling.q }, ep: st0.ep, half: st0.half };
+  var roots = legalMoves(b, white, st);
+  if (!roots.length) return null;
+
+  var best = roots[0], bestScore = 0, reached = 0;
+  var t0 = Date.now();
+  deadline = t0 + timeMs;
+  nodes = 0; stopped = false;
+
+  for (var d = 1; d <= maxDepth; d++){
+    var alpha = -Infinity, localBest = null, localScore = -Infinity;
+    var ordered = roots.slice();
+    var bi = ordered.indexOf(best);
+    if (bi > 0){ ordered.splice(bi, 1); ordered.unshift(best); }
+
+    for (var i = 0; i < ordered.length; i++){
+      var m = ordered[i];
+      var u = makeMove(b, m, st);
+      var sc = -negamax(b, d - 1, -Infinity, -alpha, !white, st, 1);
+      unmakeMove(b, m, u, st);
+      if (stopped) break;
+      if (sc > localScore){ localScore = sc; localBest = m; }
+      if (sc > alpha) alpha = sc;
+    }
+    if (localBest && (!stopped || d === 1)){
+      best = localBest; bestScore = localScore; reached = d;
+    }
+    if (stopped) break;
+    if (Math.abs(bestScore) > MATE - 1000) break;
+    if (Date.now() > deadline) break;
+  }
+
+  return { move: best, score: bestScore, depth: reached, nodes: nodes, time: Date.now() - t0 };
+}
+
+/* =========================================================
+   SAN 记谱
+   ========================================================= */
+function toSan(b, m, st){
+  var t = m.piece.toLowerCase();
+  var san;
+
+  if (m.flag === 'o-o') san = 'O-O';
+  else if (m.flag === 'o-o-o') san = 'O-O-O';
+  else if (t === 'p'){
+    san = (m.flag === 'ep' ? FILES[colOf(m.from)] + 'x' : (b[m.to] !== '.' ? FILES[colOf(m.from)] + 'x' : '')) + sqName(m.to);
+    if (m.promo) san += '=' + m.promo.toUpperCase();
+  } else {
+    var letter = t.toUpperCase();
+    var white = isWhitePiece(m.piece);
+    var others = legalMoves(b, white, st).filter(function(x){
+      return x.to === m.to && x.piece === m.piece && x.from !== m.from;
+    });
+    var dis = '';
+    if (others.length){
+      var sameFile = others.some(function(x){ return colOf(x.from) === colOf(m.from); });
+      var sameRank = others.some(function(x){ return rowOf(x.from) === rowOf(m.from); });
+      if (!sameFile) dis = FILES[colOf(m.from)];
+      else if (!sameRank) dis = String(8 - rowOf(m.from));
+      else dis = sqName(m.from);
+    }
+    san = letter + dis + (b[m.to] !== '.' ? 'x' : '') + sqName(m.to);
+  }
+
+  var oppWhite = !isWhitePiece(m.piece);
+  var u = makeMove(b, m, st);
+  if (inCheck(b, oppWhite)) san += legalMoves(b, oppWhite, st).length === 0 ? '#' : '+';
+  unmakeMove(b, m, u, st);
+  return san;
+}
+
+/* =========================================================
+   FEN
+   ========================================================= */
+function toFen(S){
+  var rows = [], r, c, line, p, i;
+  for (r = 0; r < 8; r++){
+    line = ''; var empty = 0;
+    for (c = 0; c < 8; c++){
+      p = S.board[r*8+c];
+      if (p === '.') empty++;
+      else {
+        if (empty){ line += empty; empty = 0; }
+        line += p;
+      }
+    }
+    if (empty) line += empty;
+    rows.push(line);
+  }
+  var cast = '';
+  if (S.castling.K) cast += 'K';
+  if (S.castling.Q) cast += 'Q';
+  if (S.castling.k) cast += 'k';
+  if (S.castling.q) cast += 'q';
+  if (!cast) cast = '-';
+  var ep = S.ep >= 0 ? sqName(S.ep) : '-';
+  return rows.join('/') + ' ' + S.turn + ' ' + cast + ' ' + ep + ' ' + S.half + ' ' + S.full;
+}
+
+function fromFen(fen){
+  var parts = String(fen).trim().split(/\s+/);
+  if (parts.length < 4) return null;
+  var board = new Array(64), i = 0, r, c, ch, n, j;
+  for (i = 0; i < 64; i++) board[i] = '.';
+  i = 0;
+  var rows = parts[0].split('/');
+  if (rows.length !== 8) return null;
+  for (r = 0; r < 8; r++){
+    var row = rows[r], idx = 0;
+    for (c = 0; c < row.length; c++){
+      ch = row[c];
+      if (/[1-8]/.test(ch)) idx += +ch;
+      else if (/[pnbrqkPNBRQK]/.test(ch)) board[r*8+idx] = ch, idx++;
+      else return null;
+      if (idx > 8) return null;
+    }
+    if (idx !== 8) return null;
+  }
+  var castling = { K: parts[2].indexOf('K') >= 0, Q: parts[2].indexOf('Q') >= 0, k: parts[2].indexOf('k') >= 0, q: parts[2].indexOf('q') >= 0 };
+  var ep = -1;
+  if (parts[3] !== '-'){
+    var f = FILES.indexOf(parts[3][0]);
+    var rk = 8 - parseInt(parts[3][1], 10);
+    if (f < 0 || isNaN(rk)) return null;
+    ep = rk * 8 + f;
+  }
+  var turn = parts[1] === 'b' ? 'b' : 'w';
+  var half = parts[4] ? (parseInt(parts[4], 10) || 0) : 0;
+  var full = parts[5] ? (parseInt(parts[5], 10) || 1) : 1;
+  if (findKing(board, true) < 0 || findKing(board, false) < 0) return null;
+  return { board: board, turn: turn, castling: castling, ep: ep, half: half, full: full };
+}
+
+/* =========================================================
+   对局状态
+   ========================================================= */
+var S = {
+  board: START.slice(),
+  turn: 'w',
+  castling: { K:true, Q:true, k:true, q:true },
+  ep: -1,
+  half: 0,
+  full: 1,
+  human: 'w',
+  auto: true,
+  orient: 'w',
+  lastMove: null,
+  log: [],
+  stack: [],
+  keys: [],
+  selected: -1,
+  legal: [],
+  hint: null,
+  busy: false,
+  over: null,
+  edit: false,
+  brush: 'P'
+};
+
+var boardEl = document.getElementById('board');
+var arrowEl = document.getElementById('arrowLayer');
+var turnLine = document.getElementById('turnLine');
+var outEl = document.getElementById('out');
+var logEl = document.getElementById('moveLog');
+var inputEl = document.getElementById('moveInput');
+var evalFill = document.getElementById('evalFill');
+var promoEl = document.getElementById('promo');
+var promoOpts = document.getElementById('promoOpts');
+
+function posKey(b, st, turn){
+  var c = '';
+  if (st.castling.K) c += 'K';
+  if (st.castling.Q) c += 'Q';
+  if (st.castling.k) c += 'k';
+  if (st.castling.q) c += 'q';
+  return b.join('') + turn + c + (st.ep >= 0 ? sqName(st.ep) : '-');
+}
+
+/* =========================================================
+   渲染
+   ========================================================= */
+function isViewFlipped(){ return S.orient === 'b'; }
+
+function cellIndexAt(dr, dc){
+  return isViewFlipped() ? (7 - dr) * 8 + (7 - dc) : dr * 8 + dc;
+}
+
+function render(){
+  var frag = document.createDocumentFragment();
+  var flip = isViewFlipped();
+  var kingSq = findKing(S.board, S.turn === 'w');
+
+  for (var dr = 0; dr < 8; dr++){
+    for (var dc = 0; dc < 8; dc++){
+      var r = flip ? 7 - dr : dr;
+      var c = flip ? 7 - dc : dc;
+      var i = r * 8 + c;
+
+      var cell = document.createElement('div');
+      cell.className = 'cell ' + (((r + c) % 2 === 0) ? 'lt' : 'dk');
+      cell.setAttribute('role', 'gridcell');
+      cell.dataset.sq = i;
+
+      if (S.lastMove){
+        if (i === S.lastMove.from) cell.classList.add('from');
+        if (i === S.lastMove.to) cell.classList.add('to');
+      }
+      if (i === S.selected) cell.classList.add('sel');
+      if (S.hint && (i === S.hint.from || i === S.hint.to)) cell.classList.add('hint');
+      if (i === kingSq && inCheck(S.board, S.turn === 'w')) cell.classList.add('check');
+
+      var p = S.board[i];
+      if (p !== '.'){
+        var sp = document.createElement('span');
+        sp.className = 'piece ' + (isWhitePiece(p) ? 'w' : 'b');
+        sp.textContent = GLYPH[p.toLowerCase()];
+        cell.appendChild(sp);
+      }
+
+      /* 合法落点提示：空格画点，可吃画环 */
+      if (S.selected >= 0){
+        var mv = S.legal.filter(function(x){ return x.from === S.selected && x.to === i; })[0];
+        if (mv){
+          var mark = document.createElement('span');
+          mark.className = (p !== '.' || mv.flag === 'ep') ? 'ring' : 'dot';
+          cell.appendChild(mark);
+        }
+      }
+
+      /* 边线坐标 */
+      if (dr === 7){
+        var cf = document.createElement('span');
+        cf.className = 'coord f';
+        cf.textContent = FILES[c];
+        cell.appendChild(cf);
+      }
+      if (dc === 0){
+        var cr = document.createElement('span');
+        cr.className = 'coord r';
+        cr.textContent = 8 - r;
+        cell.appendChild(cr);
+      }
+
+      cell.addEventListener('click', onCellClick);
+      frag.appendChild(cell);
+    }
+  }
+  boardEl.textContent = '';
+  boardEl.appendChild(frag);
+  drawArrow();
+}
+
+function displayPos(i){
+  var r = rowOf(i), c = colOf(i);
+  if (isViewFlipped()){ r = 7 - r; c = 7 - c; }
+  return { x: c + 0.5, y: r + 0.5 };
+}
+
+function drawArrow(){
+  arrowEl.textContent = '';
+  if (!S.lastMove) return;
+  var a = displayPos(S.lastMove.from), bpt = displayPos(S.lastMove.to);
+  var dx = bpt.x - a.x, dy = bpt.y - a.y;
+  var len = Math.sqrt(dx*dx + dy*dy) || 1;
+  var ux = dx/len, uy = dy/len;
+  var px = -uy, py = ux;
+  var sx = a.x + ux*0.28, sy = a.y + uy*0.28;
+  var ex = bpt.x - ux*0.34, ey = bpt.y - uy*0.34;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var line = document.createElementNS(NS, 'line');
+  line.setAttribute('x1', sx); line.setAttribute('y1', sy);
+  line.setAttribute('x2', ex); line.setAttribute('y2', ey);
+  line.setAttribute('stroke', '#4f8a2a');
+  line.setAttribute('stroke-width', '0.11');
+  line.setAttribute('stroke-linecap', 'round');
+  line.setAttribute('opacity', '0.85');
+  arrowEl.appendChild(line);
+
+  var hl = 0.3, hw = 0.2;
+  var p1x = bpt.x - ux*0.3, p1y = bpt.y - uy*0.3;
+  var poly = document.createElementNS(NS, 'polygon');
+  poly.setAttribute('points',
+    p1x + ',' + p1y + ' ' +
+    (p1x - ux*hl + px*hw) + ',' + (p1y - uy*hl + py*hw) + ' ' +
+    (p1x - ux*hl - px*hw) + ',' + (p1y - uy*hl - py*hw));
+  poly.setAttribute('fill', '#4f8a2a');
+  poly.setAttribute('opacity', '0.85');
+  arrowEl.appendChild(poly);
+}
+
+/* =========================================================
+   状态栏 / 评估条 / 输出
+   ========================================================= */
+function sideName(c){ return c === 'w' ? '白方' : '黑方'; }
+
+function updateTurn(score){
+  if (S.over){
+    turnLine.innerHTML = S.over;
+  } else {
+    var mine = S.turn === S.human;
+    turnLine.innerHTML = '轮到 <b>' + sideName(S.turn) + '</b>' + (mine ? '（你）' : '（程序）') +
+      (S.busy ? ' · 思考中…' : '');
+  }
+  updateEval(score);
+}
+
+function updateEval(score){
+  /* 评分永远从白方视角显示，低于 0 就是黑优 */
+  var s = null;
+  if (typeof score === 'number'){
+    var white = S.turn === 'w';
+    var mateish = Math.abs(score) > MATE - 1000;
+    if (mateish){
+      var win = (score > 0) === white;
+      s = win ? 1 : -1;
+    } else {
+      s = (white ? score : -score) / 100;
+      s = Math.max(-1, Math.min(1, s / 6));
+    }
+  }
+  if (s === null){
+    evalFill.style.width = '0%';
+    evalFill.style.left = '50%';
+    return;
+  }
+  var pct = Math.abs(s) * 50;
+  if (s > 0){
+    evalFill.style.left = '50%';
+    evalFill.style.width = pct + '%';
+  } else {
+    evalFill.style.left = (50 - pct) + '%';
+    evalFill.style.width = pct + '%';
+  }
+}
+
+function fmtScore(score){
+  if (Math.abs(score) > MATE - 1000){
+    var n = Math.ceil((MATE - Math.abs(score)) / 2);
+    return score > 0 ? '将杀：约 ' + n + ' 步取胜' : '危险：约 ' + n + ' 步被将杀';
+  }
+  var v = score / 100;
+  return (v >= 0 ? '+' : '') + v.toFixed(2);
+}
+
+function showIdle(text){
+  outEl.innerHTML = '<div class="idle">' + text + '</div>';
+}
+function showThinking(text){
+  outEl.innerHTML = '<div class="idle"><span class="spin"></span>' + (text || '正在计算…') + '</div>';
+}
+function showMove(res, san, label){
+  var judge = '';
+  if (Math.abs(res.score) > MATE - 1000){
+    judge = fmtScore(res.score);
+  } else {
+    var v = res.score / 100;
+    judge = '评分 ' + (v >= 0 ? '+' : '') + v.toFixed(2) + '（' + sideName(res.white) + '视角）';
+  }
+  outEl.innerHTML =
+    '<div class="big">' + san + '</div>' +
+    '<div class="sub2">' + (label || '程序应招') + ' · ' + judge + '</div>' +
+    '<div class="sub2">深度 ' + res.depth + ' · ' + res.nodes.toLocaleString() + ' 节点 · ' + res.time + ' ms</div>';
+  updateEval(res.score);
+}
+
+/* =========================================================
+   执行走子
+   ========================================================= */
+function snapshot(){
+  return {
+    board: S.board.slice(),
+    turn: S.turn,
+    castling: { K:S.castling.K, Q:S.castling.Q, k:S.castling.k, q:S.castling.q },
+    ep: S.ep,
+    half: S.half,
+    full: S.full,
+    lastMove: S.lastMove,
+    logLen: S.log.length,
+    keyLen: S.keys.length,
+    over: S.over
+  };
+}
+
+function restore(s){
+  S.board = s.board;
+  S.turn = s.turn;
+  S.castling = s.castling;
+  S.ep = s.ep;
+  S.half = s.half;
+  S.full = s.full;
+  S.lastMove = s.lastMove;
+  S.log = S.log.slice(0, s.logLen);
+  S.keys = S.keys.slice(0, s.keyLen);
+  S.over = s.over;
+  S.selected = -1;
+  S.hint = null;
+  S.legal = legalMoves(S.board, S.turn === 'w', S);
+}
+
+function doMove(m, label){
+  S.stack.push(snapshot());
+
+  var san = toSan(S.board, m, S);
+  makeMove(S.board, m, S);
+  S.log.push({ san: san, color: S.turn });
+  S.turn = S.turn === 'w' ? 'b' : 'w';
+  if (S.turn === 'w') S.full++;
+  S.lastMove = { from: m.from, to: m.to };
+  S.selected = -1;
+  S.hint = null;
+  S.over = null;
+
+  S.keys.push(posKey(S.board, S, S.turn));
+  S.legal = legalMoves(S.board, S.turn === 'w', S);
+
+  render();
+  updateLog();
+  checkEnd();
+  updateTurn(typeof label === 'number' ? label : null);
+  updateButtons();
+
+  if (!S.over && S.auto && S.turn !== S.human){
+    setTimeout(function(){ if (!S.over && S.auto && S.turn !== S.human && !S.busy) think(); }, 260);
+  }
+}
+
+/* =========================================================
+   终局判定
+   ========================================================= */
+function materialKey(b){
+  var counts = {}, i, p, t;
+  for (i = 0; i < 64; i++){
+    p = b[i];
+    if (p === '.') continue;
+    t = p.toLowerCase();
+    if (t === 'k') continue;
+    counts[t] = (counts[t] || 0) + 1;
+  }
+  return counts;
+}
+
+function insufficient(b){
+  var c = materialKey(b);
+  var keys = Object.keys(c);
+  if (!keys.length) return true;                                   /* 王对王 */
+  if (keys.length === 1 && (keys[0] === 'b' || keys[0] === 'n') && c[keys[0]] === 1) return true;
+  if (keys.length === 2 && keys[0] === 'b' && keys[1] === 'b' && c.b === 2){
+    /* 双象同色也算和，这里不细分，直接判和会更严；按「一方一象」处理 */
+    return false;
+  }
+  return false;
+}
+
+function checkEnd(){
+  if (!S.legal.length){
+    S.over = inCheck(S.board, S.turn === 'w')
+      ? '将杀！<b>' + sideName(S.turn === 'w' ? 'b' : 'w') + '</b> 胜'
+      : '逼和 · 和棋';
+    S.selected = -1;
+    updateButtons();
+    return true;
+  }
+  if (S.half >= 100){
+    S.over = '50 回合无吃子、无兵动 · 和棋';
+    updateButtons();
+    return true;
+  }
+  var cur = S.keys[S.keys.length - 1];
+  var same = 0;
+  for (var i = 0; i < S.keys.length; i++) if (S.keys[i] === cur) same++;
+  if (same >= 3){
+    S.over = '三次重复局面 · 和棋';
+    updateButtons();
+    return true;
+  }
+  if (insufficient(S.board)){
+    S.over = '子力不足 · 和棋';
+    updateButtons();
+    return true;
+  }
+  return false;
+}
+
+/* =========================================================
+   点击棋盘（编辑模式下是放子）
+   ========================================================= */
+var suppressClick = 0;
+
+function onCellClick(e){
+  var i = +e.currentTarget.dataset.sq;
+  if (Date.now() < suppressClick) return;
+  if (S.busy) return;
+
+  if (S.edit){ paintCell(i); return; }
+  if (S.over) return;
+  if (S.turn !== S.human) return;   /* 程序执子的回合不接受点击 */
+
+  if (S.selected >= 0 && S.selected !== i){
+    var cands = S.legal.filter(function(x){ return x.from === S.selected && x.to === i; });
+    if (cands.length){
+      if (cands.length > 1 && cands[0].promo){ askPromo(S.selected, i); return; }
+      doMove(cands[0]);
+      return;
+    }
+  }
+
+  var p = S.board[i];
+  if (p !== '.' && isWhitePiece(p) === (S.turn === 'w')){
+    S.selected = i;
+  } else {
+    S.selected = -1;
+  }
+  render();
+}
+
+/* =========================================================
+   拖动棋子（鼠标 / 触控笔；手机上点选依然是主力操作）
+   ========================================================= */
+var drag = null;
+
+function cellFromPoint(e){
+  var el = document.elementFromPoint(e.clientX, e.clientY);
+  if (!el || !el.closest) return null;
+  var cell = el.closest('.cell');
+  return cell ? +cell.dataset.sq : null;
+}
+
+boardEl.addEventListener('pointerdown', function(e){
+  if (e.pointerType === 'touch') return;      /* 触屏滑动留给页面滚动 */
+  if (e.button) return;
+  if (S.busy) return;
+  var cellEl = e.target.closest ? e.target.closest('.cell') : null;
+  if (!cellEl) return;
+
+  var i = +cellEl.dataset.sq;
+  var p = S.board[i];
+  if (S.edit){
+    if (p === '.') return;                    /* 空格留给 click 放子 */
+  } else {
+    if (S.over || S.turn !== S.human) return;
+    if (p === '.' || isWhitePiece(p) !== (S.turn === 'w')) return;
+  }
+
+  var rect = cellEl.getBoundingClientRect();
+  drag = { from:i, piece:p, startX:e.clientX, startY:e.clientY, moved:false, ghost:null, cellEl:cellEl, size:rect.width };
+  boardEl.classList.add('dragging');
+});
+
+window.addEventListener('pointermove', function(e){
+  if (!drag) return;
+  var dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+  if (!drag.moved && Math.sqrt(dx*dx + dy*dy) < 6) return;
+
+  if (!drag.moved){
+    drag.moved = true;
+    var g = document.createElement('div');
+    g.className = 'ghost ' + (isWhitePiece(drag.piece) ? 'w' : 'b');
+    g.style.fontSize = (drag.size * 0.78) + 'px';
+    g.textContent = GLYPH[drag.piece.toLowerCase()];
+    document.body.appendChild(g);
+    drag.ghost = g;
+    if (!S.edit){
+      S.selected = drag.from;                 /* 顺手把合法落点标出来 */
+      render();
+      var again = boardEl.querySelector('[data-sq="' + drag.from + '"]');
+      if (again) again.classList.add('taken');
+    } else {
+      drag.cellEl.classList.add('taken');
+    }
+  }
+  drag.ghost.style.left = e.clientX + 'px';
+  drag.ghost.style.top = e.clientY + 'px';
+});
+
+window.addEventListener('pointerup', function(e){
+  if (!drag) return;
+  var d = drag;
+  drag = null;
+  boardEl.classList.remove('dragging');
+  if (d.ghost){ d.ghost.remove(); d.ghost = null; }
+  if (!d.moved) return;                       /* 没拖动就交给 click 处理 */
+
+  suppressClick = Date.now() + 320;
+  var to = cellFromPoint(e);
+  if (to === null || to === d.from){ render(); return; }
+
+  if (S.edit){
+    var tmp = S.board[to];
+    S.board[to] = S.board[d.from];
+    S.board[d.from] = tmp;                    /* 目标有子就交换，方便摆子 */
+    render();
+    return;
+  }
+
+  var cands = S.legal.filter(function(x){ return x.from === d.from && x.to === to; });
+  if (!cands.length){ render(); return; }
+  if (cands.length > 1 && cands[0].promo){ askPromo(d.from, to); return; }
+  doMove(cands[0]);
+});
+
+window.addEventListener('pointercancel', function(){
+  if (!drag) return;
+  if (drag.ghost) drag.ghost.remove();
+  drag = null;
+  boardEl.classList.remove('dragging');
+  render();
+});
+
+/* =========================================================
+   棋局编辑
+   ========================================================= */
+var PALETTE = ['K','Q','R','B','N','P','k','q','r','b','n','p'];
+var PIECE_CN = { k:'王', q:'后', r:'车', b:'象', n:'马', p:'兵' };
+
+function buildPalette(){
+  var wrap = document.getElementById('palette');
+  wrap.textContent = '';
+  PALETTE.forEach(function(p){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.p = p;
+    b.className = isWhitePiece(p) ? 'wp' : 'bp';
+    b.textContent = GLYPH[p.toLowerCase()];
+    b.title = (isWhitePiece(p) ? '白' : '黑') + PIECE_CN[p.toLowerCase()];
+    b.addEventListener('click', function(){ S.brush = p; markBrush(); });
+    wrap.appendChild(b);
+  });
+  var er = document.createElement('button');
+  er.type = 'button';
+  er.className = 'erase';
+  er.dataset.p = '.';
+  er.textContent = '🧽 擦除';
+  er.addEventListener('click', function(){ S.brush = '.'; markBrush(); });
+  wrap.appendChild(er);
+  markBrush();
+}
+
+function markBrush(){
+  var btns = document.querySelectorAll('#palette button');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].dataset.p === S.brush);
+}
+
+function paintCell(i){
+  S.board[i] = S.brush;
+  render();
+}
+
+function setTurnSeg(c){
+  var seg = document.getElementById('turnSeg');
+  Array.prototype.forEach.call(seg.children, function(b){
+    b.setAttribute('aria-pressed', b.dataset.val === c ? 'true' : 'false');
+  });
+}
+
+function setEdit(on){
+  S.edit = on;
+  document.getElementById('editor').classList.toggle('show', on);
+  var btn = document.getElementById('btnEdit');
+  btn.textContent = on ? '✕ 退出编辑' : '✎ 编辑棋局';
+  btn.classList.toggle('primary', on);
+  S.selected = -1;
+  S.hint = null;
+  if (on){
+    S.over = null;
+    setTurnSeg(S.turn);
+    showIdle('编辑模式：左边选棋子、点格子放下，按住可以拖动摆位，拖到有子的格子会交换。「应用并开始」之后才进入对局。');
+  }
+  render();
+  updateButtons();
+}
+
+function applyEdit(){
+  if (findKing(S.board, true) < 0 || findKing(S.board, false) < 0){
+    HS.toast('两边都要有王才能开始', { icon: '⚠️' });
+    return;
+  }
+  var pressed = document.querySelector('#turnSeg button[aria-pressed="true"]');
+  S.turn = pressed ? pressed.dataset.val : 'w';
+  S.castling = {
+    K: S.board[60] === 'K' && S.board[63] === 'R',
+    Q: S.board[60] === 'K' && S.board[56] === 'R',
+    k: S.board[4] === 'k' && S.board[7] === 'r',
+    q: S.board[4] === 'k' && S.board[0] === 'r'
+  };
+  S.ep = -1;
+  S.half = 0;
+  S.full = 1;
+  S.lastMove = null;
+  S.log = [];
+  S.stack = [];
+  S.keys = [posKey(S.board, S, S.turn)];
+  S.over = null;
+  S.selected = -1;
+  S.hint = null;
+  S.legal = legalMoves(S.board, S.turn === 'w', S);
+  setEdit(false);
+  updateLog();
+  checkEnd();
+  updateTurn(null);
+  updateButtons();
+  showIdle(S.over ? '这个局面已经结束：' + S.over.replace(/<\/?b>/g, '')
+                  : '局面已应用，轮到' + sideName(S.turn) + '走。');
+  if (!S.over && S.auto && S.turn !== S.human){
+    setTimeout(function(){ if (!S.busy && !S.over && S.turn !== S.human) think(); }, 300);
+  }
+}
+
+
+/* =========================================================
+   升变
+   ========================================================= */
+var pendingPromo = null;
+function askPromo(from, to){
+  pendingPromo = { from: from, to: to };
+  var white = S.turn === 'w';
+  var set = white ? ['Q','R','B','N'] : ['q','r','b','n'];
+  promoOpts.textContent = '';
+  set.forEach(function(p){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = GLYPH[p.toLowerCase()];
+    b.style.color = white ? '#fff' : '#191b1f';
+    b.style.textShadow = white ? '0 0 1px #333,1px 1px 0 #4a4a4a,-1px -1px 0 #4a4a4a' : 'none';
+    b.addEventListener('click', function(){
+      promoEl.classList.remove('show');
+      var mv = S.legal.filter(function(x){ return x.from === from && x.to === to && x.promo === p; })[0];
+      pendingPromo = null;
+      if (mv) doMove(mv);
+    });
+    promoOpts.appendChild(b);
+  });
+  promoEl.classList.add('show');
+}
+
+/* =========================================================
+   程序思考
+   ========================================================= */
+function think(){
+  if (S.busy || S.over || S.edit || !S.legal.length) return;
+  if (S.turn === S.human) return;
+
+  S.busy = true;
+  updateButtons();
+  updateTurn(null);
+  showThinking('正在计算…');
+  setTimeout(function(){
+    var depth = +document.getElementById('depth').value;
+    var res = null;
+    try {
+      res = searchBest(S.board, S.turn === 'w', S, depth, 2400);
+    } catch (err){
+      console.error(err);
+    }
+    S.busy = false;
+    updateButtons();
+
+    if (!res || !res.move){
+      showIdle('这一步算不出来，局面可能已经结束。');
+      return;
+    }
+    var san = toSan(S.board, res.move, S);
+    res.white = S.turn;
+    doMove(res.move, res.score);
+    /* doMove 里会重绘状态，这里补上「程序走了什么」的明细 */
+    if (!S.over) showMove(res, san, '程序应招');
+    else showIdle('对局结束：' + S.over.replace(/<\/?b>/g, ''));
+  }, 40);
+}
+
+/* =========================================================
+   提示（只给建议，不落子）
+   ========================================================= */
+function hint(){
+  if (S.busy || S.over || S.edit) return;
+  if (S.turn !== S.human) { HS.toast('现在是程序执子的回合', { icon:'♞' }); return; }
+
+  S.busy = true;
+  updateButtons();
+  showThinking('正在给你找个好步…');
+  setTimeout(function(){
+    var res = searchBest(S.board, S.turn === 'w', S, Math.min(4, +document.getElementById('depth').value), 1200);
+    S.busy = false;
+    updateButtons();
+    if (!res || !res.move){ showIdle('没有可走的棋。'); return; }
+    var san = toSan(S.board, res.move, S);
+    S.hint = { from: res.move.from, to: res.move.to };
+    S.selected = -1;
+    render();
+    res.white = S.turn;
+    showMove(res, san, '建议你走');
+  }, 30);
+}
+
+/* =========================================================
+   走法输入
+   ========================================================= */
+function parseInput(text){
+  text = String(text || '').trim();
+  if (!text) return null;
+  var legal = S.legal;
+
+  /* 易位简写 */
+  var norm0 = text.replace(/\s+/g, '').replace(/0/g, 'O').toUpperCase();
+  if (norm0 === 'O-O' || norm0 === 'OO'){
+    return legal.filter(function(m){ return m.flag === 'o-o'; })[0] || null;
+  }
+  if (norm0 === 'O-O-O' || norm0 === 'OOO'){
+    return legal.filter(function(m){ return m.flag === 'o-o-o'; })[0] || null;
+  }
+
+  /* 坐标格式 e2e4 / e7e8q */
+  var m1 = /^([a-hA-H][1-8])[- ]?([a-hA-H][1-8])([qrbnQRBN])?$/.exec(text.replace(/\s+/g, ''));
+  if (m1){
+    var from = (8 - parseInt(m1[1][1], 10)) * 8 + (FILES.indexOf(m1[1][0].toLowerCase()));
+    var to = (8 - parseInt(m1[2][1], 10)) * 8 + (FILES.indexOf(m1[2][0].toLowerCase()));
+    var promo = m1[3] ? (S.turn === 'w' ? m1[3].toUpperCase() : m1[3].toLowerCase()) : null;
+    var cands = legal.filter(function(m){ return m.from === from && m.to === to; });
+    if (promo) cands = cands.filter(function(m){ return m.promo && m.promo.toLowerCase() === promo.toLowerCase(); });
+    else if (cands.length > 1) cands = cands.filter(function(m){ return m.promo && m.promo.toLowerCase() === 'q'; });
+    return cands[0] || null;
+  }
+
+  /* SAN */
+  var norm = function(s){ return s.replace(/[+#!?]/g, '').replace(/0/g, 'O').toLowerCase(); };
+  var target = norm(text);
+  for (var i = 0; i < legal.length; i++){
+    if (norm(toSan(S.board, legal[i], S)) === target) return legal[i];
+  }
+  return null;
+}
+
+function applyInput(){
+  if (S.busy || S.over || S.edit) return;
+  var text = inputEl.value.trim();
+  if (!text) return;
+  var m = parseInput(text);
+  if (!m){
+    outEl.innerHTML = '<div class="warn">看不懂这步棋：检查写法（e2e4 / Nf3 / O-O），以及现在是不是该这一方走。</div>';
+    return;
+  }
+  if (m.promo){ askPromo(m.from, m.to); inputEl.value = ''; return; }
+  inputEl.value = '';
+  doMove(m);
+  inputEl.focus();
+}
+
+/* =========================================================
+   悔棋 / 新局 / 翻转
+   ========================================================= */
+function undo(){
+  if (S.busy || S.edit || !S.stack.length) return;
+  var s = S.stack.pop();
+  restore(s);
+  if (S.stack.length && S.turn !== S.human){
+    /* 悔到程序回合没意义，再退一步回到用户回合 */
+    var s2 = S.stack.pop();
+    if (s2) restore(s2);
+  }
+  S.over = null;
+  render();
+  updateLog();
+  updateTurn(null);
+  updateButtons();
+  showIdle('已悔棋。');
+}
+
+function newGame(){
+  if (S.edit){
+    S.edit = false;
+    document.getElementById('editor').classList.remove('show');
+    var eb = document.getElementById('btnEdit');
+    eb.textContent = '✎ 编辑棋局';
+    eb.classList.remove('primary');
+  }
+  S.board = START.slice();
+  S.turn = 'w';
+  S.castling = { K:true, Q:true, k:true, q:true };
+  S.ep = -1;
+  S.half = 0;
+  S.full = 1;
+  S.lastMove = null;
+  S.log = [];
+  S.stack = [];
+  S.keys = [posKey(S.board, S, 'w')];
+  S.selected = -1;
+  S.hint = null;
+  S.over = null;
+  S.busy = false;
+  S.legal = legalMoves(S.board, true, S);
+  S.orient = S.human;
+  render();
+  updateLog();
+  updateTurn(null);
+  updateButtons();
+  showIdle('新对局开始。你执' + sideName(S.human) + '，点棋盘或输入对手走法都行。');
+  if (S.auto && S.turn !== S.human){
+    setTimeout(function(){ if (!S.busy && S.turn !== S.human) think(); }, 300);
+  }
+}
+
+function flip(){
+  S.orient = S.orient === 'w' ? 'b' : 'w';
+  render();
+}
+
+/* =========================================================
+   界面更新
+   ========================================================= */
+function updateLog(){
+  var html = '', i;
+  for (i = 0; i < S.log.length; i += 2){
+    html += '<div class="ml-row"><span class="ml-num">' + (i/2 + 1) + '.</span>' +
+            '<span class="ml-w">' + (S.log[i] ? S.log[i].san : '') + '</span>' +
+            '<span class="ml-b">' + (S.log[i+1] ? S.log[i+1].san : '') + '</span></div>';
+  }
+  logEl.innerHTML = html || '<div class="ml-empty">还没有走法</div>';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function updateButtons(){
+  var lock = S.busy || S.edit;
+  var myTurn = S.turn === S.human && !S.over && !S.busy && !S.edit;
+  document.getElementById('btnThink').disabled = lock || !!S.over || S.turn === S.human;
+  document.getElementById('btnHint').disabled = !myTurn;
+  document.getElementById('btnUndo').disabled = lock || !S.stack.length;
+  document.getElementById('btnNew').disabled = S.busy;
+  document.getElementById('btnSubmit').disabled = lock || !!S.over;
+  inputEl.disabled = lock || !!S.over;
+  document.getElementById('autoChk').disabled = lock;
+  document.getElementById('depth').disabled = lock;
+  document.getElementById('btnApply').disabled = !S.edit;
+  document.getElementById('btnStartPos').disabled = !S.edit;
+  document.getElementById('btnClearBoard').disabled = !S.edit;
+  Array.prototype.forEach.call(document.querySelectorAll('#turnSeg button'), function(b){
+    b.disabled = !S.edit;
+  });
+}
+
+/* =========================================================
+   事件绑定
+   ========================================================= */
+document.getElementById('colorSeg').addEventListener('click', function(e){
+  var b = e.target.closest('button');
+  if (!b || S.busy) return;
+  S.human = b.dataset.val;
+  Array.prototype.forEach.call(this.children, function(c){
+    c.setAttribute('aria-pressed', c === b ? 'true' : 'false');
+  });
+  newGame();
+});
+
+document.getElementById('autoChk').addEventListener('change', function(e){
+  S.auto = e.target.checked;
+  updateTurn(null);
+  if (S.auto && !S.over && !S.edit && S.turn !== S.human && !S.busy){
+    setTimeout(function(){ if (!S.busy) think(); }, 120);
+  }
+});
+
+document.getElementById('depth').addEventListener('input', function(e){
+  document.getElementById('depthVal').textContent = e.target.value;
+});
+
+document.getElementById('btnThink').addEventListener('click', function(){
+  if (S.turn === S.human) return;
+  think();
+});
+document.getElementById('btnHint').addEventListener('click', hint);
+document.getElementById('btnUndo').addEventListener('click', undo);
+document.getElementById('btnNew').addEventListener('click', newGame);
+document.getElementById('btnFlip').addEventListener('click', flip);
+document.getElementById('btnSubmit').addEventListener('click', applyInput);
+inputEl.addEventListener('keydown', function(e){ if (e.key === 'Enter') applyInput(); });
+
+/* 编辑棋局 */
+document.getElementById('btnEdit').addEventListener('click', function(){
+  setEdit(!S.edit);
+});
+document.getElementById('btnApply').addEventListener('click', applyEdit);
+document.getElementById('btnStartPos').addEventListener('click', function(){
+  S.board = START.slice();
+  render();
+});
+document.getElementById('btnClearBoard').addEventListener('click', function(){
+  S.board = new Array(64);
+  for (var i = 0; i < 64; i++) S.board[i] = '.';
+  render();
+});
+document.getElementById('turnSeg').addEventListener('click', function(e){
+  var b = e.target.closest('button');
+  if (!b || !S.edit) return;
+  setTurnSeg(b.dataset.val);
+});
+
+document.getElementById('btnCopyLog').addEventListener('click', function(){
+  if (!S.log.length){ HS.toast('还没有走法可以复制', { icon:'📋' }); return; }
+  var txt = S.log.map(function(x, i){
+    if (i % 2 === 0) return (i/2 + 1) + '. ' + x.san;
+    return x.san;
+  }).join(' ') + (S.over ? '  ' + S.over.replace(/<[^>]+>/g, '') : '');
+  HS.copy(txt);
+});
+
+document.getElementById('btnFen').addEventListener('click', function(){
+  HS.copy(toFen(S));
+});
+
+document.getElementById('btnLoadFen').addEventListener('click', function(){
+  var fen = prompt('粘贴 FEN（例：' + FEN_START + '）', toFen(S));
+  if (!fen) return;
+  var p = fromFen(fen);
+  if (!p){ HS.toast('FEN 格式不对，至少要有 4 段且双方都有王', { icon:'⚠️' }); return; }
+  S.board = p.board;
+  S.turn = p.turn;
+  S.castling = p.castling;
+  S.ep = p.ep;
+  S.half = p.half;
+  S.full = p.full;
+  S.lastMove = null;
+  S.log = [];
+  S.stack = [];
+  S.keys = [posKey(S.board, S, S.turn)];
+  S.selected = -1;
+  S.hint = null;
+  S.over = null;
+  S.legal = legalMoves(S.board, S.turn === 'w', S);
+  render();
+  updateLog();
+  checkEnd();
+  updateTurn(null);
+  updateButtons();
+  showIdle(S.over ? '已载入，但局面已经结束：' + S.over.replace(/<\/?b>/g, '') : '已载入局面，轮到' + sideName(S.turn) + '走。');
+});
+
+promoEl.addEventListener('click', function(e){
+  if (e.target === promoEl){
+    promoEl.classList.remove('show');
+    pendingPromo = null;
+  }
+});
+
+/* 键盘：左右箭头悔棋/重做太容易误触，只留 Esc 关升变 */
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && promoEl.classList.contains('show')){
+    promoEl.classList.remove('show');
+    pendingPromo = null;
+  }
+});
+
+/* =========================================================
+   启动
+   ========================================================= */
+S.keys = [posKey(S.board, S, 'w')];
+S.legal = legalMoves(S.board, true, S);
+buildPalette();
+render();
+updateLog();
+updateTurn(null);
+updateButtons();
+showIdle('点击棋盘走棋，或把对手的走法打进输入框。程序在本机算完会立刻应一手，并给出评分、深度和耗时。');
+
+/* 调试/自测用：perft 走法数、当前局面（不参与界面逻辑） */
+window.__CHESS__ = {
+  perft: function(depth){
+    var b = S.board.slice();
+    var st = { castling: { K:S.castling.K, Q:S.castling.Q, k:S.castling.k, q:S.castling.q }, ep: S.ep, half: S.half };
+    var white = S.turn === 'w';
+    function walk(bd, stt, w, d){
+      if (d === 0) return 1;
+      var ms = legalMoves(bd, w, stt), total = 0;
+      for (var i = 0; i < ms.length; i++){
+        var u = makeMove(bd, ms[i], stt);
+        total += walk(bd, stt, !w, d - 1);
+        unmakeMove(bd, ms[i], u, stt);
+      }
+      return total;
+    }
+    return walk(b, st, white, depth);
+  },
+  load: function(fen){
+    var p = fromFen(fen);
+    if (!p) return false;
+    S.board = p.board; S.turn = p.turn; S.castling = p.castling; S.ep = p.ep;
+    S.half = p.half; S.full = p.full; S.lastMove = null; S.log = []; S.stack = [];
+    S.keys = [posKey(S.board, S, S.turn)]; S.over = null;
+    S.legal = legalMoves(S.board, S.turn === 'w', S);
+    render(); updateLog(); checkEnd(); updateTurn(null); updateButtons();
+    return true;
+  },
+  fen: function(){ return toFen(S); },
+  movesSan: function(){ return S.legal.map(function(m){ return toSan(S.board, m, S); }); },
+  play: function(san){ var m = parseInput(san); if (!m) return false; doMove(m); return true; },
+  childCounts: function(){
+    var b = S.board.slice();
+    var st = { castling: { K:S.castling.K, Q:S.castling.Q, k:S.castling.k, q:S.castling.q }, ep: S.ep, half: S.half };
+    var white = S.turn === 'w';
+    var out = [];
+    S.legal.forEach(function(m){
+      var san = toSan(b, m, st);
+      var u = makeMove(b, m, st);
+      var n = legalMoves(b, !white, st).length;
+      unmakeMove(b, m, u, st);
+      out.push([san, n]);
+    });
+    return out;
+  },
+  state: S
+};
+
+/* 拦截「全局没定义 HS」的极端情况 */
+})();
+</script>
+</body>
+</html>
