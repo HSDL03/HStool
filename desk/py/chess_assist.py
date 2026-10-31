@@ -595,6 +595,182 @@ BLK_PX = N // BLK   # 每块 8×8
 INSET = 1           # 每块向内缩 1px，避开格线与相邻格的抗锯齿
 
 
+def trim_border(img, max_frac=0.32, tol=24, need=0.86):
+    """把框里四周的纯色背景裁掉（框比棋盘松的时候很有用）。
+
+    取四个角的中位色当背景色，从四边往里扫：整行/整列绝大多数像素都接近背景色就裁掉。
+    棋盘每行都是深浅交替，不会被误裁，所以最多只裁 32%。
+    返回 (裁好的图, 左边被裁的像素, 上边被裁的像素)。
+    """
+    g = img.convert("L")
+    W, H = g.size
+    if W < 40 or H < 40:
+        return img, 0, 0
+    px = g.load()
+
+    def corner(x, y):
+        tot, n = 0, 0
+        for yy in range(y, min(y + 10, H)):
+            for xx in range(x, min(x + 10, W)):
+                tot += px[xx, yy]
+                n += 1
+        return tot / n if n else 0.0
+
+    samples = sorted([corner(0, 0), corner(max(0, W - 11), 0),
+                      corner(0, max(0, H - 11)), corner(max(0, W - 11), max(0, H - 11))])
+    bg = samples[1]                     # 第二小：避开某个角恰好压在棋盘上
+
+    def row_is_bg(y):
+        n = 0
+        for x in range(0, W, 2):
+            if abs(px[x, y] - bg) < tol:
+                n += 1
+        return n / (W / 2.0) > need
+
+    def col_is_bg(x):
+        n = 0
+        for y in range(0, H, 2):
+            if abs(px[x, y] - bg) < tol:
+                n += 1
+        return n / (H / 2.0) > need
+
+    lim_y, lim_x = int(H * max_frac), int(W * max_frac)
+    top = 0
+    while top < lim_y and row_is_bg(top):
+        top += 1
+    bot = H - 1
+    while bot > H - lim_y and row_is_bg(bot):
+        bot -= 1
+    left = 0
+    while left < lim_x and col_is_bg(left):
+        left += 1
+    right = W - 1
+    while right > W - lim_x and col_is_bg(right):
+        right -= 1
+    if right - left < 32 or bot - top < 32:
+        return img, 0, 0
+    return img.crop((left, top, right + 1, bot + 1)), left, top
+
+
+def auto_align(img):
+    """在框选区域里找最像 8×8 棋盘的位置，返回归一化 (left, top, size)。
+
+    手拖的框几乎不可能正好贴住最外圈格子，偏几个像素格子就跨到隔壁，识别立刻变差。
+    这里不认棋子，只看「相邻格的底色有没有明暗交替」——对齐准了交替最强，
+    歪了就被抹平，所以只要把这个指标最大化。
+
+    在缩略图上搜（短边 96px），405 个候选，几十毫秒。
+    """
+    g = img.convert("L")
+    W, H = g.size
+    if W < 48 or H < 48:
+        return 0.0, 0.0, 1.0
+    k = 96.0 / min(W, H)
+    sw = max(32, int(W * k))
+    sh = max(32, int(H * k))
+    small = g.resize((sw, sh))
+    px = small.load()
+
+    def score(left, top, size):
+        """棋盘对齐的分：相邻格底色差得越狠越好，格子内部越纯越好。
+
+        只看「相邻格有差」不够——偏半格时每个格子都跨在两个棋盘格上，相邻还是有差。
+        再加一条：对齐准了每格内部基本是单一底色，偏了就会在格子里看到分界线（内部方差大）。
+        两条一起用，才能既对上格子、又能把框外的界面边裁掉。
+        """
+        side = size * min(sw, sh)
+        x0 = left * sw
+        y0 = top * sh
+        cw = max(1.0, side / 8.0)
+        cg = max(1, int(cw * 0.16))     # 角块边长
+        inset = max(1, int(cw * 0.28))  # 中间区域从这儿开始
+        vals, flats = [], []
+        for r in range(8):
+            for c in range(8):
+                bx = x0 + c * cw
+                by = y0 + r * cw
+                # 底色：取四角小块（棋子压不到这里，干净反映棋盘格颜色）
+                tot, n = 0, 0
+                for oy in (0, cw - cg):
+                    for ox in (0, cw - cg):
+                        for y in range(int(by + oy), int(by + oy + cg)):
+                            for x in range(int(bx + ox), int(bx + ox + cg)):
+                                if 0 <= x < sw and 0 <= y < sh:
+                                    tot += px[x, y]
+                                    n += 1
+                vals.append(tot / n if n else 0.0)
+
+                # 纯净度：中间区域的标准差，跨格时会看到分界线
+                s2, n2, cnt2 = 0.0, 0, 0
+                xs = range(int(bx + inset), int(bx + cw - inset))
+                ys = range(int(by + inset), int(by + cw - inset))
+                for y in ys:
+                    if not (0 <= y < sh):
+                        continue
+                    for x in xs:
+                        if not (0 <= x < sw):
+                            continue
+                        s2 += px[x, y]
+                        n2 += 1
+                if n2:
+                    mean = s2 / n2
+                    var = 0.0
+                    for y in ys:
+                        if not (0 <= y < sh):
+                            continue
+                        for x in xs:
+                            if not (0 <= x < sw):
+                                continue
+                            d2 = px[x, y] - mean
+                            var += d2 * d2
+                            cnt2 += 1
+                    flats.append((var / max(1, cnt2)) ** 0.5)
+                else:
+                    flats.append(999.0)
+
+        diff, cnt = 0.0, 0
+        for r in range(8):
+            for c in range(8):
+                v = vals[r * 8 + c]
+                if c + 1 < 8:
+                    diff += abs(v - vals[r * 8 + c + 1])
+                    cnt += 1
+                if r + 1 < 8:
+                    diff += abs(v - vals[(r + 1) * 8 + c])
+                    cnt += 1
+        diff /= max(1, cnt)
+        flat = sum(flats) / 64.0
+        return diff - 0.55 * flat
+
+    best, best_s = (0.0, 0.0, 1.0), -1.0
+    # 缩放范围放宽到 0.66~1.10：框得比棋盘大不少（把边上的界面也框进来）时也能纠回来
+    for size in (0.90, 0.94, 0.97, 1.0, 1.03, 1.06):
+        base = (1.0 - size) * 0.5
+        span = 0.08
+        for i in range(-4, 5):
+            for j in range(-4, 5):
+                left = base + i * span / 4.0
+                top = base + j * span / 4.0
+                sc = score(left, top, size)
+                if sc > best_s:
+                    best_s, best = sc, (left, top, size)
+    return best
+
+
+def align_image(img):
+    """裁掉边框 + 对齐 8×8，返回 (对齐后的棋盘图, 相对原图的归一化 rect)。"""
+    trimmed, ox, oy = trim_border(img)
+    l, t, k = auto_align(trimmed)
+    tw, th = trimmed.size
+    side = max(8, k * min(tw, th))
+    x0 = max(0.0, min(l * tw, tw - side))
+    y0 = max(0.0, min(t * th, th - side))
+    out = trimmed.crop((int(x0), int(y0), int(x0 + side), int(y0 + side)))
+    W, H = img.size
+    rect = ((ox + x0) / float(W), (oy + y0) / float(H), side / float(min(W, H)))
+    return out, rect
+
+
 def img_signature(img):
     """框内棋盘 → 8×8 格 × 4×4 块灰度（1024 字节）。
 
@@ -694,6 +870,147 @@ def match_move(scores, moves, flip, sens=9):
     return best, best_s
 
 
+# ─────────────────────── 棋子形状记忆（精准识别）───────────────────────
+TPL_MAX = 12          # 同一身份最多累积几帧样本
+TPL_TRUST = 26.0      # 每块平均偏差超过这个数就认为「认不准」，不参与判断
+
+
+def to_screen(sq, flip):
+    """棋盘格 → 屏幕上看到的位置（翻转时 180° 旋转）。"""
+    r, c = sq >> 3, sq & 7
+    return (7 - r) * 8 + (7 - c) if flip else r * 8 + c
+
+
+# 格内 4×4 块的权重：中间 2×2 是棋子本体，四周容易吃进高亮边框和格线，压到 0.3
+BLK_W = [1.0 if (r in (1, 2) and c in (1, 2)) else 0.3
+         for r in range(4) for c in range(4)]
+BLK_W_SUM = sum(BLK_W)
+
+
+def cell_stats(sig, sq):
+    """一格的 (16 块灰度, 加权平均灰度, 加权形状强度)。"""
+    o = sq * 16
+    v = sig[o:o + 16]
+    m = 0.0
+    for i in range(16):
+        m += v[i] * BLK_W[i]
+    m /= BLK_W_SUM
+    var = 0.0
+    for i in range(16):
+        var += BLK_W[i] * (v[i] - m) ** 2
+    var /= BLK_W_SUM
+    return v, m, var ** 0.5
+
+
+CENTER = (5, 6, 9, 10)      # 4×4 块里正中间那 2×2，棋子本体落在这里
+
+
+def center_flat(v):
+    """格心那块有多平：高亮边框只影响四周，格心平整就还是空格。"""
+    vals = [v[i] for i in CENTER]
+    m = sum(vals) / 4.0
+    return (sum((x - m) ** 2 for x in vals) / 4.0) ** 0.5
+
+
+def shape_of(v, m, sd):
+    """去掉整体明暗后的形状：只留「哪块亮哪块暗」。"""
+    if sd < 2.0:
+        return [0.0] * 16
+    return [(x - m) / sd for x in v]
+
+
+class PieceBook:
+    """记住每格图案长什么样，之后就能直接认出「这格现在是什么」。
+
+    特征分两段，因为棋盘皮肤千差万别：
+    · 形状：格内 16 个块减去本格均值再除以标准差 → 与底色、整体明暗无关，
+      换皮肤也还是同一块图案。
+    · 明暗：格子的平均灰度单独留一维，用来分白子 / 黑子。
+    空格另存一套原型（平均灰度 + 形状强度），因为纯色格归一化后全是噪声。
+
+    身份来自程序自己的棋盘，只用「画面和棋盘确定一致」的帧学。
+    """
+
+    def __init__(self):
+        self.pieces = {}        # (char, parity) -> [形状和(16), 亮度和, 样本数]
+        self.empties = {}       # parity -> [亮度和, 形状强度和, 样本数]
+
+    def __len__(self):
+        return len(self.pieces) + len(self.empties)
+
+    def ready(self):
+        return len(self.pieces) >= 8 and len(self.empties) >= 1
+
+    def clear(self):
+        self.pieces.clear()
+        self.empties.clear()
+
+    @staticmethod
+    def parity(sq):
+        return ((sq >> 3) + (sq & 7)) & 1
+
+    def add(self, sig, board, flip=False, skip=None):
+        for sq in range(64):
+            if skip and sq in skip:
+                continue
+            ch = board[sq]
+            par = self.parity(sq)
+            v, m, sd = cell_stats(sig, to_screen(sq, flip))
+            if ch == ".":
+                e = self.empties.get(par)
+                if e is None:
+                    self.empties[par] = [float(m), float(sd), 1]
+                elif e[2] < TPL_MAX:
+                    e[0] += m
+                    e[1] += sd
+                    e[2] += 1
+                continue
+            z = shape_of(v, m, sd)
+            e = self.pieces.get((ch, par))
+            if e is None:
+                self.pieces[(ch, par)] = [[x for x in z], float(m), 1]
+            elif e[2] < TPL_MAX:
+                for i in range(16):
+                    e[0][i] += z[i]
+                e[1] += m
+                e[2] += 1
+
+    def classify(self, sig, sq):
+        """返回 (身份, 偏差)。偏差是「平均每块差多少灰度」，越小越可信。"""
+        par = self.parity(sq)
+        v, m, sd = cell_stats(sig, sq)
+
+        # 先看是不是空格：纯色格形状强度低，灰度也贴近学到的底色
+        e = self.empties.get(par)
+        if e:
+            m0, sd0 = e[0] / e[2], e[1] / e[2]
+            dm = abs(m - m0)
+            # 亮度接近 + 图案强度和空格原型接近 → 空格。
+            # 只用亮度不够：浅底上的白子在整格均值上跟空格几乎一样。
+            if dm < 18 and sd < max(6.0, sd0 + 8.0):
+                return ".", dm
+
+        z = shape_of(v, m, sd)
+        best, bestd = None, 1e18
+        for (ch, p), (zs, ms, n) in self.pieces.items():
+            if p != par:
+                continue
+            d = 0.0
+            for i in range(16):
+                t = zs[i] / n - z[i]
+                d += BLK_W[i] * t * t
+            d /= BLK_W_SUM
+            # 明暗差折算成同一量纲：灰度差 40 记作 1
+            lt = (ms / n - m) / 40.0
+            d += lt * lt
+            if d < bestd:
+                bestd, best = d, ch
+        if best is None:
+            return None, 1e18
+        # 形状距离开方后 × 30，凑成「大致等于多少灰度差」，好跟阈值比
+        return best, (bestd ** 0.5) * 30.0
+
+
 # ─────────────────────────── 鼠标 ───────────────────────────
 def enable_dpi_awareness():
     """坐标系必须和截图一致，否则高 DPI 下框选与点击会整体偏移。"""
@@ -751,6 +1068,16 @@ class App(tk.Tk):
         self.expect = None            # 我方刚走那手在真实棋盘上的变化格
         self.expect_at = 0.0
         self.our_move_at = 0.0
+        self.book = PieceBook()        # 棋子形状记忆库
+        self.book_msg = ""
+        self.board_at = 0.0            # 内部局面最后一次「确认与画面一致」的时间
+        self.learn_at = 0.0
+        self._view_photo = None
+        self._view_im = None
+        self._view_marks = []
+        self.rect = (0.0, 0.0, 1.0)     # 自动对齐后的采样范围（归一化 left/top/size）
+        self._raw = None                # 最近一次抓到的整块区域，手动微调时用
+        self._drag = None
         self.rebase_pending = False   # 手动补录后要求重取基线
         self.region = None
         self.shot_base = None
@@ -763,6 +1090,7 @@ class App(tk.Tk):
         self._load_config()
         self.new_game(silent=True)
         self.after(60, self._pump_ui)
+        self.after(600, self._first_view)
         self.after(200, self._startup_move)
 
     def _pump_ui(self):
@@ -831,7 +1159,31 @@ class App(tk.Tk):
         self.btn_scan = tk.Button(row3, text="② 开始识别", command=self.toggle_scan)
         self.btn_scan.pack(side="left", padx=6)
         tk.Button(row3, text="清区域", command=self.clear_region).pack(side="left")
-        tk.Button(row3, text="重取基线", command=self.rebase).pack(side="left", padx=6)
+
+        row3b = tk.Frame(g2, bg="#fbf7ec")
+        row3b.pack(fill="x", padx=8, pady=(0, 4))
+        tk.Button(row3b, text="⌖ 自动对齐", command=self.do_align).pack(side="left")
+        tk.Button(row3b, text="③ 学棋子", command=self.learn_now).pack(side="left", padx=6)
+        tk.Button(row3b, text="重取基线", command=self.rebase).pack(side="left")
+
+        # 识别区域：程序实际截到的那一块，带 8×8 网格和识别标记
+        self.view = tk.Canvas(g2, width=248, height=248, bg="#12130f",
+                              highlightthickness=1, highlightbackground="#4a4a3c")
+        self.view.pack(padx=8, pady=(0, 4))
+        self.view.create_text(124, 124, text="框完棋盘这里会显示程序看到的画面",
+                              fill="#7d7660", font=("Microsoft YaHei UI", 9))
+        self.view.bind("<ButtonPress-1>", self._view_down)
+        self.view.bind("<B1-Motion>", self._view_move)
+        self.view.bind("<ButtonRelease-1>", self._view_up)
+        self.view.bind("<MouseWheel>", self._view_wheel)
+        rowb = tk.Frame(g2, bg="#fbf7ec")
+        rowb.pack(fill="x", padx=8, pady=(0, 6))
+        self.book_label = tk.Label(rowb, text="棋子库：空（点「③ 学棋子」采集）",
+                                   bg="#fbf7ec", fg="#8a8266", font=("Consolas", 9),
+                                   anchor="w", justify="left", wraplength=250)
+        self.book_label.pack(side="left", fill="x", expand=True)
+        tk.Button(rowb, text="重置", command=self.reset_book).pack(side="right")
+
         row4 = tk.Frame(g2, bg="#fbf7ec")
         row4.pack(fill="x", padx=8, pady=(0, 6))
         tk.Checkbutton(row4, text="自动落子（模拟鼠标）", variable=tk.BooleanVar(value=False),
@@ -1042,6 +1394,7 @@ class App(tk.Tk):
         # 否则落后的基线会一直跟画面对不上，后面每一手都认不出。
         self.rebase_pending = True
         self.our_move_at = time.time()
+        self.board_at = time.time()
         self._maybe_reply()
 
     def check_end(self):
@@ -1077,6 +1430,7 @@ class App(tk.Tk):
         self.refresh_legal()
         self.refresh_log()
         self.draw()
+        self.board_at = time.time()
         self.status.set("轮到你 · 对手：%s" % san)
 
     def _insufficient(self):
@@ -1250,7 +1604,12 @@ class App(tk.Tk):
     # ---------- 识图 ----------
     def clear_region(self):
         self.region = None
+        self.shot_base = None
+        self._view_photo = None
         self.region_label.config(text="未选择区域")
+        self.view.delete("all")
+        self.view.create_text(124, 124, text="框完棋盘这里会显示程序看到的画面",
+                              fill="#7d7660", font=("Microsoft YaHei UI", 9))
         self._save_config()
 
     def pick_region(self):
@@ -1307,7 +1666,12 @@ class App(tk.Tk):
             self._save_config()
             win.destroy()
             self.deiconify()
-            self.result.config(text="已框住棋盘，点「开始识别」。")
+            self.shot_base = None
+            self._view_marks = []
+            self.rect = (0.0, 0.0, 1.0)
+            self.do_align(quiet=True)      # 手拖的框基本不可能刚好贴住格子，先自动对一遍
+            self.result.config(text="已框住棋盘并自动对齐（下面就是程序实际看到的画面）。"
+                                    "点「开始识别」。")
 
         cv.bind("<ButtonPress-1>", on_down)
         cv.bind("<B1-Motion>", on_move)
@@ -1324,6 +1688,7 @@ class App(tk.Tk):
         if not self.region:
             messagebox.showinfo("还没框棋盘", "先点「① 框选棋盘」把屏幕上的棋盘框进去。")
             return
+        self.do_align(quiet=True)
         self.running = True
         self.shot_base = None
         self.expect = None
@@ -1333,6 +1698,193 @@ class App(tk.Tk):
         self.result.config(text="识别中：你在那边下，我这边读。")
         threading.Thread(target=self._scan_loop, daemon=True).start()
 
+    def _first_view(self):
+        """上次存的区域还在：启动就把那块画面画出来。"""
+        if not self.region:
+            return
+        try:
+            self._paint_view(self._crop(self._grab()))
+        except Exception:                    # noqa: BLE001
+            pass
+
+    def _board_read(self, sig, skip=None, scores=None, sens=None):
+        """用棋子库把整盘读一遍：返回 (与内部局面不同的格, 是否可信, 认不准的格数)。
+
+        光「认出来的身份和棋盘不一样」还不够——上一步的黄色高亮会让空格长得像棋子，
+        所以再加一条：这一格的灰度必须也确实变过（差分会给分）。两条都满足才算差异，
+        这样高亮、图标边缘、轻微抖动都不会混进来。
+        """
+        if not self.book.ready():
+            return [], False, 64
+        diff, unsure = [], 0
+        flip = self.flip()
+        for sq in range(64):
+            if skip and sq in skip:
+                continue
+            ch, d = self.book.classify(sig, sq)
+            if ch is None or d > TPL_TRUST:
+                unsure += 1
+                continue
+            if ch != self.st["board"][sq]:
+                if scores is not None and sens:
+                    if scores[to_screen(sq, flip)] < sens * 0.6:
+                        continue          # 灰度几乎没动：多半是高亮，不当走子证据
+                diff.append(sq)
+        return diff, unsure <= 3, unsure
+
+    def _learn(self, sig, force=False):
+        """在「画面和内部棋盘确定一致」的帧上记住每格图案。
+
+        学过之后再学要先自检：用现有库读这帧，如果认不准或者读出来跟棋盘本来就不一样，
+        说明这帧的标注不可靠（比如我方那手还没落到真实棋盘），宁可不学。
+        """
+        skip = self._pending_squares()
+        if not force and self.book.ready():
+            diff, ok, _ = self._board_read(sig, skip)
+            if not ok or diff:
+                return False
+        self.book.add(sig, self.st["board"], self.flip(), skip)
+        self.learn_at = time.time()
+        return True
+
+    def _book_move(self, moves, book_diff, scores=None):
+        """整盘比对说这几格不一样，就找出正好走在这几格上的合法走法。
+
+        要求「走法影响的格子全在差异里」且多出来的差异不超过 2 格（半个子都不许差太多），
+        这样上一步的黄色高亮混进差异里也不会误判。
+        """
+        if not book_diff or len(book_diff) > 8:
+            return None
+        keys = set(to_screen(sq, self.flip()) for sq in book_diff)
+        cands = []
+        for mv in moves:
+            aff = set(affected_squares(mv, self.flip()))
+            if not aff or not aff <= keys:
+                continue
+            # 只允许 1 格噪声：整盘读偶尔会把高亮格认成棋子，容忍太多就会选错走法
+            if len(keys) - len(aff) > 1:
+                continue
+            # 排序用差分分数：真走子那两格变化大，光是高亮凑出来的组合分数低
+            heat = 0.0
+            if scores:
+                for s2 in aff:
+                    heat += scores[s2] if s2 < len(scores) else 0.0
+            cands.append((heat, len(aff), mv))
+        if not cands:
+            return None
+        cands.sort(key=lambda x: (-x[0], -x[1]))
+        if len(cands) > 1 and abs(cands[0][0] - cands[1][0]) < 1e-6 \
+                and cands[0][1] == cands[1][1]:
+            return None          # 两步一样像，宁可不猜
+        return cands[0][2]
+
+    def _pending_squares(self):
+        """我方那手还没落到真实棋盘时，那两格在画面上还是旧样子，学它会把标注弄错。"""
+        if not self.expect:
+            return None
+        flip = self.flip()
+        out = set()
+        for s in self.expect:
+            r, c = s >> 3, s & 7
+            out.add(((7 - r) * 8 + (7 - c)) if flip else (r * 8 + c))
+        return out
+
+    def book_summary(self):
+        chars = sorted(set(ch for ch, _ in self.book.pieces))
+        who = "全套" if len(chars) >= 12 else (" ".join(chars) if chars else "-")
+        return "棋子 %d 类 %s · 空格 %d 色" % (len(chars), who, len(self.book.empties))
+
+    def learn_now(self):
+        """手动学棋子：把你屏幕上这块棋盘的每一格按程序当前的局面记下来。
+
+        最理想是刚开一局、程序和画面是同一个局面时点一次——12 种棋子 + 2 种底色空格
+        一次就全了。之后「整盘重读」就有据可依。
+        """
+        if not self.region:
+            messagebox.showinfo("还没框棋盘", "先点「① 框选棋盘」把棋盘框进去。")
+            return
+        try:
+            img = self._crop(self._grab())
+            first = img_signature(img)
+            time.sleep(0.15)
+            img2 = self._crop(self._grab())
+        except Exception as e:               # noqa: BLE001
+            self._set_result("抓屏失败：%s" % e)
+            return
+        self._paint_view(img)
+        if img_signature(img2) != first:
+            self._set_result("画面还在动（棋子动画 / 闪烁），等它停稳再点「学棋子」。")
+            return
+        self._learn(first, force=True)
+        self._refresh_book_label()
+        self._set_result("已按当前局面学了：%s。\n若画面和程序里的局面不一样，"
+                         "点「重置棋子库」再把局面摆对后重学。" % self.book_summary())
+
+    def reset_book(self):
+        self.book.clear()
+        self._refresh_book_label()
+        self._set_result("棋子库已清空，画面稳定下来会重新学一遍。")
+
+    def _refresh_book_label(self):
+        n = len(self.book)
+        txt = "棋子库：空（点「③ 学棋子」采集）" if not n else self.book_summary()
+        if n and self.book_msg:
+            txt += " · " + self.book_msg
+        self.ui_queue.put(lambda t=txt: self.book_label.config(text=t))
+
+    def _paint_view(self, img=None, changed=None):
+        """把「程序实际看到的那块」画出来：截图形 + 8×8 网格 + 变化格/差异格标记。"""
+        cv = self.view
+        if img is not None:
+            self._view_im = img.convert("RGB").resize((248, 248))
+            self._view_photo = ImageTk.PhotoImage(self._view_im)
+        if self._view_photo is None:
+            return
+        cv.delete("all")
+        cv.create_image(0, 0, anchor="nw", image=self._view_photo)
+        step = 248 / 8.0
+        for i in range(9):
+            x = int(i * step)
+            cv.create_line(x, 0, x, 248, fill="#5fd68d", dash=(2, 4))
+            cv.create_line(0, x, 248, x, fill="#5fd68d", dash=(2, 4))
+        for tag, color in self._view_marks:
+            r, c = tag >> 3, tag & 7
+            cv.create_rectangle(int(c * step) + 1, int(r * step) + 1,
+                                int((c + 1) * step) - 1, int((r + 1) * step) - 1,
+                                outline=color, width=2)
+
+    def _view_down(self, e):
+        if self._raw is None:
+            return
+        self._drag = (e.x, e.y, self.rect)
+
+    def _view_move(self, e):
+        """在预览上按住拖 = 平移采样框；滚轮 = 缩放。自动对齐不准时自己拨一下。"""
+        if self._drag is None or self._raw is None:
+            return
+        x0, y0, rect = self._drag
+        l, t, k = rect
+        side = 248.0
+        l += (e.x - x0) / side * k
+        t += (e.y - y0) / side * k
+        self.rect = (l, t, k)
+        self.shot_base = None
+        self._paint_view(self._crop(self._raw))
+
+    def _view_up(self, e):
+        self._drag = None
+
+    def _view_wheel(self, e):
+        if self._raw is None:
+            return
+        k = self.rect[2] * (1.02 if e.delta > 0 else 0.98)
+        k = max(0.2, min(2.0, k))
+        l = self.rect[0] + (self.rect[2] - k) / 2.0
+        t = self.rect[1] + (self.rect[2] - k) / 2.0
+        self.rect = (l, t, k)
+        self.shot_base = None
+        self._paint_view(self._crop(self._raw))
+
     def rebase(self):
         """把基线对齐到当前画面：漏了一步、或棋盘被拖动/缩放过后手动点一下。"""
         self.shot_base = None
@@ -1341,20 +1893,58 @@ class App(tk.Tk):
         self.rebase_pending = False
         self._set_result("已重新对齐基线。")
 
+    def _crop(self, img):
+        """按对齐结果裁出真正的 8×8 棋盘。"""
+        l, t, k = self.rect
+        W, H = img.size
+        side = max(8, int(k * min(W, H)))
+        x0 = int(l * W)
+        y0 = int(t * H)
+        x0 = max(0, min(x0, max(0, W - side)))
+        y0 = max(0, min(y0, max(0, H - side)))
+        x1 = min(W, x0 + side)
+        y1 = min(H, y0 + side)
+        return img.crop((x0, y0, x1, y1))
+
+    def do_align(self, quiet=False):
+        """自动把采样范围对齐到棋盘的 8×8 格子。框歪一两个格子也能纠回来。"""
+        if not self.region:
+            if not quiet:
+                messagebox.showinfo("还没框棋盘", "先点「① 框选棋盘」把棋盘框进去。")
+            return False
+        try:
+            img = self._grab()
+        except Exception as e:               # noqa: BLE001
+            self._set_result("抓屏失败：%s" % e)
+            return False
+        aligned, rect = align_image(img)
+        self.rect = rect
+        self.shot_base = None
+        self._paint_view(aligned)
+        if not quiet:
+            self._set_result("已自动对齐：偏移 %+.1f%% / %+.1f%%，缩放 %.0f%%。"
+                             "\n下面这张就是程序实际分析的画面，格子应该正好压住棋盘。"
+                             % (rect[0] * 100, rect[1] * 100, rect[2] * 100))
+        return True
+
     def _grab(self):
         x1, y1, x2, y2 = self.region
-        return ImageGrab.grab(bbox=(x1, y1, x2, y2), all_screens=True)
+        img = ImageGrab.grab(bbox=(x1, y1, x2, y2), all_screens=True)
+        self._raw = img
+        return img
 
     def _scan_loop(self):
         """每 0.12 秒截一次，交给 _scan_step 判断。"""
         self._scan_still = 0
         self._scan_hinted = False
+        tick = 0
         while self.running:
             time.sleep(0.12)
             if self.busy or self.over:
                 continue
             try:
-                sig = img_signature(self._grab())
+                img = self._crop(self._grab())
+                sig = img_signature(img)
             except Exception:                # noqa: BLE001
                 continue
             try:
@@ -1363,6 +1953,11 @@ class App(tk.Tk):
                 # 识别线程绝不能因为一次异常就悄悄死掉（那表现出来就是「他走了我这边没反应」）
                 print("识图出错:", e)
                 time.sleep(0.3)
+                continue
+            tick += 1
+            if tick % 3 == 0:                # 约 0.36 秒刷新一次预览
+                marks = self._view_marks
+                self.ui_queue.put(lambda im=img, mk=marks: self._paint_view(im, mk))
 
     def _scan_step(self, sig):
         """拿当前帧跟基线比。基线只代表「真实棋盘上一次确认的画面」。
@@ -1378,17 +1973,39 @@ class App(tk.Tk):
             self.shot_base = sig
             self._scan_still = 0
             self._scan_hinted = False
-            self._set_result("已取基线，等你那边落子。")
+            self._view_marks = []
+            self._learn(sig, force=True)         # 先把眼下这盘的棋子形状记下来
+            self._refresh_book_label()
+            self._set_result("已取基线，并记住 %d 类棋子图案。" % len(self.book))
             return
 
         scores = sign_diff(self.shot_base, sig)
         sens = float(self.sens)
         changed = changed_squares(scores, sens)
 
+        # 形状记忆读整盘：同色子换位、浅底上的白子这类「棋子换了但灰度差不够」的格子，
+        # 差分看不见，整盘比对能补出来
+        marks = [(sq, "#f2d24a") for sq in changed]
+        book_diff, book_ok, book_unsure = self._board_read(sig, self._pending_squares(),
+                                                           scores, sens)
+        if book_ok:
+            for bsq in book_diff:
+                marks.append((to_screen(bsq, self.flip()), "#ff6b6b"))
+            self.book_msg = ("整盘 %d 处对不上" % len(book_diff)) if book_diff else "整盘一致"
+        elif self.book.ready():
+            self.book_msg = "认不准 %d 格" % book_unsure
+        self._view_marks = marks
+
         # 「稳定」按有没有格子在变来算，而不是按两张图逐字节相等：
         # 鼠标闪、时钟跳这种一两格的抖动会让逐字节比较永远不相等。
         settled = not changed
         self._scan_still = self._scan_still + 1 if settled else 0
+
+        # 画面稳定 + 局面刚确认过 → 把这一帧每格的图案再记一遍（多帧平均更稳）
+        if (settled and self.board_at and time.time() - self.board_at < 4.0
+                and time.time() - self.learn_at > 0.8):
+            if self._learn(sig):
+                self._refresh_book_label()
 
         # 手动补录之后：等画面停下来再对齐，免得把刚发生的变化当成对手的下一手
         if self.rebase_pending and settled and not self.expect:
@@ -1430,6 +2047,10 @@ class App(tk.Tk):
             opp_white = (self.human != "w")
             opp_legal = legal_moves(self.st["board"], opp_white, self.st)
             om, osc = match_move(scores, opp_legal, self.flip(), sens)
+            if not om and book_ok:
+                bm = self._book_move(opp_legal, book_diff, scores)
+                if bm:
+                    om, osc = bm, sens * 1.2
             if not om and self._scan_still >= 6:
                 # 每 0.7 秒把整块棋盘重扫一遍，阈值降到 55%：
                 # 单独捞那种图案偏淡、刚好卡在阈值下的走法
@@ -1450,6 +2071,10 @@ class App(tk.Tk):
 
         # ── 轮到对手：正常识别 ────────────────────────────────────
         m, sc = match_move(scores, self.legal, self.flip(), sens)
+        if not m and book_ok:
+            bm = self._book_move(self.legal, book_diff, scores)
+            if bm:
+                m, sc = bm, sens * 1.2
         if not m and changed and self._scan_still >= 6:
             m, sc = match_move(scores, self.legal, self.flip(), max(3.0, sens * 0.55))
         if not m:
