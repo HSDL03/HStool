@@ -1,0 +1,50 @@
+{
+  "name": "chess-auto",
+  "productName": "ChessAuto",
+  "version": "1.0.0",
+  "description": "国际象棋 · 自动应招（桌面版）",
+  "author": "HSDL03",
+  "license": "MIT",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^32.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "io.github.hsdl03.chessauto",
+    "productName": "国象应招器",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "ChessAuto-${version}.exe",
+      "signAndEditExecutable": false,
+      "sign": null
+    },
+    "portable": {
+      "artifactName": "ChessAuto-${version}.exe",
+      "requestExecutionLevel": "user"
+    },
+    "compression": "normal"
+  }
+}

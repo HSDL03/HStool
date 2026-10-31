@@ -140,6 +140,21 @@
   .scr-hint{font-size:11.5px;line-height:1.65;color:var(--muted);margin-top:6px}
   .scr-hint code{font:700 11px var(--mono);background:var(--bg);border:1px solid var(--bd);border-radius:3px;padding:0 4px}
 
+  /* ── 窗口选择（桌面版） ── */
+  .pick{position:fixed;inset:0;z-index:610;display:none;place-items:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
+  .pick.show{display:grid}
+  .pick .pbox{width:min(760px,94vw);max-height:86vh;display:flex;flex-direction:column;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:0 20px 56px rgba(0,0,0,.38)}
+  .pick .phead{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:2px solid var(--bd)}
+  .pick .phead b{font-size:13.5px}
+  .pick .phead span{flex:1;font-size:11.5px;color:var(--muted)}
+  .pick .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:9px;padding:12px 14px;overflow:auto}
+  .pick .src{display:flex;flex-direction:column;gap:6px;padding:7px;cursor:pointer;text-align:left;
+    background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);color:var(--text);font-family:inherit}
+  .pick .src:hover{border-color:var(--ac);background:var(--acs)}
+  .pick .src img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:4px;background:#0c0d10}
+  .pick .src em{font:700 11.5px var(--mono);font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pick .pfoot{display:flex;justify-content:flex-end;padding:0 14px 12px}
+
   /* ── 升变选择 ── */
   .promo{
     position:fixed;inset:0;z-index:600;display:none;place-items:center;
@@ -281,6 +296,10 @@
             <input type="range" id="scrSens" min="6" max="40" step="1" value="14">
             <b id="scrSensVal">14</b>
           </div>
+          <label class="sw" id="scrPinRow" hidden>
+            <input type="checkbox" id="scrPin">
+            <span>窗口置顶（方便盖在棋盘旁边）</span>
+          </label>
           <div class="scr-status" id="scrStatus">在预览上拖一个框，把整块棋盘框进去（含最外圈格子）。</div>
           <div class="scr-hint">框好后点「开始识别」：你在别处照常下，这边自动读出对手走了哪步并给你应手。
             鼠标扫过棋盘可能误判，把灵敏度往上调一点即可。</div>
@@ -321,6 +340,18 @@
     </div>
   </div>
 </main>
+
+<div class="pick" id="pick">
+  <div class="pbox">
+    <div class="phead">
+      <b>选要共享的窗口</b>
+      <span>选那个开着棋盘的窗口 / 整屏</span>
+      <button class="btn" id="pickRefresh">刷新</button>
+    </div>
+    <div class="plist" id="pickList"></div>
+    <div class="pfoot"><button class="btn" id="pickCancel">取消</button></div>
+  </div>
+</div>
 
 <div class="promo" id="promo">
   <div class="box">
@@ -1864,10 +1895,61 @@ function scTick(){
   doMove(m);                               /* 会自动触发我方应招 */
 }
 
+/* 桌面版：列窗口 → 选一个 → 交给主进程 */
+function scAskSource(){
+  return new Promise(function(resolve){
+    var panel = document.getElementById('pick');
+    var list = document.getElementById('pickList');
+    var done = false;
+    function finish(id){
+      if (done) return;
+      done = true;
+      panel.classList.remove('show');
+      resolve(id);
+    }
+    function fill(){
+      list.innerHTML = '<div class="idle" style="grid-column:1/-1;color:var(--muted);font-size:12px">正在列窗口…</div>';
+      window.hsDesktop.listSources().then(function(items){
+        if (done) return;
+        if (!items || !items.length){
+          list.innerHTML = '<div class="idle" style="grid-column:1/-1;color:var(--warn);font-size:12px">没列到窗口，点「刷新」再试。</div>';
+          return;
+        }
+        list.innerHTML = '';
+        items.forEach(function(it){
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'src';
+          var img = document.createElement('img');
+          img.src = it.thumb;
+          img.alt = '';
+          var em = document.createElement('em');
+          em.textContent = it.name;
+          b.appendChild(img);
+          b.appendChild(em);
+          b.addEventListener('click', function(){ finish(it.id); });
+          list.appendChild(b);
+        });
+      }).catch(function(){
+        list.innerHTML = '<div class="idle" style="grid-column:1/-1;color:var(--dgr);font-size:12px">列窗口失败，用「刷新」重试。</div>';
+      });
+    }
+    document.getElementById('pickCancel').onclick = function(){ finish(null); };
+    document.getElementById('pickRefresh').onclick = fill;
+    panel.classList.add('show');
+    fill();
+  });
+}
+
 async function scShare(){
   if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
     HS.toast('这个浏览器不支持屏幕捕捉，用 Edge / Chrome 打开', { icon: '⚠️' });
     return;
+  }
+  if (window.hsDesktop && window.hsDesktop.isDesktop){
+    var sid = await scAskSource();
+    if (!sid) return;
+    await window.hsDesktop.pick(sid);
   }
   try {
     SC.stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 12 }, audio: false });
@@ -2084,6 +2166,15 @@ SC.stage.addEventListener('pointerdown', scBoxDragStart);
 SC.stage.addEventListener('pointermove', scBoxDragMove);
 SC.stage.addEventListener('pointerup', scBoxDragEnd);
 SC.stage.addEventListener('pointercancel', function(){ scDrag = null; });
+
+/* 桌面版（Electron）多给一个置顶开关 */
+if (window.hsDesktop && window.hsDesktop.isDesktop){
+  var pinRow = document.getElementById('scrPinRow');
+  pinRow.hidden = false;
+  document.getElementById('scrPin').addEventListener('change', function(e){
+    window.hsDesktop.pin(e.target.checked);
+  });
+}
 
 /* 键盘：左右箭头悔棋/重做太容易误触，只留 Esc 关升变 */
 document.addEventListener('keydown', function(e){

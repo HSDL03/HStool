@@ -103,10 +103,12 @@ python -m http.server 8000     # 或 npx serve .
 ├─ scripts/
 │  ├─ check.mjs            站点自检脚本（CI 与本地共用）
 │  ├─ serve-local.mjs      本地静态服务（8787，含自动开浏览器）
+│  ├─ build-chess-exe.mjs  打包国象应招器桌面版（借 offline/ 的 electron）
 │  ├─ build-offline.mjs    离线版打包（只挑 noDB 条目）
 │  └─ guard.mjs            命令熔断器（超时自动杀进程换方案）
 │
 ├─ offline/                Electron 打包工程（构建产物不入库）
+├─ desk/chess/             国象应招器桌面版（Electron + desktopCapturer 选窗口）
 └─ .github/workflows/check.yml   push / PR 时自动跑自检
 ```
 
@@ -152,9 +154,36 @@ python -m http.server 8000     # 或 npx serve .
 | 答辩 Wiki | 章节树 + 全文搜索 + 阅读进度 |
 | 数据后台 | 用 GitHub Token 提交 JSON 改动 |
 
-## 本地版（屏幕识别作弊）
+## 桌面版 exe / 本地版（屏幕识别作弊）
 
-国象应招器可以**直接读你屏幕上的棋盘**：在本机起个服务，框住对手的棋盘，你在那边照常下，这边自动读出他走了哪步、给你应手。
+国象应招器可以**直接读你屏幕上的棋盘**：框住对手的棋盘，你在那边照常下，这边自动读出他走了哪步、给你应手。
+
+**桌面版 exe（推荐）**：`desk/py` 是 Python + tkinter 的独立程序，识图与自动落子都在本地。
+
+```bash
+cd desk/py && build.cmd        # 或：py -m PyInstaller --onefile --windowed --name 国象应招器 chess_assist.py
+# → desk/py/dist/国象应招器.exe
+```
+
+- **识图**：点「① 框选棋盘」拖框，点「② 开始识别」。程序每 0.26 秒截一次那块区域，
+  按「哪几格变了」去当前局面的合法走法里找对得上的那一步（易位 4 格、吃过路兵 3 格都处理），
+  不认棋子长相，换什么棋盘皮肤都能用。
+- **自动**：轮到你就自动算并落子；勾上「自动落子（模拟鼠标）」后，还会在真实棋盘上替你点两下走完。
+- 手动兜底：点自己的棋盘、或输入 `e2e4` / `Nf3` / `O-O`。
+- 规则与网页版同一套（易位 / 吃过路兵 / 升变 / 将杀 / 逼和 / 50 回合 / 三次重复 / 子力不足），perft 与 chess.js 对齐。
+
+**旧的 Electron 版**（`desk/chess`，需要联网拉 nsis/winCodeSign，网络差时容易卡）：
+屏幕捕捉走 `desktopCapturer`，点「① 选屏幕 / 窗口」弹缩略图让你挑。
+
+```bash
+node scripts/build-chess-exe.mjs    # → desk/chess/dist/ChessAuto-<版本>.exe
+# 或开发时直接跑：
+cd desk/chess && npm start
+```
+
+特性：便携单文件、不写注册表；额外带「窗口置顶」，方便把它盖在棋盘窗口旁边。
+
+**网页本地版**（没装 exe 时用）：
 
 ```bash
 # Windows：直接双击仓库根目录的 start-local.cmd
