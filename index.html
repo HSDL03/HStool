@@ -103,6 +103,85 @@
 @media(max-width:640px){
   .hero{padding:14px 0 18px}
 }
+
+/* ── 卡片右键菜单（样式沿用聊天室那套：浮起、描边、danger 项） ── */
+.ctx-menu{
+  position:fixed;z-index:520;min-width:158px;padding:5px;display:flex;flex-direction:column;gap:2px;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:3px 3px 0 rgba(0,0,0,.28);
+  opacity:0;visibility:hidden;transform:translateY(-4px) scale(.97);
+  transition:opacity .14s ease-out,visibility .14s,transform .14s cubic-bezier(.34,1.56,.64,1);
+  user-select:none;
+}
+.ctx-menu.show{opacity:1;visibility:visible;transform:none}
+.ctx-menu button{
+  display:flex;align-items:center;gap:10px;padding:7px 12px;font-size:13px;font-family:inherit;font-weight:600;
+  text-align:left;color:var(--text);background:transparent;border:none;border-radius:calc(var(--r) - 1px);
+  cursor:pointer;transition:background .12s,color .12s;
+}
+.ctx-menu button:hover{background:var(--acs);color:var(--ac)}
+.ctx-menu button .ctx-ic{flex:none;width:16px;text-align:center;font-size:14px;line-height:1}
+.ctx-menu button .ctx-tx{flex:1}
+.ctx-menu button.danger:hover{background:rgba(160,32,32,.14);color:var(--dgr)}
+.ctx-menu .ctx-sep{height:1px;margin:3px 6px;background:var(--bd);flex:none}
+[data-theme^="github-"] .ctx-menu{border-width:1px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+[data-theme^="github-"] .ctx-menu button{border-radius:6px}
+
+/* 卡片上的置顶 / 收藏标记 */
+.card .badge.pin{color:var(--ac);border-color:var(--ac)}
+.card .badge.star{color:var(--ac2);border-color:var(--ac2)}
+
+/* ── 设置抽屉 ── */
+.iconbtn.has-dot{position:relative}
+.iconbtn.has-dot::after{
+  content:attr(data-n);position:absolute;top:-2px;right:-3px;min-width:14px;height:14px;padding:0 3px;
+  display:grid;place-items:center;font-size:9.5px;font-weight:800;line-height:1;
+  color:#fff;background:var(--dgr);border-radius:999px;border:1px solid var(--topbar-bg,var(--bg));
+}
+.set-mask{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.34);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.set-mask.show{opacity:1;visibility:visible}
+.set-panel{
+  position:fixed;top:0;right:0;bottom:0;z-index:501;width:360px;max-width:92vw;
+  display:flex;flex-direction:column;background:var(--bg);border-left:2px solid var(--bd2);
+  box-shadow:-6px 0 26px rgba(0,0,0,.2);
+  transform:translateX(100%);visibility:hidden;transition:transform .24s cubic-bezier(.34,1.24,.64,1),visibility .24s;
+}
+.set-panel.show{transform:none;visibility:visible}
+.set-head{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:2px solid var(--bd);font-size:14px;font-weight:800}
+.set-head .sp{flex:1}
+.set-body{flex:1;overflow:auto;padding:2px 14px 26px}
+.set-sec{margin-top:16px}
+.set-sec>h3{margin:0 0 8px;font-size:11px;letter-spacing:.08em;color:var(--muted);font-weight:800;text-transform:uppercase}
+.set-list{display:flex;flex-direction:column;gap:6px}
+.set-sub{display:flex;align-items:center;gap:5px;margin:11px 0 5px;font-size:11.5px;font-weight:800;color:var(--muted)}
+.set-sub span{font-weight:700;color:var(--faint)}
+.set-list:first-of-type{margin-top:0}
+.set-row{
+  display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:12.5px;
+  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);
+}
+.set-row .ri{width:18px;height:18px;flex:none;display:grid;place-items:center;font-size:13px;line-height:1}
+.set-row .ri img{width:18px;height:18px;object-fit:contain;display:block}
+.set-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.set-row .mini{
+  flex:none;padding:3px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;
+  color:var(--muted);background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) - 1px);
+  transition:color .12s,border-color .12s;
+}
+.set-row .mini:hover{color:var(--ac);border-color:var(--ac)}
+.set-row .mini.danger:hover{color:var(--dgr);border-color:var(--dgr)}
+.set-empty{font-size:12px;color:var(--faint);padding:2px 1px 4px}
+.set-tip{font-size:11.5px;line-height:1.55;color:var(--faint);margin:8px 0 0}
+.theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.theme-grid button{
+  display:flex;align-items:center;gap:7px;padding:6px 8px;font-size:12px;font-weight:700;font-family:inherit;
+  color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;
+  transition:border-color .12s,color .12s;
+}
+.theme-grid button:hover{border-color:var(--ac)}
+.theme-grid button[aria-pressed="true"]{border-color:var(--ac);color:var(--ac);background:var(--acs)}
+.theme-grid .sw{width:14px;height:14px;border-radius:3px;flex:none;border:1px solid var(--bd2)}
+@media print{.ctx-menu,.set-mask,.set-panel{display:none}}
 </style>
 </head>
 <body>
@@ -120,6 +199,7 @@
   </div>
   <button class="iconbtn" id="btnPalette" data-sm-hide title="打开命令面板 (Ctrl+K)" aria-label="命令面板">⌘</button>
   <button class="iconbtn" id="btnReload" title="重新拉取数据" aria-label="刷新">🔄</button>
+  <button class="iconbtn" id="btnSet" title="设置（含已隐藏的卡片）" aria-label="设置">⚙️</button>
   <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
 </header>
 
@@ -158,6 +238,7 @@
           <option value="name">按名称</option>
           <option value="tag">按分类</option>
         </select>
+        <button type="button" class="btn sm" id="btnFav" aria-pressed="false" title="只看收藏（右键卡片可收藏）">⭐ 收藏</button>
         <span class="spacer"></span>
         <span class="faint" style="font-size:11.5px" id="resultInfo"></span>
       </div>
@@ -198,6 +279,50 @@
   </div>
 </footer>
 
+<!-- 卡片右键菜单 -->
+<div class="ctx-menu" id="ctxMenu" role="menu" aria-label="卡片操作">
+  <button type="button" data-ctx="open" role="menuitem"><span class="ctx-ic">↗</span><span class="ctx-tx">打开</span></button>
+  <div class="ctx-sep"></div>
+  <button type="button" data-ctx="pin" role="menuitem"><span class="ctx-ic">📌</span><span class="ctx-tx">置顶</span></button>
+  <button type="button" data-ctx="fav" role="menuitem"><span class="ctx-ic">⭐</span><span class="ctx-tx">收藏</span></button>
+  <button type="button" data-ctx="hide" class="danger" role="menuitem"><span class="ctx-ic">🙈</span><span class="ctx-tx">隐藏</span></button>
+</div>
+
+<!-- 设置抽屉：隐藏的卡片都收在这里 -->
+<div class="set-mask" id="setMask" hidden></div>
+<aside class="set-panel" id="setPanel" aria-label="设置" aria-hidden="true">
+  <div class="set-head">
+    <span>⚙️ 设置</span><span class="sp"></span>
+    <button type="button" class="iconbtn" id="setClose" title="关闭" aria-label="关闭">✕</button>
+  </div>
+  <div class="set-body">
+    <section class="set-sec">
+      <h3>外观</h3>
+      <div class="theme-grid" id="setThemes"></div>
+    </section>
+
+    <section class="set-sec">
+      <h3>我的卡片</h3>
+      <div class="set-sub">📌 置顶 <span id="setPinN">0</span></div>
+      <div class="set-list" id="setPinList"></div>
+      <div class="set-sub">⭐ 收藏 <span id="setFavN">0</span></div>
+      <div class="set-list" id="setFavList"></div>
+      <div class="set-sub">🙈 已隐藏 <span id="setHideN">0</span></div>
+      <div class="set-list" id="setHideList"></div>
+      <p class="set-tip">在任意卡片上点右键（手机长按）就能置顶、收藏或隐藏；隐藏只是不在首页显示，随时能在这里恢复。</p>
+    </section>
+
+    <section class="set-sec">
+      <h3>数据</h3>
+      <div class="set-list">
+        <div class="set-row"><span class="ri">🔄</span><span class="nm">重新拉取工具列表</span><button type="button" class="mini" data-set="reload">刷新</button></div>
+        <div class="set-row"><span class="ri">🕘</span><span class="nm">最近打开记录</span><button type="button" class="mini danger" data-set="clear-recent">清空</button></div>
+        <div class="set-row"><span class="ri">🧹</span><span class="nm">本地缓存（数据 + 卡片偏好）</span><button type="button" class="mini danger" data-set="clear-all">清除</button></div>
+      </div>
+    </section>
+  </div>
+</aside>
+
 <script src="./assets/js/core.js"></script>
 <script>
 (function () {
@@ -211,8 +336,30 @@
 
   var TOOLS = [];
   var K_RECENT = 'hs-recent';
+  /* 卡片偏好：置顶 / 收藏 / 隐藏，只存在本机 */
+  var K_PIN = 'hs-card-pin', K_FAV = 'hs-card-fav', K_HIDE = 'hs-card-hide';
+  var PREF = {
+    pin: HS.store.json(K_PIN, []),
+    fav: HS.store.json(K_FAV, []),
+    hide: HS.store.json(K_HIDE, [])
+  };
+  function savePref(key) {
+    var map = { pin: K_PIN, fav: K_FAV, hide: K_HIDE };
+    HS.store.setJson(map[key], PREF[key]);
+  }
+  function has(list, id) { return list.indexOf(id) !== -1; }
+  function inPref(key, id) { return has(PREF[key], id); }
+  function togglePref(key, id) {
+    if (inPref(key, id)) PREF[key] = PREF[key].filter(function (x) { return x !== id; });
+    else PREF[key] = [id].concat(PREF[key]);
+    savePref(key);
+  }
+  function toolById(id) {
+    for (var i = 0; i < TOOLS.length; i++) if (TOOLS[i].id === id) return TOOLS[i];
+    return null;
+  }
   var state = {
-    q: '', tag: '__all__', db: '__all__', sort: 'default',
+    q: '', tag: '__all__', db: '__all__', sort: 'default', favOnly: false,
     view: HS.store.get('hs-view', 'grid')
   };
 
@@ -376,7 +523,10 @@
       '<div class="cinfo">' +
       '<div class="cname">' + HS.esc(t.name) + '</div>' +
       (t.desc ? '<div class="cdesc">' + HS.esc(t.desc) + '</div>' : '') +
-      '<div class="cmeta"><span class="badge">' + HS.esc(t.tag) + '</span>' + dbBadge +
+      '<div class="cmeta">' +
+      (inPref('pin', t.id) ? '<span class="badge pin" title="已置顶">📌 置顶</span>' : '') +
+      (inPref('fav', t.id) ? '<span class="badge star" title="已收藏">⭐ 收藏</span>' : '') +
+      '<span class="badge">' + HS.esc(t.tag) + '</span>' + dbBadge +
       (t.disabled ? '<span class="badge dgr">停用</span>' : '') +
       (external ? '<span class="badge muted">↗ 站外</span>' : '') +
       '</div></div>' +
@@ -393,7 +543,10 @@
           glow.style.top = (e.clientY - r.top) + 'px';
         });
       }
-      c.addEventListener('click', function () { pushRecent(c.getAttribute('data-id')); });
+      c.addEventListener('click', function (e) {
+        if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
+        pushRecent(c.getAttribute('data-id'));
+      });
     });
   }
 
@@ -410,7 +563,7 @@
     var wrap = document.getElementById('recentWrap');
     var row = document.getElementById('recentRow');
     var items = ids.map(function (id) {
-      return TOOLS.filter(function (t) { return t.id === id; })[0];
+      return TOOLS.filter(function (t) { return t.id === id && !inPref('hide', id); })[0];
     }).filter(Boolean);
     if (!items.length) { wrap.hidden = true; return; }
     row.innerHTML = items.map(function (t) {
@@ -422,9 +575,11 @@
   }
 
   /* ── 筛选与渲染 ── */
-  function visible() { return TOOLS.filter(function (t) { return !t.hidden; }); }
+  /* hidden=true 是数据层面下架；hide 是用户本机收起来的，两类都不在首页显示 */
+  function visible() { return TOOLS.filter(function (t) { return !t.hidden && !inPref('hide', t.id); }); }
 
   function passed(t) {
+    if (state.favOnly && !inPref('fav', t.id)) return false;
     if (state.tag !== '__all__' && (t.tag || '工具') !== state.tag) return false;
     if (state.db === '__db__' && t.category !== 'needDB') return false;
     if (state.db === '__nodb__' && t.category !== 'noDB') return false;
@@ -442,6 +597,14 @@
       var c = (a.tag || '').localeCompare(b.tag || '', 'zh');
       return c !== 0 ? c : a.name.localeCompare(b.name, 'zh');
     });
+    else {
+      /* 默认排序里，置顶的按置顶顺序排在最前 */
+      arr = arr.map(function (t, i) {
+        var k = PREF.pin.indexOf(t.id);
+        return { t: t, k: k < 0 ? 1e9 : k, i: i };
+      }).sort(function (a, b) { return (a.k - b.k) || (a.i - b.i); })
+        .map(function (x) { return x.t; });
+    }
     return arr;
   }
 
@@ -485,9 +648,10 @@
 
     document.getElementById('cntActive').textContent = shown.length;
     document.getElementById('resultInfo').textContent =
-      (state.q || state.tag !== '__all__' || state.db !== '__all__')
+      ((state.q || state.tag !== '__all__' || state.db !== '__all__' || state.favOnly)
         ? '筛选出 ' + shown.length + ' / ' + active.length + ' 个'
-        : '共 ' + active.length + ' 个工具';
+        : '共 ' + active.length + ' 个工具') +
+      (PREF.hide.length ? ' · 已隐藏 ' + PREF.hide.length : '');
     document.getElementById('emptyBox').hidden = shown.length > 0;
 
     var depWrap = document.getElementById('depWrap');
@@ -506,6 +670,7 @@
 
     renderChips();
     renderRecent();
+    renderPrefsUI();
     HS.reveal();
   }
 
@@ -536,8 +701,13 @@
     state.sort = e.target.value;
     render();
   });
+  document.getElementById('btnFav').addEventListener('click', function () {
+    state.favOnly = !state.favOnly;
+    render();
+    HS.toast(state.favOnly ? '只看收藏的卡片' : '显示全部卡片', { icon: '⭐' });
+  });
   document.getElementById('btnReset').addEventListener('click', function () {
-    state.q = ''; state.tag = '__all__'; state.db = '__all__';
+    state.q = ''; state.tag = '__all__'; state.db = '__all__'; state.favOnly = false;
     document.getElementById('q').value = '';
     render();
   });
@@ -606,6 +776,216 @@
       .finally(done);
   }
 
+  /* ── 卡片右键：置顶 / 收藏 / 隐藏 ── */
+  var ctxMenu = document.getElementById('ctxMenu');
+  var ctxId = null, suppressClick = false;
+
+  function openCtxMenu(x, y, id) {
+    var t = toolById(id);
+    if (!t) return;
+    ctxId = id;
+    var pinned = inPref('pin', id), faved = inPref('fav', id);
+    var pinBtn = ctxMenu.querySelector('[data-ctx="pin"]');
+    var favBtn = ctxMenu.querySelector('[data-ctx="fav"]');
+    pinBtn.querySelector('.ctx-ic').textContent = pinned ? '📍' : '📌';
+    pinBtn.querySelector('.ctx-tx').textContent = pinned ? '取消置顶' : '置顶到最前';
+    favBtn.querySelector('.ctx-ic').textContent = faved ? '☆' : '⭐';
+    favBtn.querySelector('.ctx-tx').textContent = faved ? '取消收藏' : '收藏';
+    ctxMenu.querySelector('[data-ctx="open"] .ctx-tx').textContent = isExternal(t.url) ? '打开（站外）' : '打开';
+    ctxMenu.classList.add('show');
+    var w = ctxMenu.offsetWidth || 168, h = ctxMenu.offsetHeight || 170;
+    var left = Math.min(x, window.innerWidth - w - 8);
+    var top = Math.min(y, window.innerHeight - h - 8);
+    ctxMenu.style.left = Math.max(8, left) + 'px';
+    ctxMenu.style.top = Math.max(8, top) + 'px';
+  }
+  function closeCtxMenu() {
+    ctxMenu.classList.remove('show');
+    ctxId = null;
+  }
+
+  ctxMenu.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ctx]');
+    if (!b || !ctxId) return;
+    var id = ctxId, t = toolById(id), act = b.getAttribute('data-ctx');
+    closeCtxMenu();
+    if (!t) return;
+    if (act === 'open') {
+      if (isExternal(t.url)) window.open(absUrl(t.url), '_blank', 'noopener');
+      else location.href = absUrl(t.url);
+      return;
+    }
+    if (act === 'pin') {
+      togglePref('pin', id);
+      HS.toast(inPref('pin', id) ? '已置顶：' + t.name : '已取消置顶：' + t.name, { icon: '📌' });
+    } else if (act === 'fav') {
+      togglePref('fav', id);
+      HS.toast(inPref('fav', id) ? '已收藏：' + t.name : '已取消收藏：' + t.name, { icon: '⭐' });
+    } else if (act === 'hide') {
+      if (inPref('pin', id)) { PREF.pin = PREF.pin.filter(function (x) { return x !== id; }); savePref('pin'); }
+      if (!inPref('hide', id)) { PREF.hide = [id].concat(PREF.hide); savePref('hide'); }
+      HS.toast('已隐藏：' + t.name + '（设置里可恢复）', { icon: '🙈' });
+    }
+    render();
+  });
+
+  document.addEventListener('contextmenu', function (e) {
+    var card = e.target.closest('a.card');
+    if (!card) { if (ctxMenu.classList.contains('show')) closeCtxMenu(); return; }
+    var id = card.getAttribute('data-id');
+    if (!id) return;
+    e.preventDefault();
+    openCtxMenu(e.clientX, e.clientY, id);
+  });
+  document.addEventListener('click', function (e) {
+    if (!ctxMenu.classList.contains('show')) return;
+    if (ctxMenu.contains(e.target)) return;
+    closeCtxMenu();
+  });
+  window.addEventListener('resize', closeCtxMenu);
+  window.addEventListener('scroll', closeCtxMenu, { passive: true });
+
+  /* 手机上长按 = 右键 */
+  var lpTimer = null, lpStart = null, lpCard = null;
+  document.addEventListener('touchstart', function (e) {
+    var card = e.target.closest('a.card');
+    if (!card || e.touches.length !== 1) return;
+    var tp = e.touches[0];
+    lpStart = { x: tp.clientX, y: tp.clientY };
+    lpCard = card.getAttribute('data-id');
+    clearTimeout(lpTimer);
+    lpTimer = setTimeout(function () {
+      lpTimer = null;
+      if (!lpCard) return;
+      if (navigator.vibrate) { try { navigator.vibrate(18); } catch (err) {} }
+      suppressClick = true;
+      openCtxMenu(lpStart.x, lpStart.y, lpCard);
+      lpStart = null; lpCard = null;
+    }, 520);
+  }, { passive: true });
+  document.addEventListener('touchmove', function (e) {
+    if (!lpTimer || !lpStart) return;
+    var tp = e.touches[0];
+    if (Math.abs(tp.clientX - lpStart.x) > 10 || Math.abs(tp.clientY - lpStart.y) > 10) {
+      clearTimeout(lpTimer); lpTimer = null;
+    }
+  }, { passive: true });
+  ['touchend', 'touchcancel'].forEach(function (ev) {
+    document.addEventListener(ev, function () {
+      if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+      lpStart = null; lpCard = null;
+    }, { passive: true });
+  });
+
+  /* ── 设置抽屉 ── */
+  var setPanel = document.getElementById('setPanel');
+  var setMask = document.getElementById('setMask');
+  var setOpen = false;
+
+  function prefRow(t, kind) {
+    var btn = kind === 'hide'
+      ? '<button type="button" class="mini" data-unhide="' + HS.esc(t.id) + '">恢复</button>'
+      : '<button type="button" class="mini danger" data-un' + kind + '="' + HS.esc(t.id) + '">取消</button>';
+    return '<div class="set-row"><span class="ri">' + iconHTML(t.icon) + '</span>' +
+      '<span class="nm">' + HS.esc(t.name) + '</span>' + btn + '</div>';
+  }
+  function prefList(kind) {
+    var rows = PREF[kind].map(toolById).filter(Boolean).map(function (t) { return prefRow(t, kind); });
+    var empty = kind === 'pin' ? '没有置顶的卡片' : kind === 'fav' ? '没有收藏的卡片' : '没有隐藏的卡片';
+    return rows.length ? rows.join('') : '<div class="set-empty">' + empty + '</div>';
+  }
+  function themeButtons() {
+    var cur = HS.theme.pref();
+    var h = '<button type="button" data-theme-val="auto" aria-pressed="' + (cur === 'auto' ? 'true' : 'false') + '">' +
+      '<span class="sw" style="background:linear-gradient(135deg,var(--bg),var(--ac2))"></span>跟随系统</button>';
+    HS.theme.list().forEach(function (th) {
+      var label = String(th.name || th.id).replace(/^[^A-Za-z\u4e00-\u9fa5]+/, '');
+      h += '<button type="button" data-theme-val="' + HS.esc(th.id) + '" aria-pressed="' + (cur === th.id ? 'true' : 'false') + '">' +
+        '<span class="sw" style="background:' + HS.esc(th.colors[0]) + '"></span>' + HS.esc(label) + '</button>';
+    });
+    return h;
+  }
+  function renderSettings() {
+    document.getElementById('setThemes').innerHTML = themeButtons();
+    document.getElementById('setPinList').innerHTML = prefList('pin');
+    document.getElementById('setFavList').innerHTML = prefList('fav');
+    document.getElementById('setHideList').innerHTML = prefList('hide');
+    document.getElementById('setPinN').textContent = PREF.pin.length;
+    document.getElementById('setFavN').textContent = PREF.fav.length;
+    document.getElementById('setHideN').textContent = PREF.hide.length;
+  }
+  /* 顶部按钮上的数量点 + 收藏筛选按钮文案 */
+  function renderPrefsUI() {
+    var btn = document.getElementById('btnSet');
+    var n = PREF.hide.length;
+    btn.classList.toggle('has-dot', n > 0);
+    if (n > 0) btn.setAttribute('data-n', n > 99 ? '99+' : String(n));
+    else btn.removeAttribute('data-n');
+    btn.title = n > 0 ? ('设置 · 已隐藏 ' + n + ' 张卡片') : '设置（含已隐藏的卡片）';
+    var fb = document.getElementById('btnFav');
+    fb.setAttribute('aria-pressed', state.favOnly ? 'true' : 'false');
+    fb.textContent = PREF.fav.length ? ('⭐ 收藏 ' + PREF.fav.length) : '⭐ 收藏';
+    if (setOpen) renderSettings();
+  }
+  function openSettings() {
+    renderSettings();
+    setMask.hidden = false;
+    setPanel.classList.add('show');
+    setMask.classList.add('show');
+    setPanel.setAttribute('aria-hidden', 'false');
+    setOpen = true;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSettings() {
+    setOpen = false;
+    setPanel.classList.remove('show');
+    setMask.classList.remove('show');
+    setPanel.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    setTimeout(function () { if (!setOpen) setMask.hidden = true; }, 240);
+  }
+
+  document.getElementById('btnSet').addEventListener('click', openSettings);
+  document.getElementById('setClose').addEventListener('click', closeSettings);
+  setMask.addEventListener('click', closeSettings);
+
+  setPanel.addEventListener('click', function (e) {
+    var th = e.target.closest('[data-theme-val]');
+    if (th) {
+      HS.theme.set(th.getAttribute('data-theme-val'));
+      renderSettings();
+      HS.toast('已切换风格', { icon: '🎨' });
+      return;
+    }
+    var un = e.target.closest('[data-unpin],[data-unfav],[data-unhide]');
+    if (un) {
+      var key = un.hasAttribute('data-unpin') ? 'pin' : un.hasAttribute('data-unfav') ? 'fav' : 'hide';
+      var id = un.getAttribute('data-un' + key);
+      PREF[key] = PREF[key].filter(function (x) { return x !== id; });
+      savePref(key);
+      render();
+      return;
+    }
+    var act = e.target.closest('[data-set]');
+    if (!act) return;
+    var k = act.getAttribute('data-set');
+    if (k === 'reload') { closeSettings(); loadTools(true); return; }
+    if (k === 'clear-recent') {
+      HS.store.setJson(K_RECENT, []);
+      renderRecent();
+      HS.toast('已清空最近打开', { icon: '🕘' });
+      return;
+    }
+    if (k === 'clear-all') {
+      [cacheKey(), K_PIN, K_FAV, K_HIDE, K_RECENT].forEach(function (key) { HS.store.del(key); });
+      HS.toast('已清除本地数据，正在重载…', { icon: '🧹' });
+      setTimeout(function () { location.reload(); }, 500);
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && setOpen) closeSettings();
+  });
+
   /* ── 命令面板 ── */
   HS.palette.init({
     actions: [
@@ -615,7 +995,7 @@
       { icon: '🗂️', title: '数据管理', desc: '编辑站点 JSON 数据', run: function () { location.href = HS.site.url('pages/admin.html'); } }
     ],
     source: function () {
-      return TOOLS.filter(function (t) { return !t.hidden; }).map(function (t) {
+      return TOOLS.filter(function (t) { return !t.hidden && !inPref('hide', t.id); }).map(function (t) {
         return {
           icon: t.icon, title: t.name, desc: (t.desc || t.tag), group: '工具',
           keywords: t.tag + ' ' + (t.desc || ''), href: absUrl(t.url)
