@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图片裁剪 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.stage{
+  position:relative;display:flex;justify-content:center;align-items:center;
+  min-height:220px;padding:10px;background:var(--bg);border:2px solid var(--bd2);
+  border-radius:var(--r);box-shadow:var(--bevel);overflow:hidden;
+}
+[data-theme^="github-"] .stage{border-width:1px;box-shadow:none}
+#cv{max-width:100%;height:auto;display:block;cursor:crosshair;touch-action:none;border-radius:2px}
+.pickrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.filelabel{
+  display:inline-flex;align-items:center;gap:7px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);color:var(--text);
+}
+.filelabel:hover{border-color:var(--ac)}
+.filelabel input{display:none}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:74px;font-size:11px;font-weight:800;color:var(--faint);letter-spacing:.05em}
+.kv b{font-family:var(--mono);font-variant-numeric:tabular-nums;word-break:break-all}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+@media(max-width:640px){
+  .grid3{grid-template-columns:1fr 1fr}
+  .filelabel,.btn{font-size:12.5px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>✂️ 图片裁剪</h1><p class="sub">本地框选、按比例锁、导出 PNG/JPG · 图片不出浏览器</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">选图</h2>
+      <div class="pickrow">
+        <label class="filelabel" for="file">📂 选择图片<input id="file" type="file" accept="image/*"></label>
+        <button class="btn" id="btnDemo" type="button">用示例图</button>
+        <span class="faint" style="font-size:12px">支持 PNG / JPG / WebP / GIF 首帧</span>
+      </div>
+      <div class="stage"><canvas id="cv" width="640" height="380"></canvas></div>
+      <div class="faint" style="font-size:12px;margin-top:9px">在图上拖出新选框；框内拖动可移动，右下角方块可缩放。</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">裁剪设置</h2>
+      <div class="grid3">
+        <div class="fld">
+          <label for="ratio">锁定比例</label>
+          <select id="ratio">
+            <option value="0" selected>自由</option>
+            <option value="1">1 : 1</option>
+            <option value="1.3333">4 : 3</option>
+            <option value="0.75">3 : 4</option>
+            <option value="1.7778">16 : 9</option>
+            <option value="0.5625">9 : 16</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="outW">输出宽度（px）</label>
+          <input id="outW" type="number" min="8" max="4096" step="1" value="640" inputmode="numeric">
+        </div>
+        <div class="fld">
+          <label for="fmt">格式</label>
+          <select id="fmt">
+            <option value="png" selected>PNG（无损）</option>
+            <option value="jpeg">JPG（体积小）</option>
+          </select>
+        </div>
+      </div>
+      <div class="kv"><span>原图</span><b id="iOrig">—</b></div>
+      <div class="kv"><span>选区</span><b id="iCrop">—</b></div>
+      <div class="kv"><span>输出</span><b id="iOut">—</b></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnSave" type="button">⬇ 导出图片</button>
+        <button class="btn" id="btnReset" type="button">重置选区</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 全部在本地 canvas 里完成，图片不会上传到任何服务器。切换「锁定比例」会把当前选区按比例重新贴合，
+        输出宽度超过选区宽度时会放大（可能变糊），所以导出尺寸别设得比原图选区还大太多。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var cv=$('cv'),ctx=cv.getContext('2d');
+var img=null, scale=1;
+var crop={x:0,y:0,w:0,h:0};
+var drag=null;
+
+function accent(){
+  var s=getComputedStyle(document.documentElement);
+  return (s.getPropertyValue('--ac')||'#4a8').trim();
+}
+
+function fitScale(){
+  var maxW=Math.min(760, cv.parentNode.clientWidth-24 || 640);
+  scale=Math.min(1, maxW/img.naturalWidth);
+  if(img.naturalHeight*scale>560) scale=560/img.naturalHeight;
+  return scale;
+}
+
+function setupCanvas(){
+  scale=fitScale();
+  cv.width=Math.max(1,Math.round(img.naturalWidth*scale));
+  cv.height=Math.max(1,Math.round(img.naturalHeight*scale));
+  resetCrop();
+}
+
+function resetCrop(){
+  var r=parseFloat($('ratio').value)||0;
+  var w=img.naturalWidth, h=img.naturalHeight;
+  var cw=w, ch=h;
+  if(r){
+    if(w/h>r){ cw=h*r; ch=h; } else { cw=w; ch=w/r; }
+    cw*=0.86; ch*=0.86;
+  }else{
+    cw=w*0.8; ch=h*0.8;
+  }
+  crop={x:(w-cw)/2, y:(h-ch)/2, w:cw, h:ch};
+  draw();
+}
+
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.drawImage(img,0,0,cv.width,cv.height);
+  var ac=accent();
+  var x=crop.x*scale, y=crop.y*scale, w=crop.w*scale, h=crop.h*scale;
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.beginPath();
+  ctx.rect(0,0,cv.width,cv.height);
+  ctx.rect(x,y,w,h);
+  ctx.fill('evenodd');
+  ctx.restore();
+  ctx.strokeStyle=ac;
+  ctx.lineWidth=2;
+  ctx.strokeRect(x+1,y+1,Math.max(0,w-2),Math.max(0,h-2));
+  ctx.fillStyle=ac;
+  ctx.fillRect(x+w-8,y+h-8,10,10);
+  /* 三分线 */
+  ctx.strokeStyle='rgba(255,255,255,0.35)';
+  ctx.lineWidth=1;
+  for(var i=1;i<3;i++){
+    ctx.beginPath();ctx.moveTo(x+w*i/3,y);ctx.lineTo(x+w*i/3,y+h);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x,y+h*i/3);ctx.lineTo(x+w,y+h*i/3);ctx.stroke();
+  }
+  info();
+}
+
+function info(){
+  if(!img) return;
+  $('iOrig').textContent=img.naturalWidth+' × '+img.naturalHeight;
+  $('iCrop').textContent=Math.round(crop.x)+', '+Math.round(crop.y)+' · '+
+    Math.round(crop.w)+' × '+Math.round(crop.h);
+  var ow=clampW();
+  var oh=Math.round(ow*crop.h/crop.w);
+  $('iOut').textContent=ow+' × '+oh+' px';
+  if($('ratio').value==='1') $('iOut').textContent+=' · 正方形';
+}
+
+function clampW(){
+  var v=parseInt($('outW').value,10);
+  if(isNaN(v)||v<8) v=8;
+  if(v>4096) v=4096;
+  return v;
+}
+
+function pos(e){
+  var r=cv.getBoundingClientRect();
+  return {
+    x:(e.clientX-r.left)*(cv.width/r.width)/scale,
+    y:(e.clientY-r.top)*(cv.height/r.height)/scale
+  };
+}
+
+function ratioVal(){ return parseFloat($('ratio').value)||0; }
+
+function clampCrop(){
+  var W=img.naturalWidth, H=img.naturalHeight;
+  crop.w=Math.min(crop.w,W);
+  crop.h=Math.min(crop.h,H);
+  crop.x=Math.max(0,Math.min(W-crop.w,crop.x));
+  crop.y=Math.max(0,Math.min(H-crop.h,crop.y));
+}
+
+cv.addEventListener('pointerdown',function(e){
+  if(!img) return;
+  cv.setPointerCapture(e.pointerId);
+  var p=pos(e);
+  var rect=cv.getBoundingClientRect();
+  var dx=(e.clientX-rect.left)*(cv.width/rect.width);
+  var dy=(e.clientY-rect.top)*(cv.height/rect.height);
+  var hx=(crop.x+crop.w)*scale, hy=(crop.y+crop.h)*scale;
+  var nearHandle=Math.abs(dx-hx)<18 && Math.abs(dy-hy)<18;
+  var inside=p.x>=crop.x&&p.x<=crop.x+crop.w&&p.y>=crop.y&&p.y<=crop.y+crop.h;
+  var mode='new';
+  if(nearHandle) mode='resize';
+  else if(inside) mode='move';
+  drag={mode:mode, sx:p.x, sy:p.y, ox:crop.x, oy:crop.y, ow:crop.w, oh:crop.h};
+  if(mode==='new'){ crop={x:p.x,y:p.y,w:1,h:1}; }
+});
+
+cv.addEventListener('pointermove',function(e){
+  if(!drag||!img) return;
+  var p=pos(e);
+  var r=ratioVal();
+  if(drag.mode==='move'){
+    crop.x=drag.ox+(p.x-drag.sx);
+    crop.y=drag.oy+(p.y-drag.sy);
+    clampCrop(); draw(); return;
+  }
+  var w,h;
+  if(drag.mode==='resize'){
+    w=Math.max(6,drag.ow+(p.x-drag.sx));
+    h=Math.max(6,drag.oh+(p.y-drag.sy));
+    if(r){ if(w/h>r) h=w/r; else w=h*r; }
+    w=Math.min(w,img.naturalWidth-drag.ox);
+    h=Math.min(h,img.naturalHeight-drag.oy);
+    if(r){ if(w/h>r) h=w/r; else w=h*r; }
+    crop={x:drag.ox,y:drag.oy,w:w,h:h};
+  }else{
+    var x=Math.min(drag.sx,p.x), y=Math.min(drag.sy,p.y);
+    w=Math.abs(p.x-drag.sx); h=Math.abs(p.y-drag.sy);
+    if(r){ if(w/h>r) h=w/r; else w=h*r; }
+    w=Math.max(6,w); h=Math.max(6,h);
+    crop={x:x,y:y,w:w,h:h};
+  }
+  clampCrop(); draw();
+});
+
+cv.addEventListener('pointerup',function(e){
+  if(!drag) return;
+  drag=null;
+  if(crop.w<8||crop.h<8){ resetCrop(); HS.toast('选区太小，已重置'); return; }
+  draw();
+});
+cv.addEventListener('pointercancel',function(){ drag=null; });
+
+$('ratio').addEventListener('change',function(){
+  if(!img) return;
+  var r=ratioVal();
+  if(!r){ draw(); return; }
+  var cx=crop.x+crop.w/2, cy=crop.y+crop.h/2;
+  var w=crop.w, h=crop.h;
+  if(w/h>r) w=h*r; else h=w/r;
+  if(w>img.naturalWidth){ w=img.naturalWidth; h=w/r; }
+  if(h>img.naturalHeight){ h=img.naturalHeight; w=h*r; }
+  crop={x:cx-w/2,y:cy-h/2,w:w,h:h};
+  clampCrop(); draw();
+});
+
+$('outW').addEventListener('input',info);
+$('fmt').addEventListener('change',info);
+$('btnReset').addEventListener('click',function(){ if(!img) return; resetCrop(); HS.toast('已重置选区'); });
+
+$('btnSave').addEventListener('click',function(){
+  if(!img){ HS.toast('先选一张图片'); return; }
+  var ow=clampW(), oh=Math.max(1,Math.round(ow*crop.h/crop.w));
+  var c=document.createElement('canvas');
+  c.width=ow; c.height=oh;
+  var g=c.getContext('2d');
+  var fmt=$('fmt').value;
+  if(fmt==='jpeg'){ g.fillStyle='#ffffff'; g.fillRect(0,0,ow,oh); }
+  g.imageSmoothingQuality='high';
+  g.drawImage(img, Math.round(crop.x), Math.round(crop.y), Math.round(crop.w), Math.round(crop.h), 0,0,ow,oh);
+  c.toBlob(function(blob){
+    if(!blob){ HS.toast('导出失败，换个格式试试'); return; }
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='crop-'+ow+'x'+oh+'.'+(fmt==='jpeg'?'jpg':'png');
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+    HS.toast('已导出 '+ow+'×'+oh+' '+Math.round(blob.size/1024)+'KB');
+  }, fmt==='jpeg'?'image/jpeg':'image/png', 0.92);
+});
+
+$('file').addEventListener('change',function(){
+  var f=this.files&&this.files[0];
+  if(!f) return;
+  if(!/^image\//.test(f.type)){ HS.toast('这不是图片文件'); return; }
+  var fr=new FileReader();
+  fr.onload=function(){ loadSrc(fr.result); };
+  fr.onerror=function(){ HS.toast('读取失败，换个文件试试'); };
+  fr.readAsDataURL(f);
+});
+
+function loadSrc(src){
+  var im=new Image();
+  im.onload=function(){ img=im; setupCanvas(); };
+  im.onerror=function(){ HS.toast('图片无法解析'); };
+  im.src=src;
+}
+
+/* 示例图：canvas 现画，不用外部资源 */
+function demo(){
+  var c=document.createElement('canvas');
+  c.width=800; c.height=500;
+  var g=c.getContext('2d');
+  var grd=g.createLinearGradient(0,0,800,500);
+  grd.addColorStop(0,'#2f7d4f');
+  grd.addColorStop(0.55,'#4a9e63');
+  grd.addColorStop(1,'#1e5b3a');
+  g.fillStyle=grd; g.fillRect(0,0,800,500);
+  g.strokeStyle='rgba(255,255,255,0.14)';
+  g.lineWidth=1;
+  for(var i=0;i<=800;i+=40){ g.beginPath();g.moveTo(i,0);g.lineTo(i,500);g.stroke(); }
+  for(var j=0;j<=500;j+=40){ g.beginPath();g.moveTo(0,j);g.lineTo(800,j);g.stroke(); }
+  g.fillStyle='rgba(0,0,0,0.28)';
+  g.fillRect(60,340,680,110);
+  g.fillStyle='#ffffff';
+  g.font='bold 42px system-ui,-apple-system,sans-serif';
+  g.fillText('示例图片 · 拖拽框选试试',80,398);
+  g.font='20px system-ui,-apple-system,sans-serif';
+  g.fillStyle='rgba(255,255,255,0.82)';
+  g.fillText('800 × 500 · 全部在本地处理',82,432);
+  loadSrc(c.toDataURL('image/png'));
+}
+
+demo();
+})();
+</script>
+</body>
+</html>

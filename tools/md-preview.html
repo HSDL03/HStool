@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdown 预览 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.md{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.md textarea{min-height:420px;font-family:var(--mono);font-size:12.5px;line-height:1.7}
+.preview{
+  min-height:420px;max-height:560px;overflow:auto;padding:14px 16px;font-size:14px;line-height:1.75;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  word-wrap:break-word;overflow-wrap:anywhere;
+}
+[data-theme^="github-"] .preview{border-width:1px;box-shadow:none}
+.preview>:first-child{margin-top:0}
+.preview h1,.preview h2,.preview h3,.preview h4{margin:1.1em 0 .5em;font-weight:800;line-height:1.3}
+.preview h1{font-size:1.5em;padding-bottom:.25em;border-bottom:2px solid var(--bd)}
+.preview h2{font-size:1.25em;padding-bottom:.2em;border-bottom:1px solid var(--bd)}
+.preview h3{font-size:1.1em}
+.preview p{margin:0 0 .85em}
+.preview ul,.preview ol{margin:0 0 .9em;padding-left:1.5em}
+.preview li{margin:.2em 0}
+.preview li::marker{color:var(--ac);font-weight:800}
+.preview blockquote{margin:.9em 0;padding:.5em .9em;border-left:3px solid var(--ac);background:var(--bg3);color:var(--muted);border-radius:var(--r)}
+.preview blockquote p:last-child{margin-bottom:0}
+.preview code{font-family:var(--mono);font-size:.88em;padding:.12em .35em;background:var(--bg3);border:1px solid var(--bd);border-radius:3px}
+.preview pre{margin:.9em 0;padding:11px 13px;background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);overflow:auto;font-size:12.5px;line-height:1.6}
+.preview pre code{padding:0;background:none;border:0;font-size:1em}
+.preview table{width:100%;border-collapse:collapse;margin:.9em 0;font-size:13px}
+.preview th,.preview td{padding:6px 9px;border:1px solid var(--bd);text-align:left}
+.preview th{background:var(--bg3);font-weight:800}
+.preview hr{margin:1.4em 0;border:0;border-top:1px dashed var(--bd)}
+.preview a{color:var(--ac);font-weight:600;border-bottom:1px solid var(--bd2)}
+.preview del{color:var(--faint)}
+.stats{font-size:11.5px;color:var(--faint);font-family:var(--mono);margin-top:8px}
+@media(max-width:640px){
+  .md{grid-template-columns:1fr}
+  .md textarea{min-height:220px}
+  .preview{min-height:260px;max-height:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📝 Markdown 预览</h1><p class="sub">左边写、右边看 · 标题 / 列表 / 表格 / 代码块 / 引用都支持</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">编辑</h2>
+      <div class="md">
+        <div class="fld" style="margin-bottom:0">
+          <label for="src">Markdown 源码</label>
+          <textarea id="src" spellcheck="false" placeholder="# 标题&#10;&#10;正文 **加粗**、`代码`、- 列表"></textarea>
+        </div>
+        <div class="fld" style="margin-bottom:0">
+          <label>实时预览</label>
+          <div class="preview" id="preview"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopyHtml" type="button">📋 复制 HTML</button>
+        <button class="btn" id="btnCopyMd" type="button">📋 复制源码</button>
+        <button class="btn" id="btnSample" type="button">载入示例</button>
+        <button class="btn ghost" id="btnClear" type="button">清空</button>
+      </div>
+      <div class="stats" id="stats">—</div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 纯本地解析，所有 HTML 先整体转义再渲染，贴什么都不可能执行脚本，链接只放行 <code>http(s)</code>。
+        支持 <code>**粗体**</code>、<code>*斜体*</code>、<code>~~删除线~~</code>、<code>`行内代码`</code>、
+        <code>```代码块```</code>、<code>&gt; 引用</code>、有序 / 无序列表、<code>| 表格 |</code>、<code>---</code> 分隔线。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var src=$('src'),preview=$('preview'),stats=$('stats');
+
+var SAMPLE=[
+'# 红石电路速查',
+'',
+'红石粉**最远传 15 格**，超出就得接中继器。常见组合：',
+'',
+'- 中继器：**1~4 刻**延迟，也能单向锁存',
+'- 比较器：读容器信号、做减法与「满箱检测」',
+'- 活塞：推 12 格方块，粘液块带动整块结构',
+'',
+'> 信号强度不会自动恢复，每过一格方块就衰减 1。',
+'',
+'## 常用信号值',
+'',
+'| 装置 | 强度 | 说明 |',
+'| --- | :--: | --- |',
+'| 木压力板 | 1 | 只踩得动物品 |',
+'| 石压力板 | 1 | 玩家 / 生物 |',
+'| 拉杆 | 15 | 常开元素 |',
+'',
+'```js',
+'// 容器填充度换算信号',
+'const sig = Math.floor(1 + used / (slots * 64) * 14);',
+'```',
+'',
+'---',
+'',
+'写作要点：`1 刻 = 0.1 秒`，两刻就是 0.2 秒，别和红石刻混淆。'
+].join('\n');
+
+function esc(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function inline(text){
+  var codes=[];
+  var s=text.replace(/`([^`]+)`/g,function(_,c){
+    codes.push(c);
+    return '\u0000'+(codes.length-1)+'\u0000';
+  });
+  s=s.replace(/!?\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g,function(_,txt,url){
+    if(!safeUrl(url)) return txt;
+    return '<a href="' + url + '" target="_blank" rel="noopener">' + txt + '</a>';
+  });
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/__([^_]+)__/g,'<strong>$1</strong>');
+  s=s.replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>');
+  s=s.replace(/~~([^~]+)~~/g,'<del>$1</del>');
+  s=s.replace(/\u0000(\d+)\u0000/g,function(_,i){ return '<code>'+codes[Number(i)]+'</code>'; });
+  return s;
+}
+
+function safeUrl(u){
+  return /^(https?:\/\/|\/|\.\/|#|mailto:)/i.test(u);
+}
+
+function splitRow(line){
+  var t=line.trim().replace(/^\|/,'').replace(/\|$/,'');
+  return t.split('|').map(function(c){ return c.trim(); });
+}
+
+function render(md){
+  var lines=esc(md).replace(/\r\n?/g,'\n').split('\n');
+  var out=[], i=0;
+  while(i<lines.length){
+    var line=lines[i];
+
+    if(/^\s*$/.test(line)){ i++; continue; }
+
+    var fence=line.match(/^```\s*([\w+-]*)\s*$/);
+    if(fence){
+      var buf=[];
+      i++;
+      while(i<lines.length && !/^```\s*$/.test(lines[i])){ buf.push(lines[i]); i++; }
+      i++;
+      out.push('<pre><code>'+buf.join('\n')+'</code></pre>');
+      continue;
+    }
+
+    var h=line.match(/^(#{1,6})\s+(.*)$/);
+    if(h){
+      var lv=h[1].length;
+      out.push('<h'+lv+'>'+inline(h[2].replace(/\s+#+\s*$/,''))+'</h'+lv+'>');
+      i++; continue;
+    }
+
+    if(/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(line)){
+      out.push('<hr>'); i++; continue;
+    }
+
+    if(/^\s*\|.*\|\s*$/.test(line) && i+1<lines.length && /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(lines[i+1])){
+      var head=splitRow(line);
+      var align=splitRow(lines[i+1]).map(function(c){
+        if(/^:-+:$/.test(c)) return 'center';
+        if(/-+:$/.test(c)) return 'right';
+        return 'left';
+      });
+      i+=2;
+      var rows=[];
+      while(i<lines.length && /^\s*\|.*\|\s*$/.test(lines[i])){ rows.push(splitRow(lines[i])); i++; }
+      var html='<table><thead><tr>';
+      head.forEach(function(c,ci){ html+='<th style="text-align:'+(align[ci]||'left')+'">'+inline(c)+'</th>'; });
+      html+='</tr></thead><tbody>';
+      rows.forEach(function(r){
+        html+='<tr>';
+        for(var c=0;c<head.length;c++){
+          html+='<td style="text-align:'+(align[c]||'left')+'">'+inline(r[c]||'')+'</td>';
+        }
+        html+='</tr>';
+      });
+      out.push(html+'</tbody></table>');
+      continue;
+    }
+
+    if(/^\s*>/.test(line)){
+      var q=[];
+      while(i<lines.length && /^\s*>/.test(lines[i])){
+        q.push(lines[i].replace(/^\s*>\s?/,''));
+        i++;
+      }
+      out.push('<blockquote><p>'+q.map(inline).join('<br>')+'</p></blockquote>');
+      continue;
+    }
+
+    var li=line.match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+    if(li){
+      var ordered=/\d/.test(li[2]);
+      var items=[];
+      while(i<lines.length){
+        var m=lines[i].match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+        if(!m||/\d/.test(m[2])!==ordered) break;
+        items.push(inline(m[3]));
+        i++;
+      }
+      var tag=ordered?'ol':'ul';
+      out.push('<'+tag+'>'+items.map(function(t){ return '<li>'+t+'</li>'; }).join('')+'</'+tag+'>');
+      continue;
+    }
+
+    var para=[];
+    while(i<lines.length && !/^\s*$/.test(lines[i]) &&
+          !/^\s*(#{1,6}\s|>|\||```)/.test(lines[i]) &&
+          !/^(\s*)([-*+]|\d+[.)])\s+/.test(lines[i])){
+      para.push(inline(lines[i]));
+      i++;
+    }
+    if(!para.length){ para.push(inline(lines[i])); i++; }
+    out.push('<p>'+para.join('<br>')+'</p>');
+  }
+  return out.join('\n');
+}
+
+function update(){
+  var md=src.value;
+  preview.innerHTML= md.trim()? render(md) : '<p class="muted">在左边输入 Markdown，这里会实时渲染。</p>';
+  var chars=md.replace(/\s/g,'').length;
+  var words=(md.match(/[\u4e00-\u9fa5]/g)||[]).length + (md.match(/[A-Za-z0-9]+/g)||[]).length;
+  stats.textContent=md.split('\n').length+' 行 · '+chars+' 字符 · 约 '+words+' 字词';
+  try{ localStorage.setItem('hs-md-src', md); }catch(e){}
+}
+
+var t=null;
+src.addEventListener('input',function(){
+  if(t) clearTimeout(t);
+  t=setTimeout(update,120);
+});
+
+$('btnCopyHtml').addEventListener('click',function(){
+  if(!src.value.trim()){ HS.toast('先写点内容'); return; }
+  HS.copy(preview.innerHTML); HS.toast('已复制渲染后的 HTML');
+});
+$('btnCopyMd').addEventListener('click',function(){
+  if(!src.value){ HS.toast('还没有源码'); return; }
+  HS.copy(src.value); HS.toast('已复制 Markdown 源码');
+});
+$('btnSample').addEventListener('click',function(){
+  src.value=SAMPLE; update(); HS.toast('已载入示例');
+});
+$('btnClear').addEventListener('click',function(){ src.value=''; update(); src.focus(); });
+
+var saved='';
+try{ saved=localStorage.getItem('hs-md-src')||''; }catch(e){}
+src.value= saved || SAMPLE;
+update();
+})();
+</script>
+</body>
+</html>

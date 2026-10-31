@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON 转 TypeScript · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.out{
+  font-family:var(--mono);font-size:12.5px;line-height:1.65;white-space:pre;overflow:auto;
+  max-height:380px;padding:12px 14px;background:var(--bg);border:2px solid var(--bd2);
+  border-radius:var(--r);box-shadow:var(--bevel);color:var(--text);
+}
+[data-theme^="github-"] .out{border-width:1px;box-shadow:none}
+.out .k{color:var(--ac2)}
+.out .t{color:var(--ac)}
+.out .p{color:var(--faint)}
+.out .c{color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;font-size:13px;flex-wrap:wrap;border-bottom:1px dashed var(--bd)}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:90px;font-size:11px;font-weight:800;color:var(--faint);letter-spacing:.05em}
+.kv b{font-family:var(--mono)}
+@media(max-width:640px){.out{max-height:300px;font-size:11.5px}.page-head h1{font-size:1.4rem}}
+#src{min-height:150px}
+@media(max-width:640px){#src{min-height:110px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧬 JSON 转 TypeScript</h1><p class="sub">贴一份接口返回值，直接生成 interface · 自动合并数组元素的字段</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">输入 JSON</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="rootName">根类型名</label>
+          <input id="rootName" value="Root" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="fld">
+          <label for="optMode">可选字段</label>
+          <select id="optMode">
+            <option value="q" selected>只在个别元素里出现 → 标 ?</option>
+            <option value="none">全部都当必填</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld">
+        <label for="src">JSON（可省略外层 { }）</label>
+        <textarea id="src" class="mono" spellcheck="false"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnRun" type="button">生成</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果</button>
+        <button class="btn" id="btnSample" type="button">换个例子</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="kv"><span>接口数量</span><b id="stat">—</b></div>
+      <div class="out" id="out">—</div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 数组会取所有元素一起推断：同一字段类型不同就输出联合类型（<code>string | number</code>），
+        个别元素缺字段会标成可选 <code>?</code>，空数组 <code>[]</code> 输出 <code>unknown[]</code>。
+        数字不区分整数和小数（都是 <code>number</code>），日期不会被识别成 <code>Date</code>。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var src=$('src'),out=$('out'),stat=$('stat');
+
+var SAMPLES=[
+  '{\n  "code": 0,\n  "data": {\n    "id": 1024,\n    "name": "红石",\n    "tags": ["mc", "tool"],\n    "profile": { "avatar": "a.png", "level": 12 },\n    "friends": [\n      { "id": 1, "nick": "Steve", "vip": true },\n      { "id": 2, "nick": "Alex" }\n    ]\n  }\n}',
+  '{\n  "list": [\n    { "sku": "A1", "price": 9.9, "stock": 0 },\n    { "sku": "A2", "price": 19, "stock": 5, "note": null }\n  ],\n  "total": 2,\n  "ok": true\n}',
+  '[\n  { "time": "2026-10-31T09:00:00Z", "value": 12.5 },\n  { "time": "2026-10-31T10:00:00Z", "value": 13 }\n]'
+];
+var sampleIdx=0;
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function typeName(key,used){
+  var base=String(key||'Item').replace(/[^A-Za-z0-9]/g,' ').trim();
+  if(!base) base='Item';
+  var parts=base.split(/\s+/).map(function(w){ return w.charAt(0).toUpperCase()+w.slice(1); });
+  var n=parts.join('');
+  if(!/^[A-Za-z]/.test(n)) n='T'+n;
+  var cand=n;
+  var i=2;
+  while(used[cand] && used[cand]!==key){ cand=n+i; i++; }
+  used[cand]=key;
+  return cand;
+}
+
+function describe(v){
+  if(v===null) return 'null';
+  if(Array.isArray(v)) return 'array';
+  return typeof v;
+}
+
+function mergeInfo(list){
+  var keys=[], seen={}, total=list.length, types={}, optional={}, samples={}, arrSamples={};
+  list.forEach(function(obj){
+    Object.keys(obj).forEach(function(k){
+      if(!seen[k]){ seen[k]=1; keys.push(k); }
+      var t=describe(obj[k]);
+      var map=types[k]||(types[k]={});
+      if(t==='array'){
+        map.array=true;
+        arrSamples[k]=(arrSamples[k]||[]).concat(obj[k]);
+      }
+      else if(t==='object'){ map.object=true; (samples[k]||(samples[k]=[])).push(obj[k]); }
+      else map[t]=true;
+    });
+  });
+  keys.forEach(function(k){
+    var count=0;
+    list.forEach(function(o){ if(Object.prototype.hasOwnProperty.call(o,k)) count++; });
+    if(count<total) optional[k]=true;
+  });
+  return {keys:keys,types:types,samples:samples,arrSamples:arrSamples,optional:optional};
+}
+
+var interfaces=[];
+var usedNames={};
+
+function buildInterface(name,objList){
+  var info=mergeInfo(objList);
+  var lines=[];
+  info.keys.forEach(function(k){
+    var map=info.types[k]||{};
+    var parts=[];
+    if(map.string) parts.push('string');
+    if(map.number) parts.push('number');
+    if(map.boolean) parts.push('boolean');
+    if(map.null) parts.push('null');
+    if(map.array){
+      var flat=[];
+      (info.arrSamples[k]||[]).forEach(function(a){ flat=flat.concat(a); });
+      parts.push(inferValue(flat,k));
+    }
+    if(map.object){
+      var childName=typeName(k,usedNames);
+      buildInterface(childName,info.samples[k]||[]);
+      parts.push(childName);
+    }
+    var body=parts.length?parts.join(' | '):'unknown';
+    var safeKey=/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(k)?k:JSON.stringify(k);
+    lines.push('  '+safeKey+(info.optional[k]?'?':'')+': '+body+';');
+  });
+  interfaces[name]={lines:lines};
+  return name;
+}
+
+function run(){
+  var raw=src.value.trim();
+  if(!raw){ out.textContent='先贴一段 JSON'; stat.textContent='—'; return; }
+  var data;
+  try{ data=JSON.parse(raw); }
+  catch(e){
+    out.textContent='JSON 解析失败：'+e.message;
+    stat.textContent='解析出错';
+    return;
+  }
+  interfaces=[]; usedNames={};
+  var root=String($('rootName').value||'Root').replace(/[^A-Za-z0-9_]/g,'')||'Root';
+  if(/^[0-9]/.test(root)) root='T'+root;
+
+  if(Array.isArray(data)){
+    var innerName=root.replace(/s$/,'')||'Item';
+    var elemType=inferArray(data,innerName);
+    interfaces[root]={alias:elemType};
+  }else if(data!==null && typeof data==='object'){
+    buildInterface(root,[data]);
+  }else{
+    interfaces[root]={alias:describe(data)};
+  }
+  render(root);
+}
+
+function inferValue(v,key){
+  if(v===null) return 'null';
+  if(Array.isArray(v)){
+    if(!v.length) return 'unknown[]';
+    var objs=v.filter(function(x){ return x!==null && typeof x==='object' && !Array.isArray(x); });
+    var arrays=v.filter(function(x){ return Array.isArray(x); });
+    var prims=v.filter(function(x){ return x===null || typeof x!=='object'; });
+    var parts=[];
+    if(objs.length){
+      var nm=typeName(key||'Item',usedNames);
+      buildInterface(nm,objs);
+      parts.push(nm);
+    }
+    if(arrays.length){
+      var inner=[];
+      arrays.forEach(function(a){ inner=inner.concat(a); });
+      parts.push(inferValue(inner,key));
+    }
+    if(prims.length){
+      var set={};
+      prims.forEach(function(x){ set[describe(x)]=1; });
+      parts.push(Object.keys(set).join(' | '));
+    }
+    var unique=[];
+    parts.join(' | ').split(' | ').forEach(function(p){ p=p.trim(); if(p&&unique.indexOf(p)<0) unique.push(p); });
+    return unique.length===1 ? unique[0]+'[]' : '('+unique.join(' | ')+')[]';
+  }
+  if(typeof v==='object'){
+    var nm2=typeName(key||'Item',usedNames);
+    buildInterface(nm2,[v]);
+    return nm2;
+  }
+  return typeof v;
+}
+
+function inferArray(arr,key){ return inferValue(arr,key); }
+
+function render(root){
+  var chunks=[];
+  var names=[];
+  Object.keys(interfaces).forEach(function(n){ names.push(n); });
+  names.sort(function(a,b){ return a.localeCompare(b); });
+  names.forEach(function(n){
+    var it=interfaces[n];
+    if(it.alias){ chunks.push('type '+n+' = '+it.alias+';'); return; }
+    chunks.push('interface '+n+' {');
+    chunks.push.apply(chunks,it.lines);
+    chunks.push('}');
+  });
+  var text=chunks.join('\n');
+  out.innerHTML=colored(text);
+  stat.textContent=names.length+' 个类型 · '+text.split('\n').length+' 行';
+}
+
+function colored(text){
+  return text.split('\n').map(function(line){
+    var h=esc(line);
+    if(/^interface /.test(line)){
+      return h.replace(/^interface (\S+) \{/,'<span class="p">interface</span> <span class="t">$1</span> <span class="p">{</span>');
+    }
+    if(/^type /.test(line)){
+      return h.replace(/^type (\S+) = /,'<span class="p">type</span> <span class="t">$1</span> <span class="p">=</span> ');
+    }
+    if(/^  /.test(line)){
+      var m=line.match(/^  ("?[^:?]+"?)(\??): (.*);$/);
+      if(m){
+        return '  <span class="k">'+esc(m[1])+'</span><span class="p">'+m[2]+':</span> <span class="t">'+esc(m[3])+'</span><span class="p">;</span>';
+      }
+    }
+    return h;
+  }).join('\n');
+}
+
+$('btnRun').addEventListener('click',run);
+$('btnCopy').addEventListener('click',function(){
+  var t=out.textContent;
+  if(!t||t==='—'){ HS.toast('还没有结果'); return; }
+  HS.copy(t); HS.toast('已复制类型定义');
+});
+$('btnSample').addEventListener('click',function(){
+  sampleIdx=(sampleIdx+1)%SAMPLES.length;
+  src.value=SAMPLES[sampleIdx];
+  run();
+});
+src.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); run(); }
+});
+
+src.value=SAMPLES[0];
+run();
+})();
+</script>
+</body>
+</html>

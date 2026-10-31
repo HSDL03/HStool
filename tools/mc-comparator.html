@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>比较器信号计算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔻</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.sigwrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.sigbox{
+  flex:none;width:104px;height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+}
+.sigbox b{font-family:var(--mono);font-size:40px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.sigbox em{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.08em;color:var(--faint);margin-top:6px;text-transform:uppercase}
+.bars{flex:1 1 200px;display:flex;gap:3px;align-items:flex-end;height:74px;min-width:160px}
+.bars i{flex:1;background:var(--bg3);border:1px solid var(--bd);border-radius:2px;transition:height .2s,background .2s}
+.bars i.on{background:var(--ac);border-color:var(--ac)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:86px;font-size:11px;font-weight:800;letter-spacing:.05em;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th,table.t td{padding:6px 9px;border:1px solid var(--bd);text-align:left}
+table.t th{background:var(--bg3);font-weight:800;font-size:11.5px;letter-spacing:.04em;color:var(--muted)}
+table.t td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔻 比较器信号计算</h1><p class="sub">容器装满程度 ↔ 红石信号强度 0~15 · 顺带算出触发阈值</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">容器填充</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="kind">容器类型</label>
+          <select id="kind">
+            <option value="54:64">大箱子（54 格）</option>
+            <option value="27:64" selected>箱子 / 木桶 / 潜影盒（27 格）</option>
+            <option value="9:64">发射器 / 投掷器（9 格）</option>
+            <option value="5:64">漏斗（5 格）</option>
+            <option value="3:64">熔炉 / 高炉 / 烟熏炉（3 格）</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="stackMax">每格上限</label>
+          <select id="stackMax">
+            <option value="64" selected>64（普通方块 / 物品）</option>
+            <option value="16">16（雪球 / 鸡蛋 / 告示牌）</option>
+            <option value="1">1（工具 / 盔甲 / 药水）</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fld">
+          <label for="fullStacks">整堆数量（堆）</label>
+          <input id="fullStacks" type="number" min="0" step="1" value="5" inputmode="numeric">
+        </div>
+        <div class="fld">
+          <label for="loose">零散物品（个）</label>
+          <input id="loose" type="number" min="0" step="1" value="0" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="sigwrap">
+        <div class="sigbox"><b id="sig">3</b><em>信号强度</em></div>
+        <div class="bars" id="bars" aria-hidden="true"></div>
+      </div>
+
+      <div class="kv"><span>已放物品</span><b id="total">320 个</b></div>
+      <div class="kv"><span>填充度</span><b id="fill">18.5%</b></div>
+      <div class="kv"><span>占用格数</span><b id="used">5 / 27 格</b></div>
+      <div class="kv"><span>本档区间</span><b id="range">—</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">凑到指定信号要放多少</h2>
+      <div class="fld">
+        <label for="wantSig">目标信号强度（1~15）</label>
+        <input id="wantSig" type="number" min="1" max="15" step="1" value="8" inputmode="numeric">
+      </div>
+      <div class="kv"><span>最少物品</span><b id="needMin">—</b></div>
+      <div class="kv"><span>对应摆放</span><b id="needLayout">—</b></div>
+      <div class="tip" style="margin-top:12px">信号每变 1 级，填充度要多 <code>1/14 ≈ 7.14%</code>；容器空着时信号为 0。</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">特例方块</h2>
+      <div class="scroll">
+        <table class="t">
+          <thead><tr><th>方块</th><th>状态</th><th class="n">信号</th></tr></thead>
+          <tbody>
+            <tr><td>堆肥桶</td><td>堆肥等级 1 → 8</td><td class="n">1 → 8</td></tr>
+            <tr><td>炼药锅</td><td>水位 1 / 2 / 3（水、岩浆、细雪同理）</td><td class="n">1 / 2 / 3</td></tr>
+            <tr><td>蛋糕</td><td>未咬 14，每吃一口 −2，吃完 0</td><td class="n">14 → 0</td></tr>
+            <tr><td>末地传送门框架</td><td>放入眼睛（最多 12 个）</td><td class="n">1 → 12</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 公式按 Java 版原版：<code>填充度 = 已放物品 ÷（格数 × 每格上限）</code>，
+        <code>信号 = ⌊1 + 填充度 × 14⌋</code>（容器非空）。所以放满一格 64 个在大箱子里只有信号 1，
+        想拉满 15 必须几乎塞满。数字全部现算，不联网。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var kind=$('kind'),stackMax=$('stackMax'),fullStacks=$('fullStacks'),loose=$('loose');
+var bars=$('bars'),i;
+for(i=0;i<15;i++){
+  var b=document.createElement('i');
+  b.style.height='8px';
+  b.dataset.i=String(i);
+  bars.appendChild(b);
+}
+
+function slots(){ return parseInt(kind.value.split(':')[0],10); }
+function cap(){ return parseInt(stackMax.value,10); }
+
+function calc(){
+  var n=slots(), M=cap();
+  var st=Math.max(0,Math.min(n,Math.floor(Number(fullStacks.value)||0)));
+  var looseN=Math.max(0,Math.min(M-1,Math.floor(Number(loose.value)||0)));
+  if(looseN>=M) looseN=M-1;
+  if(st>n) st=n;
+  var total=st*M+looseN;
+  var full=total/(n*M);
+  var sig= total<=0 ? 0 : Math.min(15,Math.floor(1+full*14));
+  $('sig').textContent=String(sig);
+  $('total').textContent=total+' 个';
+  $('fill').textContent=(full*100).toFixed(1)+'%';
+  var used=st+(looseN>0?1:0);
+  $('used').textContent=used+' / '+n+' 格'+(looseN>0?'（最后一格 '+looseN+'/'+M+'）':'');
+  if(sig>0){
+    var lo=(sig-1)/14, hi=sig/14;
+    $('range').textContent=(lo*100).toFixed(2)+'% ~ '+(hi*100).toFixed(2)+'%';
+  }else{
+    $('range').textContent='空容器，信号 0';
+  }
+  var all=bars.children;
+  for(i=0;i<all.length;i++){
+    all[i].className = i<sig ? 'on' : '';
+    all[i].style.height=(10+i*4)+'px';
+  }
+}
+
+function need(){
+  var n=slots(), M=cap();
+  var s=Math.floor(Number($('wantSig').value)||0);
+  if(s<1||s>15){ $('needMin').textContent='填 1 ~ 15 之间的整数'; $('needLayout').textContent='—'; return; }
+  var lo=(s-1)/14;
+  var minItems=Math.ceil(lo*n*M);
+  if(minItems<1) minItems=1;
+  $('needMin').textContent=minItems+' 个（'+n+' 格 × '+M+' 上限）';
+  var stacks=Math.floor(minItems/M), rest=minItems%M;
+  $('needLayout').textContent=(stacks>0?stacks+' 整堆':'') +
+    (rest>0?(stacks>0?' + ':'')+rest+' 个零散':'') +
+    '（正好卡在 '+s+' 级下沿，稳妥起见再多放 1 个）';
+}
+
+[kind,stackMax].forEach(function(el){ el.addEventListener('change',function(){calc();need();}); });
+[fullStacks,loose].forEach(function(el){ el.addEventListener('input',calc); });
+$('wantSig').addEventListener('input',need);
+
+calc();need();
+})();
+</script>
+</body>
+</html>

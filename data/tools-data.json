@@ -718,5 +718,65 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mc-comparator",
+    "icon": "🔻",
+    "name": "MC 比较器信号",
+    "desc": "容器装满度换算红石信号 0~15",
+    "tag": "工具",
+    "url": "./tools/mc-comparator.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-json-ts",
+    "icon": "🧬",
+    "name": "JSON 转 TS",
+    "desc": "粘贴 JSON 自动生成 TypeScript 接口",
+    "tag": "工具",
+    "url": "./tools/json-ts.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-md-preview",
+    "icon": "📝",
+    "name": "Markdown 预览",
+    "desc": "本地实时渲染 Markdown 并可导出 HTML",
+    "tag": "工具",
+    "url": "./tools/md-preview.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-lorem-cn",
+    "icon": "📄",
+    "name": "占位文本生成",
+    "desc": "中文段落与英文 Lorem 假文生成",
+    "tag": "工具",
+    "url": "./tools/lorem-cn.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "tool-img-crop",
+    "icon": "✂️",
+    "name": "图片裁剪",
+    "desc": "本地框选裁剪并按尺寸导出 PNG/JPG",
+    "tag": "工具",
+    "url": "./tools/img-crop.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false
   }
 ]

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>占位文本生成 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.statline{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--faint);font-family:var(--mono);margin-top:9px}
+#out{min-height:300px;line-height:1.85}
+@media(max-width:640px){.opts{grid-template-columns:1fr 1fr}#out{min-height:220px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📄 占位文本生成</h1><p class="sub">中文段落 / 英文 Lorem · 排版测试的假文一次到位</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">参数</h2>
+      <div class="opts">
+        <div class="fld">
+          <label for="lang">语言</label>
+          <select id="lang">
+            <option value="cn" selected>中文段落</option>
+            <option value="en">English Lorem</option>
+            <option value="mix">中英混排</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="paras">段落数（1~10）</label>
+          <input id="paras" type="number" min="1" max="10" step="1" value="3" inputmode="numeric">
+        </div>
+        <div class="fld">
+          <label for="perPara">每段句数（2~8）</label>
+          <input id="perPara" type="number" min="2" max="8" step="1" value="4" inputmode="numeric">
+        </div>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <button class="btn primary" id="btnGen" type="button">🔄 重新生成</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制全文</button>
+      </div>
+      <div class="statline" id="stat">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="fld" style="margin-bottom:0">
+        <textarea id="out" class="mono" spellcheck="false" style="font-family:inherit;font-size:13.5px"></textarea>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 中文句子由真人可读的通用句库随机拼成，不是「测试测试测试」那种垃圾填充；
+        每段首句前会带一个序号标记，方便数段落。英文用标准 lorem 词表生成，句首自动大写、句末加句号。
+        生成结果只存在这页里，刷新即换新。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var out=$('out'),stat=$('stat');
+
+var CN=[
+  '先把需求边界写清楚，再动手改代码，返工的成本会低很多。',
+  '这套方案的核心是把复杂逻辑拆成几步，每一步只负责一件事。',
+  '上线之前记得跑一遍自检脚本，再小的改动也可能带出连锁问题。',
+  '数据从接口回来之后最好先做一次校验，别直接往页面上塞。',
+  '缓存能省掉重复请求，但失效策略没想清楚，反而会制造更多麻烦。',
+  '交互动作尽量控制在两秒之内给反馈，用户才不会怀疑页面卡死。',
+  '样式统一用变量管理，换主题的时候才不用满文件地改颜色值。',
+  '移动端的可视区域比想象中窄，横向溢出的问题要提前在真机上验。',
+  '任何一次批量操作都应该可撤销，至少要让用户看清楚将要改什么。',
+  '错误提示写清楚「哪里错了、怎么改」，比一句「操作失败」有用得多。',
+  '把常用参数沉到配置文件里，下次调整就不用再翻代码。',
+  '分页和排序最好在后端完成，前端全量拉取迟早会遇到数据量瓶颈。',
+  '日志只需要记关键节点，记太多等于没有记录，排查时反而更慢。',
+  '组件之间的耦合越少，后面替换掉其中一块的代价就越小。',
+  '演示用的示例数据要真实一点，假数据会让评审看不出问题。',
+  '边界情况先列出来：空值、超长文本、并发点击、网络中断。',
+  '文案语气统一之后，整个站点看起来才像同一个人写的。',
+  '每次重构都留一条可回滚的路径，心里会踏实不少。',
+  '性能优化之前先量一遍，凭感觉猜瓶颈往往猜错。',
+  '文档不用写得多漂亮，写清楚「怎么跑起来」就已经赢了大半。',
+  '权限判断放在服务端，前端那层只是给用户看的提示。',
+  '数据结构定得好，后面的查询和渲染都会顺很多。',
+  '任务拆分到半天以内可完成，进度才看得见。',
+  '截图和日志一起留档，下次复现问题能省下大把时间。'
+];
+
+var EN='lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum'.split(' ');
+
+function pick(pool,used){
+  var tries=0, w;
+  do{
+    w=pool[Math.floor(Math.random()*pool.length)];
+    tries++;
+  }while(used[w]&&tries<40);
+  used[w]=1;
+  return w;
+}
+
+function cnSentence(used){
+  return pick(CN,used);
+}
+
+function enSentence(minWords,maxWords){
+  var n=minWords+Math.floor(Math.random()*(maxWords-minWords+1));
+  var words=[];
+  for(var i=0;i<n;i++){
+    var w=EN[Math.floor(Math.random()*EN.length)];
+    if(i===0) w=w.charAt(0).toUpperCase()+w.slice(1);
+    words.push(w);
+  }
+  return words.join(' ')+'.';
+}
+
+function clampNum(el,min,max,def){
+  var v=parseInt(el.value,10);
+  if(isNaN(v)) v=def;
+  v=Math.max(min,Math.min(max,v));
+  el.value=String(v);
+  return v;
+}
+
+function gen(){
+  var lang=$('lang').value;
+  var paras=clampNum($('paras'),1,10,3);
+  var per=clampNum($('perPara'),2,8,4);
+  var blocks=[];
+  for(var p=0;p<paras;p++){
+    var used={}, sents=[];
+    for(var k=0;k<per;k++){
+      if(lang==='en'){
+        sents.push(enSentence(9,18));
+      }else{
+        var s=cnSentence(used);
+        if(k===0) s='（'+(p+1)+'）'+s;
+        sents.push(s);
+        if(lang==='mix'&&k===per-1) sents.push(enSentence(6,12));
+      }
+    }
+    blocks.push(sents.join(''));
+  }
+  var text=blocks.join('\n\n');
+  if(lang==='en') text=text.replace(/\.(?=\S)/g,'. ');
+  out.value=text;
+  var chars=out.value.replace(/\s/g,'').length;
+  stat.textContent=paras+' 段 · 每段约 '+per+' 句 · '+chars+' 字符';
+}
+
+$('btnGen').addEventListener('click',function(){ gen(); HS.toast('已重新生成'); });
+['lang','paras','perPara'].forEach(function(id){
+  $(id).addEventListener('change',gen);
+});
+$('btnCopy').addEventListener('click',function(){
+  if(!out.value){ HS.toast('还没有内容'); return; }
+  HS.copy(out.value); HS.toast('已复制全文');
+});
+
+gen();
+})();
+</script>
+</body>
+</html>
