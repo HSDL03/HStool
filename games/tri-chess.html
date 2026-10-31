@@ -130,7 +130,7 @@ canvas{
   <div class="page-head">
     <div>
       <h1>♟️ 三合一棋</h1>
-      <p class="sub">围棋 · 象棋 · 国际象棋，一页切换；AI 就在本机浏览器里跑，不联网</p>
+      <p class="sub">围棋 · 象棋 · 国际象棋，一页切换；AI 默认在本机跑，国际象棋可切「联网」用云端引擎</p>
     </div>
     <div class="actions">
       <a class="btn sm" id="rulesLink" data-to="./rules.html#go">玩法说明 →</a>
@@ -149,6 +149,7 @@ canvas{
         <option value="fast">快 · 0.5s</option>
         <option value="normal" selected>标准 · 1s</option>
         <option value="strong">强 · 3s</option>
+        <option value="online">联网 · 云引擎</option>
       </select>
     </label>
     <span class="spacer"></span>
@@ -1459,12 +1460,124 @@ function syncCompute(d){
 const SPEED = {
   fast:   { go:{p:40000, t:450},  xq:{d:12, t:450},  ch:{d:12, t:450}  },
   normal: { go:{p:60000, t:1100}, xq:{d:14, t:1100}, ch:{d:14, t:1100} },
-  strong: { go:{p:80000, t:3000}, xq:{d:14, t:3000}, ch:{d:14, t:3000} }
+  strong: { go:{p:80000, t:3000}, xq:{d:14, t:3000}, ch:{d:14, t:3000} },
+  /* 联网档：国际象棋走云端，其余棋种没有公开引擎，按「强」在本机算 */
+  online: { go:{p:80000, t:3000}, xq:{d:14, t:3000}, ch:{d:14, t:3000} }
 };
+/* 哪些棋种真能连云端。目前只有国际象棋有可用的公开引擎接口：
+   chess-api.com 跑 Stockfish NNUE，退路是 lichess 的云评估库。
+   围棋（要 KataGo + GPU）与中国象棋（云库未开放跨域接口）都没有可用的公共服务。 */
+const ONLINE_GAMES = { ch:true, xq:false, go:false };
 let speedKey = 'normal';
 try { speedKey = localStorage.getItem('hs-chess-speed') || 'normal'; } catch (e) {}
 if (!SPEED[speedKey]) speedKey = 'normal';
 function strengthFor(game) { return SPEED[speedKey][game] || SPEED.normal[game]; }
+
+/* ================= 云端引擎（仅国际象棋） ================= */
+/* 两个免费、无需 Key、带 CORS 的公共服务：
+   1) chess-api.com：POST JSON，Stockfish NNUE，返回 UCI 着法 + 评估 + 深度
+   2) lichess.org/api/cloud-eval：GET，公开评估库，只对常见局面有数据，作兜底
+   任何一个失败都不会让对局卡住 —— 直接退回本机搜索。 */
+const CLOUD = {
+  chessApi: 'https://chess-api.com/v1',
+  lichess: 'https://lichess.org/api/cloud-eval',
+  depth: 16,      /* 16 层约 2500 分，等待 1~2 秒；18 层要等更久 */
+  timeout: 9000
+};
+
+function chFen(pos){
+  const b = pos.board, piece = {1:'p',2:'n',3:'b',4:'r',5:'q',6:'k'};
+  let rows = [];
+  for (let r = 0; r < 8; r++){
+    let line = '', empty = 0;
+    for (let c = 0; c < 8; c++){
+      const p = b[r*8+c];
+      if (!p){ empty++; continue; }
+      if (empty){ line += empty; empty = 0; }
+      const L = piece[Math.abs(p)] || 'p';
+      line += p > 0 ? L.toUpperCase() : L;
+    }
+    if (empty) line += empty;
+    rows.push(line);
+  }
+  let cast = '';
+  if (pos.castling & 2) cast += 'K';   /* 白王翼 */
+  if (pos.castling & 1) cast += 'Q';   /* 白后翼 */
+  if (pos.castling & 4) cast += 'k';   /* 黑王翼 */
+  if (pos.castling & 8) cast += 'q';   /* 黑后翼 */
+  /* 过路兵格：只有当「确实有兵能吃」时才写进去。引擎内部只要走了两格就会记 ep，
+     但 FEN 的严格校验（chess-api 会逐项验）要求无可吃时必须是 '-'。 */
+  let ep = '-';
+  if (pos.ep >= 0){
+    const row = pos.ep >> 3, col = pos.ep & 7, pawn = pos.turn > 0 ? 1 : -1;
+    const srcRow = row + (pawn > 0 ? 1 : -1);
+    if (srcRow >= 0 && srcRow < 8){
+      if ((col > 0 && b[srcRow*8+col-1] === pawn) || (col < 7 && b[srcRow*8+col+1] === pawn))
+        ep = 'abcdefgh'[col] + (8 - row);
+    }
+  }
+  /* 引擎的 fullmove 是「半步计数」，FEN 要的是回合数（黑走完才算一个回合） */
+  const full = 1 + Math.floor(((pos.fullmove || 1) - 1) / 2);
+  return rows.join('/') + ' ' + (pos.turn > 0 ? 'w' : 'b') + ' ' + (cast || '-') + ' ' + ep +
+         ' ' + (pos.halfmove || 0) + ' ' + full;
+}
+
+function sqFromAlg(alg){
+  const f = 'abcdefgh'.indexOf(alg[0]), r = 8 - parseInt(alg[1], 10);
+  return (f < 0 || !(r >= 0 && r < 8)) ? -1 : r*8 + f;
+}
+
+/* UCI 着法（e2e4 / e7e8q）→ 引擎内部的着法编码，对不上就返回 0 */
+function uciToMove(pos, uci){
+  if (typeof uci !== 'string' || uci.length < 4) return 0;
+  const from = sqFromAlg(uci.slice(0,2)), to = sqFromAlg(uci.slice(2,4));
+  if (from < 0 || to < 0) return 0;
+  const promo = {q:5, r:4, b:3, n:2}[(uci[4] || '').toLowerCase()] || 0;
+  const moves = ENG.Chess.legalMoves(pos);
+  let loose = 0;
+  for (let i = 0; i < moves.length; i++){
+    const info = ENG.Chess.moveInfo(moves[i]);
+    if (info.from !== from || info.to !== to) continue;
+    if (!promo) return moves[i];                    /* 云端没写升变字母时也认 */
+    if (info.promo === promo) return moves[i];
+    if (!loose) loose = moves[i];
+  }
+  return loose;
+}
+
+async function fetchJSON(url, opt, ms){
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), ms || CLOUD.timeout);
+  try {
+    const r = await fetch(url, Object.assign({signal: ac.signal, mode: 'cors'}, opt || {}));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+
+async function cloudChessMove(pos){
+  const fen = chFen(pos);
+  try {
+    const d = await fetchJSON(CLOUD.chessApi, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({fen: fen, depth: CLOUD.depth})
+    });
+    if (d && d.move) return {
+      uci: d.move, depth: d.depth || CLOUD.depth,
+      eval: typeof d.eval === 'number' ? d.eval : null,
+      mate: (d.mate == null ? null : d.mate), src: 'Stockfish'
+    };
+  } catch (e) { /* 落到下一个源 */ }
+  const d2 = await fetchJSON(CLOUD.lichess + '?fen=' + encodeURIComponent(fen) + '&multiPv=1');
+  const pv = d2 && d2.pvs && d2.pvs[0];
+  if (!pv || !pv.moves) throw new Error('云库没有收录这个局面');
+  return {
+    uci: pv.moves.split(' ')[0], depth: d2.depth || 0,
+    eval: (typeof pv.cp === 'number' ? pv.cp / 100 : null),
+    mate: (pv.mate == null ? null : pv.mate), src: 'Lichess'
+  };
+}
 
 /* ================= 状态 ================= */
 const S = {
@@ -1977,18 +2090,44 @@ async function chAI(){
   if (S.over) return;
   const ep = S.epoch;
   const ai = -humanColor();
-  S.thinking = true; setStatus('AI 思考中…', true);
+  const online = speedKey === 'online';
+  S.thinking = true;
+  setStatus(online ? '云引擎思考中…' : 'AI 思考中…', true);
   const L = strengthFor('ch');
   const t0 = performance.now();
   try {
-    const r = await askAI({game:'ch', pos:S.ch.pos, param1:L.d, param2:L.t});
-    if (ep !== S.epoch) return;
-    const dt = ((performance.now()-t0)/1000).toFixed(1);
-    setEngineInfo('深度 '+r.info.depth, r.info.nodes, (r.info.score/100).toFixed(2), dt+'s');
-    if (r.move <= 0){ S.over=true; setStatus('你赢了！',false); setSub('AI 无合法着法'); draw(); return; }
+    let move = 0, cloud = null;
+    if (online){
+      try {
+        cloud = await cloudChessMove(S.ch.pos);
+      } catch (err){
+        cloud = null;
+        console.warn('云端引擎不可用，改用本机搜索：', err && err.message);
+      }
+      if (ep !== S.epoch) return;
+      if (cloud){
+        move = uciToMove(S.ch.pos, cloud.uci);
+        if (!move) addLog('云端给的着法在本机对不上，改用本机搜索');
+      } else {
+        addLog('云端没连上（' + (navigator.onLine ? '接口异常' : '当前无网络') + '），这一手用本机搜索');
+        setStatus('AI 思考中…', true);
+      }
+    }
+    if (!move){
+      const r = await askAI({game:'ch', pos:S.ch.pos, param1:L.d, param2:L.t});
+      if (ep !== S.epoch) return;
+      move = r.move;
+      const dt = ((performance.now()-t0)/1000).toFixed(1);
+      setEngineInfo('本机 深度 '+r.info.depth, r.info.nodes, (r.info.score/100).toFixed(2), dt+'s');
+      if (move <= 0){ S.over=true; setStatus('你赢了！',false); setSub('AI 无合法着法'); draw(); return; }
+    } else {
+      const dt = ((performance.now()-t0)/1000).toFixed(1);
+      const ev = cloud.mate != null ? ('将杀 ' + cloud.mate) : (cloud.eval == null ? '—' : cloud.eval.toFixed(2));
+      setEngineInfo('云 深度 ' + cloud.depth, cloud.src, ev, dt+'s');
+    }
     chSnapshot();
-    const info = chApply(r.move);
-    addLog(whoName(ai)+' '+chSquare(info.from)+'-'+chSquare(info.to)+(info.promo?'='+pawnStr(info.promo):''));
+    const info = chApply(move);
+    addLog((cloud ? '☁ ' : '') + whoName(ai) + ' ' + chSquare(info.from) + '-' + chSquare(info.to) + (info.promo ? '=' + pawnStr(info.promo) : ''));
     draw();
     if (!chCheckEnd()){
       setStatus('轮到你走', false);
@@ -2228,6 +2367,7 @@ document.getElementById('tabs').addEventListener('click', e => {
   syncRulesLink();
   resize();
   startGame();
+  cloudHint();
 });
 
 $('side').onchange = () => {
@@ -2247,6 +2387,14 @@ if (window.ResizeObserver){
 }
 
 /* 思考速度：切了就存在本地，下一手生效（不用重开一局） */
+const cloudToast = {};
+function cloudHint(){
+  if (speedKey !== 'online' || ONLINE_GAMES[S.game]) return;
+  if (cloudToast[S.game]) return;
+  cloudToast[S.game] = true;
+  const name = S.game === 'go' ? '围棋' : '中国象棋';
+  if (window.HS && HS.toast) HS.toast(name + ' 没有公开的在线引擎，这一档按「强」在本机算');
+}
 const speedSel = document.getElementById('speed');
 if (speedSel){
   speedSel.value = speedKey;
@@ -2255,6 +2403,7 @@ if (speedSel){
     speedKey = speedSel.value;
     try { localStorage.setItem('hs-chess-speed', speedKey); } catch (e) {}
     addLog('思考速度 → ' + speedSel.options[speedSel.selectedIndex].text);
+    cloudHint();
   });
 }
 
