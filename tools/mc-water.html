@@ -169,7 +169,7 @@ function calcFlow(){
   var base=kind==='water'?7:(dim==='nether'?7:3);
   var total=base*(falls+1);
   var width=base*2+1;
-  $('rBase').textContent=base+' 格（第 '+base+' 格之后就没有流动水了）';
+  $('rBase').textContent=base+' 格（第 '+base+' 格之后就不再往外流）';
   $('rTotal').textContent=total+' 格（单层 '+base+' × 落差 '+falls+' + 1）';
   $('rWidth').textContent=width+' 格宽（半径 '+base+'）';
   $('rArea').textContent=(width*width)+' 格以内（'+width+'×'+width+'）';
