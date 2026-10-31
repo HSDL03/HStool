@@ -504,6 +504,21 @@ select.select{
 .statuspill .lat{color:var(--ac);font-weight:700}
 .statuspill.err .lat{color:var(--dgr)}
 
+/* ── 回到顶部（core.js 自动注入）──────────────────────────────────────── */
+.to-top{
+  position:fixed;right:12px;bottom:58px;z-index:91;
+  width:38px;height:38px;display:grid;place-items:center;
+  font-family:inherit;font-size:16px;font-weight:800;line-height:1;
+  color:var(--text);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);cursor:pointer;
+  opacity:0;visibility:hidden;transform:translateY(8px);
+  transition:opacity .18s,transform .18s,visibility .18s,color .15s,border-color .15s;
+}
+.to-top.show{opacity:.9;visibility:visible;transform:none}
+.to-top:hover{opacity:1;transform:translateY(-2px);color:var(--ac);border-color:var(--ac)}
+.to-top:active{transform:scale(.94)}
+[data-theme^="github-"] .to-top{border-width:1px;box-shadow:var(--sh-1)}
+
 /* ── 命令面板 ─────────────────────────────────────────────────────────── */
 .cmdk{
   position:fixed;inset:0;z-index:400;display:flex;align-items:flex-start;justify-content:center;
@@ -686,3 +701,28 @@ select.select{
   .card .cico img{width:32px;height:32px}
   .page-head h1 img.h1-ico{width:26px;height:26px;vertical-align:-3px;margin-right:7px}
 }
+
+/* ── 使用体验微调（全局，只增不改）────────────────────────────────────── */
+/* 锚点跳转别被固定顶栏盖住 */
+html{scroll-padding-top:calc(var(--topbar-h, 56px) + 14px)}
+/* 触屏别出现灰色高亮块，点按反馈交给 :active */
+html{-webkit-tap-highlight-color:transparent}
+/* 长表格 / 代码块在窄屏可以横向滑，不要撑破页面 */
+.panel{overflow-wrap:anywhere}
+/* 手机上把可点区域做够大，手指点得中 */
+@media(max-width:640px){
+  .btn,.chip{min-height:40px}
+  .iconbtn{width:38px;height:38px}
+  .seg button{padding:7px 12px}
+  .fld input,.fld select,.fld textarea{font-size:16px}   /* iOS 小于 16px 会强制放大页面 */
+}
+/* 滚动条：webkit 下细一点，深色主题别闪白 */
+@media (min-width:900px){
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:6px;border:2px solid var(--bg)}
+  ::-webkit-scrollbar-thumb:hover{background:var(--ac2)}
+  ::-webkit-scrollbar-track{background:transparent}
+}
+::selection{background:var(--acs);color:var(--text)}
+/* 键盘 Tab 走到卡片/按钮时给个明显落点 */
+a.card:focus-visible,.recent-item:focus-visible{outline:2px solid var(--ac);outline-offset:3px}

@@ -401,7 +401,8 @@
 <button class="sound-btn hidden" id="soundBtn" title="音效开关">🔊</button>
 <div class="net-status hidden" id="netStatus">连接中…</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+<script src="../assets/vendor/supabase.js"></script>
+<script>if(typeof supabase==='undefined'){var _sb=document.createElement('script');_sb.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';document.head.appendChild(_sb);}</script>
 <script>
 (function () {
   'use strict';

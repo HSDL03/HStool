@@ -157,6 +157,14 @@ header.head .back:hover{gap:8px}
 
 .readonly-note{padding:8px 10px;font-size:12px;color:var(--muted);background:var(--bg2);border:1px dashed var(--bd);border-radius:6px;margin-bottom:12px}
 
+.remember-row{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:12.5px;color:var(--muted);cursor:pointer;user-select:none}
+.remember-row input{width:15px;height:15px;accent-color:var(--ac);margin:0;flex:none;cursor:pointer}
+.conn-state{margin-top:10px;padding:9px 11px;font-size:12.5px;line-height:1.5;border-radius:6px;border:1px solid var(--bd);background:var(--bg2);color:var(--muted)}
+.conn-state.ok{border-color:var(--ok);background:rgba(26,127,55,.08);color:var(--ok)}
+.conn-state.bad{border-color:var(--dgr);background:rgba(207,34,46,.08);color:var(--dgr)}
+.repo-chip{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;font-size:11.5px;font-weight:700;color:var(--ac);background:var(--acs);border:1px solid var(--ac);border-radius:999px}
+.status .repo-chip{margin-left:2px}
+
 .x{width:30px;height:30px;display:grid;place-items:center;font-size:14px;color:var(--muted);background:transparent;border:none;border-radius:5px;cursor:pointer;transition:all .18s}
 .x:hover{color:var(--text);background:var(--bg2);transform:rotate(90deg)}
 
@@ -237,9 +245,16 @@ header.head .back:hover{gap:8px}
   .file{flex-wrap:wrap}
   .file .fbody{flex-basis:calc(100% - 130px)}
   .file .acts{width:100%;justify-content:flex-end;margin-top:-4px}
-  .bar{padding:12px}
+  .bar{padding:12px;gap:8px}
   .bar .sp{display:none}
-  .bar .btn{flex:1;justify-content:center}
+  .bar .status{width:100%;flex-wrap:wrap;gap:6px}
+  .bar .btn{flex:1;justify-content:center;white-space:nowrap;font-size:12.5px;padding:8px 8px}
+  .status .repo-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tabs{scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:10px 13px}
+  .conn-state{font-size:12px}
+  .pnl{max-height:calc(100vh - 24px)}
   .grid2{grid-template-columns:1fr}
   .toolbar .hint{display:none}
   .ann-head-row{gap:6px}
@@ -284,7 +299,7 @@ header.head .back:hover{gap:8px}
   </div>
 
   <div class="bar">
-    <div class="status"><span class="dot" id="dot"></span><span id="statusText">未连接</span></div>
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">未连接</span><span id="repoHint" hidden></span></div>
     <span class="sp"></span>
     <button class="btn" id="btnConnect" type="button">🔑 连接 GitHub</button>
     <button class="btn" id="btnReload" type="button" disabled>🔄 重新加载</button>
@@ -450,6 +465,8 @@ header.head .back:hover{gap:8px}
         → 生成新令牌 → 勾选本仓库 → 加 Contents 读写权限。<br>
         Token 只存你本机浏览器，不上传。
       </div>
+      <label class="remember-row"><input type="checkbox" id="ghRemember" checked> 记住 Token（存在这台电脑的浏览器里，下次自动连接）</label>
+      <div class="conn-state" id="connState" hidden></div>
       <div class="grid2" style="margin-top:14px">
         <div class="fld"><span>Owner</span><input id="ghOwner" type="text" placeholder="HSDL03" autocomplete="off" spellcheck="false"></div>
         <div class="fld"><span>仓库名 Repo</span><input id="ghRepo" type="text" placeholder="HStool" autocomplete="off" spellcheck="false"></div>
@@ -637,6 +654,7 @@ header.head .back:hover{gap:8px}
   var DEFAULT_ANN_PATH   = 'data/announcement.json';
   var DEFAULT_BRANCH     = 'main';
   var K_GH               = 'hs-admin-gh';
+  var K_GH_REMEMBER      = 'hs-admin-gh-remember';
 
   /* 仓库改版（文件下沉到 pages/ games/ tools/ data/）之前保存的扁平路径，
      老配置直接读会 404，这里统一迁移一次 */
@@ -718,6 +736,7 @@ header.head .back:hover{gap:8px}
   var gh = null;
   var curTab = 'wiki';
   var busy = false;
+  var lastSave = null;
 
   /* 分类 */
   var wikiArticles = [];
@@ -744,6 +763,7 @@ header.head .back:hover{gap:8px}
   /* 公告 */
   var annItems = [];
   var annSnapshot = '';
+  var annLoaded = false;
   var annCollapsedState = {};   /* id -> true 表示折叠 */
   var annCategoryFilter = '__all__';
   var annTypeFilter = '__all__';
@@ -822,12 +842,16 @@ header.head .back:hover{gap:8px}
      ========================================================== */
   /* 把 GitHub 的英文报错翻译成能照着做的提示 */
   function friendlyGhError(e){
+    if (e && e.friendly) return e.friendly;
     var m = (e && e.message) ? e.message : '未知错误';
+    if (e && e.rate) return 'GitHub 接口限流（每小时 5000 次），等一会儿再试';
     if (/Bad credentials|Requires authentication|401/i.test(m)) return 'Token 无效或已过期，请重新生成后再连接';
     if (/rate limit/i.test(m)) return 'GitHub 接口限流，等一会儿再试';
     if (/not accessible by personal access token|Resource not accessible/i.test(m)) return 'Token 权限不足：需要该仓库的 Contents 读写权限';
-    if (/does not match|is at .* but expected|sha/i.test(m)) return '文件已被别处修改（sha 冲突），请先点「读取」再保存';
+    if (/does not match the current version|is at .*? but expected|sha.*(mismatch|did not match)/i.test(m)) return '文件已被别处修改（sha 冲突），请先点「🔄 重新加载」再保存';
     if (/Not Found|404/i.test(m)) return '仓库或文件不存在，请检查 Owner / Repo 与路径';
+    if (/Branch .* not found/i.test(m)) return '分支不存在，检查「分支 Branch」是否写错';
+    if (/ETIMEDOUT|Failed to fetch|NetworkError/i.test(m)) return '网络连不上 GitHub（可能被墙/代理问题），换个网络再试';
     return m;
   }
 
@@ -837,12 +861,58 @@ header.head .back:hover{gap:8px}
       + encodeURIComponent(gh.repo) + '/contents/'
       + path.split('/').map(encodeURIComponent).join('/');
   }
-  function ghHeaders(){
+  function ghHeaders(cfg){
+    var c = cfg || gh || {};
     return {
-      'Authorization': 'Bearer ' + gh.token,
+      'Authorization': 'Bearer ' + c.token,
       'Accept': 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28'
     };
+  }
+
+  /* 通用 GitHub 调用；cfg 传未保存的候选配置，用来「先验证再连接」 */
+  function ghApi(path, opt, cfg){
+    var o = opt || {};
+    var h = ghHeaders(cfg);
+    if (o.body) h['Content-Type'] = 'application/json';
+    return fetch('https://api.github.com' + path, {
+      method: o.method || 'GET',
+      headers: h,
+      body: o.body ? JSON.stringify(o.body) : undefined
+    }).then(function(r){
+      if (r.status === 403 && r.headers.get('x-ratelimit-remaining') === '0') {
+        var e = new Error('rate limit');
+        e.rate = true;
+        throw e;
+      }
+      if (!r.ok) {
+        return r.json().catch(function(){ return {}; }).then(function(err){
+          var msg = (err && err.message) || ('HTTP ' + r.status);
+          var ex = new Error(msg);
+          ex.status = r.status;
+          throw ex;
+        });
+      }
+      return r.json();
+    });
+  }
+
+  /* 连接前校验：仓库能不能读、Token 属于谁、有没有写权限 */
+  function verifyConnection(cfg){
+    var repoPath = '/repos/' + encodeURIComponent(cfg.owner) + '/' + encodeURIComponent(cfg.repo);
+    return ghApi(repoPath, null, cfg).then(function(repo){
+      return ghApi('/user', null, cfg).then(function(user){
+        return { repo: repo, user: user };
+      }, function(){ return { repo: repo, user: null }; });
+    }).then(function(res){
+      var perms = (res.repo && res.repo.permissions) || {};
+      if (perms.push === false) {
+        var e = new Error('这个 Token 对该仓库没有写权限（Contents: Read and write）');
+        e.friendly = 'Token 只能读不能写：请到 github.com/settings/tokens 给这个仓库补上 Contents 读写权限';
+        throw e;
+      }
+      return res;
+    });
   }
 
   function loadJson(path){
@@ -926,8 +996,13 @@ header.head .back:hover{gap:8px}
     }
     return fetchPage(1);
   }
+  /* 缓存按「仓库 + 分支」分开存，换仓库不会读到上一个仓库的 Releases */
+  function releasesCacheKey(){
+    var c = gh || {};
+    return 'admin-releases-cache-v2:' + (c.owner || '') + '/' + (c.repo || '') + '@' + (c.branch || 'main');
+  }
   function fetchReleasesCached(force){
-    var key='admin-releases-cache-v1';
+    var key = releasesCacheKey();
     if(!force){
       try{
         var raw=sstorage.get(key);
@@ -1085,6 +1160,7 @@ header.head .back:hover{gap:8px}
     return false;
   }
   function anyDirty(){
+    syncAnnFromInputs();
     return wikiSnapshot !== snapshotWiki()
         || fileSnapshot !== snapshotFiles()
         || toolsSnapshot !== snapshotTools()
@@ -1094,6 +1170,7 @@ header.head .back:hover{gap:8px}
   function updateButtons(){
     var hasGh = !!gh;
     var dirty = currentDirty();
+    updateRepoHints();
 
     if (els.btnReload) els.btnReload.disabled = !hasGh || busy;
     if (els.btnSave) els.btnSave.disabled = !hasGh || busy || !dirty;
@@ -1161,7 +1238,11 @@ header.head .back:hover{gap:8px}
             : '管理首页公告：可折叠编辑，支持分类与类型筛选。改完点顶栏「💾 保存并推送」写入 GitHub 的 announcement.json。';
     }
 
-    if (tab === 'announce') refreshAnnounce();
+    if (tab === 'announce') {
+      /* 已经加载过就别再拉一遍：会把没保存的编辑冲掉 */
+      if (!annLoaded) refreshAnnounce();
+      else renderAnn();
+    }
     if (tab === 'tools') { rebuildToolsTagFilter(); renderTools(); }
     updateButtons();
   }
@@ -1193,10 +1274,26 @@ header.head .back:hover{gap:8px}
       data: wikiArticles
     });
   }
+  /* wiki-data.json 只有条目数组，没有单独的「分类顺序」字段。
+     所以拖完分类后，把条目按分类的新顺序重排（同分类内保持原相对顺序），
+     保存时数组顺序就带着分类顺序一起进仓库了 —— 否则排序永远存不下来。 */
+  function reorderArticlesByTags(){
+    if (!wikiArticles.length || !wikiTags.length) return;
+    var order = {};
+    wikiTags.forEach(function(t, i){ order[t.name] = i; });
+    var seq = 0;
+    var dec = wikiArticles.map(function(a){
+      var c = (a && a.category) ? String(a.category) : '未分类';
+      var k = (order[c] === undefined) ? 9999 : order[c];
+      return { a: a, k: k, i: seq++ };
+    });
+    dec.sort(function(x, y){ return (x.k - y.k) || (x.i - y.i); });
+    wikiArticles = dec.map(function(d){ return d.a; });
+  }
   function renderWiki(){
     if (!els.wikiCards) return;
     if (!gh) {
-      els.wikiCards.innerHTML = '<div class="empty">点上方「🔑 连接 GitHub」加载数据</div>';
+      els.wikiCards.innerHTML = '<div class="empty">还没连接 GitHub，连上才能读写数据。<br><br><button class="btn p" type="button" data-connect>🔑 现在连接</button></div>';
       return;
     }
     if (wikiTags.length === 0) {
@@ -1225,6 +1322,7 @@ header.head .back:hover{gap:8px}
       if (c === oldName) a.category = newName;
     });
     wikiTags.forEach(function(t){ if (t.name === oldName) t.name = newName; });
+    reorderArticlesByTags();
     renderWiki();
     updateButtons();
     toast('已重命名为「' + newName + '」');
@@ -1295,6 +1393,7 @@ header.head .back:hover{gap:8px}
     });
     wikiTags = wikiTags.filter(function(t){ return t.name !== mergingFrom; });
     recomputeWikiCounts();
+    reorderArticlesByTags();
     renderWiki(); updateButtons(); closeMerge();
     toast('已把 ' + moved + ' 条并入「' + target + '」');
   }
@@ -1316,6 +1415,7 @@ header.head .back:hover{gap:8px}
     });
     var removed = before - wikiArticles.length;
     wikiTags = wikiTags.filter(function(t){ return t.name !== deletingName; });
+    reorderArticlesByTags();
     renderWiki(); updateButtons(); closeDelete();
     toast('已删除分类，移除 ' + removed + ' 条');
   }
@@ -1366,7 +1466,7 @@ header.head .back:hover{gap:8px}
   function renderFiles(){
     if (!els.dlCards) return;
     if (!gh) {
-      els.dlCards.innerHTML = '<div class="empty">点上方「🔑 连接 GitHub」加载数据</div>';
+      els.dlCards.innerHTML = '<div class="empty">还没连接 GitHub，连上才能读写数据。<br><br><button class="btn p" type="button" data-connect>🔑 现在连接</button></div>';
       return;
     }
     if (files.length === 0) {
@@ -1597,6 +1697,7 @@ header.head .back:hover{gap:8px}
     files.splice(idx, 1);
     closeFileEditor();
     buildDlTagOptions();
+    buildTagDatalist();
     renderFiles();
     updateButtons();
     toast('已删除，点「保存并推送」生效');
@@ -1734,7 +1835,7 @@ header.head .back:hover{gap:8px}
   function renderTools(){
     if(!els.toolsCards) return;
     if(!gh){
-      els.toolsCards.innerHTML = '<div class="empty">点上方「🔑 连接 GitHub」加载数据</div>';
+      els.toolsCards.innerHTML = '<div class="empty">还没连接 GitHub，连上才能读写数据。<br><br><button class="btn p" type="button" data-connect>🔑 现在连接</button></div>';
       if(els.toolsCountInfo) els.toolsCountInfo.textContent = '';
       return;
     }
@@ -1830,8 +1931,8 @@ header.head .back:hover{gap:8px}
     if(els.tName) els.tName.value = t ? t.name : '';
     if(els.tDesc) els.tDesc.value = t ? t.desc : '';
     if(els.tTag) els.tTag.value = t ? t.tag : '';
-    if(els.tUrl) els.tUrl.value = t ? t.url : '';
-    if(els.tId) els.tId.value = t ? t.id : '';
+    if(els.tUrl) els.tUrl.value = t ? t.url : './tools/';
+    if(els.tId) els.tId.value = t ? t.id : ('tool-' + Date.now().toString(36));
     if(els.tCategory) els.tCategory.value = t ? (t.category || '') : '';
     if(els.tDeprecated) els.tDeprecated.checked = t ? t.deprecated : false;
     if(els.tDisabled) els.tDisabled.checked = t ? t.disabled : false;
@@ -1853,6 +1954,13 @@ header.head .back:hover{gap:8px}
     var url = (els.tUrl.value || '').trim();
     var id = (els.tId.value || '').trim();
     var isNew = editingToolIdx < 0;
+
+    if(!url){ toast('工具链接不能为空，例如 ./tools/xxx.html'); try { els.tUrl.focus(); } catch(e){} return; }
+    if(!/^(\.{0,2}\/|https?:\/\/)/i.test(url)){
+      toast('链接要以 ./ 或 https:// 开头');
+      try { els.tUrl.focus(); els.tUrl.select(); } catch(e){}
+      return;
+    }
 
     if(!id){
       id = 'tool-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6);
@@ -1945,7 +2053,7 @@ header.head .back:hover{gap:8px}
   function renderAnn(){
     var el = els.annCards;
     if (!el) return;
-    if (!gh) { el.innerHTML = '<div class="empty">请先连接 GitHub</div>'; return; }
+    if (!gh) { el.innerHTML = '<div class="empty">还没连接 GitHub，连上才能读写数据。<br><br><button class="btn p" type="button" data-connect>🔑 现在连接</button></div>'; return; }
     if (annItems.length === 0) {
       el.innerHTML = '<div class="empty">还没有公告，点上方「＋ 添加公告」开始</div>';
       if(els.annCountInfo) els.annCountInfo.textContent = '';
@@ -2103,6 +2211,7 @@ header.head .back:hover{gap:8px}
         };
       });
       annSnapshot = snapshotAnn();
+      annLoaded = true;
       /* 新加载：清空折叠状态 */
       annCollapsedState = {};
       renderAnn();
@@ -2110,7 +2219,7 @@ header.head .back:hover{gap:8px}
       updateButtons();
     }).catch(function(err){
       if (err && err.notFound) {
-        annItems = []; annSnapshot = snapshotAnn(); annCollapsedState = {}; renderAnn();
+        annItems = []; annSnapshot = snapshotAnn(); annCollapsedState = {}; annLoaded = true; renderAnn();
         if (els.annHint) els.annHint.textContent = '未找到 ' + (gh.annPath || DEFAULT_ANN_PATH) + '，保存时会新建';
         updateButtons();
         return;
@@ -2238,6 +2347,8 @@ header.head .back:hover{gap:8px}
     if (!container) return;
     var dragIdx = null;
     container.addEventListener('dragstart', function(e){
+      /* 在输入框/按钮上拖拽是「选文字 / 拖按钮」，别当成排序 */
+      if (e.target.closest('input,textarea,select,button,a,label')) { e.preventDefault(); return; }
       var el = e.target.closest(itemSelector);
       if (!el) return;
       dragIdx = parseInt(el.getAttribute(getIdxAttr), 10);
@@ -2278,6 +2389,15 @@ header.head .back:hover{gap:8px}
   /* ==========================================================
      连接管理
      ========================================================== */
+  function setConnState(kind, text){
+    var el = $('connState');
+    if (!el) return;
+    if (!text) { el.hidden = true; el.textContent = ''; el.className = 'conn-state'; return; }
+    el.hidden = false;
+    el.className = 'conn-state' + (kind ? ' ' + kind : '');
+    el.textContent = text;
+  }
+
   function openConn(){
     if (els.ghToken) els.ghToken.value = gh ? (gh.token || '') : '';
     if (els.ghOwner) els.ghOwner.value = gh ? gh.owner : DEFAULT_OWNER;
@@ -2287,11 +2407,25 @@ header.head .back:hover{gap:8px}
     if (els.ghToolsPath) els.ghToolsPath.value = gh ? gh.toolsPath : DEFAULT_TOOLS_PATH;
     if (els.ghAnnPath) els.ghAnnPath.value = gh ? (gh.annPath || DEFAULT_ANN_PATH) : DEFAULT_ANN_PATH;
     if (els.ghBranch) els.ghBranch.value = gh ? gh.branch : DEFAULT_BRANCH;
+    var rem = $('ghRemember');
+    if (rem) rem.checked = gh ? (gh.remember !== false) : (storage.get(K_GH_REMEMBER) !== '0');
+    if (gh) setConnState('ok', '当前已连接 ' + (gh.repoFull || (gh.owner + '/' + gh.repo)) + (gh.login ? '（' + gh.login + '）' : '') + '，改完点「保存并连接」会重新验证。');
+    else setConnState('', '');
     if (els.connDisconn) els.connDisconn.hidden = !gh;
     if (els.connOv) els.connOv.classList.add('show');
     setTimeout(function(){ try { els.ghToken.focus(); } catch(e){} }, 40);
   }
   function closeConn(){ if (els.connOv) els.connOv.classList.remove('show'); }
+
+  /* 记住 Token = 存 localStorage；不记住 = 只为这次会话存 sessionStorage */
+  function persistCred(cfg, remember){
+    var raw = JSON.stringify(cfg);
+    try {
+      if (remember) { storage.set(K_GH, raw); sstorage.del(K_GH); }
+      else { sstorage.set(K_GH, raw); storage.del(K_GH); }
+      storage.set(K_GH_REMEMBER, remember ? '1' : '0');
+    } catch(e){}
+  }
 
   function doConnect(){
     var token = (els.ghToken.value || '').trim();
@@ -2302,17 +2436,48 @@ header.head .back:hover{gap:8px}
     var toolsPath = normPath(els.ghToolsPath.value, DEFAULT_TOOLS_PATH);
     var annPath   = normPath(els.ghAnnPath.value,   DEFAULT_ANN_PATH);
     var branch = (els.ghBranch.value || '').trim() || DEFAULT_BRANCH;
+    var remember = !!($('ghRemember') && $('ghRemember').checked);
 
-    if (!token) { toast('请填 Token'); return; }
+    if (!token) { toast('请填 Token'); try { els.ghToken.focus(); } catch(e){} return; }
     if (!owner || !repo) { toast('请填 Owner 和 Repo'); return; }
 
-    gh = { token: token, owner: owner, repo: repo, wikiPath: wikiPath, dlPath: dlPath, toolsPath: toolsPath, annPath: annPath, branch: branch };
-    storage.set(K_GH, JSON.stringify(gh));
-    updatePathTips();
-    closeConn();
-    toast('正在加载数据…');
-    reload(true);
-    if (curTab === 'announce') refreshAnnounce();
+    var cfg = {
+      token: token, owner: owner, repo: repo,
+      wikiPath: wikiPath, dlPath: dlPath, toolsPath: toolsPath, annPath: annPath,
+      branch: branch, remember: remember
+    };
+
+    var btn = els.connSave;
+    var label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '验证中…'; }
+    setConnState('', '正在验证 Token 与仓库权限…');
+
+    verifyConnection(cfg).then(function(res){
+      gh = {
+        token: cfg.token, owner: cfg.owner, repo: cfg.repo,
+        wikiPath: cfg.wikiPath, dlPath: cfg.dlPath, toolsPath: cfg.toolsPath,
+        annPath: cfg.annPath, branch: cfg.branch, remember: cfg.remember,
+        login: (res.user && res.user.login) || '',
+        repoFull: (res.repo && res.repo.full_name) || (cfg.owner + '/' + cfg.repo),
+        isPrivate: !!(res.repo && res.repo.private)
+      };
+      persistCred(gh, remember);
+      updatePathTips();
+      updateRepoHints();
+      setConnState('ok', '✅ 已验证 ' + gh.repoFull + (gh.isPrivate ? '（私有）' : '') +
+        (gh.login ? ' · 以 ' + gh.login + ' 身份' : '') + '，正在加载数据…');
+      closeConn();
+      toast('已连接 ' + gh.repoFull);
+      reload(true);
+      if (curTab === 'announce') refreshAnnounce();
+    }).catch(function(err){
+      console.error('[admin] 连接失败', err);
+      setConnState('bad', '❌ ' + friendlyGhError(err));
+      toast('连接失败：' + friendlyGhError(err));
+      try { els.ghToken.focus(); els.ghToken.select(); } catch(e){}
+    }).then(function(){
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+    });
   }
 
   function doDisconnect(){
@@ -2324,10 +2489,23 @@ header.head .back:hover{gap:8px}
     annItems = [];
     annCollapsedState = {};
     wikiSnapshot = ''; fileSnapshot = ''; toolsSnapshot = ''; annSnapshot = '';
+    storage.del(K_GH); sstorage.del(K_GH);
+    setConnState('', '');
     closeConn();
+    updateRepoHints();
     renderWiki(); renderFiles(); renderTools(); renderAnn();
     buildDlTagOptions(); rebuildToolsTagFilter(); updateButtons();
-    toast('已断开');
+    toast('已断开，Token 已从本机移除');
+  }
+
+  /* 顶栏与提示里的「当前仓库 + 账号」 */
+  function updateRepoHints(){
+    var tip = $('repoHint');
+    if (!tip) return;
+    if (!gh) { tip.innerHTML = ''; tip.hidden = true; return; }
+    tip.hidden = false;
+    tip.innerHTML = '<span class="repo-chip" title="' + esc(gh.repoFull || '') + (gh.login ? ' · ' + esc(gh.login) : '') + '">📦 ' +
+      esc(gh.repoFull || (gh.owner + '/' + gh.repo)) + (gh.branch ? ' @' + esc(gh.branch) : '') + '</span>';
   }
 
   function updatePathTips(){
@@ -2441,14 +2619,17 @@ header.head .back:hover{gap:8px}
     }
 
     saveJson(path, data)
-      .then(function(){
+      .then(function(res){
+        var sha = (res && res.commit && res.commit.sha) ? String(res.commit.sha).slice(0, 7) : '';
         if (curTab === 'wiki') wikiSnapshot = snapshotWiki();
         else if (curTab === 'download') fileSnapshot = snapshotFiles();
         else if (curTab === 'tools') toolsSnapshot = snapshotTools();
-        else if (curTab === 'announce'){ annItems = data; annSnapshot = snapshotAnn(); renderAnn(); }
+        else if (curTab === 'announce'){ annItems = data; annLoaded = true; annSnapshot = snapshotAnn(); renderAnn(); }
         busy = false;
         updateButtons();
-        toast('已保存 ' + path + ' · 所有访客可见');
+        lastSave = { path: path, sha: sha, at: Date.now() };
+        var tip = '已保存 ' + path + (sha ? ' · 提交 ' + sha : '') + ' · 30~60 秒后线上生效';
+        toast(tip);
       })
       .catch(function(err){
         console.warn('[admin] 保存失败', err);
@@ -2474,8 +2655,12 @@ header.head .back:hover{gap:8px}
     }
 
     if (els.btnConnect) els.btnConnect.addEventListener('click', openConn);
+    document.addEventListener('click', function(e){
+      if (e.target.closest('[data-connect]')) openConn();
+    });
     if (els.btnReload) els.btnReload.addEventListener('click', function(){
-      if (curTab === 'announce') { refreshAnnounce(); return; }
+      if (currentDirty() && !confirm('当前有未保存的改动，重新加载会全部丢失。继续？')) return;
+      if (curTab === 'announce') { annLoaded = false; refreshAnnounce(); return; }
       reload(false, true);
     });
     if (els.btnSave) els.btnSave.addEventListener('click', save);
@@ -2516,7 +2701,7 @@ header.head .back:hover{gap:8px}
     if (els.btnSyncReleases) els.btnSyncReleases.addEventListener('click', function(){
       if (!gh) { toast('请先连接 GitHub'); return; }
       if (currentDirty() && !confirm('有未保存的改动，同步后会丢失。继续？')) return;
-      sstorage.del('admin-releases-cache-v1');
+      sstorage.del(releasesCacheKey());
       toast('正在同步 Releases…');
       reload(true, true);
     });
@@ -2618,8 +2803,10 @@ header.head .back:hover{gap:8px}
       var item = wikiTags.splice(fromIdx, 1)[0];
       if (!item) return;
       wikiTags.splice(toIdx, 0, item);
+      reorderArticlesByTags();
       renderWiki();
       updateButtons();
+      toast('分类顺序已调整，点「保存并推送」生效');
     });
     bindDragFor(els.dlCards, '.file', 'data-idx', function(fromIdx, toIdx){
       var item = files.splice(fromIdx, 1)[0];
@@ -2660,7 +2847,8 @@ header.head .back:hover{gap:8px}
       else if (t === 'announce') switchTab('announce');
       else switchTab('wiki');
 
-      var raw = storage.get(K_GH);
+      var raw = storage.get(K_GH) || sstorage.get(K_GH);
+      var remembered = !!storage.get(K_GH);
       if (raw) {
         try {
           var c = JSON.parse(raw);
@@ -2673,10 +2861,11 @@ header.head .back:hover{gap:8px}
               dlPath: normPath(c.dlPath, DEFAULT_DL_PATH),
               toolsPath: normPath(c.toolsPath, DEFAULT_TOOLS_PATH),
               annPath: normPath(c.annPath, DEFAULT_ANN_PATH),
-              branch: c.branch || DEFAULT_BRANCH
+              branch: c.branch || DEFAULT_BRANCH,
+              remember: (c.remember !== undefined) ? !!c.remember : remembered
             };
-            storage.set(K_GH, JSON.stringify(gh));   /* 迁移后的路径回写，下次直接用 */
             updatePathTips();
+            updateRepoHints();
             updateButtons();
             renderWiki();
             renderFiles();
@@ -2684,6 +2873,20 @@ header.head .back:hover{gap:8px}
             renderTools();
             reload(true);
             if (curTab === 'announce') refreshAnnounce();
+
+            /* 后台悄悄验一次：Token 失效 / 权限不够时提前告诉用户，而不是等保存才报错 */
+            verifyConnection({ token: gh.token, owner: gh.owner, repo: gh.repo }).then(function(res){
+              gh.login = (res.user && res.user.login) || '';
+              gh.repoFull = (res.repo && res.repo.full_name) || (gh.owner + '/' + gh.repo);
+              gh.isPrivate = !!(res.repo && res.repo.private);
+              persistCred(gh, gh.remember !== false);
+              updateRepoHints();
+              updateButtons();
+            }).catch(function(err){
+              console.warn('[admin] 自动验证失败', err);
+              setStatus('warn', 'Token 可能已失效，请重新连接');
+              toast('自动连接失败：' + friendlyGhError(err));
+            });
           }
         } catch(e){ console.warn('[admin] 恢复配置失败', e); }
       }

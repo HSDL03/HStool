@@ -559,6 +559,25 @@
     $$('[data-year]').forEach(function (n) { n.textContent = new Date().getFullYear(); });
     // 顶栏高度暴露给 CSS
     if (top) document.documentElement.style.setProperty('--topbar-h', top.offsetHeight + 'px');
+
+    /* 回到顶部：内容超过一屏半、且已经滚过一段才出现，长列表/工具页都用得上 */
+    var toTop = el('button', 'to-top');
+    toTop.type = 'button';
+    toTop.textContent = '↑';
+    toTop.title = '回到顶部（Home）';
+    toTop.setAttribute('aria-label', '回到顶部');
+    toTop.addEventListener('click', function () {
+      try { window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); }
+      catch (e) { window.scrollTo(0, 0); }
+    });
+    document.body.appendChild(toTop);
+    var toTopTick = function () {
+      var tall = (document.documentElement.scrollHeight - window.innerHeight) > window.innerHeight * 0.6;
+      toTop.classList.toggle('show', tall && window.scrollY > 380);
+    };
+    on(window, 'scroll', toTopTick, { passive: true });
+    on(window, 'resize', toTopTick);
+    setTimeout(toTopTick, 700);
   }
 
   /* ─────────────────────────── 导出 ─────────────────────────────── */
