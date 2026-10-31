@@ -513,7 +513,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": true
   },
   {
     "id": "game-xiangqi",
@@ -525,7 +525,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": true
   },
   {
     "id": "game-chess",
@@ -537,7 +537,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": true
   },
   {
     "id": "game-doudizhu",
@@ -549,7 +549,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": true
   },
   {
     "id": "game-uno",
@@ -561,7 +561,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": true
   },
   {
     "id": "game-mahjong",
@@ -573,7 +573,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": true
   },
   {
     "id": "game-rules",
@@ -585,7 +585,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": true
   },
   {
     "id": "tool-img-base64",
