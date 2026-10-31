@@ -158,7 +158,8 @@ python -m http.server 8000     # 或 npx serve .
 
 国象应招器可以**直接读你屏幕上的棋盘**：框住对手的棋盘，你在那边照常下，这边自动读出他走了哪步、给你应手。
 
-**桌面版 exe（推荐）**：`desk/py` 是 Python + tkinter 的独立程序，识图与自动落子都在本地。
+**桌面版 exe（推荐）**：[Releases · 国象应招器](https://github.com/HSDL03/HStool/releases/tag/chess-v1.0.0) 直接下 `国象应招器.exe`（单文件免安装，19.6 MB）。
+源码在 `desk/py`，Python + tkinter，识图与自动落子都在本地。
 
 ```bash
 cd desk/py && build.cmd        # 或：py -m PyInstaller --onefile --windowed --name 国象应招器 chess_assist.py
