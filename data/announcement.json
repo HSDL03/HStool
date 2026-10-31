@@ -8,7 +8,7 @@
     "content": "挑战做100个答辩工具",
     "link": "",
     "linkText": "",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "a-2",
@@ -19,6 +19,6 @@
     "content": "这期神了",
     "link": "",
     "linkText": "红石a",
-    "enabled": true
+    "enabled": false
   }
 ]

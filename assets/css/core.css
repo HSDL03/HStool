@@ -726,3 +726,22 @@ html{-webkit-tap-highlight-color:transparent}
 ::selection{background:var(--acs);color:var(--text)}
 /* 键盘 Tab 走到卡片/按钮时给个明显落点 */
 a.card:focus-visible,.recent-item:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+
+/* ── 卡片动效与排版微调（只增不改）────────────────────────────────────
+   目标：按下有反馈、鼠标经过更顺、描述不再被单行省略号吃掉。 */
+.card:active{transform:translateY(0) scale(.988);transition-duration:.08s}
+.card:focus-visible{outline-offset:3px}
+.card .cico img{transition:transform .24s cubic-bezier(.34,1.56,.64,1)}
+.card:hover .cico img{transform:scale(1.06)}
+.card .cico{will-change:transform}
+/* 描述最多两行，长句子不会被切成「点击后……」这种半截话 */
+.card .cdesc{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  white-space:normal;overflow:hidden;
+}
+.grid.list .card .cdesc{display:block;-webkit-line-clamp:unset}
+/* 触屏上光晕跟随没有意义，还白耗一层重绘 */
+@media (hover:none){
+  .card .glow{display:none}
+  .card:active{transform:scale(.99)}
+}
