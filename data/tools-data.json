@@ -972,18 +972,6 @@
     "hidden": false
   },
   {
-    "id": "tool-idcard",
-    "icon": "🆔",
-    "name": "身份证校验",
-    "desc": "18 位号码校验位验算与解读",
-    "tag": "工具",
-    "url": "./tools/idcard.html",
-    "category": "noDB",
-    "deprecated": false,
-    "disabled": false,
-    "hidden": false
-  },
-  {
     "id": "tool-gitignore",
     "icon": "🚫",
     "name": ".gitignore 生成器",
