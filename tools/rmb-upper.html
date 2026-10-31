@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>金额大写 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.out{
+  padding:16px 18px;background:var(--bg);border:2px solid var(--bd2);
+  border-radius:var(--r);box-shadow:var(--bevel);
+}
+.out em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.out b{
+  display:block;font-size:clamp(1.15rem,3.6vw,1.5rem);font-weight:800;line-height:1.55;
+  word-break:break-all;letter-spacing:.04em;
+}
+.out .bad{color:var(--dgr);font-size:1rem;font-weight:700}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:72px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chips button{
+  font:inherit;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;
+  padding:4px 10px;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
+}
+.chips button:hover{color:var(--text);border-color:var(--ac)}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+@media(max-width:640px){.kv span{width:100%}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧾 金额大写</h1><p class="sub">报销、合同、发票用的人民币中文大写，填数字直接出</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">输入金额</h2>
+      <div class="fld">
+        <label for="num">数字（可带千分位逗号、¥ 符号，最多两位小数）</label>
+        <input id="num" class="mono" inputmode="decimal" spellcheck="false" autocomplete="off" value="12345.67" placeholder="12345.67">
+      </div>
+      <div class="chips" id="quick">
+        <button type="button" data-v="0">0</button>
+        <button type="button" data-v="0.5">0.5</button>
+        <button type="button" data-v="100">100</button>
+        <button type="button" data-v="12345.67">12345.67</button>
+        <button type="button" data-v="1000000">100万</button>
+        <button type="button" data-v="100000000">1亿</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">大写金额</h2>
+      <div class="out"><em>人民币</em><b id="res">—</b></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制大写</button>
+        <button class="btn" id="btnCopyPlain" type="button">📋 复制数字</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">拆解</h2>
+      <div class="kv"><span>整数部分</span><b id="pInt">—</b></div>
+      <div class="kv"><span>角分</span><b id="pDec">—</b></div>
+      <div class="kv"><span>规范数字</span><b id="pNorm">—</b></div>
+      <div class="kv"><span>位数</span><b id="pLen">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 规则按财务惯例：先写「人民币」，中间连零只写一个「零」，末尾补「整」。
+        例：<code>10005.30</code> → 人民币壹万零伍元叁角整；<code>0.56</code> → 人民币零元伍角陆分。
+        支持到万亿位（16 位整数），超过会提示。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var DG='零壹贰叁肆伍陆柒捌玖';
+var U4=['','拾','佰','仟'];
+var SEC=['','万','亿','万亿'];
+
+function conv4(g){
+  var r='',zero=false;
+  for(var i=0;i<g.length;i++){
+    var d=Number(g.charAt(i)),pos=g.length-1-i;
+    if(d===0){ zero=true; }
+    else{
+      if(zero&&r) r+='零';
+      zero=false;
+      r+=DG.charAt(d)+U4[pos];
+    }
+  }
+  return r;
+}
+function convInt(s){
+  s=s.replace(/^0+/,'');
+  if(!s) return '零';
+  var secs=[];
+  while(s.length){ secs.unshift(s.slice(-4)); s=s.slice(0,-4); }
+  var out='',n=secs.length;
+  for(var i=0;i<n;i++){
+    var g=secs[i],unit=SEC[n-1-i],part=conv4(g);
+    if(!part){
+      if(out&&!/零$/.test(out)) out+='零';
+      continue;
+    }
+    if(out&&g.length<4&&g.charAt(0)==='0'&&!/零$/.test(out)) out+='零';
+    out+=part+unit;
+  }
+  return out.replace(/零+$/,'')||'零';
+}
+
+function parse(str){
+  var s=String(str).trim().replace(/[¥￥,\s]/g,'');
+  if(!s) return {err:'先填一个金额'};
+  if(!/^-?\d*(\.\d{0,2})?$/.test(s)) return {err:'只能填数字，最多两位小数'};
+  if(s==='-'||s==='.'||s==='-.') return {err:'这不是一个数字'};
+  var num=Number(s);
+  if(!isFinite(num)) return {err:'数字太大了'};
+  if(Math.abs(num)>=1e16) return {err:'最多支持到万亿位（小于 10^16）'};
+  var neg=num<0;
+  var abs=Math.abs(num);
+  var fixed=abs.toFixed(2);
+  var ip=fixed.split('.')[0],dp=fixed.split('.')[1];
+  return {neg:neg,abs:abs,ip:ip,dp:dp,num:num};
+}
+
+function upper(p){
+  var cn=convInt(p.ip);
+  var jiao=Number(p.dp.charAt(0)),fen=Number(p.dp.charAt(1));
+  var out='人民币';
+  if(p.neg) out+='负';
+  out+=cn+'元';
+  if(jiao===0&&fen===0){ out+='整'; }
+  else if(jiao===0){ out+='零'+DG.charAt(fen)+'分'; }
+  else{
+    out+=DG.charAt(jiao)+'角';
+    out+= fen===0 ? '整' : DG.charAt(fen)+'分';
+  }
+  return out;
+}
+
+function render(){
+  var p=parse($('num').value),el=$('res');
+  if(p.err){
+    el.className='bad';
+    el.textContent=p.err;
+    $('pInt').textContent='—';$('pDec').textContent='—';
+    $('pNorm').textContent='—';$('pLen').textContent='—';
+    return;
+  }
+  el.className='';
+  el.textContent=upper(p);
+  $('pInt').textContent=convInt(p.ip)+' 元（'+p.ip+'）';
+  $('pDec').textContent=p.dp==='00'?'无角分':(p.dp.charAt(0)+' 角 '+p.dp.charAt(1)+' 分');
+  $('pNorm').textContent=(p.neg?'-':'')+p.ip+'.'+p.dp;
+  $('pLen').textContent=p.ip.replace(/^0+/,'').length+' 位整数 · '+(p.dp==='00'?'无小数':'两位小数');
+}
+
+$('num').addEventListener('input',render);
+$('quick').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-v]');
+  if(!b) return;
+  $('num').value=b.getAttribute('data-v');
+  render();
+});
+
+$('btnCopy').addEventListener('click',function(){
+  var p=parse($('num').value);
+  if(p.err){ toast(p.err); return; }
+  HS.copy(upper(p));
+  toast('大写已复制');
+});
+$('btnCopyPlain').addEventListener('click',function(){
+  var p=parse($('num').value);
+  if(p.err){ toast(p.err); return; }
+  HS.copy((p.neg?'-':'')+p.ip+'.'+p.dp);
+  toast('数字已复制');
+});
+
+render();
+})();
+</script>
+</body>
+</html>

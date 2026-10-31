@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>贷款计算器 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏦</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.big{
+  padding:14px 16px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);
+}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.2rem,4vw,1.7rem);font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.bar{height:12px;display:flex;border-radius:99px;overflow:hidden;background:var(--bg3);border:1px solid var(--bd);margin:12px 0 6px}
+.bar i{display:block;height:100%}
+.bar .p{background:var(--ac)}
+.bar .i{background:var(--warn)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:9px;height:9px;border-radius:2px;display:block}
+table.plan{width:100%;border-collapse:collapse;font-size:13px}
+table.plan th{
+  text-align:right;padding:6px 8px;font-size:11px;font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--faint);border-bottom:2px solid var(--bd2);white-space:nowrap;
+}
+table.plan th:first-child,table.plan td:first-child{text-align:left}
+table.plan td{padding:6px 8px;border-bottom:1px dashed var(--bd);text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.plan tbody tr:hover td{background:var(--bg3)}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:640px){
+  .grid2{grid-template-columns:1fr}
+  table.plan{font-size:12px}
+  table.plan th,table.plan td{padding:5px 6px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🏦 贷款计算器</h1><p class="sub">等额本息 / 等额本金 · 月供、总利息、还款计划一次看清</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">贷款条件</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="amt">贷款金额（元）</label>
+          <input id="amt" class="mono" type="number" min="1000" max="100000000" step="10000" value="1000000">
+        </div>
+        <div class="fld">
+          <label for="rate">年利率（%）</label>
+          <input id="rate" class="mono" type="number" min="0" max="36" step="0.01" value="4.2">
+        </div>
+      </div>
+      <div class="fld">
+        <label for="years">期限（年，1 ~ 40）</label>
+        <input id="years" class="mono" type="number" min="1" max="40" step="1" value="30">
+      </div>
+      <div class="fld">
+        <label>还款方式</label>
+        <div class="seg" id="mode">
+          <button type="button" data-m="ep" aria-pressed="true">等额本息</button>
+          <button type="button" data-m="epp" aria-pressed="false">等额本金</button>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnCalc" type="button">计算</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="grid2">
+        <div class="big"><em id="mLabel">每月月供</em><b id="mPay">—</b><small id="mNote">—</small></div>
+        <div class="big"><em>总利息</em><b id="tInt">—</b><small id="tRate">—</small></div>
+      </div>
+      <div class="bar" aria-hidden="true"><i class="p" id="barP" style="width:50%"></i><i class="i" id="barI" style="width:50%"></i></div>
+      <div class="legend">
+        <span><i style="background:var(--ac)"></i>本金 <b id="lgP" class="mono">—</b></span>
+        <span><i style="background:var(--warn)"></i>利息 <b id="lgI" class="mono">—</b></span>
+        <span>总还款 <b id="lgT" class="mono">—</b></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">还款计划（前 12 期）</h2>
+      <div class="tblwrap">
+        <table class="plan">
+          <thead><tr><th>期数</th><th>月供</th><th>本金</th><th>利息</th><th>剩余本金</th></tr></thead>
+          <tbody id="planBody"></tbody>
+        </table>
+      </div>
+      <div class="hint" id="planHint">—</div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 <b>等额本息</b>每月还一样多，前期利息占比高；<b>等额本金</b>每月本金固定、月供递减，总利息更少。
+        计算按「按月计息、每月还款一次」的标准公式，不含手续费、提前还款违约金和利率浮动。
+        实际以银行合同为准。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var mode='ep',last=null;
+
+function money(n){
+  var s=Math.round(n*100)/100;
+  var parts=String(s).split('.');
+  var ip=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  var dp=parts[1]||'0';
+  if(dp.length<2) dp+='0';
+  return ip+'.'+dp;
+}
+function wan(n){ return (n/10000).toFixed(2)+' 万'; }
+
+$('mode').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-m]');
+  if(!b) return;
+  mode=b.getAttribute('data-m');
+  var all=$('mode').querySelectorAll('button');
+  for(var i=0;i<all.length;i++) all[i].setAttribute('aria-pressed',all[i]===b?'true':'false');
+  calc(false);
+});
+
+function readInputs(){
+  var P=parseFloat($('amt').value),r=parseFloat($('rate').value),Y=parseFloat($('years').value);
+  if(!isFinite(P)||P<1000){ toast('贷款金额至少 1000 元'); return null; }
+  if(P>100000000){ toast('金额上限 1 亿元'); return null; }
+  if(!isFinite(r)||r<0||r>36){ toast('年利率填 0 ~ 36 之间'); return null; }
+  if(!isFinite(Y)||Y<1||Y>40){ toast('期限填 1 ~ 40 年'); return null; }
+  var n=Math.round(Y*12),i=r/100/12;
+  return {P:P,i:i,n:n,r:r};
+}
+
+function calc(notify){
+  var v=readInputs();
+  if(!v) return;
+  var P=v.P,i=v.i,n=v.n,payList=[],totalInt=0,k,bal=P;
+
+  if(mode==='ep'){
+    var m = i===0 ? P/n : P*i*Math.pow(1+i,n)/(Math.pow(1+i,n)-1);
+    for(k=0;k<n;k++){
+      var interest=bal*i,principal=m-interest;
+      if(k===n-1){ principal=bal; m=principal+interest; }
+      payList.push({no:k+1,pay:principal+interest,pri:principal,int:interest,left:bal-principal});
+      bal-=principal; totalInt+=interest;
+    }
+    $('mLabel').textContent='每月月供';
+    $('mPay').textContent='¥ '+money(payList[0].pay);
+    $('mNote').textContent='共 '+n+' 期，每期相同';
+  }else{
+    var per=P/n;
+    for(k=0;k<n;k++){
+      var it=bal*i,pri=k===n-1?bal:per;
+      payList.push({no:k+1,pay:pri+it,pri:pri,int:it,left:Math.max(0,bal-pri)});
+      bal-=pri; totalInt+=it;
+    }
+    $('mLabel').textContent='首月月供';
+    $('mPay').textContent='¥ '+money(payList[0].pay);
+    $('mNote').textContent='逐月递减，末月 ¥ '+money(payList[n-1].pay);
+  }
+
+  var total=P+totalInt;
+  $('tInt').textContent='¥ '+money(totalInt);
+  $('tRate').textContent='占本金 '+(totalInt/P*100).toFixed(1)+'% · 共 '+n+' 期';
+  var pp=P/total*100;
+  $('barP').style.width=pp.toFixed(2)+'%';
+  $('barI').style.width=(100-pp).toFixed(2)+'%';
+  $('lgP').textContent='¥ '+money(P);
+  $('lgI').textContent='¥ '+money(totalInt);
+  $('lgT').textContent='¥ '+money(total);
+
+  var html='',show=Math.min(12,n);
+  for(k=0;k<show;k++){
+    var p=payList[k];
+    html+='<tr><td>'+p.no+'</td><td>'+money(p.pay)+'</td><td>'+money(p.pri)
+      +'</td><td>'+money(p.int)+'</td><td>'+money(p.left)+'</td></tr>';
+  }
+  $('planBody').innerHTML=html;
+  $('planHint').textContent=n>12
+    ? '总共 '+n+' 期，这里只列前 12 期；平均每月还本 ¥ '+money(P/n)+'。'
+    : '总共 '+n+' 期，已全部列出。';
+
+  last={v:v,mode:mode,pay:payList[0].pay,total:total,totalInt:totalInt,n:n,plan:payList};
+  if(notify) toast('算好了');
+}
+
+$('btnCalc').addEventListener('click',function(){ calc(true); });
+['amt','rate','years'].forEach(function(id){
+  $(id).addEventListener('keydown',function(e){ if(e.key==='Enter') calc(true); });
+});
+
+$('btnCopy').addEventListener('click',function(){
+  if(!last){ toast('先算一次'); return; }
+  var L=['贷款计算（'+($('mode').querySelector('[aria-pressed="true"]').textContent)+'）',
+    '金额：¥ '+money(last.v.P)+'　年利率：'+last.v.r+'%　期限：'+last.n+' 期（'+(last.n/12).toFixed(0)+' 年）',
+    (last.mode==='ep'?'每月月供':'首月月供')+'：¥ '+money(last.pay),
+    '总利息：¥ '+money(last.totalInt)+'（'+wan(last.totalInt)+'）',
+    '总还款：¥ '+money(last.total),
+    '本息比：本金 '+money(last.v.P)+' / 利息 '+money(last.totalInt)];
+  HS.copy(L.join('\n'));
+  toast('已复制结果');
+});
+
+calc(false);
+})();
+</script>
+</body>
+</html>

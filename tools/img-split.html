@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>九宫格切图 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.drop{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  padding:26px 16px;text-align:center;cursor:pointer;
+  background:var(--bg);border:2px dashed var(--bd2);border-radius:var(--r);
+  transition:border-color .15s,background .15s;
+}
+.drop:hover,.drop.over{border-color:var(--ac);background:var(--bg3)}
+.drop b{font-size:14px}
+.drop small{font-size:12px;color:var(--faint)}
+.drop input{display:none}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.cell{
+  position:relative;display:block;padding:0;cursor:pointer;overflow:hidden;
+  background:var(--bg3);border:2px solid var(--bd2);border-radius:var(--r);
+  aspect-ratio:1/1;
+}
+.cell img{width:100%;height:100%;object-fit:cover;display:block}
+.cell span{
+  position:absolute;left:4px;bottom:4px;padding:1px 6px;border-radius:4px;
+  font-size:10.5px;font-weight:800;color:var(--on-ac);background:var(--ac);
+  opacity:0;transition:opacity .15s;
+}
+.cell:hover span,.cell:focus-visible span{opacity:1}
+.cell:hover{border-color:var(--ac)}
+.meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:12px}
+.meta b{font-family:var(--mono);color:var(--text)}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+@media(max-width:640px){
+  .grid{grid-template-columns:repeat(3,1fr);gap:6px}
+  .meta{gap:10px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🖼 九宫格切图</h1><p class="sub">朋友圈九宫格、长图切片，选好图直接切好下载（全部在本地完成）</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">选一张图片</h2>
+      <label class="drop" id="drop">
+        <input id="file" type="file" accept="image/*">
+        <b>🖼 点击选择图片</b>
+        <small>也可以把图片拖到这里 · 不上传，纯本地处理</small>
+      </label>
+      <div class="fld" style="margin-top:13px">
+        <label>切法</label>
+        <div class="seg" id="mode">
+          <button type="button" data-m="3,3" aria-pressed="true">3 × 3 九宫格</button>
+          <button type="button" data-m="2,2" aria-pressed="false">2 × 2 四宫格</button>
+          <button type="button" data-m="1,3" aria-pressed="false">1 × 3 长图</button>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnAll" type="button">⬇ 下载全部</button>
+        <button class="btn" id="btnReset" type="button">重新选择</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">切片预览</h2>
+      <div class="grid" id="cells"></div>
+      <div class="meta" id="meta"><span>还没选图片，选完这里会显示原图尺寸和每片大小。</span></div>
+      <div class="hint" id="hint"></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 点击任意一格即可单独下载那一片。切片按原图像素对齐、不做缩放，所以切出来的图拼回去和原图完全一致；
+        长图切片建议用 <code>1 × 3</code>。文件名形如 <code>原图_1-1.png</code>，PNG 输出无损。
+        图片只在你的浏览器里处理，不会上传到任何服务器。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var img=null,baseName='image',cols=3,rows=3,pieces=[];
+
+$('drop').addEventListener('dragover',function(e){ e.preventDefault(); $('drop').classList.add('over'); });
+$('drop').addEventListener('dragleave',function(){ $('drop').classList.remove('over'); });
+$('drop').addEventListener('drop',function(e){
+  e.preventDefault();
+  $('drop').classList.remove('over');
+  var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+  if(f) load(f);
+});
+$('file').addEventListener('change',function(){
+  if(this.files&&this.files[0]) load(this.files[0]);
+});
+
+function load(file){
+  if(!/^image\//.test(file.type)){ toast('这看起来不是图片文件'); return; }
+  if(file.size>25*1024*1024){ toast('图片超过 25MB，换小一点的吧'); return; }
+  baseName=(file.name||'image').replace(/\.[^.]+$/,'').slice(0,40)||'image';
+  var url=URL.createObjectURL(file);
+  var im=new Image();
+  im.onload=function(){
+    URL.revokeObjectURL(url);
+    if(im.naturalWidth<cols||im.naturalHeight<rows){ toast('图片太小，切不出这么多块'); return; }
+    img=im;
+    slice();
+  };
+  im.onerror=function(){ URL.revokeObjectURL(url); toast('这张图片读不出来，换一张试试'); };
+  im.src=url;
+}
+
+$('mode').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-m]');
+  if(!b) return;
+  var p=b.getAttribute('data-m').split(',');
+  cols=Number(p[0]); rows=Number(p[1]);
+  var all=$('mode').querySelectorAll('button');
+  for(var i=0;i<all.length;i++) all[i].setAttribute('aria-pressed',all[i]===b?'true':'false');
+  if(img) slice();
+});
+
+function slice(){
+  var W=img.naturalWidth,H=img.naturalHeight;
+  var cw=Math.floor(W/cols),ch=Math.floor(H/rows);
+  pieces=[];
+  var box=$('cells');
+  box.innerHTML='';
+  for(var r=0;r<rows;r++){
+    for(var c=0;c<cols;c++){
+      var cv=document.createElement('canvas');
+      cv.width=cw; cv.height=ch;
+      var ctx=cv.getContext('2d');
+      ctx.drawImage(img,c*cw,r*ch,cw,ch,0,0,cw,ch);
+      var data=cv.toDataURL('image/png');
+      var name=baseName+'_'+(r+1)+'-'+(c+1)+'.png';
+      pieces.push({name:name,data:data});
+      var btn=document.createElement('button');
+      btn.type='button';
+      btn.className='cell';
+      btn.title='下载 '+name;
+      var im=document.createElement('img');
+      im.src=data; im.alt=name; im.loading='lazy';
+      var tag=document.createElement('span');
+      tag.textContent=(r+1)+'-'+(c+1);
+      btn.appendChild(im); btn.appendChild(tag);
+      btn.addEventListener('click',(function(pc){ return function(){ save(pc); }; })(pieces[pieces.length-1]));
+      box.appendChild(btn);
+    }
+  }
+  $('meta').innerHTML='<span>原图 <b>'+W+' × '+H+'</b></span>'
+    +'<span>每片 <b>'+cw+' × '+ch+'</b></span>'
+    +'<span>共 <b>'+pieces.length+'</b> 片</span>';
+  var ex=(W-cw*cols)+(H-ch*rows);
+  $('hint').textContent=ex>0
+    ? '原图宽高不能整除，右边/下边有 '+ex+' 像素被舍掉（避免出现模糊的补边）。'
+    : '尺寸正好整除，切出来可以无缝拼回原图。';
+}
+
+function save(pc){
+  var a=document.createElement('a');
+  a.href=pc.data;
+  a.download=pc.name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+$('btnAll').addEventListener('click',function(){
+  if(!pieces.length){ toast('先选一张图片'); return; }
+  var i=0;
+  (function next(){
+    if(i>=pieces.length){ toast('已下载 '+pieces.length+' 片'); return; }
+    save(pieces[i++]);
+    setTimeout(next,260);
+  })();
+});
+$('btnReset').addEventListener('click',function(){
+  img=null; pieces=[];
+  $('file').value='';
+  $('cells').innerHTML='';
+  $('meta').innerHTML='<span>还没选图片，选完这里会显示原图尺寸和每片大小。</span>';
+  $('hint').textContent='';
+  demo();
+});
+
+/* ── 开局先切一张内置示例图，保证打开就能看到效果 ── */
+function cssVar(n){
+  var v=getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  return v||'#888';
+}
+function demo(){
+  var S=900,cv=document.createElement('canvas');
+  cv.width=S; cv.height=S;
+  var g=cv.getContext('2d');
+  g.fillStyle=cssVar('--bg3'); g.fillRect(0,0,S,S);
+  var colors=[cssVar('--ac'),cssVar('--ac2'),cssVar('--warn')];
+  for(var y=0;y<3;y++){
+    for(var x=0;x<3;x++){
+      g.fillStyle=colors[(x+y)%3];
+      g.globalAlpha=0.22+0.1*((x*3+y)%4);
+      g.fillRect(x*300+18,y*300+18,264,264);
+    }
+  }
+  g.globalAlpha=1;
+  g.fillStyle=cssVar('--text');
+  g.font='bold 96px system-ui,sans-serif';
+  g.textAlign='center';
+  g.textBaseline='middle';
+  g.fillText('示例图',S/2,S/2);
+  g.font='500 28px system-ui,sans-serif';
+  g.fillStyle=cssVar('--muted');
+  g.fillText('换成自己的图片试试',S/2,S/2+90);
+  baseName='示例图';
+  var im=new Image();
+  im.onload=function(){ img=im; slice(); };
+  im.src=cv.toDataURL('image/png');
+}
+demo();
+})();
+</script>
+</body>
+</html>

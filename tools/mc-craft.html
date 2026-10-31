@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 合成计算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧱</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.pick{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:230px;overflow:auto}
+.pick button{
+  display:flex;align-items:baseline;gap:8px;text-align:left;width:100%;
+  padding:7px 11px;font:inherit;font-size:13.5px;color:var(--text);cursor:pointer;
+  background:var(--bg);border:2px solid var(--bd);border-radius:var(--r);
+}
+.pick button:hover,.pick button:focus-visible{border-color:var(--ac);outline:none}
+.pick button em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:auto}
+.pick .empty{font-size:12.5px;color:var(--faint);padding:6px 2px}
+.target{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 14px;background:var(--bg);border:2px solid var(--bd2);
+  border-radius:var(--r);box-shadow:var(--bevel);margin-bottom:13px;
+}
+.target b{font-size:16px}
+.target code{font-family:var(--mono);font-size:12px;color:var(--faint)}
+.target .lv{margin-left:auto;font-size:12px;color:var(--muted)}
+table.list{width:100%;border-collapse:collapse;font-size:13.5px}
+table.list th{
+  text-align:left;padding:6px 8px;font-size:11px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+  border-bottom:2px solid var(--bd2);
+}
+table.list td{padding:7px 8px;border-bottom:1px dashed var(--bd)}
+table.list tr:last-child td{border-bottom:0}
+table.list td.n{text-align:right;font-family:var(--mono);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.list td small{font-family:var(--mono);font-size:11px;color:var(--faint);display:block}
+.sum{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--muted)}
+.sum b{font-family:var(--mono);font-size:14px;color:var(--text)}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+@media(max-width:640px){
+  .target .lv{margin-left:0;width:100%}
+  table.list{font-size:12.5px}
+  table.list th:nth-child(2),table.list td:nth-child(2){display:none}
+  .sum{gap:10px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧱 合成计算</h1><p class="sub">要做什么先说，一路拆到底，直接告诉你得挖多少矿</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">要合成的物品</h2>
+      <div class="fld">
+        <label for="q">搜索中文名或英文 id</label>
+        <input id="q" spellcheck="false" autocomplete="off" placeholder="钻石剑 / diamond_sword">
+      </div>
+      <div class="pick" id="hits"></div>
+      <div class="hint" id="dbInfo">配方来自本站内置的 26.3 原版数据</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">数量与结果</h2>
+      <div class="target">
+        <b id="tName">—</b>
+        <code id="tEn"></code>
+        <span class="lv" id="tRecipe">—</span>
+      </div>
+      <div class="fld">
+        <label for="qty">需要多少个（1 ~ 9999）</label>
+        <input id="qty" class="mono" type="number" min="1" max="9999" step="1" value="1">
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnCalc" type="button">算材料</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制清单</button>
+      </div>
+
+      <h2 class="panel-title" style="margin-top:18px">基础材料（要挖 / 要采的）</h2>
+      <table class="list">
+        <thead><tr><th>材料</th><th>英文 id</th><th style="text-align:right">数量</th></tr></thead>
+        <tbody id="rawBody"></tbody>
+      </table>
+      <div class="sum" id="sum"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">中间产物（要合成的步数）</h2>
+      <table class="list">
+        <thead><tr><th>物品</th><th>英文 id</th><th style="text-align:right">合成次数</th></tr></thead>
+        <tbody id="midBody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 每个物品会挑一条「一路拆到底最省料」的配方，所以结果是<b>下限</b>：实际游戏里熔炉烧炼、
+        打怪掉落、村民交易都能省掉一部分（本工具的配方表只有工作台配方）。
+        「9 个碎片合成 1 个」这种压缩配方（铁锭 ⇄ 铁粒、钻石块）按原料处理，
+        免得算出「1 个铁锭要 9 个铁粒」这种废话。数据取自本站内置的 26.3 原版配方（1723 条），
+        不认识的物品不会被瞎算成别的原料。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script src="../assets/mc-items-data.js"></script>
+<script src="../assets/mc-recipes-data.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var DICT={},RS=window.MC_RECIPES||[],BEST={},CANDS={},ALLINS={},PLIST=[],cur=0;
+
+(function build(){
+  var B=window.MC_BLOCKS||{},I=window.MC_ITEMS||{},k;
+  for(k in B) DICT[k]=B[k];
+  for(k in I) DICT[k]=I[k];
+  var i;
+  for(i=0;i<RS.length;i++){
+    var r=RS[i],prod=r.r[0],cnt=r.r[1]||1,ing=[];
+    if(r.s){
+      for(var a=0;a<r.s.length;a++){
+        for(var b=0;b<r.s[a].length;b++){ if(r.s[a][b]) ing.push(r.s[a][b]); }
+      }
+    }else{
+      var L=r.l||[];
+      for(var c=0;c<L.length;c++){ if(L[c]) ing.push(L[c]); }
+    }
+    if(!ing.length) continue;
+    /* 原始用料表留着判断「压缩/拆解」用 */
+    (ALLINS[prod]=ALLINS[prod]||[]).push(ing.slice());
+    /* 拆解类配方（单种原料、一次产出 ≥5 个）不算：铁锭拆铁粒、钻石块拆钻石没人这么干 */
+    if(singleType(ing) && cnt>=5) continue;
+    var m={},tot=0;
+    for(var j=0;j<ing.length;j++){ var id=ing[j]; m[id]=(m[id]||0)+1; tot++; }
+    var ins=[];
+    for(var key in m) ins.push([Number(key),m[key]]);
+    (CANDS[prod]=CANDS[prod]||[]).push({out:cnt,ins:ins,per:tot/cnt,total:tot});
+  }
+  /* 只保留「正常产出」的候选，按单位用料粗排后取前 12 条 */
+  for(var p in CANDS){
+    CANDS[p].sort(function(x,y){ return x.per-y.per||x.ins.length-y.ins.length; });
+    CANDS[p]=CANDS[p].slice(0,12);
+    PLIST.push(Number(p));
+  }
+
+  /* 排除互相拆解的死循环：钻石块 ⇄ 钻石 这种配方不用 */
+  function reaches(start,ins){
+    var stack=[],seen={},steps=0;
+    for(var x=0;x<ins.length;x++) stack.push(ins[x][0]);
+    while(stack.length&&steps++<600){
+      var id=stack.pop();
+      if(id===start) return true;
+      if(seen[id]) continue;
+      seen[id]=1;
+      var c=BEST[id];
+      if(c) for(var y=0;y<c.ins.length;y++) stack.push(c.ins[y][0]);
+    }
+    return false;
+  }
+  /* 按「一路拆到原料要几个」来挑配方，几轮迭代让成本收敛 */
+  var COST={};
+  for(var q0=0;q0<PLIST.length;q0++) COST[PLIST[q0]]=1;
+  function rcost(r){
+    var s=0;
+    for(var i2=0;i2<r.ins.length;i2++) s+=(COST[r.ins[i2][0]]||1)*r.ins[i2][1];
+    return s/r.out;
+  }
+  for(var pass=0;pass<4;pass++){
+    for(var q=0;q<PLIST.length;q++){
+      var pid=PLIST[q],list=CANDS[pid],pick=null,bc=Infinity;
+      for(var t=0;t<list.length;t++){
+        if(reaches(pid,list[t].ins)) continue;
+        var c=rcost(list[t]);
+        if(c<bc-1e-9){ bc=c; pick=list[t]; }
+      }
+      BEST[pid]=pick;
+      if(pick) COST[pid]=bc;
+    }
+  }
+  /* 唯一配方是「拿一整块拆成一堆碎片」的物品（铁锭⇄铁粒），当原料看待 */
+  for(var q2=0;q2<PLIST.length;q2++){
+    var id2=PLIST[q2],ls=CANDS[id2];
+    if(ls&&ls.length&&compressedOnly(ls,id2)) BEST[id2]=null;
+  }
+  PLIST.sort(function(x,y){ return nm(x).localeCompare(nm(y),'zh-Hans-CN'); });
+  $('dbInfo').textContent='内置 '+RS.length+' 条配方 · 可合成 '+PLIST.length+' 种物品 · 26.3 原版数据';
+})();
+
+function compressedOnly(ls,id){
+  for(var i=0;i<ls.length;i++){
+    var r=ls[i];
+    if(r.out!==1||r.ins.length!==1||r.ins[0][1]<5) return false;
+    var cs=ALLINS[r.ins[0][0]],back=false;
+    if(!cs) return false;
+    for(var j=0;j<cs.length;j++){
+      for(var m=0;m<cs[j].length;m++) if(cs[j][m]===id) back=true;
+    }
+    if(!back) return false;
+  }
+  return true;
+}
+
+function nm(id){ var o=DICT[id]; return o?o.n:('#'+id); }
+function en(id){ var o=DICT[id]; return o?o.e:''; }
+function singleType(list){
+  var s={},n=0;
+  for(var i=0;i<list.length;i++) if(!s[list[i]]){ s[list[i]]=1; n++; }
+  return n===1;
+}
+
+/* ── 搜索 ── */
+function search(term){
+  var t=String(term||'').trim().toLowerCase(),out=[],i;
+  if(!t){ return PLIST.slice(0,10); }
+  for(i=0;i<PLIST.length&&out.length<12;i++){
+    var id=PLIST[i],n=nm(id),e=en(id).toLowerCase();
+    if(n.indexOf(t)>-1||e.indexOf(t)>-1) out.push(id);
+  }
+  return out;
+}
+function renderHits(term){
+  var box=$('hits'),list=search(term);
+  if(!list.length){
+    box.innerHTML='<div class="empty">没找到这个物品，换个关键词试试（比如「木棍」「石头」）。</div>';
+    return;
+  }
+  var html='';
+  for(var i=0;i<list.length;i++){
+    var id=list[i];
+    html+='<button type="button" data-id="'+id+'">'+HS.esc(nm(id))+'<em>'+HS.esc(en(id))+'</em></button>';
+  }
+  box.innerHTML=html;
+}
+$('hits').addEventListener('click',function(e){
+  var btn=e.target.closest('button[data-id]');
+  if(!btn) return;
+  cur=Number(btn.getAttribute('data-id'));
+  $('q').value=nm(cur);
+  renderHits(nm(cur));
+  run(false);
+});
+$('q').addEventListener('input',function(){ renderHits($('q').value); });
+
+/* ── 递归展开 ── */
+function expand(rootId,need){
+  var raw={},steps={},made={},budget=60000;
+  function walk(id,q,depth,path){
+    if(--budget<0) return;
+    var rec=BEST[id];
+    if(!rec||depth>10||path.indexOf(id)>=0){ raw[id]=(raw[id]||0)+q; return; }
+    var c=Math.ceil(q/rec.out);
+    steps[id]=(steps[id]||0)+c;
+    made[id]=(made[id]||0)+c*rec.out;
+    path.push(id);
+    for(var i=0;i<rec.ins.length;i++) walk(rec.ins[i][0],rec.ins[i][1]*c,depth+1,path);
+    path.pop();
+  }
+  walk(rootId,need,0,[]);
+  return {raw:raw,steps:steps,made:made};
+}
+
+var lastResult=null,lastQty=0;
+
+function rows(map,skipId){
+  var keys=Object.keys(map).filter(function(k){ return Number(k)!==skipId&&map[k]>0; });
+  keys.sort(function(a,b){ return map[b]-map[a]; });
+  var html='';
+  for(var i=0;i<keys.length;i++){
+    var id=Number(keys[i]);
+    html+='<tr><td>'+HS.esc(nm(id))+'<small>'+HS.esc(en(id))+'</small></td>'
+      +'<td class="mono" style="color:var(--faint)">'+HS.esc(en(id))+'</td>'
+      +'<td class="n">'+map[keys[i]]+'</td></tr>';
+  }
+  return html||'<tr><td colspan="3" style="color:var(--faint)">这一项不需要额外材料。</td></tr>';
+}
+
+function run(notify){
+  if(!cur){ toast('先选一个要合成的物品'); return; }
+  var qty=parseInt($('qty').value,10);
+  if(!isFinite(qty)||qty<1){ toast('数量要填 1 以上的整数'); $('qty').value=1; qty=1; }
+  if(qty>9999){ toast('一次最多算 9999 个'); qty=9999; $('qty').value=9999; }
+
+  var rec=BEST[cur];
+  $('tName').textContent=nm(cur);
+  $('tEn').textContent=en(cur);
+  $('tRecipe').textContent=rec
+    ? '配方产出 '+rec.out+' 个 · 需 '+rec.ins.length+' 种材料'
+    : '没有工作台配方，按原材料处理';
+
+  var r=expand(cur,qty);
+  lastResult=r; lastQty=qty;
+  $('rawBody').innerHTML=rows(r.raw,cur);
+  $('midBody').innerHTML=rows(r.steps,cur);
+
+  var rawKinds=Object.keys(r.raw).length,rawSum=0,stepSum=0,k;
+  for(k in r.raw) rawSum+=r.raw[k];
+  for(k in r.steps) stepSum+=r.steps[k];
+  $('sum').innerHTML='<span>目标 <b>'+qty+'</b> 个</span>'
+    +'<span>基础材料 <b>'+rawSum+'</b> 件 / '+rawKinds+' 种</span>'
+    +'<span>合成次数 <b>'+stepSum+'</b> 次</span>';
+  if(notify) toast('算好了');
+}
+
+$('btnCalc').addEventListener('click',function(){ run(true); });
+$('qty').addEventListener('keydown',function(e){ if(e.key==='Enter') run(true); });
+
+$('btnCopy').addEventListener('click',function(){
+  if(!lastResult){ toast('先算一次'); return; }
+  var lines=['【'+nm(cur)+'】×'+lastQty];
+  var k,keys=Object.keys(lastResult.raw).sort(function(a,b){ return lastResult.raw[b]-lastResult.raw[a]; });
+  lines.push('基础材料：');
+  for(var i=0;i<keys.length;i++) lines.push('  '+nm(Number(keys[i]))+' × '+lastResult.raw[keys[i]]);
+  var sk=Object.keys(lastResult.steps).filter(function(x){ return Number(x)!==cur; });
+  if(sk.length){
+    lines.push('中间产物：');
+    for(var j=0;j<sk.length;j++) lines.push('  '+nm(Number(sk[j]))+' 合 '+lastResult.steps[sk[j]]+' 次');
+  }
+  HS.copy(lines.join('\n'));
+  toast('清单已复制');
+});
+
+/* ── 开局：默认演示钻石剑 ── */
+(function boot(){
+  var target=0,i;
+  for(i=0;i<PLIST.length;i++){ if(en(PLIST[i])==='diamond_sword'){ target=PLIST[i]; break; } }
+  if(!target) target=PLIST[0]||0;
+  cur=target;
+  $('q').value=nm(cur);
+  renderHits(nm(cur));
+  run(false);
+})();
+})();
+</script>
+</body>
+</html>

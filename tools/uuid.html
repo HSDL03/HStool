@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UUID 工具 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🆔</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+#out{
+  font-family:var(--mono);font-size:13px;line-height:1.75;min-height:180px;
+  font-variant-numeric:tabular-nums;white-space:pre;overflow:auto;
+}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:74px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all}
+.ok{color:var(--ac)}
+.bad{color:var(--dgr)}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+@media(max-width:640px){
+  .grid2{grid-template-columns:1fr}
+  #out{font-size:11.5px;min-height:150px}
+  .kv span{width:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🆔 UUID 工具</h1><p class="sub">批量生成 v4 / v7，粘一个回来还能解析版本与变体</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">批量生成</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="cnt">数量（1 ~ 200）</label>
+          <input id="cnt" class="mono" type="number" min="1" max="200" step="1" value="5">
+        </div>
+        <div class="fld">
+          <label for="fmt">格式</label>
+          <select id="fmt">
+            <option value="lower">小写带连字符</option>
+            <option value="upper">大写带连字符</option>
+            <option value="nohyphen">无连字符</option>
+            <option value="brace">带花括号</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld">
+        <label>版本</label>
+        <div class="seg" id="ver">
+          <button type="button" data-v="4" aria-pressed="true">v4 随机</button>
+          <button type="button" data-v="7" aria-pressed="false">v7 时间有序</button>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnGen" type="button">生成</button>
+        <button class="btn" id="btnCopyAll" type="button">📋 复制全部</button>
+      </div>
+      <div class="fld" style="margin-top:13px">
+        <label for="out">结果（点击可整段选中）</label>
+        <textarea id="out" class="mono" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="hint" id="genHint">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">解析一个 UUID</h2>
+      <div class="fld">
+        <label for="one">粘贴 UUID（大小写、有无连字符、花括号都可以）</label>
+        <input id="one" class="mono" spellcheck="false" autocomplete="off" placeholder="f47ac10b-58cc-4372-a567-0e02b2c3d479">
+      </div>
+      <div class="kv"><span>合法性</span><b id="pValid">—</b></div>
+      <div class="kv"><span>规范形式</span><b id="pNorm">—</b></div>
+      <div class="kv"><span>版本</span><b id="pVer">—</b></div>
+      <div class="kv"><span>变体</span><b id="pVar">—</b></div>
+      <div class="kv"><span>时间戳</span><b id="pTime">—</b></div>
+      <div class="kv"><span>整数</span><b id="pInt">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 UUID v4 用 <code>crypto.getRandomValues</code> 生成 122 位真随机数，第 13 位固定为 <code>4</code>，
+        第 17 位固定为 <code>8/9/a/b</code>，完全符合 RFC 4122。v7 把 48 位毫秒时间戳放在最前，
+        同毫秒内用随机数结尾，数据库按主键排序时基本是插入顺序，索引更友好。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var ver='4',list=[];
+
+function rndBytes(n){
+  var a=new Uint8Array(n);
+  if(window.crypto&&window.crypto.getRandomValues) window.crypto.getRandomValues(a);
+  else for(var i=0;i<n;i++) a[i]=Math.floor(Math.random()*256);
+  return a;
+}
+function bytesToHex(a){
+  var s='',i;
+  for(i=0;i<a.length;i++) s+=(a[i]<16?'0':'')+a[i].toString(16);
+  return s;
+}
+function uuid4(){
+  var b=rndBytes(16);
+  b[6]=(b[6]&0x0f)|0x40;
+  b[8]=(b[8]&0x3f)|0x80;
+  var h=bytesToHex(b);
+  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+}
+function uuid7(){
+  var ms=Date.now(),b=rndBytes(16);
+  b[0]=(ms/1099511627776)&0xff;
+  b[1]=(ms/4294967296)&0xff;
+  b[2]=(ms/16777216)&0xff;
+  b[3]=(ms/65536)&0xff;
+  b[4]=(ms/256)&0xff;
+  b[5]=ms&0xff;
+  b[6]=(b[6]&0x0f)|0x70;
+  b[8]=(b[8]&0x3f)|0x80;
+  var h=bytesToHex(b);
+  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+}
+function shaped(u){
+  var f=$('fmt').value;
+  if(f==='upper') return u.toUpperCase();
+  if(f==='nohyphen') return u.replace(/-/g,'');
+  if(f==='brace') return '{'+u+'}';
+  return u;
+}
+
+function gen(notify){
+  var n=parseInt($('cnt').value,10);
+  if(!isFinite(n)||n<1){ toast('数量填 1 以上的整数'); $('cnt').value=5; n=5; }
+  if(n>200){ toast('一次最多 200 个'); $('cnt').value=200; n=200; }
+  list=[];
+  for(var i=0;i<n;i++) list.push(shaped(ver==='7'?uuid7():uuid4()));
+  $('out').value=list.join('\n');
+  $('genHint').textContent='已生成 '+n+' 个 UUID v'+ver+' · '+($('fmt').selectedOptions[0].textContent);
+  if(notify) toast('生成 '+n+' 个');
+}
+
+$('ver').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-v]');
+  if(!b) return;
+  ver=b.getAttribute('data-v');
+  var all=$('ver').querySelectorAll('button');
+  for(var i=0;i<all.length;i++) all[i].setAttribute('aria-pressed',all[i]===b?'true':'false');
+  gen(false);
+});
+$('fmt').addEventListener('change',function(){ gen(false); });
+$('btnGen').addEventListener('click',function(){ gen(true); });
+$('btnCopyAll').addEventListener('click',function(){
+  if(!list.length){ toast('先生成几个'); return; }
+  HS.copy(list.join('\n'));
+  toast('已复制 '+list.length+' 个');
+});
+
+/* ── 解析 ── */
+function parse(raw){
+  var s=String(raw||'').trim().toLowerCase().replace(/^urn:uuid:/,'').replace(/[{}]/g,'').replace(/-/g,'');
+  if(!s) return {err:'先粘一个 UUID'};
+  if(!/^[0-9a-f]{32}$/.test(s)) return {err:'不是合法的 UUID：去掉连字符后应为 32 位十六进制'};
+  var h=s.slice(0,8)+'-'+s.slice(8,12)+'-'+s.slice(12,16)+'-'+s.slice(16,20)+'-'+s.slice(20);
+  return {hex:s,norm:h,ver:parseInt(s.charAt(12),16),variant:parseInt(s.charAt(16),16)};
+}
+function variantName(v){
+  if(v<8) return 'NCS（保留给向后兼容）';
+  if(v<12) return 'RFC 4122 / 标准变体';
+  if(v<14) return 'Microsoft GUID';
+  return '未来保留';
+}
+function verName(v){
+  var m={1:'v1 时间 + MAC',2:'v2 DCE 安全',3:'v3 MD5 命名',4:'v4 随机',5:'v5 SHA-1 命名',6:'v6 重排时间',7:'v7 毫秒时间有序',8:'v8 自定义'};
+  return m[v]?('v'+v+' · '+m[v]):('未知版本（第 13 位 = '+v+'）');
+}
+function renderParse(){
+  var r=parse($('one').value),el=$('pValid');
+  if(r.err){
+    el.className='bad';el.textContent=r.err;
+    ['pNorm','pVer','pVar','pTime','pInt'].forEach(function(id){ $(id).textContent='—'; });
+    return;
+  }
+  el.className='ok';
+  el.textContent='合法 ✓';
+  $('pNorm').textContent=r.norm;
+  $('pVer').textContent=verName(r.ver);
+  $('pVar').textContent=variantName(r.variant);
+  var t='这个版本不含时间信息';
+  if(r.ver===7){
+    var ms=0;
+    for(var i=0;i<12;i++) ms=ms*16+parseInt(r.hex.charAt(i),16);
+    t=new Date(ms).toLocaleString('zh-CN')+'（'+ms+'）';
+  }else if(r.ver===1){
+    var t1=parseInt(r.hex.slice(13,16)+r.hex.slice(8,12),16);
+    t=new Date((t1-12219292800000)).toLocaleString('zh-CN')+'（v1 60 位时间戳）';
+  }
+  $('pTime').textContent=t;
+  $('pInt').textContent=r.hex.slice(0,8).toUpperCase()+' '+r.hex.slice(8,12).toUpperCase()
+    +' '+r.hex.slice(12,16).toUpperCase()+' '+r.hex.slice(16,20).toUpperCase()
+    +' '+r.hex.slice(20).toUpperCase();
+}
+$('one').addEventListener('input',renderParse);
+$('out').addEventListener('click',function(){ this.select(); });
+
+gen(false);
+$('one').value=uuid4();
+renderParse();
+})();
+</script>
+</body>
+</html>
