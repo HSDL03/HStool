@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>子网计算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:92px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.kv b em{font-style:normal;font-weight:500;font-family:inherit;color:var(--muted);font-size:12.5px}
+.pend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.bits{font-family:var(--mono);font-size:12.5px;letter-spacing:.02em;word-break:break-all;background:var(--bg3);padding:9px 11px;border-radius:var(--r);line-height:1.8}
+.bits u{color:var(--ac);text-decoration:none;font-weight:800}
+.bits i{color:var(--faint);font-style:normal}
+.binv{font-size:12px;color:var(--muted);margin-top:8px}
+.binv code{font-family:var(--mono)}
+.mono{font-variant-numeric:tabular-nums}
+@media(max-width:640px){.kv span{width:100%}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🌐 子网计算</h1><p class="sub">IPv4 地址 + 掩码 → 网络段、广播、可用主机范围</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">输入</h2>
+      <div class="fld">
+        <label for="ipIn">IP 地址 / CIDR（也可以只填 IP，用下面的掩码）</label>
+        <input id="ipIn" class="mono" spellcheck="false" autocomplete="off" value="192.168.1.130/26" placeholder="10.0.0.5/24">
+      </div>
+      <div class="fld">
+        <label for="maskSel">或者选一个常用掩码</label>
+        <select id="maskSel">
+          <option value="24">/24 · 255.255.255.0 · 254 台</option>
+          <option value="26">/26 · 255.255.255.192 · 62 台</option>
+          <option value="16">/16 · 255.255.0.0 · 65534 台</option>
+          <option value="25">/25 · 255.255.255.128 · 126 台</option>
+          <option value="27">/27 · 255.255.255.224 · 30 台</option>
+          <option value="28">/28 · 255.255.255.240 · 14 台</option>
+          <option value="30">/30 · 255.255.255.252 · 2 台（点对点）</option>
+          <option value="8">/8 · 255.0.0.0</option>
+        </select>
+      </div>
+      <div class="pend">
+        <button class="btn primary" id="btnCalc" type="button">计算</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制摘要</button>
+      </div>
+      <div class="binv" id="err" style="color:var(--warn)"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="kv"><span>CIDR</span><b id="rCidr">—</b></div>
+      <div class="kv"><span>网络地址</span><b id="rNet">—</b></div>
+      <div class="kv"><span>广播地址</span><b id="rBc">—</b></div>
+      <div class="kv"><span>可用主机</span><b id="rHost">—</b></div>
+      <div class="kv"><span>掩码</span><b id="rMask">—</b></div>
+      <div class="kv"><span>通配符</span><b id="rWild">—</b></div>
+      <div class="kv"><span>主机数</span><b id="rCount">—</b></div>
+      <div class="kv"><span>类型</span><b id="rType">—</b></div>
+      <div class="kv"><span>地址段</span><b id="rClass">—</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">二进制对照</h2>
+      <div class="bits" id="bits">—</div>
+      <div class="binv" id="bitNote"></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 网络地址和广播地址各占掉一个，所以 /24 能用的主机是 254 台，不是 256。
+        /31 和 /32 是特例：/32 只有一台主机，/31 两点直连两台都能用。
+        写 ACL、配路由、划 VLAN 之前先在这里核一遍，比记口诀靠谱。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var ipIn=$('ipIn'), maskSel=$('maskSel'), errEl=$('err');
+
+function parseIp(s){
+  var p = s.split('.');
+  if(p.length !== 4) return null;
+  var out = [];
+  for(var i=0;i<4;i++){
+    if(!/^\d{1,3}$/.test(p[i])) return null;
+    var n = Number(p[i]);
+    if(n>255) return null;
+    out.push(n);
+  }
+  return out;
+}
+function ipToInt(a){ return ((a[0]<<24) | (a[1]<<16) | (a[2]<<8) | a[3]) >>> 0; }
+function intToIp(n){
+  n = n >>> 0;
+  return [(n>>>24)&255, (n>>>16)&255, (n>>>8)&255, n&255].join('.');
+}
+function bin(n){
+  n = n >>> 0;
+  var s = n.toString(2);
+  while(s.length < 32) s = '0' + s;
+  return s;
+}
+
+var summary = '';
+
+function calc(){
+  var raw = String(ipIn.value).trim();
+  if(!raw){ errEl.textContent = '先填一个 IP 地址'; return; }
+  var prefix = null, ipPart = raw;
+  if(raw.indexOf('/') > -1){
+    var sp = raw.split('/');
+    ipPart = sp[0];
+    if(!/^\d{1,2}$/.test(sp[1] || '')){
+      errEl.textContent = 'CIDR 前缀要写成 /24 这种 0~32 的数字'; return;
+    }
+    prefix = Number(sp[1]);
+    if(prefix > 32){ errEl.textContent = '前缀最大是 32'; return; }
+  }
+  var a = parseIp(ipPart);
+  if(!a){ errEl.textContent = 'IP 格式不对，要像 192.168.1.10 这样四段 0~255'; return; }
+  if(prefix === null) prefix = Number(maskSel.value);
+
+  errEl.textContent = '';
+  var ip = ipToInt(a);
+  var mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+  var wild = (~mask) >>> 0;
+  var net = (ip & mask) >>> 0;
+  var bc = (net | wild) >>> 0;
+  var size = Math.pow(2, 32 - prefix);
+
+  var first, last, count, hostTxt;
+  if(prefix === 32){
+    first = last = ip; count = 1; hostTxt = intToIp(ip) + ' （单主机，/32）';
+  } else if(prefix === 31){
+    first = net; last = bc; count = 2; hostTxt = intToIp(net) + ' ~ ' + intToIp(bc) + ' （点对点，两端都可用）';
+  } else {
+    first = (net + 1) >>> 0; last = (bc - 1) >>> 0; count = size - 2;
+    hostTxt = intToIp(first) + ' ~ ' + intToIp(last);
+  }
+
+  var cls;
+  var o1 = a[0];
+  if(o1 === 10) cls = '私有 · A 类 (10.0.0.0/8)';
+  else if(o1 === 172 && a[1] >= 16 && a[1] <= 31) cls = '私有 · B 段 (172.16/12)';
+  else if(o1 === 192 && a[1] === 168) cls = '私有 · C 段 (192.168/16)';
+  else if(o1 === 127) cls = '本机回环 (loopback)';
+  else if(o1 === 169 && a[1] === 254) cls = '链路本地 (APIPA，常表示没拿到 DHCP)';
+  else if(o1 >= 224 && o1 <= 239) cls = '组播 (multicast)';
+  else if(o1 >= 240) cls = '保留 / 广播';
+  else cls = '公网地址';
+
+  var sizeTxt;
+  if(size >= 1048576) sizeTxt = size + ' 个地址（约 ' + (size/10000).toFixed(1) + ' 万个）';
+  else sizeTxt = size + ' 个地址';
+
+  $('rCidr').textContent = intToIp(net) + '/' + prefix;
+  $('rNet').textContent = intToIp(net);
+  $('rBc').textContent = intToIp(bc);
+  $('rHost').textContent = hostTxt;
+  $('rMask').textContent = intToIp(mask);
+  $('rWild').textContent = intToIp(wild);
+  $('rCount').textContent = '可用 ' + count + ' 台 / 共 ' + sizeTxt;
+  $('rType').textContent = cls;
+  $('rClass').textContent = a[0] < 128 ? 'A 类（1~126 开头）' : a[0] < 192 ? 'B 类（128~191）' : a[0] < 224 ? 'C 类（192~223）' : 'D/E 类';
+
+  var bIp = bin(ip), bM = bin(mask);
+  var html = '';
+  function seg(str, start, end, tag){
+    var s = '';
+    for(var i=0;i<32;i++){
+      if(i && i%8===0) s += '.';
+      var ch = str.charAt(i);
+      s += (i>=start && i<end) ? '<u>'+ch+'</u>' : (tag==='mask' && ch==='0' ? '<i>'+ch+'</i>' : ch);
+    }
+    return s;
+  }
+  html = '地址 ' + seg(bIp, 0, prefix, 'ip') + '<br>'
+       + '掩码 ' + seg(bM, 0, prefix, 'mask') + '<br>'
+       + '网络 ' + seg(bin(net), 0, prefix, 'net');
+  $('bits').innerHTML = html;
+  $('bitNote').innerHTML = '前 <b>' + prefix + '</b> 位是网络位（高亮），后 <b>' + (32-prefix) + '</b> 位是主机位。'
+    + ' 本机 <code>' + intToIp(ip) + '</code> 在该段内偏移 ' + (ip - net) + '。';
+
+  summary = 'CIDR ' + intToIp(net) + '/' + prefix
+    + ' | 掩码 ' + intToIp(mask)
+    + ' | 网络 ' + intToIp(net)
+    + ' | 广播 ' + intToIp(bc)
+    + ' | 可用 ' + hostTxt
+    + ' | 共 ' + count + ' 台';
+}
+
+function safeCalc(){
+  try{ calc(); }catch(e){ errEl.textContent = '计算出错，检查输入格式'; }
+}
+
+ipIn.addEventListener('input', function(){
+  var v = String(ipIn.value).trim();
+  var m = v.match(/\/(\d{1,2})$/);
+  if(m && Number(m[1]) <= 32) maskSel.value = m[1];
+  safeCalc();
+});
+maskSel.addEventListener('change', function(){
+  var v = String(ipIn.value).trim();
+  if(v.indexOf('/') > -1) ipIn.value = v.split('/')[0] + '/' + maskSel.value;
+  safeCalc();
+});
+$('btnCalc').addEventListener('click', function(){ safeCalc(); if(!errEl.textContent) toast('已计算'); });
+
+$('btnCopy').addEventListener('click', function(){
+  if(!summary){ toast('先算出结果'); return; }
+  HS.copy(summary); toast('已复制摘要');
+});
+
+safeCalc();
+})();
+</script>
+</body>
+</html>

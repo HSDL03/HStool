@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 区块定位 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:88px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.kv b em{font-style:normal;font-weight:500;color:var(--muted);font-family:inherit;font-size:12.5px}
+.mapline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.mapline code{flex:1;min-width:0;padding:9px 11px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);font-family:var(--mono);font-size:12.5px;box-shadow:var(--bevel);word-break:break-all}
+.mini{font-size:12px;color:var(--faint);margin-top:8px}
+.bounds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.bd{padding:9px 11px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);font-family:var(--mono);font-size:12.5px}
+.bd i{display:block;font-style:normal;font-family:inherit;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+@media(max-width:640px){.bounds{grid-template-columns:1fr}.kv span{width:100%}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧭 MC 区块定位</h1><p class="sub">坐标 → 区块 / 区域文件 / 区块边界 · 找 slime chunk、写 forceload 都用得上</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">世界坐标</h2>
+      <div class="grid2">
+        <div class="fld"><label for="xIn">X 坐标</label><input id="xIn" class="mono" inputmode="numeric" spellcheck="false" value="128"></div>
+        <div class="fld"><label for="zIn">Z 坐标</label><input id="zIn" class="mono" inputmode="numeric" spellcheck="false" value="-45"></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="btnCalc" type="button">定位区块</button></div>
+      <div class="mini" id="err" style="color:var(--warn)"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">区块</h2>
+      <div class="kv"><span>区块坐标</span><b id="rChunk">—</b></div>
+      <div class="kv"><span>区块内偏移</span><b id="rOffset">—</b></div>
+      <div class="kv"><span>区块范围</span><b id="rRange">—</b></div>
+      <div class="bounds">
+        <div class="bd"><i>区块西北角 (min)</i><span id="rMin">—</span></div>
+        <div class="bd"><i>区块东南角 (max)</i><span id="rMax">—</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">区域文件</h2>
+      <div class="kv"><span>区域坐标</span><b id="rRegion">—</b></div>
+      <div class="kv"><span>文件</span><b id="rFile">—</b></div>
+      <div class="kv"><span>区块在区内</span><b id="rIdx">—</b></div>
+      <div class="mapline">
+        <code id="cmdLine">—</code>
+        <button class="btn sm" id="btnCopy" type="button">📋 复制</button>
+      </div>
+      <div class="mini">用 <code>/forceload add</code> 时就填上面这行里的起止坐标。</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">下界 ↔ 主世界</h2>
+      <div class="kv"><span>主世界 → 下界</span><b id="rNether">—</b></div>
+      <div class="kv"><span>下界 → 主世界</span><b id="rOver">—</b></div>
+      <div class="mini">传送到下界后坐标除以 8，回主世界乘 8，门会自动找最近的对应点。</div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 区块边长 16 格，用 <code>floor(x / 16)</code> 算；32 个区块拼成一个区域文件
+        <code>r.X.Z.mca</code>，所以区域号是 <code>floor(区块号 / 32)</code>。负数坐标向下取整，
+        这点最容易算错 —— 本页直接给结果，不用自己掰。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var xIn=$('xIn'), zIn=$('zIn'), errEl=$('err');
+var cmd='';
+
+function floorDiv(v,n){ return Math.floor(v/n); }
+function mod(v,n){ return ((v % n) + n) % n; }
+
+function set(id,txt){ $(id).textContent = txt; }
+
+function calc(){
+  var xs = String(xIn.value).trim(), zs = String(zIn.value).trim();
+  if(xs === '' || zs === ''){ errEl.textContent = 'X 和 Z 都要填'; return; }
+  if(!/^-?\d+(\.\d+)?$/.test(xs) || !/^-?\d+(\.\d+)?$/.test(zs)){
+    errEl.textContent = '坐标只能是数字，比如 128 或 -45.5'; return;
+  }
+  var x = Math.floor(Number(xs)), z = Math.floor(Number(zs));
+  if(Math.abs(x) > 30000000 || Math.abs(z) > 30000000){
+    errEl.textContent = '原版世界边界是 ±3000 万格，超出就没有地形了'; return;
+  }
+  errEl.textContent = '';
+
+  var cx = floorDiv(x,16), cz = floorDiv(z,16);
+  set('rChunk', cx + ', ' + cz);
+  set('rOffset', (mod(x,16)) + ', ' + (mod(z,16)) + '  （从区块西北角起算）');
+  set('rRange', (cx*16) + ' ~ ' + (cx*16+15) + '  ×  ' + (cz*16) + ' ~ ' + (cz*16+15));
+  set('rMin', (cx*16) + ', ' + (cz*16));
+  set('rMax', (cx*16+15) + ', ' + (cz*16+15));
+
+  var rx = floorDiv(cx,32), rz = floorDiv(cz,32);
+  var ix = mod(cx,32), iz = mod(cz,32);
+  set('rRegion', rx + ', ' + rz);
+  set('rFile', 'r.' + rx + '.' + rz + '.mca');
+  set('rIdx', ix + ', ' + iz + '   （文件内索引 ' + (ix + iz*32) + '）');
+
+  cmd = '/forceload add ' + (cx*16) + ' ' + (cz*16) + ' ' + (cx*16+15) + ' ' + (cz*16+15);
+  set('cmdLine', cmd);
+
+  var nx = Math.floor(x/8), nz = Math.floor(z/8);
+  set('rNether', nx + ', ' + nz + '  （区块 ' + floorDiv(nx,16) + ', ' + floorDiv(nz,16) + '）');
+  set('rOver', (x*8) + ', ' + (z*8) + '  （从下界 ' + x + ', ' + z + ' 回主世界）');
+}
+
+function safeCalc(){
+  try{ calc(); }catch(e){ errEl.textContent = '算不出来，检查一下输入'; }
+}
+xIn.addEventListener('input',safeCalc);
+zIn.addEventListener('input',safeCalc);
+$('btnCalc').addEventListener('click',function(){ safeCalc(); if(!errEl.textContent) toast('已定位'); });
+
+$('btnCopy').addEventListener('click',function(){
+  if(!cmd){ toast('先填坐标'); return; }
+  HS.copy(cmd); toast('已复制指令');
+});
+
+/* 复制区块坐标本身：点区块那行也行 */
+$('rChunk').parentNode.addEventListener('click',function(){
+  var t=$('rChunk').textContent;
+  if(t === '—') return;
+  HS.copy(t); toast('已复制区块坐标');
+});
+
+safeCalc();
+})();
+</script>
+</body>
+</html>

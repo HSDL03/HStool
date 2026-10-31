@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>随机分组 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modebar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.grp{background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);overflow:hidden}
+.grp h3{
+  margin:0;padding:8px 11px;font-size:12px;font-weight:800;letter-spacing:.05em;
+  color:var(--ac);background:var(--bg3);border-bottom:1px solid var(--bd);
+}
+.grp ul{margin:0;padding:8px 11px 10px;list-style:none}
+.grp li{
+  font-size:13.5px;padding:4px 0;border-bottom:1px dashed var(--bd);
+  display:flex;gap:8px;align-items:baseline;word-break:break-all;
+}
+.grp li:last-child{border-bottom:0}
+.grp li i{font-style:normal;font-size:10.5px;font-family:var(--mono);color:var(--faint);flex:none;min-width:14px}
+.stat{font-size:12.5px;color:var(--muted);margin-top:10px}
+.stat b{color:var(--ac);font-family:var(--mono)}
+.one{
+  display:flex;align-items:center;justify-content:center;min-height:78px;
+  padding:14px;margin-top:10px;border:2px dashed var(--bd2);border-radius:var(--r);
+  font-size:clamp(1.2rem,5vw,1.7rem);font-weight:800;letter-spacing:.04em;color:var(--ac);
+  background:var(--bg);word-break:break-all;text-align:center;
+}
+@media(max-width:640px){.two{grid-template-columns:1fr}.groups{grid-template-columns:1fr 1fr}}
+@media(max-width:400px){.groups{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🎲 随机分组</h1><p class="sub">名单打乱后按组数或人数切分 · 也能抽一个人</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">名单</h2>
+      <div class="fld">
+        <label for="namesIn">一行一个名字（也认逗号、顿号分隔）</label>
+        <textarea id="namesIn" class="mono" rows="7" spellcheck="false" placeholder="直接粘贴名单，重复的名字会自动合并"></textarea>
+      </div>
+      <div class="two">
+        <div class="fld"><label for="gCount">分几组</label><input id="gCount" type="number" min="1" max="50" value="3" inputmode="numeric"></div>
+        <div class="fld"><label for="pSize">每组几人（写 0 = 按组数分）</label><input id="pSize" type="number" min="0" max="50" value="0" inputmode="numeric"></div>
+      </div>
+      <div class="modebar">
+        <button class="btn primary" id="btnGo" type="button">开始分组</button>
+        <button class="btn" id="btnPick" type="button">抽一个人</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果</button>
+        <button class="btn ghost" id="btnClear" type="button">清空名单</button>
+      </div>
+      <div class="stat" id="err" style="color:var(--warn)"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">分组结果</h2>
+      <div class="groups" id="out"></div>
+      <div class="stat" id="statLine">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">抽签</h2>
+      <div class="one" id="pickBox">点上面的「抽一个人」</div>
+      <div class="stat" id="pickNote">同一份名单可以反复抽，每次都是独立的随机结果。</div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 用的是浏览器自带的 <code>crypto.getRandomValues</code> 加 Fisher–Yates 洗牌，
+        不是 <code>Math.random()</code> 那种可预测的伪随机，开黑选人、排班、抽奖都够用。
+        人数除不尽时多出来的人会依次补到前几组，所以各组最多差 1 人。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var namesIn=$('namesIn'), out=$('out'), statLine=$('statLine'), errEl=$('err');
+var pSize=$('pSize'), gCountEl=$('gCount');
+var pickBox=$('pickBox'), pickNote=$('pickNote');
+var lastText = '';
+var pool = [];
+
+var KEY = 'hs-shuffle-names';
+var SAMPLE = ['红石', '苦力怕', '末影人', '小麦种子', '金胡萝卜', '海晶灯', '黏土球', '石英块'];
+
+var saved = null;
+try{ saved = JSON.parse(localStorage.getItem(KEY) || 'null'); }catch(e){ saved = null; }
+namesIn.value = (saved && saved.length) ? saved.join('\n') : SAMPLE.join('\n');
+
+function parseNames(){
+  var raw = String(namesIn.value).replace(/[\r\n]+/g, '\n');
+  var arr = raw.split(/[\n,，、;；]+/);
+  var seen = {};
+  var out2 = [];
+  for(var i=0;i<arr.length;i++){
+    var n = arr[i].replace(/^\s+|\s+$/g, '');
+    if(!n) continue;
+    if(seen[n]) continue;
+    seen[n] = 1;
+    out2.push(n);
+  }
+  return out2;
+}
+
+/* 无偏随机整数：拒绝采样，避免取模带来的偏斜 */
+function randInt(max){
+  if(max <= 0) return 0;
+  var buf = new Uint32Array(1);
+  var limit = Math.floor(4294967296 / max) * max;
+  for(var i=0;i<50;i++){
+    crypto.getRandomValues(buf);
+    if(buf[0] < limit) return buf[0] % max;
+  }
+  return buf[0] % max;
+}
+function shuffle(a){
+  var arr = a.slice();
+  for(var i=arr.length-1;i>0;i--){
+    var j = randInt(i+1);
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(parseNames())); }catch(e){}
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : '&quot;';
+  });
+}
+
+function renderGroups(groups){
+  var html = '';
+  for(var i=0;i<groups.length;i++){
+    html += '<div class="grp"><h3>第 ' + (i+1) + ' 组 · ' + groups[i].length + ' 人</h3><ul>';
+    for(var j=0;j<groups[i].length;j++){
+      html += '<li><i>' + (j+1) + '</i><span>' + esc(groups[i][j]) + '</span></li>';
+    }
+    html += '</ul></div>';
+  }
+  out.innerHTML = html;
+}
+
+function group(){
+  var list = parseNames();
+  if(list.length < 2){ errEl.textContent = '至少要 2 个人才能分组'; return; }
+  errEl.textContent = '';
+  save();
+
+  var perSize = Number(pSize.value) || 0;
+  var gN = Number(gCountEl.value) || 0;
+  var count;
+
+  if(perSize > 0){
+    count = Math.ceil(list.length / perSize);
+  } else {
+    if(gN < 1){ errEl.textContent = '组数至少是 1'; return; }
+    count = Math.min(gN, list.length);
+  }
+
+  var s = shuffle(list);
+  var groups = [];
+  for(var i=0;i<count;i++) groups.push([]);
+  for(var k=0;k<s.length;k++) groups[k % count].push(s[k]);
+
+  renderGroups(groups);
+
+  var sizes = groups.map(function(g){return g.length;});
+  var maxN = Math.max.apply(null, sizes), minN = Math.min.apply(null, sizes);
+  statLine.innerHTML = '共 <b>' + s.length + '</b> 人，分成 <b>' + count + '</b> 组，'
+    + (maxN === minN ? '每组 <b>' + maxN + '</b> 人' : '人数差最大 1（' + minN + '~' + maxN + ' 人）');
+
+  lastText = '共 ' + s.length + ' 人 / ' + count + ' 组\n';
+  for(var g=0;g<groups.length;g++){
+    lastText += '\n第 ' + (g+1) + ' 组：' + groups[g].join('、');
+  }
+}
+
+function pickOne(){
+  var list = parseNames();
+  if(!list.length){ errEl.textContent = '名单是空的，先填点名字'; return; }
+  errEl.textContent = '';
+  save();
+  var idx = randInt(list.length);
+  pickBox.textContent = list[idx];
+  pickNote.textContent = '从 ' + list.length + ' 个名字里随机抽中，每次结果独立。';
+  lastText = '抽中：' + list[idx];
+  toast('抽中 ' + list[idx]);
+}
+
+$('btnGo').addEventListener('click', function(){ group(); });
+$('btnPick').addEventListener('click', pickOne);
+$('btnCopy').addEventListener('click', function(){
+  if(!lastText){ toast('先分一次组'); return; }
+  HS.copy(lastText); toast('已复制结果');
+});
+$('btnClear').addEventListener('click', function(){
+  namesIn.value = '';
+  out.innerHTML = '';
+  statLine.textContent = '—';
+  pickBox.textContent = '点上面的「抽一个人」';
+  lastText = '';
+  save();
+  namesIn.focus();
+});
+
+/* 打开就分一次组，免得看到空白面板 */
+group();
+})();
+</script>
+</body>
+</html>

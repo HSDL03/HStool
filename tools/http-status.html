@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTTP 状态码 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.list{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.it{
+  display:flex;gap:11px;align-items:flex-start;padding:11px 13px;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);cursor:pointer;transition:border-color .15s,transform .1s;
+}
+.it:hover{border-color:var(--ac)}
+.it:active{transform:translateY(1px)}
+.it .code{
+  flex:none;width:52px;font-family:var(--mono);font-weight:800;font-size:15px;
+  font-variant-numeric:tabular-nums;padding-top:1px;
+}
+.it .code.c1{color:var(--ac)}
+.it .code.c2{color:var(--ac2)}
+.it .code.c3{color:var(--warn)}
+.it .code.c4,.it .code.c5{color:var(--dgr)}
+.it .body{flex:1;min-width:0}
+.it .nm{font-size:13.5px;font-weight:800;margin-bottom:3px}
+.it .nm em{font-style:normal;font-weight:500;font-size:11.5px;color:var(--faint);font-family:var(--mono);margin-left:6px}
+.it .ds{font-size:12.5px;color:var(--muted);line-height:1.6}
+.it .cp{flex:none;font-size:11px;color:var(--faint);align-self:center}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 2px}
+.count{font-size:12px;color:var(--faint);margin-top:10px}
+.none{padding:24px;text-align:center;color:var(--faint);font-size:13px}
+@media(max-width:640px){
+  .it{padding:10px}
+  .it .code{width:44px;font-size:14px}
+  .it .cp{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🚦 HTTP 状态码</h1><p class="sub">查码 + 排障方向 · 点一行复制数字</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">搜索</h2>
+      <div class="fld">
+        <label for="qIn">输入状态码、英文名或关键词</label>
+        <input id="qIn" spellcheck="false" autocomplete="off" placeholder="比如 404、timeout、跨域、缓存">
+      </div>
+      <div class="chips" id="chips">
+        <button class="chip active" data-cat="all" type="button">全部 <span class="n" id="nAll"></span></button>
+        <button class="chip" data-cat="1" type="button">1xx 信息</button>
+        <button class="chip" data-cat="2" type="button">2xx 成功</button>
+        <button class="chip" data-cat="3" type="button">3xx 重定向</button>
+        <button class="chip" data-cat="4" type="button">4xx 客户端</button>
+        <button class="chip" data-cat="5" type="button">5xx 服务端</button>
+      </div>
+      <div class="count" id="count">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="list" id="list"></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 排障先分锅：<b>4xx 是请求方的问题</b>（改地址、补参数、加权限），<b>5xx 是服务方的问题</b>（看日志、看依赖）。
+        只有 <b>408 / 429</b> 例外，它们是服务端在抱怨你太慢或太快。
+        401 是「没登录」，403 是「登录了但没权限」，这两个最容易搞混。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var DATA = [
+  {c:100,n:'Continue',d:'已收到请求头，等客户端发 body。一般由客户端自动处理，不用管。'},
+  {c:101,n:'Switching Protocols',d:'协议切换成功，WebSocket 握手就是靠它从 HTTP 升到 ws。'},
+  {c:103,n:'Early Hints',d:'先把 Link 等关键响应头吐出来，让浏览器提前预加载资源。'},
+  {c:200,n:'OK',d:'请求成功，响应体就是你要的数据。'},
+  {c:201,n:'Created',d:'创建成功，常见于 POST 新建资源，Location 头里带新地址。'},
+  {c:202,n:'Accepted',d:'已受理但还没处理完，异步任务（导出、转码）常返回它。'},
+  {c:204,n:'No Content',d:'成功但没有响应体，DELETE、OPTIONS 预检常返回它。'},
+  {c:206,n:'Partial Content',d:'只返回了一段内容，视频拖动进度条、断点续传靠它。'},
+  {c:301,n:'Moved Permanently',d:'永久跳转，搜索引擎会把权重转到新地址，换了域名就用这个。'},
+  {c:302,n:'Found',d:'临时跳转，原地址仍然有效，登录后跳回原页面常用它。'},
+  {c:303,n:'See Other',d:'跳转后改用 GET 取结果，POST 完防止刷新重复提交。'},
+  {c:304,n:'Not Modified',d:'内容没变，用你本地的缓存即可，省流量。排查缓存问题时先看它。'},
+  {c:307,n:'Temporary Redirect',d:'临时跳转且保持原方法和 body，302 会把 POST 变成 GET，它不会。'},
+  {c:308,n:'Permanent Redirect',d:'永久跳转且保持方法，301 的严格版。'},
+  {c:400,n:'Bad Request',d:'请求本身有问题：参数缺失、JSON 语法错、body 格式不对。'},
+  {c:401,n:'Unauthorized',d:'没带凭证或凭证失效 —— 该登录了。名字有误导，它其实是「未认证」。'},
+  {c:402,n:'Payment Required',d:'预留码，实际很少用，个别付费 API 拿它表示欠费。'},
+  {c:403,n:'Forbidden',d:'身份认出来了，但没有权限。别再试同一账号，得改权限或换角色。'},
+  {c:404,n:'Not Found',d:'路径不存在。也可能是后端路由没匹配上，或者静态文件根本没部署。'},
+  {c:405,n:'Method Not Allowed',d:'路径对但方法不对，比如该用 POST 却发了 GET。看 Allow 响应头。'},
+  {c:406,n:'Not Acceptable',d:'服务端造不出你 Accept 头里要求的格式，比如只支持 JSON 却要 XML。'},
+  {c:408,n:'Request Timeout',d:'服务端等请求等超时了，通常是网络太慢或客户端发一半断了。'},
+  {c:409,n:'Conflict',d:'状态冲突：重复创建、并发编辑同一资源、版本号对不上。'},
+  {c:410,n:'Gone',d:'资源曾经存在，现在被永久删除了，比 404 更明确。'},
+  {c:411,n:'Length Required',d:'缺 Content-Length，服务端不知道该收多少数据。'},
+  {c:412,n:'Precondition Failed',d:'If-Match 之类的前置条件不成立，乐观锁冲突就是它。'},
+  {c:413,n:'Payload Too Large',d:'请求体太大。上传报这个就去调 Nginx 的 client_max_body_size。'},
+  {c:414,n:'URI Too Long',d:'URL 太长，GET 塞了太多参数，改用 POST 或分页。'},
+  {c:415,n:'Unsupported Media Type',d:'Content-Type 不对，比如发了 JSON 却标成 form-urlencoded。'},
+  {c:416,n:'Range Not Satisfiable',d:'请求的字节范围超出文件大小，断点续传时缓存对不上会见到。'},
+  {c:422,n:'Unprocessable Content',d:'格式对但语义不对，字段校验失败（邮箱不合法、金额为负）常用它。'},
+  {c:425,n:'Too Early',d:'防重放：请求来的太早，TLS 还没握完就发了，服务端拒收。'},
+  {c:429,n:'Too Many Requests',d:'被限流了。看 Retry-After 头等多久，别原地猛重试。'},
+  {c:431,n:'Request Header Fields Too Large',d:'请求头太大，常见于 Cookie 攒了几百 KB，清一下就好。'},
+  {c:451,n:'Unavailable For Legal Reasons',d:'因法律原因不可用，地区封锁、合规下架会用这个码。'},
+  {c:500,n:'Internal Server Error',d:'服务端未捕获的异常。必须看服务端日志，前端改什么都没用。'},
+  {c:501,n:'Not Implemented',d:'服务端不支持这个功能或方法，网关不认这个请求类型时也会给。'},
+  {c:502,n:'Bad Gateway',d:'网关拿到的上游响应是坏的。后端挂了、端口写错、容器没起来都会这样。'},
+  {c:503,n:'Service Unavailable',d:'服务暂时不可用：过载、维护、启动中。看 Retry-After。'},
+  {c:504,n:'Gateway Timeout',d:'网关等上游超时。上游慢查询、长任务没设超时，最常见。'},
+  {c:505,n:'HTTP Version Not Supported',d:'服务端不支持这个 HTTP 版本，老网关遇到 HTTP/2 请求可能出现。'},
+  {c:507,n:'Insufficient Storage',d:'存储空间不足，网盘类服务写满了会返回它。'},
+  {c:508,n:'Loop Detected',d:'检测到死循环，CDN 回源绕成环、重写规则自己指自己时会触发。'}
+];
+
+var listEl=$('list'), countEl=$('count'), qIn=$('qIn');
+var cat = 'all';
+
+$('nAll').textContent = DATA.length;
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : '&quot;';
+  });
+}
+
+function render(){
+  var q = String(qIn.value).trim().toLowerCase();
+  var hits = DATA.filter(function(it){
+    if(cat !== 'all' && String(it.c).charAt(0) !== cat) return false;
+    if(!q) return true;
+    return String(it.c).indexOf(q) > -1
+      || it.n.toLowerCase().indexOf(q) > -1
+      || it.d.toLowerCase().indexOf(q) > -1;
+  });
+
+  if(!hits.length){
+    listEl.innerHTML = '<div class="none">没有匹配的状态码，换个关键词试试（比如 权限、超时、缓存）</div>';
+  } else {
+    var html = '';
+    for(var i=0;i<hits.length;i++){
+      var it = hits[i];
+      html += '<div class="it" data-code="' + it.c + '" role="button" tabindex="0">'
+        + '<div class="code c' + String(it.c).charAt(0) + '">' + it.c + '</div>'
+        + '<div class="body"><div class="nm">' + esc(it.n) + '</div>'
+        + '<div class="ds">' + esc(it.d) + '</div></div>'
+        + '<div class="cp">复制</div></div>';
+    }
+    listEl.innerHTML = html;
+  }
+  countEl.textContent = '匹配 ' + hits.length + ' 条 / 共 ' + DATA.length + ' 条';
+}
+
+qIn.addEventListener('input', render);
+
+Array.prototype.forEach.call(document.querySelectorAll('#chips .chip'), function(btn){
+  btn.addEventListener('click', function(){
+    Array.prototype.forEach.call(document.querySelectorAll('#chips .chip'), function(b){
+      b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    cat = btn.getAttribute('data-cat');
+    render();
+  });
+});
+
+function copyCode(code){
+  HS.copy(String(code));
+  toast('已复制 ' + code);
+}
+listEl.addEventListener('click', function(e){
+  var row = e.target.closest ? e.target.closest('.it') : null;
+  if(row) copyCode(row.getAttribute('data-code'));
+});
+listEl.addEventListener('keydown', function(e){
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  var row = e.target.closest ? e.target.closest('.it') : null;
+  if(row){ e.preventDefault(); copyCode(row.getAttribute('data-code')); }
+});
+
+render();
+})();
+</script>
+</body>
+</html>

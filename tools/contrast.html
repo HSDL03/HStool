@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>对比度检查 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌓</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.pickers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pk{display:flex;gap:9px;align-items:center}
+.pk input[type=color]{width:52px;height:40px;padding:0;border:2px solid var(--bd2);border-radius:var(--r);background:var(--bg);cursor:pointer;flex:none}
+.pk input[type=text]{flex:1;min-width:0;padding:9px 11px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  color:var(--text);font-family:var(--mono);font-size:13px;box-shadow:var(--bevel);outline:none}
+.pk input[type=text]:focus{border-color:var(--ac)}
+.ratio{
+  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  padding:16px 18px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+}
+.ratio b{font-family:var(--mono);font-size:clamp(1.8rem,7vw,2.6rem);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.ratio span{font-size:13px;color:var(--muted)}
+.ratio .badge{font-size:12px}
+.prev{margin-top:12px;padding:18px;border-radius:var(--r);border:2px solid var(--bd2)}
+.prev .lg{font-size:24px;font-weight:800;margin-bottom:6px}
+.prev .nm{font-size:15px;margin-bottom:6px}
+.prev .sm{font-size:12px}
+.grade{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+.gd{padding:10px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);text-align:center;box-shadow:var(--bevel)}
+.gd i{display:block;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.gd b{display:block;font-family:var(--mono);font-size:15px;font-weight:800}
+.gd.ok b{color:var(--ac)}
+.gd.no b{color:var(--warn)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:96px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all}
+.mini{font-size:12px;line-height:1.6}
+@media(max-width:640px){.pickers{grid-template-columns:1fr}.grade{grid-template-columns:1fr 1fr}.kv span{width:100%}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🌓 对比度检查</h1><p class="sub">WCAG 2.1 文字对比度 · 够不够 AA / AAA 一眼看清</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">颜色</h2>
+      <div class="pickers">
+        <div class="fld"><label for="fgText">文字颜色</label>
+          <div class="pk"><input type="color" id="fgPick" value="#3a5a34"><input type="text" id="fgText" value="#3a5a34" spellcheck="false" maxlength="7"></div>
+        </div>
+        <div class="fld"><label for="bgText">背景颜色</label>
+          <div class="pk"><input type="color" id="bgPick" value="#f4f7f0"><input type="text" id="bgText" value="#f4f7f0" spellcheck="false" maxlength="7"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnSwap" type="button">互换前景 / 背景</button>
+        <button class="btn" id="btnFix" type="button">自动修正到 AA</button>
+        <button class="btn" id="btnCopy" type="button">📋 复制结果</button>
+      </div>
+      <div class="mini" id="err" style="color:var(--warn);margin-top:10px"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结果</h2>
+      <div class="ratio">
+        <b id="rRatio">—</b>
+        <span>: 1 对比度</span>
+        <span class="badge" id="rBadge">—</span>
+      </div>
+      <div class="prev" id="preview">
+        <div class="lg" id="pvLg">大标题 24px 粗体</div>
+        <div class="nm" id="pvNm">正文 15px —— 这段话用来判断实际阅读是否吃力。</div>
+        <div class="sm" id="pvSm">辅助文字 12px，界面里最容易被忽略的一层。</div>
+      </div>
+      <div class="grade">
+        <div class="gd" id="gAaN"><i>正文 AA</i><b>—</b></div>
+        <div class="gd" id="gAaA"><i>正文 AAA</i><b>—</b></div>
+        <div class="gd" id="gAaL"><i>大字 AA</i><b>—</b></div>
+        <div class="gd" id="gAaaL"><i>大字 AAA</i><b>—</b></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">数值</h2>
+      <div class="kv"><span>相对亮度</span><b id="rLum">—</b></div>
+      <div class="kv"><span>差值</span><b id="rDiff">—</b></div>
+      <div class="kv"><span>色相 / 饱和</span><b id="rHsl">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 门槛是死的：<b>正文 4.5:1</b>、<b>大字 3:1</b>（≥24px 或 ≥18.66px 粗体）、AA 级；
+        AAA 则是 7:1 和 4.5:1。界面元素、图标、边框的对比度要求更低（3:1），但别拿来凑正文。
+        算的是 WCAG 的相对亮度，不是人眼主观感受 —— 蓝紫系最容易「看着够实际不够」。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var fgPick=$('fgPick'), fgText=$('fgText'), bgPick=$('bgPick'), bgText=$('bgText'), errEl=$('err');
+
+function norm(s){
+  s = String(s).trim();
+  if(!s) return null;
+  if(s.charAt(0) !== '#') s = '#' + s;
+  if(/^#[0-9a-fA-F]{3}$/.test(s)){
+    s = '#' + s.charAt(1)+s.charAt(1)+s.charAt(2)+s.charAt(2)+s.charAt(3)+s.charAt(3);
+  }
+  if(!/^#[0-9a-fA-F]{6}$/.test(s)) return null;
+  return s.toLowerCase();
+}
+function hex2rgb(h){
+  return [parseInt(h.substr(1,2),16), parseInt(h.substr(3,2),16), parseInt(h.substr(5,2),16)];
+}
+function rgb2hex(r,g,b){
+  function p(n){ n = Math.max(0, Math.min(255, Math.round(n))); return (n<16?'0':'') + n.toString(16); }
+  return '#' + p(r) + p(g) + p(b);
+}
+function lum(h){
+  var c = hex2rgb(h);
+  var v = c.map(function(x){
+    var s = x/255;
+    return s <= 0.03928 ? s/12.92 : Math.pow((s+0.055)/1.055, 2.4);
+  });
+  return 0.2126*v[0] + 0.7152*v[1] + 0.0722*v[2];
+}
+function ratio(a,b){
+  var la = lum(a), lb = lum(b);
+  var hi = Math.max(la,lb), lo = Math.min(la,lb);
+  return (hi + 0.05) / (lo + 0.05);
+}
+function rgb2hsl(h){
+  var c = hex2rgb(h).map(function(x){return x/255;});
+  var mx = Math.max(c[0],c[1],c[2]), mn = Math.min(c[0],c[1],c[2]);
+  var l = (mx+mn)/2, d = mx-mn, hh = 0, s = 0;
+  if(d > 0){
+    s = l > 0.5 ? d/(2-mx-mn) : d/(mx+mn);
+    if(mx === c[0]) hh = ((c[1]-c[2])/d) % 6;
+    else if(mx === c[1]) hh = (c[2]-c[0])/d + 2;
+    else hh = (c[0]-c[1])/d + 4;
+    hh *= 60;
+    if(hh < 0) hh += 360;
+  }
+  return [Math.round(hh), Math.round(s*100), Math.round(l*100)];
+}
+function hsl2hex(h,s,l){
+  s /= 100; l /= 100;
+  var c = (1 - Math.abs(2*l-1)) * s;
+  var x = c * (1 - Math.abs((h/60) % 2 - 1));
+  var m = l - c/2, r=0,g=0,b=0;
+  if(h < 60){r=c;g=x;} else if(h < 120){r=x;g=c;}
+  else if(h < 180){g=c;b=x;} else if(h < 240){g=x;b=c;}
+  else if(h < 300){r=x;b=c;} else {r=c;b=x;}
+  return rgb2hex((r+m)*255, (g+m)*255, (b+m)*255);
+}
+function grade(el, pass){
+  el.className = 'gd ' + (pass ? 'ok' : 'no');
+  el.querySelector('b').textContent = pass ? '通过' : '不够';
+}
+
+var last = '';
+
+function render(){
+  var fg = norm(fgText.value), bg = norm(bgText.value);
+  if(!fg || !bg){
+    errEl.textContent = '颜色要写成 #3a5a34 或 #fff 这种格式';
+    $('rRatio').textContent = '—';
+    return;
+  }
+  errEl.textContent = '';
+  fgText.value = fg; bgText.value = bg;
+  fgPick.value = fg; bgPick.value = bg;
+
+  var r = ratio(fg,bg);
+  var r2 = Math.round(r*100)/100;
+  $('rRatio').textContent = r2.toFixed(2);
+
+  var badge = $('rBadge');
+  if(r >= 7){ badge.textContent = 'AAA · 全场景可用'; badge.className = 'badge ok'; }
+  else if(r >= 4.5){ badge.textContent = 'AA · 正文可用'; badge.className = 'badge ok'; }
+  else if(r >= 3){ badge.textContent = '只够大字 / 界面元素'; badge.className = 'badge warn'; }
+  else { badge.textContent = '不合格'; badge.className = 'badge dgr'; }
+
+  var pv = $('preview');
+  pv.style.background = bg;
+  ['pvLg','pvNm','pvSm'].forEach(function(id){ $(id).style.color = fg; });
+
+  grade($('gAaN'), r >= 4.5);
+  grade($('gAaA'), r >= 7);
+  grade($('gAaL'), r >= 3);
+  grade($('gAaaL'), r >= 4.5);
+
+  var lf = lum(fg), lb = lum(bg);
+  $('rLum').textContent = lf.toFixed(4) + ' （文）/ ' + lb.toFixed(4) + ' （底）';
+  $('rDiff').textContent = Math.abs(lf - lb).toFixed(4);
+  var hsl = rgb2hsl(fg);
+  $('rHsl').textContent = hsl[0] + '° / ' + hsl[1] + '% / ' + hsl[2] + '%　（文字色）';
+
+  last = '文字 ' + fg + ' / 背景 ' + bg + ' → ' + r2.toFixed(2) + ':1'
+    + (r>=4.5 ? '，达到 AA' : '，未达 AA') + (r>=7 ? '，达到 AAA' : '');
+}
+
+function bindText(inp, pick){
+  inp.addEventListener('input', function(){
+    var v = norm(inp.value);
+    if(v) pick.value = v;
+    render();
+  });
+  inp.addEventListener('blur', function(){
+    var v = norm(inp.value);
+    if(!v){ inp.value = pick.value; render(); }
+  });
+  pick.addEventListener('input', function(){
+    inp.value = pick.value;
+    render();
+  });
+}
+bindText(fgText, fgPick);
+bindText(bgText, bgPick);
+
+$('btnSwap').addEventListener('click', function(){
+  var a = fgText.value, b = bgText.value;
+  fgText.value = b; bgText.value = a;
+  render(); toast('已互换');
+});
+
+/* 保持色相饱和不变，把亮度往两端推，找最近一个能过 AA 的版本 */
+$('btnFix').addEventListener('click', function(){
+  var fg = norm(fgText.value), bg = norm(bgText.value);
+  if(!fg || !bg){ toast('先把两个颜色填对'); return; }
+  if(ratio(fg,bg) >= 4.5){ toast('已经达到 AA 了，不用改'); return; }
+  var hsl = rgb2hsl(fg);
+  var bgL = lum(bg);
+  var dirs = bgL > 0.18 ? [-1, 1] : [1, -1];
+  var found = null;
+  for(var d=0; d<dirs.length && !found; d++){
+    for(var step=1; step<=100; step++){
+      var l = hsl[2] + dirs[d]*step;
+      if(l < 0 || l > 100) break;
+      var cand = hsl2hex(hsl[0], hsl[1], l);
+      if(ratio(cand, bg) >= 4.5){ found = cand; break; }
+    }
+  }
+  if(!found){ toast('调整亮度也过不了，换个背景色更实际'); return; }
+  fgText.value = found;
+  render();
+  toast('已修正为 ' + found);
+});
+
+$('btnCopy').addEventListener('click', function(){
+  if(!last){ toast('先填颜色'); return; }
+  HS.copy(last); toast('已复制');
+});
+
+render();
+})();
+</script>
+</body>
+</html>
