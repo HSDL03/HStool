@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 刷怪笼规划 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧟</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.box{
+  padding:12px 14px;background:var(--bg3);border-radius:var(--r);
+  font-family:var(--mono);font-size:13px;line-height:1.9;margin-bottom:10px;overflow-wrap:anywhere;
+}
+.box span{color:var(--ac2);font-weight:800}
+.st{
+  display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:var(--r);
+  border:2px solid var(--bd2);background:var(--bg3);font-weight:700;font-size:13.5px;margin-bottom:10px;
+}
+.st.ok{border-color:var(--ac)}
+.st.bad{border-color:var(--dgr)}
+.st .ico{font-size:18px;line-height:1}
+.warn{margin-top:9px;font-size:12.5px;color:var(--dgr);min-height:18px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+@media(max-width:640px){.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧟 MC 刷怪笼规划</h1><p class="sub">生成区多大、站哪才刷、要挖多少格、火把放多远</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">位置</h2>
+      <div class="grid3">
+        <div class="fld">
+          <label for="sx">刷怪笼 X</label>
+          <input id="sx" type="number" inputmode="numeric" step="1" value="100">
+        </div>
+        <div class="fld">
+          <label for="sy">刷怪笼 Y</label>
+          <input id="sy" type="number" inputmode="numeric" step="1" value="20">
+        </div>
+        <div class="fld">
+          <label for="sz">刷怪笼 Z</label>
+          <input id="sz" type="number" inputmode="numeric" step="1" value="100">
+        </div>
+      </div>
+      <div class="grid3">
+        <div class="fld">
+          <label for="px">挂机点 X</label>
+          <input id="px" type="number" inputmode="numeric" step="1" value="100">
+        </div>
+        <div class="fld">
+          <label for="py">挂机点 Y</label>
+          <input id="py" type="number" inputmode="numeric" step="1" value="20">
+        </div>
+        <div class="fld">
+          <label for="pz">挂机点 Z</label>
+          <input id="pz" type="number" inputmode="numeric" step="1" value="112">
+        </div>
+      </div>
+      <div class="warn" id="err"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">生成区</h2>
+      <div class="box" id="areaBox">—</div>
+      <div class="kv"><span>生成区格数</span><b id="rVol">—</b></div>
+      <div class="kv"><span>要清空的方块</span><b id="rDig">—</b></div>
+      <div class="kv"><span>同种怪物上限</span><b>6 只</b></div>
+      <div class="kv"><span>尝试间隔</span><b>10 – 40 秒（随机）</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">挂机点检查</h2>
+      <div class="st" id="st"><span class="ico">—</span><span id="stText">—</span></div>
+      <div class="kv"><span>与刷怪笼距离</span><b id="rDist">—</b></div>
+      <div class="kv"><span>水平距离 / 垂直距离</span><b id="rSplit">—</b></div>
+      <div class="kv"><span>推荐挂机点（水平 12 格）</span><b id="rSpot">—</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">照明</h2>
+      <div class="kv"><span>刷怪需要亮度</span><b>≤ 7</b></div>
+      <div class="kv"><span>火把（14 级）照亮半径</span><b>6 格 → 亮度 ≥ 8</b></div>
+      <div class="kv"><span>想让它刷</span><b>6 格内别放光源</b></div>
+      <div class="kv"><span>想让它别刷</span><b>6 格内插火把即可</b></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制坐标清单</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 刷怪笼只在<b>玩家 16 格内</b>才工作，生成范围是以刷怪笼为中心的水平 8 格、垂直 3 格
+        （<code>X-4…X+3</code>、<code>Y-1…Y+1</code>、<code>Z-4…Z+3</code>），同种怪物满 6 只就暂停。<br>
+        亮度 > 7 就不刷了：火把亮度 14，每格衰减 1，所以 6 格以内（亮度 ≥8）是安全区，第 7 格开始又会刷。
+        挖空生成区只是让它「不卡住」，别把刷怪笼自己挖了。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var ids=['sx','sy','sz','px','py','pz'];
+var errEl=$('err');
+
+function numOf(id,label){
+  var raw=String($(id).value).trim();
+  if(raw==='') throw new Error(label+'不能为空');
+  if(!/^-?\d+$/.test(raw)) throw new Error(label+'要填整数坐标');
+  var n=parseInt(raw,10);
+  if(Math.abs(n)>30000000) throw new Error(label+'超出世界边界');
+  return n;
+}
+
+function calc(){
+  errEl.textContent='';
+  var v;
+  try{
+    v={};
+    ids.forEach(function(id){ v[id]=numOf(id,id.slice(0,1).toUpperCase()+' 坐标'); });
+  }catch(e){
+    errEl.textContent='⚠ '+e.message;
+    return;
+  }
+  var sx=v.sx, sy=v.sy, sz=v.sz;
+
+  /* 生成区：X-4..X+3, Y-1..Y+1, Z-4..Z+3 */
+  var x1=sx-4,x2=sx+3,y1=sy-1,y2=sy+1,z1=sz-4,z2=sz+3;
+  $('areaBox').innerHTML=
+    'X <span>'+x1+'</span> … <span>'+x2+'</span>（8 格）<br>'
+   +'Y <span>'+y1+'</span> … <span>'+y2+'</span>（3 格）<br>'
+   +'Z <span>'+z1+'</span> … <span>'+z2+'</span>（8 格）';
+  var vol=8*3*8;
+  $('rVol').textContent=vol+' 格（8×3×8）';
+  $('rDig').textContent=(vol-1)+' 格（刷怪笼本身保留）';
+
+  /* 距离 */
+  var dx=v.px-sx, dy=v.py-sy, dz=v.pz-sz;
+  var d=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  var hd=Math.sqrt(dx*dx+dz*dz);
+  $('rDist').textContent=d.toFixed(1)+' 格';
+  $('rSplit').textContent=hd.toFixed(1)+' / '+Math.abs(dy)+' 格';
+
+  var st=$('st');
+  if(d<=16){
+    st.className='st ok';
+    st.querySelector('.ico').textContent='✅';
+    $('stText').textContent='在 16 格内，刷怪笼会工作';
+  }else{
+    st.className='st bad';
+    st.querySelector('.ico').textContent='⚠';
+    $('stText').textContent='超出 16 格，完全不刷怪';
+  }
+  if(d<=16&&hd<4){
+    st.className='st bad';
+    st.querySelector('.ico').textContent='⚠';
+    $('stText').textContent='站太近了，会挡住生成区里的空间';
+  }
+
+  $('rSpot').textContent=(sx)+' , '+sy+' , '+(sz+12);
+
+  window.__copy=[
+    '【刷怪笼】('+sx+', '+sy+', '+sz+')',
+    '生成区 X '+x1+'…'+x2+' / Y '+y1+'…'+y2+' / Z '+z1+'…'+z2,
+    '清空 '+(vol-1)+' 格，同种怪物上限 6 只',
+    '挂机点 ('+v.px+', '+v.py+', '+v.pz+')，距刷怪笼 '+d.toFixed(1)+' 格',
+    '照明：想让它是黑的，6 格内别放光源'
+  ].join('\n');
+}
+
+$('btnCopy').addEventListener('click',function(){
+  if(!window.__copy){toast('先把坐标填好');return;}
+  HS.copy(window.__copy);toast('坐标清单已复制');
+});
+
+ids.forEach(function(id){
+  $(id).addEventListener('input',function(){
+    clearTimeout(window.__t);
+    window.__t=setTimeout(calc,220);
+  });
+  $(id).addEventListener('change',calc);
+});
+
+calc();
+})();
+</script>
+</body>
+</html>

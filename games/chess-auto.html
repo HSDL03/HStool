@@ -200,7 +200,7 @@
   <div class="page-head">
     <div>
       <h1>♞ 国际象棋 · 自动应招</h1>
-      <p class="sub">对手走了什么就输进来，程序当场给出你的最优应手 · 评分 / 深度 / 完整规则</p>
+      <p class="sub">对手走哪步，你就在棋盘上把他的子走到哪 · 轮到你了，程序立刻给出你该回的一手</p>
     </div>
     <div class="actions"><a class="btn" href="./rules.html">📖 玩法说明</a></div>
   </div>
@@ -223,12 +223,12 @@
         <div class="cardbox">
           <h3>对局设置</h3>
           <div class="seg" id="colorSeg" role="group" aria-label="你执哪一方">
-            <button data-val="w" aria-pressed="true">你执白</button>
-            <button data-val="b" aria-pressed="false">你执黑</button>
+            <button data-val="w" aria-pressed="true">我执白</button>
+            <button data-val="b" aria-pressed="false">我执黑</button>
           </div>
           <label class="sw">
             <input type="checkbox" id="autoChk" checked>
-            <span>你走完自动应招</span>
+            <span>该我走时自动算</span>
           </label>
           <div class="rangeline">
             <span>深度</span>
@@ -240,7 +240,7 @@
         <div class="cardbox">
           <h3>操作</h3>
           <div class="act">
-            <button class="btn primary wide" id="btnThink">让程序走一步</button>
+            <button class="btn primary wide" id="btnThink">算我这一步</button>
             <button class="btn" id="btnHint">💡 该走哪步</button>
             <button class="btn" id="btnUndo">↶ 悔棋</button>
             <button class="btn" id="btnNew">＋ 新对局</button>
@@ -270,7 +270,7 @@
         <div class="cardbox">
           <h3>分析</h3>
           <div class="out" id="out">
-            <div class="idle">把对手刚走的棋打进上面的输入框（或点棋盘摆到这步），程序在本机算完就给出你该走的一手，并附上评分、搜索深度和耗时。</div>
+            <div class="idle">把对手刚走的棋在棋盘上走出来——拖他的子，或者点起点再点落点；输入框也能直接打 e2e4。轮到你了，程序立刻算出你该回哪一手。</div>
           </div>
         </div>
 
@@ -671,14 +671,17 @@ function negamax(b, depth, alpha, beta, white, st, ply){
   if (timeUp()) return (white ? 1 : -1) * evaluate(b);
   if (depth <= 0) return quiesce(b, alpha, beta, white, st, 0);
 
-  var moves = legalMoves(b, white, st);
-  if (!moves.length) return inCheck(b, white) ? -MATE + ply : 0;
+  /* 一趟走完：伪合法生成 → 落子 → 测王安全 → 递归，省掉 legalMoves 的重复生成 */
+  var moves = genPseudo(b, white, st);
   orderMoves(b, moves);
 
-  var best = -Infinity, i, m, u, sc;
+  var best = -Infinity, legalCount = 0, i, m, u, sc, k;
   for (i = 0; i < moves.length; i++){
     m = moves[i];
     u = makeMove(b, m, st);
+    k = findKing(b, white);
+    if (k >= 0 && attacked(b, k, !white)){ unmakeMove(b, m, u, st); continue; }
+    legalCount++;
     sc = -negamax(b, depth - 1, -beta, -alpha, !white, st, ply + 1);
     unmakeMove(b, m, u, st);
     if (stopped) break;
@@ -686,6 +689,7 @@ function negamax(b, depth, alpha, beta, white, st, ply){
     if (sc > alpha) alpha = sc;
     if (alpha >= beta) break;
   }
+  if (!legalCount) return inCheck(b, white) ? -MATE + ply : 0;
   return best === -Infinity ? alpha : best;
 }
 
@@ -992,8 +996,9 @@ function updateTurn(score){
     turnLine.innerHTML = S.over;
   } else {
     var mine = S.turn === S.human;
-    turnLine.innerHTML = '轮到 <b>' + sideName(S.turn) + '</b>' + (mine ? '（你）' : '（程序）') +
-      (S.busy ? ' · 思考中…' : '');
+    turnLine.innerHTML = S.busy ? '轮到 <b>' + sideName(S.turn) + '</b> · 思考中…'
+      : mine ? '轮到 <b>' + sideName(S.turn) + '</b>（程序）· 自动应招中'
+      : '等待对手走法 <b>' + sideName(S.turn) + '</b> · 在棋盘上走出来或输入';
   }
   updateEval(score);
 }
@@ -1113,8 +1118,8 @@ function doMove(m, label){
   updateTurn(typeof label === 'number' ? label : null);
   updateButtons();
 
-  if (!S.over && S.auto && S.turn !== S.human){
-    setTimeout(function(){ if (!S.over && S.auto && S.turn !== S.human && !S.busy) think(); }, 260);
+  if (!S.over && S.auto && S.turn === S.human){
+    setTimeout(function(){ if (!S.over && S.auto && S.turn === S.human && !S.busy) think(); }, 220);
   }
 }
 
@@ -1187,7 +1192,7 @@ function onCellClick(e){
 
   if (S.edit){ paintCell(i); return; }
   if (S.over) return;
-  if (S.turn !== S.human) return;   /* 程序执子的回合不接受点击 */
+  /* 两边都能点：把对手的走法在棋盘上走出来，是这套用法的入口 */
 
   if (S.selected >= 0 && S.selected !== i){
     var cands = S.legal.filter(function(x){ return x.from === S.selected && x.to === i; });
@@ -1231,7 +1236,7 @@ boardEl.addEventListener('pointerdown', function(e){
   if (S.edit){
     if (p === '.') return;                    /* 空格留给 click 放子 */
   } else {
-    if (S.over || S.turn !== S.human) return;
+    if (S.over) return;
     if (p === '.' || isWhitePiece(p) !== (S.turn === 'w')) return;
   }
 
@@ -1394,8 +1399,8 @@ function applyEdit(){
   updateButtons();
   showIdle(S.over ? '这个局面已经结束：' + S.over.replace(/<\/?b>/g, '')
                   : '局面已应用，轮到' + sideName(S.turn) + '走。');
-  if (!S.over && S.auto && S.turn !== S.human){
-    setTimeout(function(){ if (!S.busy && !S.over && S.turn !== S.human) think(); }, 300);
+  if (!S.over && S.auto && S.turn === S.human){
+    setTimeout(function(){ if (!S.busy && !S.over && S.turn === S.human) think(); }, 300);
   }
 }
 
@@ -1431,7 +1436,7 @@ function askPromo(from, to){
    ========================================================= */
 function think(){
   if (S.busy || S.over || S.edit || !S.legal.length) return;
-  if (S.turn === S.human) return;
+  if (S.turn !== S.human) return;
 
   S.busy = true;
   updateButtons();
@@ -1456,7 +1461,7 @@ function think(){
     res.white = S.turn;
     doMove(res.move, res.score);
     /* doMove 里会重绘状态，这里补上「程序走了什么」的明细 */
-    if (!S.over) showMove(res, san, '程序应招');
+    if (!S.over) showMove(res, san, '程序替你走');
     else showIdle('对局结束：' + S.over.replace(/<\/?b>/g, ''));
   }, 40);
 }
@@ -1466,7 +1471,7 @@ function think(){
    ========================================================= */
 function hint(){
   if (S.busy || S.over || S.edit) return;
-  if (S.turn !== S.human) { HS.toast('现在是程序执子的回合', { icon:'♞' }); return; }
+  if (S.turn !== S.human) { HS.toast('现在是对手走棋：先把他的走法在棋盘上走出来', { icon:'♟' }); return; }
 
   S.busy = true;
   updateButtons();
@@ -1586,9 +1591,10 @@ function newGame(){
   updateLog();
   updateTurn(null);
   updateButtons();
-  showIdle('新对局开始。你执' + sideName(S.human) + '，点棋盘或输入对手走法都行。');
-  if (S.auto && S.turn !== S.human){
-    setTimeout(function(){ if (!S.busy && S.turn !== S.human) think(); }, 300);
+  showIdle('新对局开始。你执' + sideName(S.human) + '：'
+    + (S.turn === S.human ? '该你走，程序直接替你算第一手。' : '对手先走，把他的第一手在棋盘上走出来。'));
+  if (S.auto && S.turn === S.human){
+    setTimeout(function(){ if (!S.busy && S.turn === S.human) think(); }, 300);
   }
 }
 
@@ -1614,7 +1620,7 @@ function updateLog(){
 function updateButtons(){
   var lock = S.busy || S.edit;
   var myTurn = S.turn === S.human && !S.over && !S.busy && !S.edit;
-  document.getElementById('btnThink').disabled = lock || !!S.over || S.turn === S.human;
+  document.getElementById('btnThink').disabled = lock || !!S.over || S.turn !== S.human;
   document.getElementById('btnHint').disabled = !myTurn;
   document.getElementById('btnUndo').disabled = lock || !S.stack.length;
   document.getElementById('btnNew').disabled = S.busy;
@@ -1646,7 +1652,7 @@ document.getElementById('colorSeg').addEventListener('click', function(e){
 document.getElementById('autoChk').addEventListener('change', function(e){
   S.auto = e.target.checked;
   updateTurn(null);
-  if (S.auto && !S.over && !S.edit && S.turn !== S.human && !S.busy){
+  if (S.auto && !S.over && !S.edit && S.turn === S.human && !S.busy){
     setTimeout(function(){ if (!S.busy) think(); }, 120);
   }
 });
@@ -1656,7 +1662,7 @@ document.getElementById('depth').addEventListener('input', function(e){
 });
 
 document.getElementById('btnThink').addEventListener('click', function(){
-  if (S.turn === S.human) return;
+  if (S.turn !== S.human) return;
   think();
 });
 document.getElementById('btnHint').addEventListener('click', hint);
@@ -1751,7 +1757,12 @@ render();
 updateLog();
 updateTurn(null);
 updateButtons();
-showIdle('把对手刚走的棋打进输入框（或点棋盘摆到这步），程序算完就给出你该走的一手，附评分、深度和耗时。');
+showIdle('把对手的走法在棋盘上走出来（拖子或点两下），轮到你就自动给你应手；也可直接打 e2e4。');
+
+/* 我执白时开局就是白先，直接替你把第一手算出来 */
+if (S.auto && S.turn === S.human){
+  setTimeout(function(){ if (!S.busy && !S.over && !S.edit && S.turn === S.human) think(); }, 260);
+}
 
 /* 调试/自测用：perft 走法数、当前局面（不参与界面逻辑） */
 window.__CHESS__ = {

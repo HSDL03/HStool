@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 附魔冲突检查 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧿</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.state{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 14px;border-radius:var(--r);border:2px solid var(--bd2);
+  background:var(--bg3);margin-bottom:12px;font-weight:700;font-size:14px;
+}
+.state.ok{border-color:var(--ac)}
+.state.bad{border-color:var(--dgr)}
+.state .ico{font-size:20px;line-height:1}
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.pick{
+  display:flex;align-items:center;gap:8px;padding:7px 9px;font-size:13px;
+  border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;user-select:none;
+  background:var(--bg);transition:border-color .15s,background .15s;
+}
+.pick:hover{border-color:var(--ac)}
+.pick input{width:16px;height:16px;accent-color:var(--ac);margin:0;flex:none}
+.pick span{flex:1;min-width:0}
+.pick em{font-style:normal;font-size:11px;color:var(--faint);font-family:var(--mono);flex:none}
+.pick.on{background:var(--bg3);border-color:var(--ac)}
+.pick.on em{color:var(--ac2)}
+.conflict{margin-top:6px;font-size:13px;color:var(--dgr);line-height:1.8}
+.conflict b{font-family:var(--mono)}
+.warn{margin-top:9px;font-size:12.5px;color:var(--dgr);min-height:18px}
+.hint{font-size:12px;color:var(--faint);margin-top:8px}
+@media(max-width:640px){.picks{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧿 MC 附魔冲突检查</h1><p class="sub">这几条附魔能不能同时带在身上 · 最高几级</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">装备</h2>
+      <div class="fld">
+        <label for="item">选一件装备</label>
+        <select id="item"></select>
+      </div>
+      <div class="hint" id="itemNote">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">勾上想加的附魔</h2>
+      <div class="picks" id="picks"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnBest" type="button">一键满配</button>
+        <button class="btn ghost" id="btnClear" type="button">清空</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">结论</h2>
+      <div class="state" id="state"><span class="ico">—</span><span id="stateText">先勾几条附魔</span></div>
+      <div class="conflict" id="conflict"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制这套附魔</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 只查<b>能不能共存</b>，不查附魔台能不能刷出来、也不查铁砧够不够钱（那两件事在「MC 附魔台等级」和「MC 铁砧成本」里）。<br>
+        几组硬性互斥：锋利/亡灵杀手/节肢杀手三选一；四种保护（普通/火焰/爆炸/弹射物）四选一；
+        <code>精准采集</code> 与 <code>时运</code>；<code>耐久</code> 与 <code>经验修补</code>；
+        三叉戟的忠诚/引雷/激流；靴子的摔落保护与深海探索者/冰霜行者；弩的多重射击与穿透。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var itemEl=$('item'),picksEl=$('picks'),stateEl=$('state'),stateTxt=$('stateText'),confEl=$('conflict');
+
+/* ex = 互斥组，同组只能选一个 */
+var ITEMS=[
+  {id:'sword',name:'剑',note:'横扫之刃只对剑有效',e:[
+    {n:'锋利',max:5,ex:'dmg'},{n:'亡灵杀手',max:5,ex:'dmg'},{n:'节肢杀手',max:5,ex:'dmg'},
+    {n:'击退',max:2},{n:'火焰附加',max:2},{n:'抢夺',max:3},{n:'横扫之刃',max:3},
+    {n:'耐久',max:3,ex:'mend'},{n:'经验修补',max:1,ex:'mend'},
+    {n:'消失诅咒',max:1},{n:'绑定诅咒',max:1}
+  ]},
+  {id:'axe',name:'斧',note:'斧没有横扫之刃',e:[
+    {n:'锋利',max:5,ex:'dmg'},{n:'亡灵杀手',max:5,ex:'dmg'},{n:'节肢杀手',max:5,ex:'dmg'},
+    {n:'效率',max:5},{n:'精准采集',max:1,ex:'silk'},{n:'时运',max:3,ex:'silk'},
+    {n:'耐久',max:3,ex:'mend'},{n:'经验修补',max:1,ex:'mend'},
+    {n:'消失诅咒',max:1},{n:'绑定诅咒',max:1}
+  ]},
+  {id:'pickaxe',name:'镐',note:'精准采集与时运只能选一个',e:[
+    {n:'效率',max:5},{n:'精准采集',max:1,ex:'silk'},{n:'时运',max:3,ex:'silk'},
+    {n:'耐久',max:3,ex:'mend'},{n:'经验修补',max:1,ex:'mend'},
+    {n:'消失诅咒',max:1},{n:'绑定诅咒',max:1}
+  ]},
+  {id:'shovel',name:'锹',note:'同上，采集类与耐久类互斥',e:[
+    {n:'效率',max:5},{n:'精准采集',max:1,ex:'silk'},{n:'时运',max:3,ex:'silk'},
+    {n:'耐久',max:3,ex:'mend'},{n:'经验修补',max:1,ex:'mend'},
+    {n:'消失诅咒',max:1}
+  ]},
+  {id:'hoe',name:'锄',note:'锄的附魔很少',e:[
+    {n:'效率',max:5},{n:'精准采集',max:1,ex:'silk'},{n:'时运',max:3,ex:'silk'},
+    {n:'耐久',max:3,ex:'mend'},{n:'经验修补',max:1,ex:'mend'},
+    {n:'消失诅咒',max:1}
+  ]},
+  {id:'bow',name:'弓',note:'无限与经验修补不能同时带',e:[
+    {n:'力量',max:5},{n:'冲击',max:2},{n:'火矢',max:1},
+    {n:'无限',max:1,ex:'inf'},{n:'耐久',max:3},{n:'经验修补',max:1,ex:'inf'},
+    {n:'消失诅咒',max:1}
+  ]},
+  {id:'crossbow',name:'弩',note:'多重射击与穿透互斥',e:[
+    {n:'快速装填',max:3},{n:'多重射击',max:1,ex:'multi'},{n:'穿透',max:4,ex:'multi'},
+    {n:'耐久',max:3},{n:'经验修补',max:1},{n:'消失诅咒',max:1}
+  ]},
+  {id:'trident',name:'三叉戟',note:'忠诚/引雷/激流三者只能选一个',e:[
+    {n:'穿刺',max:5},{n:'忠诚',max:3,ex:'tri'},{n:'引雷',max:1,ex:'tri'},{n:'激流',max:3,ex:'tri'},
+    {n:'耐久',max:3},{n:'经验修补',max:1},{n:'消失诅咒',max:1}
+  ]},
+  {id:'fishing',name:'钓鱼竿',note:'海之眷顾加好货概率',e:[
+    {n:'饵钓',max:3},{n:'海之眷顾',max:3},
+    {n:'耐久',max:3},{n:'经验修补',max:1},{n:'消失诅咒',max:1}
+  ]},
+  {id:'helmet',name:'头盔',note:'四种保护只能选一种',e:[
+    {n:'保护',max:4,ex:'prot'},{n:'火焰保护',max:4,ex:'prot'},{n:'爆炸保护',max:4,ex:'prot'},{n:'弹射物保护',max:4,ex:'prot'},
+    {n:'水下呼吸',max:3},{n:'水下速掘',max:1},
+    {n:'耐久',max:3},{n:'经验修补',max:1},{n:'消失诅咒',max:1},{n:'绑定诅咒',max:1}
+  ]},
+  {id:'chest',name:'胸甲',note:'胸甲没有额外专属附魔',e:[
+    {n:'保护',max:4,ex:'prot'},{n:'火焰保护',max:4,ex:'prot'},{n:'爆炸保护',max:4,ex:'prot'},{n:'弹射物保护',max:4,ex:'prot'},
+    {n:'耐久',max:3},{n:'经验修补',max:1},{n:'消失诅咒',max:1},{n:'绑定诅咒',max:1}
+  ]},
+  {id:'legs',name:'护腿',note:'唯一能带迅捷潜行的部位',e:[
+    {n:'保护',max:4,ex:'prot'},{n:'火焰保护',max:4,ex:'prot'},{n:'爆炸保护',max:4,ex:'prot'},{n:'弹射物保护',max:4,ex:'prot'},
+    {n:'迅捷潜行',max:3},
+    {n:'耐久',max:3},{n:'经验修补',max:1},{n:'消失诅咒',max:1},{n:'绑定诅咒',max:1}
+  ]},
+  {id:'boots',name:'靴子',note:'摔落保护与深海探索者/冰霜行者互斥',e:[
+    {n:'保护',max:4,ex:'prot'},{n:'火焰保护',max:4,ex:'prot'},{n:'爆炸保护',max:4,ex:'prot'},{n:'弹射物保护',max:4,ex:'prot'},
+    {n:'摔落保护',max:4,ex:'feet'},{n:'深海探索者',max:3,ex:'feet'},{n:'冰霜行者',max:2,ex:'feet'},
+    {n:'灵魂疾行',max:3},
+    {n:'耐久',max:3},{n:'经验修补',max:1},{n:'消失诅咒',max:1},{n:'绑定诅咒',max:1}
+  ]},
+  {id:'elytra',name:'鞘翅',note:'鞘翅只能带耐久和经验修补',e:[
+    {n:'耐久',max:3},{n:'经验修补',max:1},{n:'消失诅咒',max:1},{n:'绑定诅咒',max:1}
+  ]}
+];
+
+function curItem(){
+  for(var i=0;i<ITEMS.length;i++) if(ITEMS[i].id===itemEl.value) return ITEMS[i];
+  return ITEMS[0];
+}
+
+function buildPicks(){
+  var it=curItem();
+  picksEl.innerHTML='';
+  it.e.forEach(function(en,idx){
+    var lab=document.createElement('label');
+    lab.className='pick';
+    lab.innerHTML='<input type="checkbox" data-idx="'+idx+'"><span>'+en.n+'</span><em>I–'
+      +['','I','II','III','IV','V'][en.max]+'</em>';
+    picksEl.appendChild(lab);
+  });
+  $('itemNote').textContent=it.note||'';
+  restorePicks();
+  check();
+}
+
+/* 记住这件装备勾过什么；第一次打开默认给一套能用的 */
+function storeKey(){ return 'hs-ench-'+curItem().id; }
+function restorePicks(){
+  var saved=null;
+  try{ saved=JSON.parse(localStorage.getItem(storeKey())||'null'); }catch(e){}
+  var boxes=picksEl.querySelectorAll('input');
+  if(saved&&Array.isArray(saved)){
+    Array.prototype.forEach.call(boxes,function(cb,idx){
+      cb.checked=saved.indexOf(idx)>=0;
+    });
+    return;
+  }
+  /* 默认勾前 4 条互不冲突的 */
+  var used={},n=0;
+  Array.prototype.forEach.call(boxes,function(cb,idx){
+    if(n>=4){ cb.checked=false; return; }
+    var en=curItem().e[idx];
+    if(en.ex&&used[en.ex]){ cb.checked=false; return; }
+    if(en.ex) used[en.ex]=true;
+    cb.checked=true;n++;
+  });
+}
+function savePicks(){
+  var out=[];
+  Array.prototype.forEach.call(picksEl.querySelectorAll('input'),function(cb,idx){
+    if(cb.checked) out.push(idx);
+  });
+  try{ localStorage.setItem(storeKey(),JSON.stringify(out)); }catch(e){}
+}
+
+function selected(){
+  var it=curItem(),out=[];
+  Array.prototype.forEach.call(picksEl.querySelectorAll('input'),function(cb){
+    if(cb.checked){
+      var en=it.e[parseInt(cb.getAttribute('data-idx'),10)];
+      out.push({en:en,el:cb.parentNode});
+    }
+  });
+  return out;
+}
+
+function check(){
+  var picks=selected();
+  Array.prototype.forEach.call(picksEl.querySelectorAll('.pick'),function(p){
+    p.classList.toggle('on',p.querySelector('input').checked);
+  });
+
+  if(!picks.length){
+    stateEl.className='state';
+    stateEl.querySelector('.ico').textContent='—';
+    stateTxt.textContent='先勾几条附魔';
+    confEl.innerHTML='';
+    return;
+  }
+  var groups={},bad=[];
+  picks.forEach(function(p){
+    if(!p.en.ex) return;
+    (groups[p.en.ex]=groups[p.en.ex]||[]).push(p.en.n);
+  });
+  Object.keys(groups).forEach(function(k){
+    if(groups[k].length>1) bad.push(groups[k]);
+  });
+
+  if(bad.length){
+    stateEl.className='state bad';
+    stateEl.querySelector('.ico').textContent='⚠';
+    stateTxt.textContent='有 '+bad.length+' 组冲突，这套附魔做不出来';
+    confEl.innerHTML=bad.map(function(g){
+      return '· <b>'+g.join('</b> 与 <b>')+'</b> 只能选一个';
+    }).join('<br>');
+  }else{
+    stateEl.className='state ok';
+    stateEl.querySelector('.ico').textContent='✅';
+    stateTxt.textContent=picks.length+' 条附魔可以共存';
+    confEl.innerHTML='';
+  }
+}
+
+$('item').addEventListener('change',buildPicks);
+picksEl.addEventListener('change',function(){check();savePicks();});
+
+$('btnClear').addEventListener('click',function(){
+  Array.prototype.forEach.call(picksEl.querySelectorAll('input'),function(c){c.checked=false;});
+  check();savePicks();
+});
+$('btnBest').addEventListener('click',function(){
+  var it=curItem(),used={};
+  /* 每个互斥组只取第一个，其余全选 */
+  Array.prototype.forEach.call(picksEl.querySelectorAll('input'),function(cb,idx){
+    var en=it.e[idx];
+    if(en.ex==='mend'&&en.n!=='经验修补'){ cb.checked=false; return; } /* 满配优先经验修补 */
+    if(en.ex){
+      if(used[en.ex]){cb.checked=false;return;}
+      used[en.ex]=true;
+    }
+    cb.checked=true;
+  });
+  check();savePicks();
+  toast('已套用 '+it.name+' 的满配方案');
+});
+
+$('btnCopy').addEventListener('click',function(){
+  var picks=selected();
+  if(!picks.length){toast('还没勾附魔');return;}
+  var it=curItem();
+  HS.copy(it.name+'：'+picks.map(function(p){return p.en.n;}).join('、')
+    +'\n'+stateTxt.textContent);
+  toast('已复制');
+});
+
+ITEMS.forEach(function(it){
+  var o=document.createElement('option');
+  o.value=it.id;o.textContent=it.name;
+  itemEl.appendChild(o);
+});
+try{
+  var saved=localStorage.getItem('hs-enchcheck');
+  if(saved&&document.querySelector('option[value="'+saved+'"]')) itemEl.value=saved;
+}catch(e){}
+itemEl.addEventListener('change',function(){
+  try{ localStorage.setItem('hs-enchcheck',itemEl.value); }catch(e){}
+});
+
+buildPicks();
+})();
+</script>
+</body>
+</html>

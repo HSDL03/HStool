@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 圆形建造 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭕</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.pv{
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);padding:10px;margin-bottom:12px;
+}
+.pv canvas{display:block;margin:0 auto;image-rendering:pixelated;max-width:100%;height:auto}
+.total{
+  display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+  padding:12px 14px;background:var(--bg3);border-radius:var(--r);margin-bottom:10px;
+}
+.total b{font-family:var(--mono);font-size:clamp(1.4rem,5.5vw,1.9rem);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.total i{font-style:normal;font-size:12.5px;color:var(--muted)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+table th,table td{padding:5px 9px;border-bottom:1px solid var(--bd);text-align:right}
+table th{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);background:var(--bg3);white-space:nowrap;position:sticky;top:0}
+table th:first-child,table td:first-child{text-align:left}
+table td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+table tbody tr:hover td{background:var(--bg3)}
+.warn{margin-top:9px;font-size:12.5px;color:var(--dgr);min-height:18px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>⭕ MC 圆形建造</h1><p class="sub">给我一个直径，逐行告诉你从哪放到哪</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">尺寸</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="dia">直径（格）</label>
+          <input id="dia" type="number" inputmode="numeric" min="3" max="101" step="1" value="15">
+        </div>
+        <div class="fld">
+          <label for="hei">圆顶高度（层）</label>
+          <input id="hei" type="number" inputmode="numeric" min="1" max="50" step="1" value="7">
+        </div>
+      </div>
+      <div class="warn" id="err"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">平面圆</h2>
+      <div class="pv"><canvas id="cv" width="300" height="300" role="img" aria-label="圆形俯视点阵"></canvas></div>
+      <div class="total"><b id="cN">—</b><i>个方块 · 占地 <span id="cArea">—</span> 格</i></div>
+      <div class="scroll" style="max-height:320px">
+        <table>
+          <thead><tr><th>行</th><th>X 起点</th><th>X 终点</th><th>格数</th></tr></thead>
+          <tbody id="cBody"></tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnCopyRow" type="button">📋 复制逐行表</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">圆顶 / 半球</h2>
+      <div class="total"><b id="dN">—</b><i>个方块 · 共 <span id="dLayers">—</span> 层</i></div>
+      <div class="scroll" style="max-height:320px">
+        <table>
+          <thead><tr><th>第几层</th><th>该层直径</th><th>方块数</th></tr></thead>
+          <tbody id="dBody"></tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnCopyLayer" type="button">📋 复制逐层表</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 判定按<b>方块中心</b>算：中心落在圆内就放，所以偶数直径是「中间四个方块」，奇数直径是「正中一个方块」，
+        照表摆出来不会歪。<br>
+        圆顶按半球算，球心在底面中心，越往上半径收得越快；高度填到半径（直径的一半）就是完整半球，
+        填小了是浅碗，填多了顶部会是空的。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var diaEl=$('dia'),heiEl=$('hei'),errEl=$('err'),cv=$('cv');
+
+function intOf(el,label,min,max){
+  var raw=String(el.value).trim();
+  if(raw==='') throw new Error(label+'不能为空');
+  if(!/^\d+$/.test(raw)) throw new Error(label+'只能是正整数');
+  var n=parseInt(raw,10);
+  if(n<min) throw new Error(label+'至少 '+min);
+  if(n>max) throw new Error(label+'最多 '+max);
+  return n;
+}
+
+/* 圆内判定：方块中心 (x+0.5, z+0.5) 到圆心 (R,R) */
+function inside(x,z,R,rr){
+  var dx=x+0.5-R, dz=z+0.5-R;
+  return dx*dx+dz*dz<=rr+1e-9;
+}
+
+function circle(D){
+  var R=D/2, rows=[], total=0;
+  for(var z=0;z<D;z++){
+    var from=null,to=null,n=0;
+    for(var x=0;x<D;x++){
+      if(inside(x,z,R,R*R)){
+        if(from===null) from=x;
+        to=x;n++;
+      }
+    }
+    rows.push({z:z,from:from,to:to,n:n});
+    total+=n;
+  }
+  return {rows:rows,total:total};
+}
+
+function dome(D,H){
+  var R=D/2, out=[], total=0;
+  for(var i=0;i<H;i++){
+    var y=i+0.5, rr=R*R-y*y;
+    if(rr<0){ out.push({i:i,d:0,n:0}); continue; }
+    var n=0,minx=null,maxx=null;
+    for(var z=0;z<D;z++){
+      for(var x=0;x<D;x++){
+        if(inside(x,z,R,rr)){
+          n++;
+          if(minx===null||x<minx) minx=x;
+          if(maxx===null||x>maxx) maxx=x;
+        }
+      }
+    }
+    out.push({i:i,d:n?maxx-minx+1:0,n:n});
+    total+=n;
+  }
+  return {layers:out,total:total};
+}
+
+function draw(D,R){
+  var ctx=cv.getContext('2d');
+  var box=cv.parentNode.clientWidth-20;
+  var cell=Math.max(2,Math.floor(Math.min(box,D?box/D:20)));
+  cell=Math.min(cell,18);
+  var size=Math.max(60,D*cell);
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(size*dpr);cv.height=Math.round(size*dpr);
+  cv.style.width=size+'px';cv.style.height=size+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  var cs=getComputedStyle(document.documentElement);
+  var ac=(cs.getPropertyValue('--ac')||'#888').trim();
+  var bd=(cs.getPropertyValue('--bd')||'#555').trim();
+  var bg=(cs.getPropertyValue('--bg')||'#fff').trim();
+  ctx.fillStyle=bg;ctx.fillRect(0,0,size,size);
+  for(var z=0;z<D;z++){
+    for(var x=0;x<D;x++){
+      if(inside(x,z,R,R*R)){
+        ctx.fillStyle=ac;
+        ctx.fillRect(x*cell,z*cell,cell-0.5,cell-0.5);
+      }else{
+        ctx.fillStyle=bd;
+        ctx.fillRect(x*cell,z*cell,cell-0.5,cell-0.5);
+      }
+    }
+  }
+}
+
+var rowsCache=[],layerCache=[];
+
+function calc(){
+  errEl.textContent='';
+  var D,H;
+  try{
+    D=intOf(diaEl,'直径',3,101);
+    H=intOf(heiEl,'圆顶高度',1,50);
+  }catch(e){ errEl.textContent='⚠ '+e.message; return; }
+
+  var R=D/2;
+  var c=circle(D);
+  rowsCache=c.rows;
+  $('cN').textContent=c.total;
+  $('cArea').textContent=(D*D);
+  var html='';
+  c.rows.forEach(function(r){
+    html+='<tr><td>'+r.z+'</td><td>'+(r.from==null?'—':r.from)+'</td><td>'+(r.to==null?'—':r.to)
+        +'</td><td>'+r.n+'</td></tr>';
+  });
+  $('cBody').innerHTML=html;
+
+  var dm=dome(D,H);
+  layerCache=dm.layers;
+  $('dN').textContent=dm.total;
+  var used=dm.layers.filter(function(l){return l.n>0;}).length;
+  $('dLayers').textContent=used+' 层有用（填了 '+H+' 层）';
+  var h2='';
+  dm.layers.forEach(function(l){
+    h2+='<tr><td>第 '+(l.i+1)+' 层</td><td>'+(l.d||'—')+'</td><td>'+l.n+'</td></tr>';
+  });
+  $('dBody').innerHTML=h2;
+
+  if(H>R+0.5){
+    errEl.textContent='⚠ 高度超过半径 '+R+'，顶部几层是空的（真半球填 '+(Math.ceil(R-0.5))+' 层就够）';
+  }
+  draw(D,R);
+}
+
+[$( 'dia'),$('hei')].forEach(function(el){
+  el.addEventListener('input',function(){
+    clearTimeout(window.__t);
+    window.__t=setTimeout(calc,240);
+  });
+  el.addEventListener('change',calc);
+});
+
+$('btnCopyRow').addEventListener('click',function(){
+  if(!rowsCache.length){toast('先填直径');return;}
+  var D=parseInt(diaEl.value,10);
+  var lines=['第几行\tX起点\tX终点\t格数'];
+  rowsCache.forEach(function(r){
+    lines.push(r.z+'\t'+(r.from==null?'-':r.from)+'\t'+(r.to==null?'-':r.to)+'\t'+r.n);
+  });
+  HS.copy(lines.join('\n')+'\n\n直径 '+D+' 共 '+$('cN').textContent+' 个方块');
+  toast('逐行表已复制');
+});
+$('btnCopyLayer').addEventListener('click',function(){
+  if(!layerCache.length){toast('先填尺寸');return;}
+  var lines=['层\t直径\t方块数'];
+  layerCache.forEach(function(l){
+    lines.push((l.i+1)+'\t'+(l.d||0)+'\t'+l.n);
+  });
+  HS.copy(lines.join('\n'));
+  toast('逐层表已复制');
+});
+
+var rt=null;
+window.addEventListener('resize',function(){
+  clearTimeout(rt);
+  rt=setTimeout(function(){
+    try{ draw(parseInt(diaEl.value,10)||15,(parseInt(diaEl.value,10)||15)/2); }catch(e){}
+  },200);
+});
+
+calc();
+})();
+</script>
+</body>
+</html>

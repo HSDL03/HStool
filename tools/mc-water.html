@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 水源与灌溉 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💧</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.total{
+  display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+  padding:12px 14px;background:var(--bg3);border-radius:var(--r);margin-bottom:11px;
+}
+.total b{font-family:var(--mono);font-size:clamp(1.4rem,5.5vw,1.9rem);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.total i{font-style:normal;font-size:12.5px;color:var(--muted)}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{color:var(--muted)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.list{
+  margin-top:10px;padding:10px 12px;background:var(--bg);border:1px dashed var(--bd2);
+  border-radius:var(--r);font-family:var(--mono);font-size:12.5px;line-height:1.9;
+  max-height:180px;overflow:auto;overflow-wrap:anywhere;
+}
+.list span{color:var(--ac2);font-weight:700}
+.warn{margin-top:9px;font-size:12.5px;color:var(--dgr);min-height:18px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+@media(max-width:640px){.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>💧 MC 水源与灌溉</h1><p class="sub">一块田要几桶水 · 水流最远能流几格</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">农田灌溉</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="fl">农田长（格）</label>
+          <input id="fl" type="number" inputmode="numeric" min="1" max="256" step="1" value="18">
+        </div>
+        <div class="fld">
+          <label for="fw">农田宽（格）</label>
+          <input id="fw" type="number" inputmode="numeric" min="1" max="256" step="1" value="18">
+        </div>
+      </div>
+      <div class="warn" id="err"></div>
+      <div class="total"><b id="wCount">—</b><i>桶水 · 每桶浇 9×9</i></div>
+      <div class="kv"><span>耕地总面积</span><b id="wArea">—</b></div>
+      <div class="kv"><span>每桶能浇</span><b>9 × 9 = 81 格（水平 4 格内）</b></div>
+      <div class="kv"><span>水源间隔</span><b>9 格（每 9 格挖一个水坑）</b></div>
+      <div class="list" id="wList">—</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制水源坐标</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">水流 / 熔岩蔓延</h2>
+      <div class="grid3">
+        <div class="fld">
+          <label for="kind">液体</label>
+          <select id="kind">
+            <option value="water">水</option>
+            <option value="lava">熔岩</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="dim">维度</label>
+          <select id="dim">
+            <option value="over">主世界</option>
+            <option value="nether">下界</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="falls">中途落差（格）</label>
+          <input id="falls" type="number" inputmode="numeric" min="0" max="64" step="1" value="0">
+        </div>
+      </div>
+      <div class="kv"><span>单层最远水平距离</span><b id="rBase">—</b></div>
+      <div class="kv"><span>总最远水平距离</span><b id="rTotal">—</b></div>
+      <div class="kv"><span>单层覆盖宽度</span><b id="rWidth">—</b></div>
+      <div class="kv"><span>一格液体流完的范围</span><b id="rArea">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 水从源头开始水平最远流 <code>7</code> 格（每格衰减一级，到 7 就停）；熔岩在主世界只有 <code>3</code> 格，
+        但<b>下界</b>的熔岩和水一样是 <code>7</code> 格。<br>
+        中途每下落 1 格，流动距离会重置，所以「往下冲一段再铺开」能流得更远：总水平距离 = 单层距离 ×(落差 + 1)。<br>
+        灌溉只认水平 <b>4 格</b>：一桶水湿润以它为中心的 9×9 耕地（同层或低一格的耕地也算），
+        所以田越大越应该按 9 格一格挖水坑，而不是中间放一桶了事。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var flEl=$('fl'),fwEl=$('fw'),errEl=$('err');
+var kindEl=$('kind'),dimEl=$('dim'),fallsEl=$('falls');
+
+function intOf(el,label,min,max){
+  var raw=String(el.value).trim();
+  if(raw==='') throw new Error(label+'不能为空');
+  if(!/^\d+$/.test(raw)) throw new Error(label+'只能填正整数');
+  var n=parseInt(raw,10);
+  if(n<min) throw new Error(label+'不能小于 '+min);
+  if(max!=null&&n>max) throw new Error(label+'不能大于 '+max);
+  return n;
+}
+
+var spots=[];
+
+function calcField(){
+  errEl.textContent='';
+  var L,W;
+  try{
+    L=intOf(flEl,'农田长',1,256);
+    W=intOf(fwEl,'农田宽',1,256);
+  }catch(e){
+    errEl.textContent='⚠ '+e.message;
+    $('wCount').textContent='—';
+    return;
+  }
+  var nx=Math.ceil(L/9), nz=Math.ceil(W/9);
+  var count=nx*nz;
+  $('wCount').textContent=count;
+  $('wArea').textContent=L+' × '+W+' = '+(L*W)+' 格';
+
+  /* 每 9 格一个水坑，尽量居中：起点 = min(4, 段长-1) */
+  spots=[];
+  for(var i=0;i<nx;i++){
+    var len=Math.min(9,L-i*9);
+    var x=i*9+Math.min(4,len-1);
+    for(var j=0;j<nz;j++){
+      var len2=Math.min(9,W-j*9);
+      var z=j*9+Math.min(4,len2-1);
+      spots.push({x:x,z:z});
+    }
+  }
+  var show=spots.slice(0,60).map(function(s){return '('+s.x+', '+s.z+')';}).join('  ');
+  $('wList').innerHTML=spots.length
+    ? '相对坐标（左上角为 0,0）：<br><span>'+show+'</span>'+(spots.length>60?'<br>…还有 '+(spots.length-60)+' 个':'')
+    : '—';
+}
+
+function calcFlow(){
+  var kind=kindEl.value, dim=dimEl.value;
+  var falls=0;
+  try{ falls=intOf(fallsEl,'落差',0,64); }
+  catch(e){ falls=0; fallsEl.value='0'; }
+
+  var base=kind==='water'?7:(dim==='nether'?7:3);
+  var total=base*(falls+1);
+  var width=base*2+1;
+  $('rBase').textContent=base+' 格（第 '+base+' 格之后就没有流动水了）';
+  $('rTotal').textContent=total+' 格（单层 '+base+' × 落差 '+falls+' + 1）';
+  $('rWidth').textContent=width+' 格宽（半径 '+base+'）';
+  $('rArea').textContent=(width*width)+' 格以内（'+width+'×'+width+'）';
+}
+
+$('btnCopy').addEventListener('click',function(){
+  if(!spots.length){toast('先填农田尺寸');return;}
+  var L=parseInt(flEl.value,10),W=parseInt(fwEl.value,10);
+  var lines=['【灌溉】'+L+'×'+W+' 农田，'+spots.length+' 桶水（相对左上角 0,0）'];
+  spots.forEach(function(s,i){ lines.push((i+1)+'. ('+s.x+', '+s.z+')'); });
+  HS.copy(lines.join('\n'));
+  toast('已复制 '+spots.length+' 个水源坐标');
+});
+
+[flEl,fwEl].forEach(function(el){
+  el.addEventListener('input',function(){
+    clearTimeout(window.__t);
+    window.__t=setTimeout(calcField,240);
+  });
+  el.addEventListener('change',calcField);
+});
+[kindEl,dimEl].forEach(function(el){ el.addEventListener('change',calcFlow); });
+fallsEl.addEventListener('input',function(){
+  clearTimeout(window.__t2);
+  window.__t2=setTimeout(calcFlow,240);
+});
+fallsEl.addEventListener('change',calcFlow);
+
+calcField();
+calcFlow();
+})();
+</script>
+</body>
+</html>
