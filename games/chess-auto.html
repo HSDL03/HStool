@@ -127,6 +127,19 @@
   .mlog-foot{display:flex;gap:6px;margin-top:7px}
   .mlog-foot .btn{flex:1;justify-content:center;font-size:11.5px;padding:5px 4px}
 
+  /* ── 屏幕识别 ── */
+  .scr-stage{position:relative;margin-top:8px;display:none;background:#0b0c0e;border:2px solid var(--bd2);border-radius:var(--r);overflow:hidden}
+  .scr-stage.on{display:block}
+  .scr-stage video{display:block;width:100%;height:auto;pointer-events:none}
+  .scr-box{position:absolute;border:2px dashed #6ee7a8;box-shadow:0 0 0 9999px rgba(0,0,0,.42);cursor:crosshair}
+  .scr-box span{position:absolute;left:0;top:-18px;font:700 10px var(--mono);color:#6ee7a8;white-space:nowrap}
+  .scr-arrow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .scr-status{font:700 11.5px/1.65 var(--mono);color:var(--muted);margin-top:7px}
+  .scr-status b{color:var(--ac)}
+  .scr-status .bad{color:var(--warn)}
+  .scr-hint{font-size:11.5px;line-height:1.65;color:var(--muted);margin-top:6px}
+  .scr-hint code{font:700 11px var(--mono);background:var(--bg);border:1px solid var(--bd);border-radius:3px;padding:0 4px}
+
   /* ── 升变选择 ── */
   .promo{
     position:fixed;inset:0;z-index:600;display:none;place-items:center;
@@ -244,12 +257,33 @@
             <button class="btn" id="btnHint">💡 该走哪步</button>
             <button class="btn" id="btnUndo">↶ 悔棋</button>
             <button class="btn" id="btnNew">＋ 新对局</button>
-            <button class="btn" id="btnEdit">✎ 编辑棋局</button>
+            <button class="btn" id="btnEdit">编辑棋局</button>
           </div>
           <div class="movein">
             <input type="text" id="moveInput" placeholder="输入走法：e2e4 / Nf3 / O-O" autocomplete="off" spellcheck="false">
             <button class="btn" id="btnSubmit">走这步</button>
           </div>
+        </div>
+
+        <div class="cardbox">
+          <h3>屏幕识别（框选棋盘）</h3>
+          <div class="act">
+            <button class="btn" id="btnShare">① 选屏幕 / 窗口</button>
+            <button class="btn primary" id="btnScan">② 开始识别</button>
+          </div>
+          <div class="scr-stage" id="scrStage">
+            <video id="scrVideo" muted playsinline></video>
+            <div class="scr-box" id="scrBox" hidden><span>棋盘区域</span></div>
+            <svg class="scr-arrow" id="scrArrow" viewBox="0 0 8 8" preserveAspectRatio="none"></svg>
+          </div>
+          <div class="rangeline">
+            <span>灵敏度</span>
+            <input type="range" id="scrSens" min="6" max="40" step="1" value="14">
+            <b id="scrSensVal">14</b>
+          </div>
+          <div class="scr-status" id="scrStatus">在预览上拖一个框，把整块棋盘框进去（含最外圈格子）。</div>
+          <div class="scr-hint">框好后点「开始识别」：你在别处照常下，这边自动读出对手走了哪步并给你应手。
+            鼠标扫过棋盘可能误判，把灵敏度往上调一点即可。</div>
         </div>
 
         <div class="cardbox editor" id="editor">
@@ -1355,7 +1389,7 @@ function setEdit(on){
   S.edit = on;
   document.getElementById('editor').classList.toggle('show', on);
   var btn = document.getElementById('btnEdit');
-  btn.textContent = on ? '✕ 退出编辑' : '✎ 编辑棋局';
+  btn.textContent = on ? '✕ 退出编辑' : '编辑棋局';
   btn.classList.toggle('primary', on);
   S.selected = -1;
   S.hint = null;
@@ -1460,6 +1494,7 @@ function think(){
     var san = toSan(S.board, res.move, S);
     res.white = S.turn;
     doMove(res.move, res.score);
+    if (SC.running) scExpect(res.move);
     /* doMove 里会重绘状态，这里补上「程序走了什么」的明细 */
     if (!S.over) showMove(res, san, '程序替你走');
     else showIdle('对局结束：' + S.over.replace(/<\/?b>/g, ''));
@@ -1568,7 +1603,7 @@ function newGame(){
     S.edit = false;
     document.getElementById('editor').classList.remove('show');
     var eb = document.getElementById('btnEdit');
-    eb.textContent = '✎ 编辑棋局';
+    eb.textContent = '编辑棋局';
     eb.classList.remove('primary');
   }
   S.board = START.slice();
@@ -1634,6 +1669,300 @@ function updateButtons(){
   Array.prototype.forEach.call(document.querySelectorAll('#turnSeg button'), function(b){
     b.disabled = !S.edit;
   });
+}
+
+/* =========================================================
+   屏幕识别：框住对手的棋盘，自己在那边下，这边自动读步
+   ---------------------------------------------------------
+   不做棋子识别（各家棋子/主题都不一样，认不准）：只比对相邻两帧
+   每个格子的像素变化，把「哪两格变了」拿去找当前局面里能对上的
+   合法走法。这样换任何棋盘皮肤都能用。
+   ========================================================= */
+var SC = {
+  stream: null, video: null, stage: null, boxEl: null, arrowEl: null, statusEl: null,
+  box: null, base: null, timer: 0, running: false, expect: null, miss: 0,
+  sens: 14, N: 24, canvas: null, ctx: null
+};
+
+function scStatus(html){ if (SC.statusEl) SC.statusEl.innerHTML = html; }
+
+function scAffected(m){
+  var out = [m.from, m.to];
+  var white = isWhitePiece(m.piece);
+  if (m.flag === 'o-o'){
+    var rk = (white ? 7 : 0) * 8;
+    out.push(rk + 7, rk + 5);
+  } else if (m.flag === 'o-o-o'){
+    var rq = (white ? 7 : 0) * 8;
+    out.push(rq, rq + 3);
+  } else if (m.flag === 'ep'){
+    out.push(m.to + (white ? 8 : -8));
+  }
+  return out;
+}
+
+/* 屏幕格 → 棋盘格（跟着棋盘朝向走） */
+function scCellToSquare(sr, sc2){
+  var flip = isViewFlipped();
+  var r = flip ? 7 - sr : sr;
+  var c = flip ? 7 - sc2 : sc2;
+  return r * 8 + c;
+}
+
+function scSign(){
+  var v = SC.video;
+  if (!v || !v.videoWidth || !SC.box) return null;
+  var N = SC.N, size = N * 8;
+  if (!SC.canvas){
+    SC.canvas = document.createElement('canvas');
+    SC.canvas.width = size;
+    SC.canvas.height = size;
+    SC.ctx = SC.canvas.getContext('2d', { willReadFrequently: true });
+  }
+  var vw = v.videoWidth, vh = v.videoHeight;
+  SC.ctx.drawImage(
+    v,
+    SC.box.x * vw, SC.box.y * vh, SC.box.w * vw, SC.box.h * vh,
+    0, 0, size, size
+  );
+  var data = SC.ctx.getImageData(0, 0, size, size).data;
+  var out = new Uint8Array(64 * 9);
+  var B = N / 3;                       /* 每格切成 3×3 小块 */
+  for (var sr = 0; sr < 8; sr++){
+    for (var sc2 = 0; sc2 < 8; sc2++){
+      var base = (sr * 8 + sc2) * 9;
+      for (var by = 0; by < 3; by++){
+        for (var bx = 0; bx < 3; bx++){
+          var sum = 0;
+          for (var y = 0; y < B; y++){
+            var py = sr * N + by * B + y;
+            for (var x = 0; x < B; x++){
+              var px = sc2 * N + bx * B + x;
+              var idx = (py * size + px) * 4;
+              sum += (data[idx] * 3 + data[idx + 1] * 6 + data[idx + 2]) / 10;
+            }
+          }
+          out[base + by * 3 + bx] = Math.round(sum / (B * B));
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function scDiff(a, b, sens){
+  var changed = [];
+  for (var sq = 0; sq < 64; sq++){
+    var d = 0;
+    for (var k = 0; k < 9; k++) d += Math.abs(a[sq * 9 + k] - b[sq * 9 + k]);
+    if (d / 9 > sens) changed.push(sq);
+  }
+  return changed;
+}
+
+/* 变化格 → 合法走法：先严格对齐，再宽容一格噪声 */
+function scMatch(changedSq){
+  if (!S.legal.length || changedSq.length < 2) return null;
+  var set = {};
+  changedSq.forEach(function(x){ set[x] = 1; });
+
+  var strict = null, loose = null, looseScore = -1;
+  S.legal.forEach(function(m){
+    var keys = [], seen = {};
+    scAffected(m).forEach(function(x){ if (!seen[x]){ seen[x] = 1; keys.push(x); } });
+    var hit = keys.filter(function(x){ return set[x]; }).length;
+    if (hit === keys.length && changedSq.length === keys.length){ strict = m; return; }
+    if (hit === keys.length && changedSq.length - hit <= 2){
+      var sc2 = hit * 10 - (changedSq.length - hit);
+      if (sc2 > looseScore){ looseScore = sc2; loose = m; }
+    }
+  });
+  return strict || loose;
+}
+
+function scArrow(from, to){
+  var el = SC.arrowEl;
+  if (!el) return;
+  el.textContent = '';
+  if (!SC.box) return;
+  var flip = isViewFlipped();
+  function pt(sq){
+    var r = sq >> 3, c = sq & 7;
+    var sr = flip ? 7 - r : r, sc2 = flip ? 7 - c : c;
+    return {
+      x: SC.box.x + (sc2 + 0.5) * SC.box.w / 8,
+      y: SC.box.y + (sr + 0.5) * SC.box.h / 8
+    };
+  }
+  var a = pt(from), b = pt(to);
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var len = Math.sqrt(dx * dx + dy * dy) || 1;
+  var ux = dx / len, uy = dy / len;
+  var px = -uy, py = ux;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var line = document.createElementNS(NS, 'line');
+  line.setAttribute('x1', a.x + ux * 0.035); line.setAttribute('y1', a.y + uy * 0.035);
+  line.setAttribute('x2', b.x - ux * 0.05); line.setAttribute('y2', b.y - uy * 0.05);
+  line.setAttribute('stroke', '#48e08a');
+  line.setAttribute('stroke-width', '0.014');
+  line.setAttribute('stroke-linecap', 'round');
+  el.appendChild(line);
+
+  var hl = 0.042, hw = 0.03;
+  var tipX = b.x - ux * 0.045, tipY = b.y - uy * 0.045;
+  var poly = document.createElementNS(NS, 'polygon');
+  poly.setAttribute('points',
+    tipX + ',' + tipY + ' ' +
+    (tipX - ux * hl + px * hw) + ',' + (tipY - uy * hl + py * hw) + ' ' +
+    (tipX - ux * hl - px * hw) + ',' + (tipY - uy * hl - py * hw));
+  poly.setAttribute('fill', '#48e08a');
+  el.appendChild(poly);
+}
+
+function scExpect(move){
+  SC.expect = scAffected(move).map(function(x){ return scCellToSquare(x >> 3, x & 7); });
+  scArrow(move.from, move.to);
+}
+
+function scTick(){
+  if (!SC.running || S.busy || S.over || S.edit) return;
+  var sig = (SC.signHook && SC.signHook()) || scSign();
+  if (!sig) return;
+  if (!SC.base){ SC.base = sig; scStatus('已取基线。你在那边下，我这边看。'); return; }
+
+  var changedScreen = scDiff(SC.base, sig, SC.sens);
+  if (!changedScreen.length){ SC.miss = 0; return; }
+  var changed = changedScreen.map(function(sq){ return scCellToSquare(sq >> 3, sq & 7); });
+
+  /* 我方那手已经算进镜面棋盘了，真实棋盘跟上来就吞掉，不重复应用 */
+  if (SC.expect){
+    var exp = {};
+    SC.expect.forEach(function(x){ exp[x] = 1; });
+    var hit = changed.filter(function(x){ return exp[x]; }).length;
+    if (hit === SC.expect.length && changed.length <= SC.expect.length + 1){
+      SC.base = sig; SC.expect = null;
+      scStatus('我方这手已在真实棋盘上，继续等对手。');
+      return;
+    }
+    if (hit) return;                       /* 还在动，等下一帧 */
+  }
+
+  var m = scMatch(changed);
+  if (!m){
+    if (++SC.miss >= 3){ SC.base = sig; SC.miss = 0; }
+    return;
+  }
+  SC.miss = 0;
+  if (S.turn === S.human){                 /* 画面变的是我方那手，只同步基线 */
+    SC.base = sig;
+    return;
+  }
+  var san = toSan(S.board, m, S);
+  SC.base = sig;
+  scStatus('读到对手：<b>' + san + '</b>（变化 ' + changed.length + ' 格）');
+  doMove(m);                               /* 会自动触发我方应招 */
+}
+
+async function scShare(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
+    HS.toast('这个浏览器不支持屏幕捕捉，用 Edge / Chrome 打开', { icon: '⚠️' });
+    return;
+  }
+  try {
+    SC.stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 12 }, audio: false });
+  } catch (e){
+    HS.toast('没有拿到屏幕权限', { icon: '⚠️' });
+    return;
+  }
+  SC.video.srcObject = SC.stream;
+  await SC.video.play().catch(function(){});
+  SC.stage.classList.add('on');
+  SC.box = null;
+  SC.base = null;
+  SC.expect = null;
+  SC.arrowEl.textContent = '';
+  scStatus('预览已开。在画面上拖一个框，框住整块棋盘（贴住最外圈格子）。');
+  document.getElementById('btnShare').textContent = '① 重选屏幕';
+  SC.stream.getVideoTracks()[0].addEventListener('ended', scStop);
+}
+
+function scStop(){
+  SC.running = false;
+  clearInterval(SC.timer);
+  SC.timer = 0;
+  SC.expect = null;
+  var b = document.getElementById('btnScan');
+  if (b){ b.textContent = '② 开始识别'; b.classList.add('primary'); }
+  if (SC.stream){
+    SC.stream.getTracks().forEach(function(t){ t.stop(); });
+    SC.stream = null;
+  }
+  SC.video.srcObject = null;
+  SC.stage.classList.remove('on');
+  SC.arrowEl.textContent = '';
+  var sb = document.getElementById('btnShare');
+  if (sb) sb.textContent = '① 选屏幕 / 窗口';
+  scStatus('已停止。');
+  /* 停止后把我方那手的箭头清掉，避免下次误看 */
+  SC.box = SC.box || null;
+}
+
+function scToggle(){
+  if (SC.running){ scStop(); return; }
+  if (!SC.stream){ HS.toast('先点「选屏幕 / 窗口」', { icon: '🖥' }); return; }
+  if (!SC.box){ HS.toast('先在预览上拖一个框，把棋盘框进去', { icon: '🖼' }); return; }
+  SC.running = true;
+  SC.base = null;
+  SC.expect = null;
+  SC.miss = 0;
+  SC.timer = setInterval(scTick, 260);
+  var b = document.getElementById('btnScan');
+  b.textContent = '■ 停止识别';
+  b.classList.remove('primary');
+  scStatus('识别中：<b>' + sideName(S.human) + '</b> 是我方，' + sideName(S.human === 'w' ? 'b' : 'w') + ' 是对手。');
+}
+
+/* 框选 */
+var scDrag = null;
+function scBoxPaint(x, y, w, h){
+  var el = SC.boxEl;
+  el.hidden = false;
+  el.style.left = (x * 100) + '%';
+  el.style.top = (y * 100) + '%';
+  el.style.width = (w * 100) + '%';
+  el.style.height = (h * 100) + '%';
+}
+function scBoxDragStart(e){
+  if (!SC.stream) return;
+  var r = SC.stage.getBoundingClientRect();
+  scDrag = {
+    x: (e.clientX - r.left) / r.width,
+    y: (e.clientY - r.top) / r.height,
+    r: r
+  };
+  SC.stage.setPointerCapture(e.pointerId);
+  e.preventDefault();
+}
+function scBoxDragMove(e){
+  if (!scDrag) return;
+  var x = Math.min(Math.max((e.clientX - scDrag.r.left) / scDrag.r.width, 0), 1);
+  var y = Math.min(Math.max((e.clientY - scDrag.r.top) / scDrag.r.height, 0), 1);
+  var nx = Math.min(scDrag.x, x), ny = Math.min(scDrag.y, y);
+  var nw = Math.abs(x - scDrag.x), nh = Math.abs(y - scDrag.y);
+  if (nw < 0.02 || nh < 0.02) return;
+  SC.box = { x: nx, y: ny, w: nw, h: nh };
+  scBoxPaint(nx, ny, nw, nh);
+}
+function scBoxDragEnd(){
+  if (!scDrag) return;
+  scDrag = null;
+  if (!SC.box) return;
+  SC.base = null;
+  SC.expect = null;
+  SC.arrowEl.textContent = '';
+  scStatus('已框住棋盘。点「开始识别」，然后你就在那边正常下。');
+  document.getElementById('btnScan').classList.add('primary');
 }
 
 /* =========================================================
@@ -1739,6 +2068,23 @@ promoEl.addEventListener('click', function(e){
   }
 });
 
+/* 屏幕识别 */
+SC.stage = document.getElementById('scrStage');
+SC.video = document.getElementById('scrVideo');
+SC.boxEl = document.getElementById('scrBox');
+SC.arrowEl = document.getElementById('scrArrow');
+SC.statusEl = document.getElementById('scrStatus');
+document.getElementById('btnShare').addEventListener('click', scShare);
+document.getElementById('btnScan').addEventListener('click', scToggle);
+document.getElementById('scrSens').addEventListener('input', function(e){
+  SC.sens = +e.target.value;
+  document.getElementById('scrSensVal').textContent = e.target.value;
+});
+SC.stage.addEventListener('pointerdown', scBoxDragStart);
+SC.stage.addEventListener('pointermove', scBoxDragMove);
+SC.stage.addEventListener('pointerup', scBoxDragEnd);
+SC.stage.addEventListener('pointercancel', function(){ scDrag = null; });
+
 /* 键盘：左右箭头悔棋/重做太容易误触，只留 Esc 关升变 */
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && promoEl.classList.contains('show')){
@@ -1793,6 +2139,17 @@ window.__CHESS__ = {
     return true;
   },
   fen: function(){ return toFen(S); },
+  sc: {
+    diff: function(a, b, sens){ return scDiff(Uint8Array.from(a), Uint8Array.from(b), sens); },
+    match: function(list){ return scMatch(list); },
+    affected: function(m){ return scAffected(m); },
+    box: function(b){ SC.box = b || null; },
+    fakeFrame: function(sig){ SC.base = Uint8Array.from(sig); },
+    tick: function(){ scTick(); },
+    forceRunning: function(v){ SC.running = !!v; },
+    signHook: function(fn){ SC.signHook = fn || null; },
+    state: function(){ return { box: SC.box, running: SC.running, expect: SC.expect }; }
+  },
   movesSan: function(){ return S.legal.map(function(m){ return toSan(S.board, m, S); }); },
   play: function(san){ var m = parseInput(san); if (!m) return false; doMove(m); return true; },
   childCounts: function(){

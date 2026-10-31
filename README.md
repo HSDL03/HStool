@@ -99,8 +99,10 @@ python -m http.server 8000     # 或 npx serve .
 │  ├─ download-data.json   资源补录
 │  └─ announcement.json    公告
 │
+├─ start-local.cmd         双击启动本地版（起 127.0.0.1 服务并打开国象应招器）
 ├─ scripts/
 │  ├─ check.mjs            站点自检脚本（CI 与本地共用）
+│  ├─ serve-local.mjs      本地静态服务（8787，含自动开浏览器）
 │  ├─ build-offline.mjs    离线版打包（只挑 noDB 条目）
 │  └─ guard.mjs            命令熔断器（超时自动杀进程换方案）
 │
@@ -149,6 +151,25 @@ python -m http.server 8000     # 或 npx serve .
 | 下载站 | GitHub Releases 聚合 + 手动补录 |
 | 答辩 Wiki | 章节树 + 全文搜索 + 阅读进度 |
 | 数据后台 | 用 GitHub Token 提交 JSON 改动 |
+
+## 本地版（屏幕识别作弊）
+
+国象应招器可以**直接读你屏幕上的棋盘**：在本机起个服务，框住对手的棋盘，你在那边照常下，这边自动读出他走了哪步、给你应手。
+
+```bash
+# Windows：直接双击仓库根目录的 start-local.cmd
+# 或者手动：
+node scripts/serve-local.mjs        # → http://127.0.0.1:8787/games/chess-auto.html
+```
+
+用 Edge / Chrome 打开，点侧栏「① 选屏幕 / 窗口」→ 选中那个开着棋盘的窗口 → 在预览上**拖框住整块棋盘** → 「② 开始识别」。
+
+- 只做**格子级像素变化**比对，不认棋子长相，所以换任何网站/任何皮肤都能用。
+- 推理链：画面里哪两格变了 → 在当前局面的合法走法里找对得上的那一步 → 算应手 → 在预览上画箭头。
+- 你把自己那手在真实棋盘上走掉时，会被识别成「已知的我方走法」直接吞掉，不会重复落子。
+- 鼠标扫过棋盘可能误判，把「灵敏度」调高即可。
+
+> 屏幕捕捉需要安全上下文：`localhost` 和 `https` 都行，直接双击 `file://` 打开不行——所以给了上面的本地服务。
 
 ## 离线版 exe
 
