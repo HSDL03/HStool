@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>信标范围与材料 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔦</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:2px}
+.big{padding:13px 15px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.15rem,3.6vw,1.6rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:76px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:320px}
+.tbl th,.tbl td{padding:7px 9px;text-align:right;border-bottom:1px dashed var(--bd);white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.tbl td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl td.hi{color:var(--ac);font-weight:800}
+.tbl tr.on td{background:var(--bg3)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font-size:12px;padding:5px 9px;border-radius:var(--r);border:2px solid var(--bd);background:var(--bg3);color:var(--muted)}
+.chip b{font-family:var(--mono);color:var(--text)}
+.chip.new{border-color:var(--ac);color:var(--text)}
+.chip.new b{color:var(--ac)}
+.verdict{margin-top:12px;padding:10px 12px;background:var(--bg3);border-left:3px solid var(--ac);border-radius:var(--r);font-size:13.5px;line-height:1.7}
+.verdict b{font-family:var(--mono);color:var(--ac)}
+@media(max-width:640px){.res{grid-template-columns:1fr}.kv span{width:68px}.tbl{font-size:12px}.tbl th,.tbl td{padding:6px 6px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔦 信标范围与材料</h1><p class="sub">金字塔层数 → 效果半径、可用效果、要挖多少矿</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">① 选择金字塔层数</h2>
+      <div class="seg" id="lvSeg" role="group" aria-label="层数">
+        <button type="button" data-lv="1" aria-pressed="false">1 层</button>
+        <button type="button" data-lv="2" aria-pressed="false">2 层</button>
+        <button type="button" data-lv="3" aria-pressed="false">3 层</button>
+        <button type="button" data-lv="4" aria-pressed="true">4 层（满级）</button>
+      </div>
+      <div class="res" style="margin-top:14px">
+        <div class="big"><em>效果半径</em><b id="rRange">—</b><small>格，以信标为中心</small></div>
+        <div class="big"><em>底座方块总数</em><b id="rTotal">—</b><small>块（铁/金/钻石/绿宝石/下界合金）</small></div>
+      </div>
+      <div class="kv"><span>底座</span><b id="rBase">—</b></div>
+      <div class="kv"><span>效果</span><b id="rCount">—</b></div>
+      <div class="verdict" id="verdict">—</div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">② 每层要摆多少方块</h2>
+      <div class="scroll">
+        <table class="tbl">
+          <thead><tr><th>层（自下往上）</th><th>边长</th><th>本层方块</th><th>累计</th></tr></thead>
+          <tbody id="layerBody"></tbody>
+        </table>
+      </div>
+      <div class="kv" style="margin-top:6px"><span>累加规则</span><b>第 n 层边长 = 2n+7 的奇数递减：9×9、7×7、5×5、3×3</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">③ 换成锭 / 宝石</h2>
+      <div class="scroll">
+        <table class="tbl">
+          <thead><tr><th>材质</th><th>方块</th><th>换算</th><th>合计</th></tr></thead>
+          <tbody id="matBody"></tbody>
+        </table>
+      </div>
+      <div class="kv" style="margin-top:8px"><span>紫水晶</span><b id="amat">紫水晶块不是信标底座材料，仅作参考</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">④ 这一层的可用效果</h2>
+      <div class="chips" id="effBox"></div>
+      <div class="kv" style="margin-top:10px"><span>说明</span><b id="effNote">—</b></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 数据为 <b>Java 版</b>：层数 1–4 对应作用半径 <code>20 / 30 / 40 / 50</code> 格，底座边长由 <code>9×9</code> 起每层减 2，
+        累计方块数 <code>81 / 130 / 155 / 164</code>（81+49=130，+25=155，+9=164）。效果按层解锁：1 层给速度、急迫，
+        2 层加抗性提升与跳跃提升，3 层加力量，4 层把速度/急迫/跳跃提升升到 II 级（抗性、力量仍是 I 级）。
+        信标本体 = 3 黑曜石 + 5 玻璃 + 1 下界之星。底座只认铁块、金块、钻石块、绿宝石块、下界合金块，
+        紫水晶块、青金石块、红石块都不行 —— 别照着「看起来贵」的方块搭。数据范围：Java 版 1.20 – 1.21。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var LAYERS=[81,49,25,9];      // 自下往上：9×9、7×7、5×5、3×3
+var SIDE=[9,7,5,3];
+var RADIUS=[20,30,40,50];
+var EFF={
+  1:[['速度','I'],['急迫','I']],
+  2:[['速度','I'],['急迫','I'],['抗性提升','I'],['跳跃提升','I']],
+  3:[['速度','I'],['急迫','I'],['抗性提升','I'],['跳跃提升','I'],['力量','I']],
+  4:[['速度','II'],['急迫','II'],['抗性提升','I'],['跳跃提升','II'],['力量','I']]
+};
+var MATS=[
+  {n:'铁块',per:9,u:'铁锭'},
+  {n:'金块',per:9,u:'金锭'},
+  {n:'钻石块',per:9,u:'钻石'},
+  {n:'绿宝石块',per:9,u:'绿宝石'},
+  {n:'下界合金块',per:9,u:'下界合金锭'}
+];
+var cur=4;
+function fmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+
+function render(){
+  var lv=cur;
+  var total=0,i;
+  for(i=0;i<lv;i++) total+=LAYERS[i];
+
+  $('rRange').textContent=RADIUS[lv-1];
+  $('rTotal').textContent=fmt(total);
+  $('rBase').textContent=SIDE[lv-1]+'×'+SIDE[lv-1]+' 底座（'+(lv===1?'只需要最下面一层':'共 '+lv+' 层，最下面 '+SIDE[0]+'×'+SIDE[0])+'）';
+  $('rCount').textContent=EFF[lv].length+' 种主要效果可选';
+
+  var rows='';
+  for(i=0;i<4;i++){
+    var use=i<lv;
+    var cum=0,j;
+    for(j=0;j<=i;j++) cum+=LAYERS[j];
+    rows+='<tr'+(use?' class="on"':'')+'><td>第 '+(i+1)+' 层'+(use?'':'（未搭）')+'</td><td>'+SIDE[i]+'×'+SIDE[i]+'</td>'
+      +'<td>'+LAYERS[i]+'</td><td'+(use?' class="hi"':'')+'>'+cum+'</td></tr>';
+  }
+  $('layerBody').innerHTML=rows;
+
+  $('matBody').innerHTML=MATS.map(function(m){
+    return '<tr><td>'+m.n+'</td><td>'+fmt(total)+'</td><td>×'+m.per+'</td><td class="hi">'+fmt(total*m.per)+' '+m.u+'</td></tr>';
+  }).join('');
+  $('amat').textContent=fmt(total)+' 块紫水晶块 = '+fmt(total*4)+' 个紫水晶碎片（4 碎片/块），但紫水晶块不能当底座';
+
+  $('verdict').innerHTML=lv+' 层信标：半径 <b>'+RADIUS[lv-1]+'</b> 格，要 <b>'+total+'</b> 个方块 —— 全用铁块就是 <b>'+fmt(total*9)+'</b> 个铁锭'
+    +'（'+fmt(Math.ceil(total*9/64))+' 组多 '+((total*9)%64)+' 个）。';
+
+  var prev=lv>1?EFF[lv-1].map(function(a){return a[0]+a[1];}):[];
+  $('effBox').innerHTML=EFF[lv].map(function(e){
+    var isNew=prev.indexOf(e[0]+e[1])<0;
+    return '<span class="chip'+(isNew?' new':'')+'">'+e[0]+' <b>'+e[1]+'</b>'+(isNew?' ·新':'')+'</span>';
+  }).join('');
+  $('effNote').textContent=lv===4
+    ? '满级才有 II 级速度/急迫/跳跃提升；抗性与力量固定 I 级'
+    : (lv===1?'1 层只有速度 I 与急迫 I，够用了就别再堆':'第 '+(lv+1)+' 层会再加效果 / 升级倍率');
+
+  Array.prototype.forEach.call(document.querySelectorAll('#lvSeg button'),function(b){
+    b.setAttribute('aria-pressed',String(Number(b.getAttribute('data-lv'))===lv));
+  });
+}
+
+Array.prototype.forEach.call(document.querySelectorAll('#lvSeg button'),function(b){
+  b.addEventListener('click',function(){
+    cur=Number(b.getAttribute('data-lv'));
+    render();
+    toast(cur+' 层信标：半径 '+RADIUS[cur-1]+' 格，'+['81','130','155','164'][cur-1]+' 个方块');
+  });
+});
+
+render();
+})();
+</script>
+</body>
+</html>

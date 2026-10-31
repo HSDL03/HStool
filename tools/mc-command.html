@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 指令生成器 · 红石的小站</title>
+<meta name="description" content="选物品、填参数，直接生成能粘贴进游戏的 /give、/tp、/effect 指令">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.out{
+  display:block;width:100%;box-sizing:border-box;margin-top:10px;padding:11px 13px;
+  font-family:var(--mono);font-size:13px;line-height:1.55;word-break:break-all;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  color:var(--text);
+}
+.pick{position:relative}
+.pop{
+  position:absolute;left:0;right:0;top:100%;z-index:20;margin-top:4px;max-height:260px;overflow:auto;
+  background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r);box-shadow:0 10px 24px rgba(0,0,0,.22);
+}
+.pop button{
+  display:flex;width:100%;gap:8px;align-items:baseline;padding:7px 11px;border:0;border-bottom:1px dashed var(--bd);
+  background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer;
+}
+.pop button:last-child{border-bottom:0}
+.pop button:hover,.pop button:focus{background:var(--bg3);outline:none}
+.pop button span{color:var(--faint);font-size:11px;font-family:var(--mono)}
+.pop .none{padding:9px 11px;color:var(--muted);font-size:12.5px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tags button{
+  padding:4px 9px;font-size:12px;font-family:var(--mono);cursor:pointer;
+  background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);color:var(--muted);
+}
+.tags button:hover{color:var(--ac);border-color:var(--ac)}
+@media(max-width:640px){.out{font-size:12px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div>
+      <h1>⌨️ MC 指令生成器</h1>
+      <p class="sub">搜物品名就能出 /give · 坐标、效果、时间天气一起生成，复制即用</p>
+    </div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">/give 给物品</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="gTarget">给谁</label>
+          <input id="gTarget" autocomplete="off" value="@p" spellcheck="false">
+        </div>
+        <div class="fld">
+          <label for="gCount">数量（1 ~ 64）</label>
+          <input id="gCount" class="mono" inputmode="numeric" autocomplete="off" value="1">
+        </div>
+      </div>
+      <div class="fld pick">
+        <label for="gItem">物品（中文或英文都行，例如「钻石」「diamond」）</label>
+        <input id="gItem" autocomplete="off" value="钻石" spellcheck="false">
+        <div class="pop" id="gPop" hidden></div>
+      </div>
+      <code class="out" id="gOut">—</code>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary sm" id="gCopy" type="button">📋 复制指令</button>
+        <button class="btn ghost sm" id="gPick" type="button">🎲 换个热门物品</button>
+      </div>
+      <div class="err" id="gErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">/tp 传送</h2>
+      <div class="grid2">
+        <div class="fld"><label for="tTarget">谁传</label><input id="tTarget" autocomplete="off" value="@s" spellcheck="false"></div>
+        <div class="fld"><label for="tPos">坐标（x y z）</label><input id="tPos" autocomplete="off" value="0 64 0" spellcheck="false"></div>
+      </div>
+      <code class="out" id="tOut">—</code>
+      <div class="row" style="margin-top:10px">
+        <button class="btn sm" id="tCopy" type="button">📋 复制指令</button>
+      </div>
+      <div class="err" id="tErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">/effect 给效果</h2>
+      <div class="grid2">
+        <div class="fld"><label for="eTarget">给谁</label><input id="eTarget" autocomplete="off" value="@s" spellcheck="false"></div>
+        <div class="fld">
+          <label for="eKind">效果</label>
+          <select id="eKind">
+            <option value="speed">速度 speed</option>
+            <option value="haste">急迫 haste</option>
+            <option value="strength">力量 strength</option>
+            <option value="jump_boost">跳跃提升 jump_boost</option>
+            <option value="regeneration">生命恢复 regeneration</option>
+            <option value="resistance">抗性提升 resistance</option>
+            <option value="fire_resistance">抗火 fire_resistance</option>
+            <option value="water_breathing">水下呼吸 water_breathing</option>
+            <option value="night_vision">夜视 night_vision</option>
+            <option value="invisibility">隐身 invisibility</option>
+            <option value="slow_falling">缓降 slow_falling</option>
+            <option value="absorption">伤害吸收 absorption</option>
+            <option value="health_boost">生命提升 health_boost</option>
+            <option value="saturation">饱和 saturation</option>
+            <option value="glowing">发光 glowing</option>
+            <option value="levitation">飘浮 levitation</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label for="eSec">持续秒数</label><input id="eSec" class="mono" inputmode="numeric" autocomplete="off" value="60"></div>
+        <div class="fld"><label for="eLv">等级（1 = I）</label><input id="eLv" class="mono" inputmode="numeric" autocomplete="off" value="1"></div>
+      </div>
+      <code class="out" id="eOut">—</code>
+      <div class="row" style="margin-top:10px">
+        <button class="btn sm" id="eCopy" type="button">📋 复制指令</button>
+      </div>
+      <div class="err" id="eErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">常用开关</h2>
+      <div class="tags" id="quick"></div>
+      <code class="out" id="qOut">/gamerule keepInventory true</code>
+      <div class="row" style="margin-top:10px">
+        <button class="btn sm" id="qCopy" type="button">📋 复制指令</button>
+      </div>
+      <div class="tip">💡 <strong>使用说明</strong>：目标写 <code>@p</code>（最近的玩家）、<code>@s</code>（自己）、<code>@a</code>（所有人），也可以直接写玩家名。
+        物品名支持中文与英文（数据来自 26.3 版本的方块与物品清单，一千多条）。
+        这里只生成最稳的 <code>/give &lt;目标&gt; &lt;物品&gt; &lt;数量&gt;</code>，不带 NBT 组件——组件写法各版本差异大，手改容易报错。
+        指令需要在开启作弊的世界里，或用管理员权限执行。</div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script src="../assets/mc-items-data.js"></script>
+<script>(function(){
+'use strict';
+function $(id){ return document.getElementById(id); }
+
+/* 汇总成一张可搜的表：{id:'minecraft:diamond', cn:'钻石', en:'diamond'} */
+var LIST = [];
+(function build(){
+  var src = [window.MC_ITEMS || {}, window.MC_BLOCKS || {}];
+  var seen = {};
+  src.forEach(function (pool){
+    Object.keys(pool).forEach(function (k){
+      var it = pool[k];
+      if (!it || !it.e) return;
+      var id = 'minecraft:' + it.e;
+      if (seen[id]) return;
+      seen[id] = 1;
+      LIST.push({id: id, cn: (it.n || it.e), en: it.e});
+    });
+  });
+  LIST.sort(function (a, b){ return a.cn.localeCompare(b.cn, 'zh'); });
+})();
+
+var chosen = null;   /* 当前选中的物品 */
+
+function norm(s){ return String(s || '').toLowerCase().replace(/[\s_-]/g, ''); }
+function search(q){
+  var key = norm(q);
+  if (!key) return LIST.slice(0, 12);
+  var start = [], part = [];
+  for (var i = 0; i < LIST.length && start.length < 12; i++){
+    var it = LIST[i], cn = norm(it.cn), en = norm(it.en);
+    if (cn === key || en === key) start.unshift(it);
+    else if (cn.indexOf(key) === 0 || en.indexOf(key) === 0) start.push(it);
+    else if (part.length < 12 && (cn.indexOf(key) > 0 || en.indexOf(key) > 0)) part.push(it);
+  }
+  return start.concat(part).slice(0, 12);
+}
+function renderPop(list){
+  var box = $('gPop');
+  if (!list.length){ box.innerHTML = '<div class="none">没找到这个物品，换个说法试试（也可以直接填英文 id）</div>'; box.hidden = false; return; }
+  box.innerHTML = list.map(function (it, i){
+    return '<button type="button" data-i="' + i + '">' + HS.esc(it.cn) + '<span>' + HS.esc(it.id) + '</span></button>';
+  }).join('');
+  box.hidden = false;
+}
+function currentItemId(){
+  if (chosen) return chosen.id;
+  var q = $('gItem').value.trim();
+  if (!q) return '';
+  if (/^[a-z0-9_:.]+$/i.test(q) && q.indexOf(':') > 0) return q;   /* 直接写完整 id */
+  var hit = search(q)[0];
+  return hit ? hit.id : '';
+}
+function renderGive(){
+  var id = currentItemId();
+  var cnt = parseInt($('gCount').value, 10);
+  var target = $('gTarget').value.trim() || '@p';
+  if (!id){ $('gOut').textContent = '—'; $('gErr').hidden = false; $('gErr').textContent = '还差一个物品：在上面搜中文名或英文 id'; return; }
+  if (!(cnt >= 1 && cnt <= 64)){ $('gOut').textContent = '—'; $('gErr').hidden = false; $('gErr').textContent = '数量填 1 ~ 64 的整数'; return; }
+  $('gErr').hidden = true;
+  $('gOut').textContent = '/give ' + target + ' ' + id + ' ' + cnt;
+}
+
+/* 物品输入与下拉 */
+$('gItem').addEventListener('input', function (){
+  chosen = null;
+  renderPop(search($('gItem').value));
+  renderGive();
+});
+$('gItem').addEventListener('focus', function (){ renderPop(search($('gItem').value)); });
+$('gItem').addEventListener('blur', function (){ setTimeout(function (){ $('gPop').hidden = true; }, 160); });
+$('gPop').addEventListener('click', function (e){
+  var btn = e.target.closest('button[data-i]');
+  if (!btn) return;
+  var it = search($('gItem').value)[Number(btn.dataset.i)];
+  if (!it) return;
+  chosen = it;
+  $('gItem').value = it.cn;
+  $('gPop').hidden = true;
+  renderGive();
+});
+$('gCount').addEventListener('input', renderGive);
+$('gTarget').addEventListener('input', renderGive);
+$('gCopy').addEventListener('click', function (){
+  if ($('gOut').textContent === '—') return HS.toast('先生成一个指令');
+  HS.copy($('gOut').textContent);
+});
+$('gPick').addEventListener('click', function (){
+  var hot = ['钻石', '下界合金锭', '金苹果', '末影珍珠', '火药', '红石', '铁锭', '钻石镐'];
+  var pick = hot[Math.floor(Math.random() * hot.length)];
+  $('gItem').value = pick; chosen = null;
+  $('gItem').dispatchEvent(new Event('input'));
+});
+
+/* /tp */
+function renderTp(){
+  var target = $('tTarget').value.trim() || '@s';
+  var pos = $('tPos').value.trim().split(/[\s,，]+/).filter(Boolean);
+  if (pos.length !== 3 || pos.some(function (v){ return !/^-?\d+(\.\d+)?$/.test(v); })){
+    $('tOut').textContent = '—';
+    $('tErr').hidden = false; $('tErr').textContent = '坐标要三个数字，例如「0 64 0」（可以是小数、负数）';
+    return;
+  }
+  $('tErr').hidden = true;
+  $('tOut').textContent = '/tp ' + target + ' ' + pos.join(' ');
+}
+$('tTarget').addEventListener('input', renderTp);
+$('tPos').addEventListener('input', renderTp);
+$('tCopy').addEventListener('click', function (){
+  if ($('tOut').textContent === '—') return HS.toast('先填对坐标');
+  HS.copy($('tOut').textContent);
+});
+
+/* /effect */
+function renderEffect(){
+  var target = $('eTarget').value.trim() || '@s';
+  var sec = parseInt($('eSec').value, 10);
+  var lv = parseInt($('eLv').value, 10);
+  if (!(sec >= 1 && sec <= 1000000)){ $('eOut').textContent = '—'; $('eErr').hidden = false; $('eErr').textContent = '持续秒数填 1 ~ 1000000'; return; }
+  if (!(lv >= 1 && lv <= 255)){ $('eOut').textContent = '—'; $('eErr').hidden = false; $('eErr').textContent = '等级填 1 ~ 255（1 就是游戏里的 I 级）'; return; }
+  $('eErr').hidden = true;
+  /* 游戏内等级从 0 起算，所以 I 级写成 0 */
+  $('eOut').textContent = '/effect give ' + target + ' minecraft:' + $('eKind').value + ' ' + sec + ' ' + (lv - 1);
+}
+['eTarget','eSec','eLv'].forEach(function (id){ $(id).addEventListener('input', renderEffect); });
+$('eKind').addEventListener('change', renderEffect);
+$('eCopy').addEventListener('click', function (){
+  if ($('eOut').textContent === '—') return HS.toast('先填对参数');
+  HS.copy($('eOut').textContent);
+});
+
+/* 常用开关 */
+var QUICK = [
+  ['白天', '/time set day'],
+  ['夜晚', '/time set night'],
+  ['晴天', '/weather clear'],
+  ['下雨', '/weather rain'],
+  ['死亡不掉落', '/gamerule keepInventory true'],
+  ['关闭生物破坏', '/gamerule mobGriefing false'],
+  ['创造模式', '/gamemode creative'],
+  ['生存模式', '/gamemode survival'],
+  ['清空天气', '/weather clear 1000000'],
+  ['停止下雨', '/weather clear 99999']
+];
+$('quick').innerHTML = QUICK.map(function (q, i){
+  return '<button type="button" data-q="' + i + '">' + HS.esc(q[0]) + '</button>';
+}).join('');
+$('quick').addEventListener('click', function (e){
+  var btn = e.target.closest('button[data-q]');
+  if (!btn) return;
+  $('qOut').textContent = QUICK[Number(btn.dataset.q)][1];
+});
+$('qCopy').addEventListener('click', function (){ HS.copy($('qOut').textContent); });
+
+/* 启动 */
+renderPop(search($('gItem').value));
+renderGive(); renderTp(); renderEffect();
+})();</script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>熔炉燃料与烧炼 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:2px}
+.big{padding:13px 15px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.15rem,3.6vw,1.6rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:76px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:330px}
+.tbl th,.tbl td{padding:7px 9px;text-align:right;border-bottom:1px dashed var(--bd);white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.tbl td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl td.hi{color:var(--ac);font-weight:800}
+.tbl tr.on td{background:var(--bg3)}
+.err{color:var(--dgr);font-size:12.5px;margin-top:6px}
+@media(max-width:640px){.res{grid-template-columns:1fr}.kv span{width:68px}.tbl{font-size:12px}.tbl th,.tbl td{padding:6px 6px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🔥 熔炉燃料与烧炼</h1><p class="sub">要烧多少东西 → 各燃料各要几个；有多少燃料 → 能烧多少东西</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">① 我要烧 N 个物品</h2>
+      <div class="fld">
+        <label for="nIn">要烧炼的物品数量</label>
+        <input id="nIn" class="mono" inputmode="numeric" autocomplete="off" value="64">
+      </div>
+      <div class="res">
+        <div class="big"><em>最少煤炭</em><b id="sCoal">—</b><small>个（每份烧 8 个）</small></div>
+        <div class="big"><em>总耗时</em><b id="sTime">—</b><small>单熔炉，每件 10 秒</small></div>
+      </div>
+      <div class="kv"><span>一句话</span><b id="sLine">—</b></div>
+      <div class="err" id="nErr" hidden></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnCopy" type="button">📋 复制这张表</button>
+        <button class="btn ghost sm" data-n="64" type="button">64 个</button>
+        <button class="btn ghost sm" data-n="1728" type="button">一箱（1728）</button>
+      </div>
+      <div class="scroll" style="margin-top:12px">
+        <table class="tbl">
+          <thead><tr><th>燃料</th><th>单份可烧</th><th>需要数量</th><th>燃烧时长</th></tr></thead>
+          <tbody id="needBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">② 我手上有 X 个燃料</h2>
+      <div class="grid2">
+        <div class="fld"><label for="fSel">燃料种类</label><select id="fSel"></select></div>
+        <div class="fld"><label for="cIn">数量</label><input id="cIn" class="mono" inputmode="numeric" autocomplete="off" value="64"></div>
+      </div>
+      <div class="res">
+        <div class="big"><em>能烧完</em><b id="cOut">—</b><small>个物品</small></div>
+        <div class="big"><em>理论总热量</em><b id="cCap">—</b><small>个物品当量</small></div>
+      </div>
+      <div class="kv"><span>余火</span><b id="cRest">—</b></div>
+      <div class="kv"><span>耗时</span><b id="cTime">—</b></div>
+      <div class="kv"><span>折合</span><b id="cStack">—</b></div>
+      <div class="err" id="cErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">燃料热量对照（Java 版）</h2>
+      <div class="scroll">
+        <table class="tbl">
+          <thead><tr><th>燃料</th><th>可烧物品</th><th>游戏刻</th><th>时长</th></tr></thead>
+          <tbody id="refBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 数值为 <b>Java 版 1.20+</b> 熔炉燃料表：1 个物品 = 200 刻 = 10 秒，燃料按「整份」消耗，所以 ① 里的数量一律
+        <b>向上取整</b>（烧 1 个东西也得扔 3 张地毯）。② 的理论总热量 × 整份 = 可烧物品数，超出整份的零头是最后一份没烧完的火，
+        熔炉熄灭后作废；若在火焰熄灭前继续投料则不会浪费。高炉/烟熏炉只是把每件 10 秒压到 5 秒，同量燃料烧的物品数不变。
+        干燥海带块实际是 <code>4001 刻</code>（20.005 个），本页按 20 计，不影响任何整数结果。
+        木材类按主世界木头计；竹制品的燃烧值与木板相同但不在本表内。数据范围：Java 版 1.20 – 1.21。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+/* v = 每份燃料可烧炼的物品数（Java 版 1.20+） */
+var FUELS=[
+  {n:'煤炭',v:8,u:'个'},{n:'木炭',v:8,u:'个'},{n:'煤炭块',v:80,u:'块'},{n:'岩浆桶',v:100,u:'桶'},
+  {n:'烈焰棒',v:12,u:'根'},{n:'干海带块',v:20,u:'块'},{n:'干海带',v:4,u:'个'},{n:'船',v:6,u:'艘'},
+  {n:'原木',v:1.5,u:'个'},{n:'木板',v:1.5,u:'块'},{n:'工作台',v:1.5,u:'个'},{n:'书架',v:1.5,u:'个'},
+  {n:'木台阶',v:0.75,u:'个'},{n:'木棍',v:0.5,u:'根'},{n:'树苗',v:0.5,u:'个'},{n:'木碗',v:0.5,u:'个'},
+  {n:'羊毛',v:0.5,u:'块'},{n:'地毯',v:0.335,u:'块'}
+];
+var NAMES=['煤炭','煤炭块','岩浆桶'];
+
+function num(x){
+  var s=(Math.round(x*1000)/1000).toString();
+  return s;
+}
+function fmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function dur(sec){
+  sec=Math.round(sec);
+  if(sec<60) return sec+' 秒';
+  var m=Math.floor(sec/60),r=sec%60;
+  return m+' 分'+(r?' '+r+' 秒':'');
+}
+function readInt(el,min,max){
+  var v=String(el.value).trim().replace(/[, _，]/g,'');
+  if(!v) return {err:'还没填数字'};
+  if(!/^\d+$/.test(v)) return {err:'只能填正整数'};
+  var n=Number(v);
+  if(n<min||n>max) return {err:'范围是 '+min+' ~ '+fmt(max)};
+  return {val:n};
+}
+function showErr(el,msg){
+  if(!msg){el.hidden=true;el.textContent='';return;}
+  el.hidden=false;el.textContent='⚠ '+msg;
+}
+/* 烧 n 个物品需要几份燃料（向上取整，容忍浮点误差） */
+function need(n,v){return Math.max(1,Math.ceil((n-1e-9)/v));}
+
+function calcNeed(){
+  var r=readInt($('nIn'),1,10000000);
+  if(r.err){
+    showErr($('nErr'),r.err);
+    $('sCoal').textContent='—';$('sTime').textContent='—';$('sLine').textContent='—';
+    $('needBody').innerHTML='';
+    return;
+  }
+  showErr($('nErr'),'');
+  var n=r.val;
+  var rows=FUELS.map(function(f){
+    var cnt=need(n,f.v);
+    var hi=NAMES.indexOf(f.n)>-1?' class="hi"':'';
+    return '<tr><td>'+f.n+'</td><td'+hi+'>'+num(f.v)+'</td><td'+hi+'>'+fmt(cnt)+' '+f.u+'</td><td>'+dur(cnt*f.v*10)+'</td></tr>';
+  });
+  $('needBody').innerHTML=rows.join('');
+  $('sCoal').textContent=fmt(need(n,8));
+  $('sTime').textContent=dur(n*10);
+  $('sLine').textContent='烧 '+fmt(n)+' 个：'+NAMES.map(function(nm){
+    var f=FUELS.filter(function(x){return x.n===nm;})[0];
+    return nm+' '+fmt(need(n,f.v))+' '+f.u;
+  }).join(' · ');
+}
+
+function calcHave(){
+  var f=FUELS[$('fSel').selectedIndex]||FUELS[0];
+  var r=readInt($('cIn'),1,1000000);
+  if(r.err){
+    showErr($('cErr'),r.err);
+    $('cOut').textContent='—';$('cCap').textContent='—';
+    $('cRest').textContent='—';$('cTime').textContent='—';$('cStack').textContent='—';
+    return;
+  }
+  showErr($('cErr'),'');
+  var x=r.val, cap=x*f.v, full=Math.floor(cap+1e-9), rest=(cap-full)*10;
+  $('cOut').textContent=fmt(full);
+  $('cCap').textContent=num(Math.round(cap*1000)/1000);
+  $('cRest').textContent=rest>0.01
+    ? '最后一份还剩 '+dur(rest)+' 的火，可再塞 '+num(Math.round((cap-full)*1000)/1000)+' 个物品，熄火即作废'
+    : '刚好烧完整份，没有余火';
+  $('cTime').textContent=dur(full*10)+'（单熔炉）';
+  $('cStack').textContent=fmt(x)+' '+f.u+' ≈ '+(x/64).toFixed(2)+' 组';
+}
+
+function buildRef(){
+  var rows=FUELS.slice().sort(function(a,b){return b.v-a.v;}).map(function(f){
+    return '<tr><td>'+f.n+'</td><td>'+num(f.v)+'</td><td>'+fmt(Math.round(f.v*200))+'</td><td>'+dur(f.v*10)+'</td></tr>';
+  });
+  $('refBody').innerHTML=rows.join('');
+}
+
+function buildSel(){
+  $('fSel').innerHTML=FUELS.map(function(f){
+    return '<option>'+f.n+'（'+num(f.v)+' 个）</option>';
+  }).join('');
+}
+
+$('nIn').addEventListener('input',calcNeed);
+$('cIn').addEventListener('input',calcHave);
+$('fSel').addEventListener('change',calcHave);
+Array.prototype.forEach.call(document.querySelectorAll('[data-n]'),function(b){
+  b.addEventListener('click',function(){$('nIn').value=b.getAttribute('data-n');calcNeed();});
+});
+$('btnCopy').addEventListener('click',function(){
+  var r=readInt($('nIn'),1,10000000);
+  if(r.err){toast('先填一个有效数量');return;}
+  var lines=['烧 '+fmt(r.val)+' 个物品所需的燃料（Java 1.20+，单熔炉 ' + dur(r.val*10) + '）'];
+  FUELS.forEach(function(f){lines.push(f.n+'\t'+num(f.v)+'\t'+fmt(need(r.val,f.v))+' '+f.u);});
+  HS.copy(lines.join('\n'));
+  toast('已复制 '+FUELS.length+' 种燃料的需求量');
+});
+
+buildSel();
+buildRef();
+calcNeed();
+calcHave();
+})();
+</script>
+</body>
+</html>

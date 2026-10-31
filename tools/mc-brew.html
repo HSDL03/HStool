@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>药水酿造表 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.out{
+  margin-top:4px;padding:14px 15px;background:var(--bg);border:2px solid var(--bd2);
+  border-radius:var(--r);box-shadow:var(--bevel);
+}
+.oname{display:flex;align-items:center;gap:9px;font-size:clamp(1.05rem,3.4vw,1.35rem);font-weight:800;margin-bottom:6px;flex-wrap:wrap}
+.oname .ic{font-size:1.3em;line-height:1}
+.oname .tag{
+  font-size:11px;font-weight:800;letter-spacing:.06em;padding:2px 7px;border-radius:3px;
+  background:var(--ac);color:var(--on-ac);
+}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:74px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-weight:700;word-break:break-word;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.kv b.plain{font-family:inherit}
+.chain{font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:8px;word-break:break-word}
+.note{font-size:12.5px;line-height:1.65;margin-top:9px;padding:8px 11px;background:var(--bg3);border-left:3px solid var(--warn);border-radius:var(--r);color:var(--muted)}
+.note.bad{border-left-color:var(--dgr)}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;min-width:330px}
+.tbl th,.tbl td{padding:6px 7px;text-align:left;border-bottom:1px dashed var(--bd);white-space:nowrap}
+.tbl th{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.tbl td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl tr.hi td{color:var(--ac);font-weight:800}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 12px}
+.chip{padding:5px 11px;font-size:12.5px;font-weight:700;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);cursor:pointer;color:var(--muted)}
+.chip:hover{color:var(--text);border-color:var(--ac)}
+.chip[aria-pressed="true"]{background:var(--ac);color:var(--on-ac);border-color:var(--ac)}
+@media(max-width:640px){
+  .kv span{width:62px;font-size:10.5px}
+  .tbl{font-size:12px}
+  .tbl th,.tbl td{padding:5px 5px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🧪 药水酿造表</h1><p class="sub">基础药水 + 材料 → 效果、等级、时长、喷溅与滞留</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">配一瓶</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="baseSel">基础药水</label>
+          <select id="baseSel">
+            <option value="water">水瓶</option>
+            <option value="awkward" selected>粗制的药水（水瓶 + 下界疣）</option>
+            <option value="thick">浓稠的药水</option>
+            <option value="mundane">平凡的药水</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label for="ingSel">主材料</label>
+          <select id="ingSel"></select>
+        </div>
+      </div>
+
+      <div class="fld" style="margin-bottom:7px"><label>变体（可叠加）</label></div>
+      <div class="chips" id="chips">
+        <button class="chip" type="button" data-mod="red" aria-pressed="false">🔴 红石 · 延时</button>
+        <button class="chip" type="button" data-mod="glow" aria-pressed="false">✨ 萤石 · 强化</button>
+        <button class="chip" type="button" data-mod="gun" aria-pressed="false">💣 火药 · 喷溅</button>
+        <button class="chip" type="button" data-mod="dragon" aria-pressed="false">🐉 龙息 · 滞留</button>
+        <button class="chip" type="button" data-mod="fse" aria-pressed="false">🕷️ 发酵蜘蛛眼 · 腐化</button>
+      </div>
+
+      <div class="out">
+        <div class="oname"><span class="ic" id="oIc">🧪</span><span id="oName">—</span><span class="tag" id="oTier" hidden></span></div>
+        <div class="kv"><span>效果</span><b id="oEffect">—</b></div>
+        <div class="kv"><span>等级</span><b id="oLevel">—</b></div>
+        <div class="kv"><span>时长</span><b id="oDur">—</b></div>
+        <div class="kv"><span>形态</span><b class="plain" id="oForm">—</b></div>
+        <div class="chain" id="oChain">—</div>
+        <div class="note" id="oNote" hidden></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制结果</button>
+        <button class="btn ghost sm" id="btnReset" type="button">清空变体</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">全部配方表（加在粗制的药水上）</h2>
+      <div class="tw">
+        <table class="tbl">
+          <thead><tr><th>材料</th><th>得到</th><th>基础</th><th>红石延时</th><th>萤石强化</th></tr></thead>
+          <tbody id="recBody"></tbody>
+        </table>
+      </div>
+      <div class="chain">「基础」列的时长是普通可饮用药水的时长；加火药变喷溅时长不变，再加龙息变滞留后效果时长约为原来的 1/4。</div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 使用说明：所有效果药水都要先做 <b>粗制的药水</b>（水瓶 + 下界疣）。把糖、闪烁的西瓜之类直接丢进水瓶只会得到
+        <b>平凡的药水</b>，没有效果；浓稠的药水（水瓶 + 萤石粉）和普通的药水都酿不出东西。
+        唯一的例外是 <b>虚弱</b>：发酵蜘蛛眼直接加在水瓶上（Java 版加在粗制的药水上无效）。
+        腐化只收录确认的几条：迅捷/跳跃 → 缓慢、治疗/中毒 → 伤害、夜视 → 隐身。
+        延长时间是原版固定值（3:00 → 8:00、1:30 → 4:00、0:45 → 1:30），不是统一翻倍；标「—」的项目原版没有该变体或时长说法不一。
+        <br>数据基于 Java 版 1.20+，基岩版可能有差异。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+/* 效果表：dur 普通 / long 红石延时 / strongDur 萤石 II 级时长（-1 表示不确定）
+   单位秒；instant 为瞬间效果 */
+var E={
+  healing:{n:'治疗',ic:'❤️',instant:true},
+  harming:{n:'伤害',ic:'💥',instant:true},
+  regeneration:{n:'再生',ic:'💗',dur:45,long:90,strong:true,strongDur:-1},
+  poison:{n:'中毒',ic:'☠️',dur:45,long:90,strong:true,strongDur:-1},
+  strength:{n:'力量',ic:'💪',dur:180,long:480,strong:true,strongDur:90},
+  swiftness:{n:'迅捷',ic:'💨',dur:180,long:480,strong:true,strongDur:90},
+  leaping:{n:'跳跃提升',ic:'🐰',dur:180,long:480,strong:true,strongDur:90},
+  fire:{n:'抗火',ic:'🔥',dur:180,long:480},
+  water:{n:'水肺',ic:'🐬',dur:180,long:480},
+  night:{n:'夜视',ic:'🌙',dur:180,long:480},
+  falling:{n:'缓降',ic:'🪶',dur:90,long:240},
+  slowness:{n:'缓慢',ic:'🐌',dur:90,long:240},
+  weakness:{n:'虚弱',ic:'🥀',dur:90,long:240},
+  invis:{n:'隐身',ic:'👻',dur:180,long:480},
+  turtle:{n:'海龟之力',ic:'🐢',dur:20,long:40,strong:true,strongDur:20}
+};
+
+var ING=[
+  {k:'melon',n:'闪烁的西瓜',e:'healing'},
+  {k:'ghast',n:'恶魂之泪',e:'regeneration'},
+  {k:'blaze',n:'烈焰粉',e:'strength'},
+  {k:'sugar',n:'糖',e:'swiftness'},
+  {k:'magma',n:'岩浆膏',e:'fire'},
+  {k:'puffer',n:'河豚',e:'water'},
+  {k:'carrot',n:'金胡萝卜',e:'night'},
+  {k:'rabbit',n:'兔子脚',e:'leaping'},
+  {k:'phantom',n:'幻翼膜',e:'falling'},
+  {k:'spider',n:'蜘蛛眼',e:'poison'},
+  {k:'scute',n:'海龟壳',e:'turtle'},
+  {k:'fse',n:'发酵蜘蛛眼',e:null}
+];
+var CORRUPT={swiftness:'slowness',leaping:'slowness',healing:'harming',poison:'harming',night:'invis'};
+
+var st={red:false,glow:false,gun:false,dragon:false,fse:false};
+
+function fmtDur(s){
+  if(s==null) return '—';
+  if(s<0) return '—';
+  var m=Math.floor(s/60),r=s%60;
+  return m+':'+(r<10?'0':'')+r;
+}
+function ingByKey(k){
+  for(var i=0;i<ING.length;i++) if(ING[i].k===k) return ING[i];
+  return ING[0];
+}
+function setChips(){
+  var els=$('chips').children;
+  for(var i=0;i<els.length;i++){
+    var el=els[i];
+    el.setAttribute('aria-pressed', st[el.getAttribute('data-mod')]?'true':'false');
+  }
+}
+
+function render(){
+  var base=$('baseSel').value, ing=ingByKey($('ingSel').value);
+  var notes=[], ekey=null, ok=true, chain=[];
+  var baseName={water:'水瓶',awkward:'粗制的药水',thick:'浓稠的药水',mundane:'平凡的药水'}[base];
+  chain.push(baseName);
+
+  /* 1. 基础药水 + 材料 */
+  if(ing.k==='fse'){
+    if(base==='water'){ ekey='weakness'; chain.push('发酵蜘蛛眼'); }
+    else if(base==='awkward'){
+      ok=false;
+      notes.push('Java 版里发酵蜘蛛眼不能加在粗制的药水上（只有水瓶能直接酿出虚弱）。基岩版才可以加在粗制/浓稠/平凡药水上。');
+    }else{
+      ok=false;
+      notes.push('这种基础药水加发酵蜘蛛眼在 Java 版没有对应配方。想酿虚弱，请直接用「水瓶 + 发酵蜘蛛眼」。');
+    }
+  }else if(base==='awkward'){
+    ekey=ing.e; chain.push(ing.n);
+  }else if(base==='water'){
+    ok=false;
+    notes.push('水瓶直接加'+ing.n+'只会得到「平凡的药水」，没有效果。先加下界疣做成粗制的药水，再加材料才有用。');
+  }else if(base==='thick'){
+    ok=false;
+    notes.push('浓稠的药水（水瓶 + 萤石粉）是死路，加任何材料都不会产生效果。');
+  }else{
+    ok=false;
+    notes.push('平凡的药水没有效果，也不能再酿成有效果的药水。');
+  }
+
+  if(!ok){
+    $('oIc').textContent='🫙';
+    $('oName').textContent = base==='awkward' ? '没有反应' : (base==='thick' ? '浓稠的药水' : '平凡的药水');
+    $('oTier').hidden=true;
+    $('oEffect').textContent='无';
+    $('oLevel').textContent='—';
+    $('oDur').textContent='—';
+    $('oForm').textContent='可饮用药水';
+    $('oChain').textContent=chain.join(' → ');
+    $('oNote').hidden=false;$('oNote').className='note bad';
+    $('oNote').textContent=notes.join(' ');
+    return;
+  }
+
+  /* 2. 腐化 */
+  var wasCorrupt=false;
+  if(st.fse){
+    if(CORRUPT[ekey]){ ekey=CORRUPT[ekey]; wasCorrupt=true; chain.push('发酵蜘蛛眼'); }
+    else notes.push('这种药水没有已确认的腐化产物，这里保持原效果（腐化只收录迅捷/跳跃→缓慢、治疗/中毒→伤害、夜视→隐身）。');
+  }
+
+  var eff=E[ekey], lv=1;
+
+  /* 3. 延时 / 强化 */
+  var dur = eff.instant ? 0 : eff.dur;
+  var strongOn=false;
+  if(st.glow){
+    if(eff.strong){
+      strongOn=true; lv=2;
+      dur = eff.instant ? 0 : eff.strongDur;
+      chain.push('萤石粉');
+      if(dur===-1){ dur=null; notes.push('II 级时长各版本说法不一，这里不写具体数值，以游戏内为准。'); }
+    }else{
+      chain.push('萤石粉');
+      notes.push('原版没有'+eff.n+'的 II 级药水，萤石不产生强化效果。');
+    }
+  }else if(st.red){
+    chain.push('红石粉');
+    if(eff.instant){
+      notes.push('瞬间效果没有时长，红石对它无效。');
+    }else{
+      dur=eff.long;
+    }
+  }
+  if(strongOn && ekey==='turtle') notes.push('海龟之力 II 级（抗性 IV + 缓慢 IV）与 I 级同样是 0:20。');
+
+  /* 4. 喷溅 / 滞留 */
+  var form='可饮用', splash=false;
+  if(st.gun){ splash=true; form='喷溅'; chain.push('火药'); }
+  if(st.dragon){
+    if(splash){
+      form='滞留'; chain.push('龙息');
+      if(dur!=null && !eff.instant){
+        dur=Math.floor(dur/4);
+        notes.push('滞留药水落地形成药水云，对实体生效的时长约为普通药水的 1/4。');
+      }
+    }else{
+      notes.push('龙息只能加在喷溅药水上，要先加火药。');
+    }
+  }
+  if(st.fse && !wasCorrupt) notes.push('腐化标记没有生效，原因见上。');
+
+  /* 5. 输出 */
+  var label=eff.n+(lv>1?' II':'');
+  $('oIc').textContent=eff.ic;
+  $('oName').textContent=eff.n+'药水'+(lv>1?' II':'');
+  var tag=$('oTier');
+  tag.hidden = !(form!=='可饮用' || wasCorrupt);
+  tag.textContent = form!=='可饮用' ? form : '腐化';
+  $('oEffect').textContent=label;
+  $('oLevel').textContent=eff.instant?'瞬间':('Lv'+lv);
+  $('oDur').textContent=eff.instant?'立即生效（无时长）':(dur==null?'—（以游戏内为准）':fmtDur(dur));
+  $('oForm').textContent=form+'药水';
+  $('oChain').textContent=chain.join(' → ');
+
+  var note=$('oNote');
+  if(notes.length){
+    note.hidden=false;
+    note.className='note';
+    note.textContent=notes.join(' ');
+  }else{
+    note.hidden=true;note.textContent='';
+  }
+}
+
+function buildIng(){
+  $('ingSel').innerHTML=ING.map(function(o){
+    return '<option value="'+o.k+'">'+o.n+(o.e?'':'（直接加在水瓶上）')+'</option>';
+  }).join('');
+  var saved=HS.store.get('hs-mc-brew-ing','sugar');
+  $('ingSel').value=ingByKey(saved).k;
+  var sb=HS.store.get('hs-mc-brew-base','awkward');
+  if(['water','awkward','thick','mundane'].indexOf(sb)>-1) $('baseSel').value=sb;
+}
+
+function buildTable(){
+  var out=ING.map(function(o){
+    if(!o.e){
+      return '<tr><td>发酵蜘蛛眼</td><td>虚弱</td><td class="n">1:30</td><td class="n">4:00</td><td class="n">—</td></tr>';
+    }
+    var e=E[o.e];
+    var strong = !e.strong ? '—' : (e.strongDur===-1?'—':(e.instant?'立即':fmtDur(e.strongDur)));
+    return '<tr><td>'+o.n+'</td><td>'+e.n+'</td><td class="n">'+(e.instant?'立即':fmtDur(e.dur))
+      +'</td><td class="n">'+(e.instant?'立即':fmtDur(e.long))+'</td><td class="n">'+strong+'</td></tr>';
+  });
+  $('recBody').innerHTML=out.join('');
+}
+
+$('chips').addEventListener('click',function(e){
+  var b=e.target.closest('[data-mod]');
+  if(!b) return;
+  var k=b.getAttribute('data-mod');
+  st[k]=!st[k];
+  if(k==='red' && st[k]) st.glow=false;
+  if(k==='glow' && st[k]) st.red=false;
+  if(k==='dragon' && st[k] && !st.gun){ st.gun=true; }
+  if(k==='gun' && !st[k]) st.dragon=false;
+  setChips();
+  render();
+  try{HS.store.setJson('hs-mc-brew-mods',st);}catch(err){}
+});
+
+$('baseSel').addEventListener('change',function(){
+  try{HS.store.set('hs-mc-brew-base',this.value);}catch(e){}
+  render();
+});
+$('ingSel').addEventListener('change',function(){
+  try{HS.store.set('hs-mc-brew-ing',this.value);}catch(e){}
+  render();
+});
+$('btnReset').addEventListener('click',function(){
+  st={red:false,glow:false,gun:false,dragon:false,fse:false};
+  setChips();render();
+  try{HS.store.del('hs-mc-brew-mods');}catch(e){}
+});
+$('btnCopy').addEventListener('click',function(){
+  var t=$('oName').textContent;
+  if(!t||t==='—'){toast('先选一组配方');return;}
+  var txt='《我的世界》' + t + '：' + $('oEffect').textContent + '，' + $('oDur').textContent
+    + '，' + $('oForm').textContent + '（' + $('oChain').textContent + '）';
+  HS.copy(txt);
+  toast('已复制配方');
+});
+
+buildIng();
+buildTable();
+try{
+  var m=HS.store.json('hs-mc-brew-mods',null);
+  if(m && typeof m==='object'){
+    st={red:!!m.red,glow:!!m.glow,gun:!!m.gun,dragon:!!m.dragon,fse:!!m.fse};
+    if(st.red&&st.glow) st.glow=false;
+  }
+}catch(e){}
+setChips();
+render();
+})();
+</script>
+</body>
+</html>

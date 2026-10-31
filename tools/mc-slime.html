@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 史莱姆区块查询 · 红石的小站</title>
+<meta name="description" content="按世界种子与区块坐标判断是不是史莱姆区块，附周围区块小地图">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🟩</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.verdict{
+  display:flex;align-items:center;gap:14px;margin-top:12px;padding:15px 17px;
+  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+}
+.verdict .mark{
+  flex:none;width:26px;height:26px;border-radius:5px;border:2px solid var(--bd2);
+  background:var(--bg3);
+}
+.verdict.yes .mark{background:var(--ac);border-color:var(--ac)}
+.verdict .txt{min-width:0}
+.verdict b{display:block;font-size:17px;font-weight:800}
+.verdict small{display:block;margin-top:3px;font-size:12px;color:var(--muted);word-break:break-all}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:92px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;word-break:break-all}
+.mapbox{margin-top:12px;overflow:auto;padding-bottom:4px}
+#map{display:block;margin:0 auto;max-width:100%;height:auto;border-radius:var(--r);border:1px solid var(--bd)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.err{color:var(--dgr);font-size:12.5px;margin-top:6px}
+@media(max-width:640px){.verdict{padding:12px 13px;gap:10px}.kv span{width:76px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div>
+      <h1>🟩 MC 史莱姆区块查询</h1>
+      <p class="sub">按种子与区块算 Java 版史莱姆区块 · 附周围 ±4 区块小地图</p>
+    </div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">查一个区块</h2>
+      <div class="grid2">
+        <div class="fld">
+          <label for="seed">世界种子（数字，或直接粘种子文本）</label>
+          <input id="seed" autocomplete="off" value="12345" spellcheck="false">
+        </div>
+        <div class="fld">
+          <label for="mode">坐标填的是</label>
+          <select id="mode">
+            <option value="chunk">区块坐标（1 区块 = 16 格）</option>
+            <option value="block">方块坐标（会自动除以 16）</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label for="cx" id="cxLabel">区块 X</label><input id="cx" class="mono" inputmode="numeric" autocomplete="off" value="0"></div>
+        <div class="fld"><label for="cz" id="czLabel">区块 Z</label><input id="cz" class="mono" inputmode="numeric" autocomplete="off" value="0"></div>
+      </div>
+
+      <div class="verdict" id="verdict">
+        <span class="mark" id="vMark" aria-hidden="true"></span>
+        <span class="txt"><b id="vTitle">—</b><small id="vSub">—</small></span>
+      </div>
+
+      <div class="kv"><span>换算</span><b id="kBox">—</b></div>
+      <div class="kv"><span>种子</span><b id="kSeed">—</b></div>
+      <div class="kv"><span>最近的</span><b id="kNear">—</b></div>
+      <div class="err" id="err" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">周围 ±4 区块</h2>
+      <div class="mapbox"><canvas id="map" width="360" height="360" role="img" aria-label="周围区块的史莱姆分布"></canvas></div>
+      <div class="legend">
+        <span><i id="lgA"></i>史莱姆区块</span>
+        <span><i id="lgB"></i>普通区块</span>
+        <span><i id="lgC"></i>你查的那格（描边）</span>
+      </div>
+      <div class="tip">💡 <strong>使用说明</strong>：这是<b>Java 版</b>的史莱姆区块算法（1.18 之后没变）：种子、区块坐标代进公式得到该区块的专属随机数，取模 10 等于 0 就是史莱姆区块，比例约 1/10。
+        区块坐标 = 方块坐标 ÷ 16 向下取整（负数也是向下，例如 -1 格属于区块 -1）。
+        史莱姆只在 Y=40 以下的史莱姆区块里刷，1.18 之后还要看光照与空间。基岩版用的是另一套算法，这个工具不适用。</div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>(function(){
+'use strict';
+function $(id){ return document.getElementById(id); }
+
+/* ===== Java 版随机数（java.util.Random，48 位 LCG）===== */
+var MASK48 = (1n << 48n) - 1n, MUL = 0x5DEECE66Dn, INC = 0xBn;
+function JRandom(seedBig){
+  var st = (BigInt.asIntN(64, seedBig) ^ MUL) & MASK48;
+  return {
+    next: function (bits){
+      st = (st * MUL + INC) & MASK48;
+      return Number(BigInt.asIntN(32, st >> BigInt(48 - bits)));
+    },
+    nextIntBound: function (bound){
+      var bits = this.next(31), val = bits % bound;
+      while (bits - val + (bound - 1) < 0){ bits = this.next(31); val = bits % bound; }
+      return val;
+    }
+  };
+}
+/* 种子文本 → Java String.hashCode()（int32 溢出），数字原样用 */
+function parseSeed(text){
+  var s = String(text).trim();
+  if (!s) return null;
+  if (/^-?\d+$/.test(s)) return BigInt(s);
+  var h = 0;
+  for (var i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
+  return BigInt(h);
+}
+var i32 = function (n){ return n | 0; };
+
+/* 核心：给定种子与区块坐标，返回是否史莱姆区块 */
+function isSlime(seedBig, cx, cz){
+  /* 对应 Java：seed + (long)(x*x*4987142) + (long)(x*5947611)
+            + (long)(z*z)*4392871L + (long)(z*389711) ^ 0x3AD8025FL
+     前四项在 Java 里是 int 乘法（会溢出回绕），所以这里用 Math.imul 保证 32 位语义。 */
+  var t1 = BigInt(i32(Math.imul(i32(Math.imul(cx, cx)), 4987142)));
+  var t2 = BigInt(i32(Math.imul(cx, 5947611)));
+  var t3 = BigInt(i32(Math.imul(cz, cz))) * 4392871n;
+  var t4 = BigInt(i32(Math.imul(cz, 389711)));
+  var mixed = BigInt.asIntN(64, BigInt.asIntN(64, seedBig + t1 + t2 + t3 + t4) ^ 0x3AD8025Fn);
+  return JRandom(mixed).nextIntBound(10) === 0;
+}
+
+/* ===== 状态与渲染 ===== */
+var cur = {seed: 12345n, cx: 0, cz: 0};
+var C = {};
+
+function parseXY(el){
+  var v = String($(el).value).trim();
+  if (!/^-?\d+$/.test(v)) return null;
+  return parseInt(v, 10);
+}
+function toChunk(v, mode){ return mode === 'block' ? Math.floor(v / 16) : v; }
+
+function update(){
+  var seed = parseSeed($('seed').value);
+  var x = parseXY('cx'), z = parseXY('cz');
+  var mode = $('mode').value;
+  var err = $('err');
+  if (seed === null){
+    err.hidden = false; err.textContent = '种子不能为空';
+    $('vTitle').textContent = '—'; $('vSub').textContent = '—';
+    return;
+  }
+  if (x === null || z === null){
+    err.hidden = false; err.textContent = '坐标要填整数（区块坐标可直接是负数）';
+    $('vTitle').textContent = '—'; $('vSub').textContent = '—';
+    return;
+  }
+  if (Math.abs(x) > 1e9 || Math.abs(z) > 1e9){
+    err.hidden = false; err.textContent = '坐标太大了，控制在 ±10 亿以内';
+    return;
+  }
+  err.hidden = true;
+
+  var cx = toChunk(x, mode), cz = toChunk(z, mode);
+  cur = {seed: seed, cx: cx, cz: cz};
+  var slime = isSlime(seed, cx, cz);
+
+  $('verdict').className = 'verdict' + (slime ? ' yes' : '');
+  $('vTitle').textContent = slime ? '是史莱姆区块' : '不是史莱姆区块';
+  $('vSub').textContent = '区块 (' + cx + ', ' + cz + ')' + (mode === 'block'
+    ? '　方块范围 X ' + (cx * 16) + '~' + (cx * 16 + 15) + '，Z ' + (cz * 16) + '~' + (cz * 16 + 15)
+    : '　方块范围 X ' + (cx * 16) + '~' + (cx * 16 + 15) + '，Z ' + (cz * 16) + '~' + (cz * 16 + 15));
+
+  $('kBox').textContent = '区块 ↔ 方块：1 区块 16 格；区块 (0,0) = 方块 X 0~15 / Z 0~15';
+  $('kSeed').textContent = seed.toString() + (String($('seed').value).trim() !== seed.toString() ? '（由文本换算）' : '');
+
+  var near = nearestSlime(seed, cx, cz);
+  $('kNear').textContent = near
+    ? '区块 (' + near.cx + ', ' + near.cz + ')，直线 ' + near.dist + ' 区块'
+    : '周围 64 区块内没找到';
+
+  drawMap();
+}
+
+/* 由近到远找最近的一个（环形扫描，最多 64 格远） */
+function nearestSlime(seed, cx, cz){
+  if (isSlime(seed, cx, cz)) return {cx: cx, cz: cz, dist: 0};
+  for (var r = 1; r <= 64; r++){
+    var best = null;
+    for (var dx = -r; dx <= r; dx++){
+      for (var dz = -r; dz <= r; dz++){
+        if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+        if (!isSlime(seed, cx + dx, cz + dz)) continue;
+        var d = Math.sqrt(dx * dx + dz * dz);
+        if (!best || d < best.dist) best = {cx: cx + dx, cz: cz + dz, dist: Math.round(d)};
+      }
+    }
+    if (best) return best;
+  }
+  return null;
+}
+
+/* ===== 小地图 ===== */
+function cssVar(name, fallback){
+  var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+function drawMap(){
+  var cvs = $('map'), ctx = cvs.getContext('2d');
+  var N = 9, cell = 40, pad = 22;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  var W = N * cell + pad * 2, H = W;
+  cvs.style.width = W + 'px'; cvs.style.height = H + 'px';
+  cvs.width = Math.round(W * dpr); cvs.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  var bg = cssVar('--bg', '#fff'), line = cssVar('--bd', '#ccc');
+  var ac = cssVar('--ac', '#3f9b52'), faint = cssVar('--faint', '#888');
+  var normal = cssVar('--bg3', '#eee'), text = cssVar('--text', '#111');
+
+  C.slime = ac; C.normal = normal; C.line = line; C.text = text;
+  $('lgA').style.background = ac;
+  $('lgB').style.background = normal;
+  $('lgC').style.border = '2px solid ' + text;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.font = '10px ui-monospace,monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  var half = (N - 1) / 2;
+  for (var i = 0; i < N; i++){
+    for (var j = 0; j < N; j++){
+      var cx = cur.cx + (i - half), cz = cur.cz + (j - half);
+      var slime = isSlime(cur.seed, cx, cz);
+      var x = pad + i * cell, y = pad + j * cell;
+      ctx.fillStyle = slime ? ac : normal;
+      ctx.globalAlpha = slime ? 0.85 : 1;
+      ctx.fillRect(x, y, cell - 2, cell - 2);
+      ctx.globalAlpha = 1;
+      if (i === half && j === half){
+        ctx.strokeStyle = text; ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1, y + 1, cell - 4, cell - 4);
+      }
+      ctx.fillStyle = slime ? '#fff' : faint;
+      ctx.fillText(String(cx) + ',' + String(cz), x + (cell - 2) / 2, y + (cell - 2) / 2);
+    }
+  }
+  ctx.strokeStyle = line; ctx.lineWidth = 1;
+  ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+}
+
+/* ===== 事件 ===== */
+['seed', 'cx', 'cz', 'mode'].forEach(function (id){
+  $(id).addEventListener('input', update);
+  $(id).addEventListener('change', update);
+});
+$('mode').addEventListener('change', function (){
+  var isBlock = $('mode').value === 'block';
+  $('cxLabel').textContent = isBlock ? '方块 X' : '区块 X';
+  $('czLabel').textContent = isBlock ? '方块 Z' : '区块 Z';
+  update();
+});
+window.addEventListener('resize', function (){ drawMap(); });
+if (window.matchMedia){
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  if (mq.addEventListener) mq.addEventListener('change', drawMap);
+}
+document.addEventListener('click', function (e){
+  if (e.target && e.target.closest && e.target.closest('[data-act="theme"]')) setTimeout(drawMap, 60);
+});
+
+update();
+})();</script>
+</body>
+</html>

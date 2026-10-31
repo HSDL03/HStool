@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>附魔台等级与书架 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪄</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:2px 0 12px}
+.big{
+  padding:12px 13px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);min-width:0;
+}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.05rem,3.4vw,1.45rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:5px;font-size:11.5px;color:var(--muted);line-height:1.5}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:96px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{padding:6px 9px;text-align:right;border-bottom:1px dashed var(--bd)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.tbl td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl tr.hi td{color:var(--ac);font-weight:800}
+.msg{font-size:12.5px;margin-top:8px;color:var(--warn);line-height:1.6}
+.msg.bad{color:var(--dgr)}
+@media(max-width:640px){
+  .res{grid-template-columns:1fr}
+  .kv span{width:74px}
+  .tbl{font-size:12px}
+  .tbl th,.tbl td{padding:5px 5px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🪄 附魔台等级与书架</h1><p class="sub">15 个书架封顶 · 三档附魔到底能刷到几级</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">书架数量 → 三档区间</h2>
+      <div class="fld">
+        <label for="shelfIn">环绕附魔台的书架数量（0 ~ 15）</label>
+        <input id="shelfIn" class="mono" inputmode="numeric" autocomplete="off" value="15">
+      </div>
+      <div class="res">
+        <div class="big"><em>上档 · 1 级 / 1 青金石</em><b id="r0">—</b><small id="s0">—</small></div>
+        <div class="big"><em>中档 · 2 级 / 2 青金石</em><b id="r1">—</b><small id="s1">—</small></div>
+        <div class="big"><em>下档 · 3 级 / 3 青金石</em><b id="r2">—</b><small id="s2">—</small></div>
+      </div>
+      <div class="kv"><span>说明</span><b id="rNote">—</b></div>
+      <div class="msg" id="shelfMsg" hidden></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制结果</button>
+        <button class="btn ghost sm" id="btn0" type="button">0 书架</button>
+        <button class="btn ghost sm" id="btn15" type="button">15 书架</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">性价比曲线：书架数 → 各档最高等级</h2>
+      <table class="tbl">
+        <thead><tr><th>书架</th><th>上档</th><th>中档</th><th>下档</th></tr></thead>
+        <tbody id="curveBody"></tbody>
+      </table>
+      <div class="kv" style="margin-top:8px"><span>要点</span><b>只有 15 个书架时，下档上限才是 30（8–30 随机）</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">30 级要多少经验</h2>
+      <div class="kv"><span>0 → 30 级</span><b id="xp30">1,395 点</b></div>
+      <div class="kv"><span>下档门槛</span><b id="xpBot">—</b></div>
+      <div class="kv"><span>附魔消耗</span><b>扣 3 级：30 级附魔后剩 27 级</b></div>
+      <div class="tip">
+        💡 使用说明：书架最多生效 15 个，多放不叠加；书架与附魔台之间要留 1 格空气，中间隔方块就断开。
+        每档等级 = <code>随机(1~8) + ⌊书架/2⌋ + 随机(0~书架)</code>，再按 <code>上=÷3</code>、<code>中=×2/3+1</code>、<code>下=原值</code> 折算，
+        低档最低为 1/2/3 级。表里是「能刷到的上限」，不是每次都给；15 书架刷 30 级要反复换工具重roll。
+        经验曲线：<code>0–16 级</code> 每级 <code>2L+7</code>、<code>17–31 级</code> 每级 <code>5L−38</code>、<code>32 级起</code> 每级 <code>9L−158</code>。
+        <br>数据基于 Java 版 1.20+，基岩版可能有差异。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+var CAP=15;
+
+/* 三档：base 区间 → 上/中/下，与原版 calculateRequiredExperienceLevel 一致 */
+function tiers(b){
+  var baseMin=1+Math.floor(b/2);
+  var baseMax=8+Math.floor(b/2)+b;
+  if(baseMax>30) baseMax=30;
+  var topMin=Math.max(Math.floor(baseMin/3),1), topMax=Math.floor(baseMax/3);
+  var midMin=Math.max(Math.floor(baseMin*2/3)+1,2), midMax=Math.floor(baseMax*2/3)+1;
+  var botMin=Math.max(baseMin,3), botMax=Math.min(baseMax,30);
+  return [
+    {min:topMin,max:topMax,need:1,lapis:1},
+    {min:midMin,max:midMax,need:2,lapis:2},
+    {min:botMin,max:botMax,need:3,lapis:3}
+  ];
+}
+/* Java 经验曲线：到达 lv 级的累计点数 */
+function totalXp(lv){
+  if(lv<=16) return lv*lv+6*lv;
+  if(lv<=31) return Math.floor(2.5*lv*lv-40.5*lv+360);
+  return Math.floor(4.5*lv*lv-162.5*lv+2220);
+}
+function fmt(n){return n.toLocaleString('en-US');}
+
+function readShelf(){
+  var v=String($('shelfIn').value).trim().replace(/[, _，]/g,'');
+  if(!v) return {err:'先填一个书架数量'};
+  if(!/^\d+$/.test(v)) return {err:'只能填非负整数'};
+  var n=Number(v);
+  if(n>CAP) return {val:CAP,over:n};
+  return {val:n};
+}
+
+function calc(){
+  var r=readShelf();
+  var msg=$('shelfMsg');
+  if(r.err){
+    msg.hidden=false;msg.className='msg bad';msg.textContent='⚠ '+r.err;
+    ['r0','r1','r2'].forEach(function(id){$(id).textContent='—';});
+    ['s0','s1','s2'].forEach(function(id){$(id).textContent='—';});
+    $('rNote').textContent='—';$('xpBot').textContent='—';
+    return;
+  }
+  var b=r.val;
+  if(r.over!=null){
+    msg.hidden=false;msg.className='msg';
+    msg.textContent='⚠ 放了 '+r.over+' 个书架，但附魔台最多只认 15 个，多出的无效，这里按 15 计算。';
+  }else if(b<CAP){
+    msg.hidden=false;msg.className='msg';
+    msg.textContent='还差 '+(CAP-b)+' 个书架到封顶，下档上限会到 '+tiers(CAP)[2].max+'。';
+  }else{
+    msg.hidden=true;msg.textContent='';
+  }
+  var t=tiers(b);
+  t.forEach(function(o,i){
+    $('r'+i).textContent=o.min+' – '+o.max;
+    $('s'+i).textContent='要 Lv'+o.need+' 以上 · '+o.lapis+' 青金石';
+  });
+  var bot=t[2];
+  $('rNote').textContent='书架 '+b+' 个：下档落在 Lv'+bot.min+' ~ Lv'+bot.max+'，'
+    + (bot.max>=30?'能摸到 30':'最高只到 '+bot.max);
+  $('xpBot').textContent='Lv'+bot.max+' 需 '+fmt(totalXp(bot.max))+' 点（从 0 级攒起）';
+  try{HS.store.set('hs-mc-enchant-shelf',String(b));}catch(e){}
+}
+
+function buildCurve(){
+  var out='';
+  for(var b=0;b<=CAP;b++){
+    var t=tiers(b);
+    out+='<tr'+(b===CAP?' class="hi"':'')+'><td>'+b+'</td><td>'+t[0].max+'</td><td>'+t[1].max+'</td><td>'+t[2].max+'</td></tr>';
+  }
+  $('curveBody').innerHTML=out;
+}
+
+$('btnCopy').addEventListener('click',function(){
+  var r=readShelf();
+  if(r.err){toast('先填一个有效书架数');return;}
+  var b=r.val,t=tiers(b);
+  var txt='书架 '+b+' 个：上档 Lv'+t[0].min+'-'+t[0].max+' / 中档 Lv'+t[1].min+'-'+t[1].max
+    +' / 下档 Lv'+t[2].min+'-'+t[2].max+'（Java 1.20+）';
+  HS.copy(txt);
+  toast('已复制三档区间');
+});
+$('btn0').addEventListener('click',function(){$('shelfIn').value='0';calc();});
+$('btn15').addEventListener('click',function(){$('shelfIn').value='15';calc();});
+
+var saved=HS.store.get('hs-mc-enchant-shelf',null);
+if(saved!=null && /^\d+$/.test(saved)) $('shelfIn').value=saved;
+$('shelfIn').addEventListener('input',calc);
+
+buildCurve();
+$('xp30').textContent=fmt(totalXp(30))+' 点';
+calc();
+})();
+</script>
+</body>
+</html>

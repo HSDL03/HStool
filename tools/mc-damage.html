@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🛡 伤害与护甲计算 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:2px}
+.big{
+  padding:13px 15px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);min-width:0;
+}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.1rem,3.4vw,1.6rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:88px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.verdict{
+  margin-top:10px;padding:10px 12px;font-size:13.5px;line-height:1.7;
+  background:var(--acs);border:2px solid var(--ac);border-radius:var(--r);word-break:break-word;
+}
+.verdict b{font-family:var(--mono);color:var(--ac);font-size:15px}
+.bar{height:10px;margin-top:10px;background:var(--bg3);border:2px solid var(--bd2);border-radius:var(--r);overflow:hidden;display:flex}
+.bar i{display:block;height:100%;background:var(--ac2)}
+.bar i.hp{background:var(--ac)}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+.chk input{width:16px;height:16px;accent-color:var(--ac);flex:none}
+.err{color:var(--dgr);font-size:12.5px;margin-top:6px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{padding:7px 9px;text-align:left;border-bottom:1px dashed var(--bd)}
+.tbl th{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.tbl td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:640px){
+  .res{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .kv span{width:74px}
+  .kv b{font-size:12.5px}
+  .tbl{min-width:420px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>🛡 伤害与护甲计算</h1><p class="sub">挨这一下会掉几颗心 · Java 1.9+ 护甲公式 + 保护附魔</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">伤害来源</h2>
+      <div class="fld"><label for="src">来源</label><select id="src">
+        <option value="fall">摔落（每格 1 点，前 3 格免费）</option>
+        <option value="melee">近战武器</option>
+        <option value="lava">岩浆（每次接触 4 点）</option>
+        <option value="cactus">仙人掌（每次 1 点）</option>
+        <option value="explosion">爆炸（自填原始伤害）</option>
+        <option value="custom">自定义（自填原始伤害）</option>
+      </select></div>
+      <div class="grid2">
+        <div class="fld" id="paramWrap"><label for="param" id="paramLb">下落格数</label><input id="param" class="mono" inputmode="decimal" autocomplete="off" value="12"></div>
+        <div class="fld" id="weapWrap" hidden><label for="weap">武器</label><select id="weap"></select></div>
+      </div>
+      <div class="kv"><span>原始伤害</span><b id="rRaw">—</b></div>
+      <div class="err" id="srcErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">护甲</h2>
+      <div class="grid2">
+        <div class="fld"><label for="pH">头盔</label><select id="pH" class="p"></select></div>
+        <div class="fld"><label for="pC">胸甲</label><select id="pC" class="p"></select></div>
+        <div class="fld"><label for="pL">护腿</label><select id="pL" class="p"></select></div>
+        <div class="fld"><label for="pB">靴子</label><select id="pB" class="p"></select></div>
+      </div>
+      <div class="kv"><span>护甲值</span><b id="rArmor">—</b></div>
+      <div class="kv"><span>韧性</span><b id="rTough">—</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">保护类附魔</h2>
+      <div class="grid2">
+        <div class="fld"><label for="epT">种类</label><select id="epT">
+          <option value="0">无</option>
+          <option value="1">保护（1 点 EPF/级）</option>
+          <option value="2">火焰保护（2 点 EPF/级）</option>
+          <option value="2b">爆炸保护（2 点 EPF/级）</option>
+          <option value="2c">弹射物保护（2 点 EPF/级）</option>
+        </select></div>
+        <div class="fld"><label for="epL">等级</label><select id="epL">
+          <option value="0">0</option><option value="1">I</option><option value="2">II</option>
+          <option value="3">III</option><option value="4">IV</option>
+        </select></div>
+        <div class="fld"><label for="epN">穿戴件数</label><select id="epN">
+          <option value="1">1 件</option><option value="2">2 件</option>
+          <option value="3">3 件</option><option value="4">4 件</option>
+        </select></div>
+      </div>
+      <div class="kv"><span>EPF</span><b id="rEpf">—</b></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">最终结果</h2>
+      <div class="res">
+        <div class="big"><em>实际伤害</em><b id="oFinal">—</b><small>点（2 点血 = 1 颗心）</small></div>
+        <div class="big"><em>掉血</em><b id="oHearts">—</b><small>颗心</small></div>
+        <div class="big"><em>剩余生命</em><b id="oLeft">—</b><small>点 / 20</small></div>
+      </div>
+      <div class="bar" id="oBar" aria-hidden="true"><i class="hp" id="oBarHp" style="width:100%"></i></div>
+      <div class="verdict" id="oVerdict">—</div>
+      <div class="kv"><span>护甲减免</span><b id="oArm">—</b></div>
+      <div class="kv"><span>附魔减免</span><b id="oProt">—</b></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制结论</button>
+        <button class="btn ghost sm" id="btnReset" type="button">恢复默认</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">护甲值速查</h2>
+      <div class="scroll"><table class="tbl">
+        <thead><tr><th>材质</th><th>头盔</th><th>胸甲</th><th>护腿</th><th>靴子</th><th>合计</th><th>韧性</th></tr></thead>
+        <tbody id="armBody"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 护甲减免（Java 1.9+）：<code>减免 = min(20, max(护甲/5, 护甲 − 伤害/(2 + 韧性/4)))</code>，
+        实际伤害 <code>= 原始 × (1 − 减免/25)</code>，所以护甲最多挡 80%。附魔在护甲之后结算：
+        <code>EPF</code> 普通保护每级 1 点、火焰/爆炸/弹射物保护每级 2 点，上限 20 点，每点减 4%。<br>
+        ⚠ 爆炸的真实伤害取决于爆心距离与方块遮挡，这里只能让你直接填原始伤害；岩浆只算单次接触的 4 点，
+        不叠加着火伤害；摔落伤害同样走护甲公式，但轻盈（摔落保护）是靴子专属附魔，没算进来。
+        暴击、无敌帧、抗性提升/抗性降低、伤害吸收也都没算。<br>
+        数据范围：Java 版 1.20+ 原版护甲值与公式；近战伤害只列剑与斧（锹/镐/三叉戟未列）。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+/* 各材质 [头盔, 胸甲, 护腿, 靴子] 护甲值；t = 单件韧性 */
+var ARM={
+  none:[0,0,0,0],leather:[1,3,2,1],golden:[2,5,3,1],chain:[2,5,4,1],
+  iron:[2,6,5,2],diamond:[3,8,6,3],netherite:[3,8,6,3],turtle:[2,0,0,0]
+};
+var ARM_NAME={none:'无',leather:'皮革',golden:'金',chain:'锁链',iron:'铁',diamond:'钻石',netherite:'下界合金',turtle:'海龟壳'};
+var TGH={diamond:2,netherite:3};
+
+/* 近战武器攻击伤害（Java 1.20 原版） */
+var WEAPONS=[
+  ['空手',1],['木剑',4],['石剑',5],['铁剑',6],['金剑',4],['钻石剑',7],['下界合金剑',8],
+  ['木斧',7],['石斧',9],['铁斧',9],['金斧',7],['钻石斧',9],['下界合金斧',10]
+];
+
+var SRC={
+  fall:{lb:'下落格数',val:'12'},
+  lava:{lb:'接触次数',val:'1'},
+  cactus:{lb:'接触次数',val:'1'},
+  explosion:{lb:'原始伤害（点）',val:'12'},
+  custom:{lb:'原始伤害（点）',val:'8'}
+};
+
+function fillPiece(sel,withTurtle){
+  var keys=['none','leather','golden','chain','iron','diamond','netherite'];
+  if(withTurtle) keys.push('turtle');
+  sel.innerHTML=keys.map(function(k){return '<option value="'+k+'">'+ARM_NAME[k]+'</option>';}).join('');
+}
+function buildUI(){
+  fillPiece($('pH'),true);
+  fillPiece($('pC'),false);
+  fillPiece($('pL'),false);
+  fillPiece($('pB'),false);
+  $('pH').value='iron';$('pC').value='iron';$('pL').value='iron';$('pB').value='iron';
+  $('weap').innerHTML=WEAPONS.map(function(w,i){
+    return '<option value="'+i+'">'+w[0]+'（'+w[1]+' 点）</option>';
+  }).join('');
+  $('weap').value='5';
+  $('armBody').innerHTML=['leather','golden','chain','iron','diamond','netherite'].map(function(k){
+    var a=ARM[k],sum=a[0]+a[1]+a[2]+a[3],t=TGH[k]||0;
+    return '<tr><td>'+ARM_NAME[k]+'</td><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+
+      '</td><td>'+a[3]+'</td><td>'+sum+'</td><td>'+(t?t*4+'（'+t+'×4）':'0')+'</td></tr>';
+  }).join('');
+}
+
+function syncSource(){
+  var s=$('src').value;
+  if(s==='melee'){
+    $('paramWrap').hidden=true;
+    $('weapWrap').hidden=false;
+  }else{
+    $('paramWrap').hidden=false;
+    $('weapWrap').hidden=true;
+    $('paramLb').textContent=SRC[s].lb;
+    if(!$('param').dataset.touched) $('param').value=SRC[s].val;
+  }
+  calc();
+}
+
+function rawDamage(){
+  var s=$('src').value;
+  if(s==='melee') return {val:WEAPONS[+$('weap').value][1],txt:WEAPONS[+$('weap').value][0]};
+  var v=String($('param').value).trim().replace(/[,，]/g,'');
+  if(v==='' ) return {err:'还没填数字'};
+  if(!/^\d+(\.\d+)?$/.test(v)) return {err:'只能填非负数字'};
+  var n=Number(v);
+  if(s==='fall'){
+    if(n>500) return {err:'格数太大了（≤ 500）'};
+    return {val:Math.max(0,Math.floor(n-3)),txt:'摔落 '+n+' 格'};
+  }
+  if(s==='lava'){
+    if(n>100) return {err:'次数太大（≤ 100）'};
+    return {val:4*n,txt:'岩浆 '+n+' 次'};
+  }
+  if(s==='cactus'){
+    if(n>100) return {err:'次数太大（≤ 100）'};
+    return {val:n,txt:'仙人掌 '+n+' 次'};
+  }
+  if(n>1000) return {err:'伤害太大（≤ 1000）'};
+  return {val:n,txt:s==='explosion'?'爆炸':'自定义'};
+}
+
+function armorTotal(){
+  var slots=['pH','pC','pL','pB'],a=0,t=0;
+  slots.forEach(function(id,i){
+    var k=$(id).value;
+    a+=ARM[k][i];
+    t+=(TGH[k]||0);
+  });
+  return {a:a,t:t};
+}
+
+function epfTotal(){
+  var v=$('epT').value;
+  if(v==='0'||+$('epL').value===0) return 0;
+  var per=v==='1'?1:2;
+  return per*$('epL').value*$('epN').value;
+}
+
+function calc(){
+  var raw=rawDamage();
+  var A=armorTotal(), epf=epfTotal();
+  $('rArmor').textContent=A.a+' 点'+(A.a>=20?'（满）':'');
+  $('rTough').textContent=A.t+' 点';
+  $('rEpf').textContent=Math.min(20,epf)+' 点'+(epf>20?'（原始 '+epf+'，已封顶）':'');
+
+  if(raw.err){
+    $('srcErr').hidden=false;$('srcErr').textContent='⚠ '+raw.err;
+    $('rRaw').textContent='—';
+    ['oFinal','oHearts','oLeft','oArm','oProt'].forEach(function(id){$(id).textContent='—';});
+    $('oVerdict').textContent='—';
+    return;
+  }
+  $('srcErr').hidden=true;$('srcErr').textContent='';
+  var dmg=raw.val;
+  $('rRaw').textContent=dmg+' 点'+(raw.txt?'（'+raw.txt+'）':'');
+
+  var red=Math.min(20,Math.max(A.a/5,A.a-dmg/(2+A.t/4)));
+  if(dmg<=0) red=0;
+  var afterArmor=dmg*(1-red/25);
+  var afterProt=afterArmor*(1-Math.min(20,epf)/25);
+  var left=Math.max(0,20-afterProt);
+
+  $('oFinal').textContent=afterProt.toFixed(2);
+  $('oHearts').textContent=(afterProt/2).toFixed(2);
+  $('oLeft').textContent=left.toFixed(2);
+  $('oArm').textContent=(dmg*red/25).toFixed(2)+' 点（'+(red/25*100).toFixed(1)+'%）→ 剩 '+afterArmor.toFixed(2);
+  $('oProt').textContent=(afterArmor-afterProt).toFixed(2)+' 点（'+(Math.min(20,epf)/25*100).toFixed(1)+'%）';
+  $('oBarHp').style.width=(left/20*100).toFixed(1)+'%';
+
+  if(dmg<=0){
+    $('oVerdict').innerHTML='原始伤害 <b>0</b> 点 —— 摔落 3 格以内不掉血。';
+    return;
+  }
+  var armName=[$('pH').value,$('pC').value,$('pL').value,$('pB').value];
+  var full=armName.every(function(k){return k===armName[0];});
+  var setName=full?(ARM_NAME[armName[0]]+'套'):(A.a===0?'裸装':'混搭护甲');
+  var tail=afterProt>=20?' 直接倒下。':' 还剩 '+left.toFixed(2)+' 点血。';
+  $('oVerdict').innerHTML=raw.txt+'（原始 <b>'+dmg+'</b> 点）+ '+setName+
+    ' → 实际受到 <b>'+afterProt.toFixed(2)+' 点</b>伤害，掉 '+ (afterProt/2).toFixed(2) +' 颗心，'+tail;
+}
+
+$('src').addEventListener('change',function(){
+  $('param').dataset.touched='';
+  syncSource();
+});
+$('param').addEventListener('input',function(){
+  $('param').dataset.touched='1';
+  calc();
+});
+['pH','pC','pL','pB','epT','epL','epN','weap'].forEach(function(id){
+  $(id).addEventListener('change',calc);
+});
+$('btnReset').addEventListener('click',function(){
+  $('src').value='fall';
+  $('param').value='12';$('param').dataset.touched='';
+  $('pH').value='iron';$('pC').value='iron';$('pL').value='iron';$('pB').value='iron';
+  $('epT').value='0';$('epL').value='0';$('epN').value='4';
+  $('weap').value='5';
+  syncSource();toast('已恢复默认');
+});
+$('btnCopy').addEventListener('click',function(){
+  var t=$('oVerdict').textContent;
+  if(!t||t==='—'){toast('先填一个有效伤害');return;}
+  HS.copy(t).then(function(){toast('已复制结论');},function(){toast('复制失败，手动选中吧');});
+});
+
+buildUI();
+syncSource();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 红石信号规划 · 红石的小站</title>
+<meta name="description" content="红石信号能传多远、传 N 格要几个中继器、整条链路延迟多少秒">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔴</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:2px}
+.big{padding:13px 15px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel)}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.2rem,3.8vw,1.7rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:88px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{padding:7px 9px;text-align:right;border-bottom:1px dashed var(--bd)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.tbl td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl td.hi{color:var(--ac);font-weight:800}
+.err{color:var(--dgr);font-size:12.5px;margin-top:6px}
+.chain{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-family:var(--mono);font-size:12px}
+.chain i{font-style:normal;padding:3px 7px;border-radius:var(--r);background:var(--bg);border:1px solid var(--bd)}
+.chain i.seg{border-color:var(--ac);color:var(--ac)}
+@media(max-width:640px){.res{grid-template-columns:1fr}.kv span{width:72px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div>
+      <h1>🔴 MC 红石信号规划</h1>
+      <p class="sub">信号能传多远 · 传 N 格要几个中继器 · 整条链路延迟多少秒</p>
+    </div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">信号强度 → 能传到第几格</h2>
+      <div class="fld">
+        <label for="sIn">源头的信号强度（1 ~ 15）</label>
+        <input id="sIn" class="mono" inputmode="numeric" autocomplete="off" value="15">
+      </div>
+      <div class="res">
+        <div class="big"><em>红石粉最多拉</em><b id="sLen">15</b><small>格（第 16 格就已经是 0）</small></div>
+        <div class="big"><em>还能点亮第</em><b id="sFar">15</b><small>格上的装置</small></div>
+      </div>
+      <div class="kv"><span>规则</span><b>红石粉每经过 1 格衰减 1 点，强度归 0 就不再传</b></div>
+      <div class="err" id="sErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">传 N 格 → 几个中继器</h2>
+      <div class="grid2">
+        <div class="fld"><label for="dIn">要传的距离（格）</label><input id="dIn" class="mono" inputmode="numeric" autocomplete="off" value="42"></div>
+        <div class="fld"><label for="dDly">每个中继器档位（1~4）</label><input id="dDly" class="mono" inputmode="numeric" autocomplete="off" value="1"></div>
+      </div>
+      <div class="res">
+        <div class="big"><em>需要中继器</em><b id="dRep">2</b><small>个</small></div>
+        <div class="big"><em>整条链路延迟</em><b id="dSec">0.2</b><small>秒（不连导线本身）</small></div>
+      </div>
+      <div class="kv"><span>分段</span><b id="dSeg">—</b></div>
+      <div class="kv"><span>换算</span><b id="dTick">—</b></div>
+      <div class="chain" id="dChain" aria-hidden="true"></div>
+      <div class="err" id="dErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">时间换算：红石刻 / 游戏刻</h2>
+      <div class="grid2">
+        <div class="fld"><label for="tSec">秒数</label><input id="tSec" class="mono" inputmode="decimal" autocomplete="off" value="1"></div>
+        <div class="fld"><label for="tTk">游戏刻（1 刻 = 50ms）</label><input id="tTk" class="mono" inputmode="numeric" autocomplete="off" value="20"></div>
+      </div>
+      <div class="res">
+        <div class="big"><em>红石刻</em><b id="tRs">10</b><small>1 红石刻 = 2 游戏刻 = 0.1 秒</small></div>
+        <div class="big"><em>一天要</em><b id="tDay">—</b><small>游戏刻才过完 20 分钟</small></div>
+      </div>
+      <div class="err" id="tErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">速查表</h2>
+      <table class="tbl">
+        <thead><tr><th>项目</th><th>数值</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>红石粉最远</td><td class="hi">15 格</td><td>每格衰减 1 点信号</td></tr>
+          <tr><td>中继器一档</td><td class="hi">0.1 秒</td><td>1~4 档 = 0.1~0.4 秒</td></tr>
+          <tr><td>比较器</td><td class="hi">0.1 秒</td><td>固定 1 红石刻，不可调</td></tr>
+          <tr><td>中继器输出</td><td class="hi">15</td><td>把信号重新拉满，所以要靠它续命</td></tr>
+          <tr><td>游戏刻</td><td class="hi">20 / 秒</td><td>1 游戏刻 = 50 毫秒</td></tr>
+          <tr><td>红石刻</td><td class="hi">10 / 秒</td><td>1 红石刻 = 2 游戏刻</td></tr>
+        </tbody>
+      </table>
+      <div class="tip">💡 <strong>使用说明</strong>：先看「信号强度」确认一段粉能拉多长（满强度 15 格），再用「传 N 格」算要补几个中继器、每段分多长、整条线多慢。
+        中继器档位越大延迟越久，做大范围时钟或红石计算机时，这些 0.1 秒会累加成明显误差。
+        逐档换算与频率反推在 <a href="./mc-redstone.html">MC 红石延迟</a> 那页。
+        数据基于 Java 版 1.20+，基岩版时序基本一致但个别元件可能差 1 刻。</div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>(function(){
+'use strict';
+function $(id){ return document.getElementById(id); }
+var MAX = 15;
+
+function clampNum(v, min, max, dflt){
+  var n = parseFloat(v);
+  if (!isFinite(n)) return dflt;
+  return Math.min(max, Math.max(min, n));
+}
+function showErr(el, msg){
+  if (!msg){ el.hidden = true; el.textContent = ''; return; }
+  el.hidden = false; el.textContent = msg;
+}
+
+/* 1. 信号强度 → 距离 */
+function calcSignal(){
+  var raw = $('sIn').value.trim();
+  var n = parseInt(raw, 10);
+  if (!/^\d+$/.test(raw) || n < 1 || n > MAX){
+    $('sLen').textContent = '—'; $('sFar').textContent = '—';
+    showErr($('sErr'), '信号强度只能是 1 ~ 15 的整数（红石粉最大 15，再大也没用）');
+    return;
+  }
+  showErr($('sErr'), '');
+  $('sLen').textContent = String(n);
+  $('sFar').textContent = String(n);
+}
+
+/* 2. 距离 → 中继器数量与延迟 */
+function calcChain(){
+  var rawD = $('dIn').value.trim();
+  var rawP = $('dDly').value.trim();
+  var d = parseInt(rawD, 10), p = parseInt(rawP, 10);
+  if (!/^\d+$/.test(rawD) || d < 0 || d > 2000){
+    $('dRep').textContent = '—'; $('dSec').textContent = '—';
+    showErr($('dErr'), '距离请填 0 ~ 2000 的整数（格）');
+    return;
+  }
+  if (!/^\d+$/.test(rawP) || p < 1 || p > 4){
+    $('dRep').textContent = '—'; $('dSec').textContent = '—';
+    showErr($('dErr'), '中继器档位只能是 1 ~ 4');
+    return;
+  }
+  showErr($('dErr'), '');
+
+  var segs = d === 0 ? 0 : Math.ceil(d / MAX);
+  var reps = Math.max(0, segs - 1);
+  /* 均分：前几段多 1 格，保证每段 ≤ 15 */
+  var base = segs ? Math.floor(d / segs) : 0;
+  var extra = segs ? d % segs : 0;
+  var lens = [];
+  for (var i = 0; i < segs; i++) lens.push(base + (i < extra ? 1 : 0));
+
+  var delayOne = p * 0.1;                 /* 1 档 = 1 红石刻 = 0.1 秒 */
+  var total = reps * delayOne;
+
+  $('dRep').textContent = String(reps);
+  $('dSec').textContent = total.toFixed(1);
+  $('dSeg').textContent = segs === 0 ? '不需要走线'
+    : (segs + ' 段，每段 ' + lens.join(' / ') + ' 格');
+  $('dTick').textContent = '每个中继器 ' + delayOne.toFixed(1) + ' 秒（' + (p * 2) + ' 游戏刻），合计 ' + Math.round(total * 20) + ' 游戏刻 / ' + Math.round(total * 10) + ' 红石刻';
+
+  var out = [];
+  lens.forEach(function (len, idx){
+    out.push('<i class="seg">' + len + ' 格</i>');
+    if (idx < reps) out.push('<i>中继器 ' + p + ' 档</i>');
+  });
+  $('dChain').innerHTML = out.join('');
+}
+
+/* 3. 时间换算 */
+function calcTime(){
+  var rawS = $('tSec').value.trim();
+  var s = parseFloat(rawS);
+  if (!rawS || !isFinite(s) || s < 0 || s > 86400){
+    $('tRs').textContent = '—';
+    showErr($('tErr'), '秒数请填 0 ~ 86400 的数字');
+    return;
+  }
+  showErr($('tErr'), '');
+  $('tRs').textContent = String(Math.round(s * 10));
+  $('tTk').value = String(Math.round(s * 20));
+  $('tDay').textContent = (20 * 60 * 20).toLocaleString('en-US');
+}
+function calcTimeTicks(){
+  var rawK = $('tTk').value.trim();
+  var k = parseFloat(rawK);
+  if (!rawK || !isFinite(k) || k < 0 || k > 2000000){
+    $('tRs').textContent = '—';
+    showErr($('tErr'), '游戏刻请填 0 ~ 2000000 的数字');
+    return;
+  }
+  showErr($('tErr'), '');
+  var s = k / 20;
+  $('tRs').textContent = String(Math.round(k / 2));
+  $('tSec').value = (Math.round(s * 100) / 100).toString();
+  $('tDay').textContent = (20 * 60 * 20).toLocaleString('en-US');
+}
+
+$('sIn').addEventListener('input', calcSignal);
+$('dIn').addEventListener('input', calcChain);
+$('dDly').addEventListener('input', calcChain);
+$('tSec').addEventListener('input', calcTime);
+$('tTk').addEventListener('input', calcTimeTicks);
+
+calcSignal(); calcChain(); calcTime();
+})();</script>
+</body>
+</html>

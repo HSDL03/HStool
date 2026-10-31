@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>📦 堆叠与箱子容量 · 红石的小站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+.res{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:2px}
+.big{
+  padding:13px 15px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel);min-width:0;
+}
+.big em{display:block;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.big b{display:block;font-family:var(--mono);font-size:clamp(1.1rem,3.4vw,1.6rem);font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all}
+.big small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+.kv:last-child{border-bottom:0}
+.kv span{flex:none;width:96px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+.verdict{
+  margin-top:10px;padding:10px 12px;font-size:13.5px;line-height:1.7;
+  background:var(--acs);border:2px solid var(--ac);border-radius:var(--r);word-break:break-word;
+}
+.verdict b{font-family:var(--mono);color:var(--ac);font-size:15px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th,.tbl td{padding:7px 9px;text-align:right;border-bottom:1px dashed var(--bd)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.tbl td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.err{color:var(--dgr);font-size:12.5px;margin-top:6px}
+@media(max-width:640px){
+  .res{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .kv span{width:80px}
+  .kv b{font-size:12.5px}
+  .tbl{min-width:400px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<div class="wrap">
+  <div class="tool">
+    <div class="page-head"><div><h1>📦 堆叠与箱子容量</h1><p class="sub">物品 ↔ 组 ↔ 箱子槽位 · 搬仓库前先算清楚</p></div></div>
+
+    <div class="panel">
+      <h2 class="panel-title">物品数量 → 组 / 箱子</h2>
+      <div class="grid2">
+        <div class="fld"><label for="num">物品数量</label><input id="num" class="mono" inputmode="numeric" autocomplete="off" value="1000"></div>
+        <div class="fld"><label for="ss">堆叠上限</label><select id="ss">
+          <option value="64">64（多数方块/材料）</option>
+          <option value="16">16（鸡蛋、雪球、末影珍珠、告示牌）</option>
+          <option value="32">32（部分食物与杂项）</option>
+          <option value="1">1（药水、工具、盔甲）</option>
+        </select></div>
+      </div>
+      <div class="res">
+        <div class="big"><em>满组</em><b id="oStacks">—</b><small>组</small></div>
+        <div class="big"><em>还余</em><b id="oRest">—</b><small>个</small></div>
+        <div class="big"><em>占用</em><b id="oSlots">—</b><small>格槽位</small></div>
+      </div>
+      <div class="verdict" id="oVerdict">—</div>
+      <div class="kv"><span>箱子（27 格）</span><b id="oChest">—</b></div>
+      <div class="kv"><span>大箱子（54 格）</span><b id="oLarge">—</b></div>
+      <div class="kv"><span>潜影盒（27 格）</span><b id="oShulker">—</b></div>
+      <div class="kv"><span>凑满下一组</span><b id="oNextStack">—</b></div>
+      <div class="kv"><span>装满下一大箱</span><b id="oNextLarge">—</b></div>
+      <div class="err" id="numErr" hidden></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="btnCopy" type="button">📋 复制结论</button>
+        <button class="btn ghost sm" data-set="64" type="button">1 组</button>
+        <button class="btn ghost sm" data-set="1728" type="button">1 箱</button>
+        <button class="btn ghost sm" data-set="3456" type="button">1 大箱</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">容器数量 → 能装多少</h2>
+      <div class="grid2">
+        <div class="fld"><label for="ct">容器</label><select id="ct"></select></div>
+        <div class="fld"><label for="cn">个数</label><input id="cn" class="mono" inputmode="numeric" autocomplete="off" value="3"></div>
+      </div>
+      <div class="res">
+        <div class="big"><em>总容量</em><b id="cTotal">—</b><small>个物品</small></div>
+        <div class="big"><em>折合</em><b id="cStacks">—</b><small>组</small></div>
+        <div class="big"><em>折合大箱</em><b id="cLarge">—</b><small>个（54 格）</small></div>
+      </div>
+      <div class="verdict" id="cVerdict">—</div>
+      <div class="err" id="cnErr" hidden></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">容器容量表</h2>
+      <div class="scroll"><table class="tbl">
+        <thead><tr><th>容器</th><th>槽位</th><th>容量（64/组）</th><th>组数</th></tr></thead>
+        <tbody id="tbBody"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <div class="tip">
+        💡 一组 = 一个槽位的堆叠上限，默认 64。槽位数按「占了几格」算：38 个鸡蛋 = 2 组 + 6 个，占 3 格，
+        因为余数也要占一格。容器容量 <code>= 槽位 × 堆叠上限</code>，1 大箱子 54 格 × 64 = <b>3456</b> 个，
+        1 箱子 27 × 64 = <b>1728</b> 个。<br>
+        数据范围：Java 版 1.20+ 原版槽位数（箱子/木桶/潜影盒/末影箱/运输矿车 27，大箱子 54，漏斗 5，
+        发射器与投掷器 9，熔炉 3，带箱子的驴/骡 15）。酿造台、村民交易格这类不算「存物」的槽位没列；
+        潜影盒按单个 27 格算，盒子本身还能塞进箱子，这里不递归。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+var toast=HS.toast;
+
+var CONTAINERS=[
+  ['箱子',27],['大箱子（两只并排）',54],['木桶',27],['潜影盒',27],['末影箱',27],
+  ['运输矿车',27],['驴 / 骡（带箱子）',15],['漏斗',5],['发射器',9],['投掷器',9],
+  ['熔炉 / 高炉 / 烟熏炉',3]
+];
+
+function fmt(n){return n.toLocaleString('en-US');}
+
+function readInt(el,min,max){
+  var v=String(el.value).trim().replace(/[, _，]/g,'');
+  if(!v) return {err:'还没填数字'};
+  if(!/^\d+$/.test(v)) return {err:'只能填非负整数'};
+  var n=Number(v);
+  if(!isFinite(n)||n<min||n>max) return {err:'范围是 '+fmt(min)+' ~ '+fmt(max)};
+  return {val:n};
+}
+function showErr(el,msg){
+  if(!msg){el.hidden=true;el.textContent='';return;}
+  el.hidden=false;el.textContent='⚠ '+msg;
+}
+
+function buildUI(){
+  $('ct').innerHTML=CONTAINERS.map(function(c,i){
+    return '<option value="'+i+'">'+c[0]+'（'+c[1]+' 格）</option>';
+  }).join('');
+  $('ct').value='1';
+  $('tbBody').innerHTML=CONTAINERS.map(function(c){
+    var cap=c[1]*64;
+    return '<tr><td>'+c[0]+'</td><td>'+c[1]+'</td><td>'+fmt(cap)+'</td><td>'+fmt(c[1])+'</td></tr>';
+  }).join('');
+}
+
+function calcItems(){
+  var r=readInt($('num'),0,1e12);
+  var size=+$('ss').value;
+  if(r.err){
+    showErr($('numErr'),r.err);
+    ['oStacks','oRest','oSlots','oChest','oLarge','oShulker','oNextStack','oNextLarge']
+      .forEach(function(id){$(id).textContent='—';});
+    $('oVerdict').textContent='—';
+    return;
+  }
+  showErr($('numErr'),'');
+  var n=r.val;
+  var stacks=Math.floor(n/size), rest=n%size;
+  var slots=stacks+(rest?1:0);
+  var chests=Math.ceil(slots/27), large=Math.ceil(slots/54), shulker=Math.ceil(slots/27);
+
+  $('oStacks').textContent=fmt(stacks);
+  $('oRest').textContent=fmt(rest);
+  $('oSlots').textContent=fmt(slots);
+  $('oChest').textContent=chests?fmt(chests)+' 个（第 '+chests+' 个才装得下）':'0 个';
+  $('oLarge').textContent=large?fmt(large)+' 个':'0 个';
+  $('oShulker').textContent=shulker?fmt(shulker)+' 个':'0 个';
+  $('oNextStack').textContent=rest?('第 '+(stacks+1)+' 组还差 '+fmt(size-rest)+' 个'):'刚好整组';
+  $('oNextLarge').textContent=fmt(54*size-n)+' 个（大箱按 '+(54*size)+' 个算）';
+
+  if(n===0){
+    $('oVerdict').innerHTML='0 个物品，什么都不用搬。';
+    return;
+  }
+  $('oVerdict').innerHTML=fmt(n)+' 个物品（'+size+'/组）= <b>'+fmt(stacks)+' 组</b>'+
+    (rest?' + '+fmt(rest)+' 个':'')+'，占 <b>'+fmt(slots)+'</b> 格 —— '+
+    (slots<=27?'一只箱子就装得下':(slots<=54?'要一只大箱子（54 格）':('要 '+fmt(large)+' 只大箱子')));
+}
+
+function calcContainers(){
+  var r=readInt($('cn'),0,1000000);
+  var size=+$('ss').value;
+  var c=CONTAINERS[+$('ct').value];
+  if(r.err){
+    showErr($('cnErr'),r.err);
+    ['cTotal','cStacks','cLarge'].forEach(function(id){$(id).textContent='—';});
+    $('cVerdict').textContent='—';
+    return;
+  }
+  showErr($('cnErr'),'');
+  var total=r.val*c[1]*size;
+  var stacks=r.val*c[1];
+  $('cTotal').textContent=fmt(total);
+  $('cStacks').textContent=fmt(stacks);
+  $('cLarge').textContent=(total/3456).toFixed(2).replace(/\.00$/,'');
+  if(r.val===0){
+    $('cVerdict').textContent='0 个容器，装 0 个。';
+    return;
+  }
+  $('cVerdict').innerHTML=fmt(r.val)+' 个'+c[0]+'（每个 '+c[1]+' 格）= <b>'+fmt(total)+' 个物品</b>，'+
+    '折合 <b>'+fmt(stacks)+' 组</b>（按 '+size+'/组）。';
+}
+
+$('num').addEventListener('input',calcItems);
+$('ss').addEventListener('change',function(){calcItems();calcContainers();});
+$('ct').addEventListener('change',calcContainers);
+$('cn').addEventListener('input',calcContainers);
+Array.prototype.forEach.call(document.querySelectorAll('[data-set]'),function(b){
+  b.addEventListener('click',function(){
+    $('num').value=b.getAttribute('data-set');
+    calcItems();
+  });
+});
+$('btnCopy').addEventListener('click',function(){
+  var t=$('oVerdict').textContent;
+  if(!t||t==='—'){toast('先填一个有效数量');return;}
+  HS.copy(t).then(function(){toast('已复制结论');},function(){toast('复制失败，手动选中吧');});
+});
+
+buildUI();
+calcItems();
+calcContainers();
+})();
+</script>
+</body>
+</html>
