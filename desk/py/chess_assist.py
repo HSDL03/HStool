@@ -421,6 +421,7 @@ class Searcher:
         self._order(b, moves)
         best = -10 ** 9
         legal_count = 0
+        first = True
         for m in moves:
             u = make_move(b, st, m)
             k = find_king(b, white)
@@ -428,7 +429,15 @@ class Searcher:
                 unmake_move(b, st, m, u)
                 continue
             legal_count += 1
-            sc = -self.negamax(b, depth - 1, -beta, -alpha, not white, st, ply + 1)
+            # PVS：第一手照常搜，其余先用零窗口探一下——绝大多数走法立刻被剪掉，
+            # 同样的时间能多搜一层。探出比 alpha 还好才回头用全窗口重搜。
+            if first:
+                sc = -self.negamax(b, depth - 1, -beta, -alpha, not white, st, ply + 1)
+                first = False
+            else:
+                sc = -self.negamax(b, depth - 1, -alpha - 1, -alpha, not white, st, ply + 1)
+                if alpha < sc < beta and not self.stopped:
+                    sc = -self.negamax(b, depth - 1, -beta, -alpha, not white, st, ply + 1)
             unmake_move(b, st, m, u)
             if self.stopped:
                 break
@@ -888,6 +897,23 @@ BLK_W = [1.0 if (r in (1, 2) and c in (1, 2)) else 0.3
 BLK_W_SUM = sum(BLK_W)
 
 
+def cell_occupied(sig, sq):
+    """这一格有没有子——只看「格心跟四角底色差多少」，不需要知道是什么子。
+
+    用来给棋子库上把锁：标样本之前先确认「程序局面」和「画面」占位一致，
+    否则拿一个错局面去标注，会把整库棋子形状教歪（那时标签就全是错的）。
+    """
+    o = sq * 16
+    v = sig[o:o + 16]
+    bg = (v[0] + v[3] + v[12] + v[15]) / 4.0
+    dev = max(abs(v[5] - bg), abs(v[6] - bg), abs(v[9] - bg), abs(v[10] - bg))
+    m = sum(v) / 16.0
+    sd = (sum((x - m) ** 2 for x in v) / 16.0) ** 0.5
+    # 实测：空格 16 块几乎一样（sd ≤ 3），有子时形状起伏 sd ≥ 10；
+    # 浅底白子只有 sd 明显，所以两条都要。
+    return sd > 8.0 or dev > 22.0
+
+
 def cell_stats(sig, sq):
     """一格的 (16 块灰度, 加权平均灰度, 加权形状强度)。"""
     o = sq * 16
@@ -976,6 +1002,27 @@ class PieceBook:
                 e[1] += m
                 e[2] += 1
 
+    def dump(self):
+        """存成 JSON：下次开程序不用再点「学棋子」。"""
+        return {
+            "pieces": [[ch, p, n, round(ms, 3), [round(z, 4) for z in zs]]
+                       for (ch, p), (zs, ms, n) in self.pieces.items()],
+            "empties": [[p, round(e[0], 2), round(e[1], 2), e[2]]
+                        for p, e in self.empties.items()],
+        }
+
+    def load(self, d):
+        try:
+            for ch, p, n, ms, zs in d.get("pieces", []):
+                if len(zs) != 16 or not n:
+                    continue
+                self.pieces[(ch, int(p))] = [list(zs), float(ms), int(n)]
+            for p, s1, s2, n in d.get("empties", []):
+                self.empties[int(p)] = [float(s1), float(s2), int(n)]
+        except (TypeError, ValueError, KeyError):
+            self.pieces.clear()
+            self.empties.clear()
+
     def classify(self, sig, sq, flip=False):
         """返回 (身份, 偏差)。sq 是棋盘格，内部按 flip 换算成画面格再取图案。
 
@@ -1049,6 +1096,7 @@ def send_click(x, y):
 # ─────────────────────────── 界面 ───────────────────────────
 CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "ChessAssist")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
+BOOK_PATH = os.path.join(CONFIG_DIR, "book.json")
 
 SENS_DEFAULT = 44          # 滑杆位置（1..50，越大越灵敏）
 
@@ -1091,9 +1139,14 @@ class App(tk.Tk):
         self.suggest = None           # 程序给的那步建议（只画出来，不替我落子）
         self.clicked_at = 0.0
         self._last_sig = None
+        self._adopt_tried = False
+        self._sync_at = 0.0           # 最后一次「画面和程序局面确认一致」的时间
+        self._book_bad = 0            # 连续几帧棋子库大面积认不准
+        self._book_reset_at = 0.0
         self.our_move_at = 0.0
         self.book = PieceBook()        # 棋子形状记忆库
         self.book_msg = ""
+        self.book_from_disk = False
         self.board_at = 0.0            # 内部局面最后一次「确认与画面一致」的时间
         self.learn_at = 0.0
         self._view_photo = None
@@ -1168,8 +1221,8 @@ class App(tk.Tk):
         row2 = tk.Frame(g1, bg="#fbf7ec")
         row2.pack(fill="x", padx=8, pady=(0, 6))
         tk.Label(row2, text="深度", bg="#fbf7ec").pack(side="left")
-        self.depth_var = tk.IntVar(value=4)
-        tk.Scale(row2, from_=2, to=7, orient="horizontal", variable=self.depth_var,
+        self.depth_var = tk.IntVar(value=6)
+        tk.Scale(row2, from_=2, to=20, orient="horizontal", variable=self.depth_var,
                  showvalue=True, length=150, bg="#fbf7ec", highlightthickness=0
                  ).pack(side="left", padx=6)
         tk.Button(row2, text="算我这一步", command=self.think).pack(side="left", padx=4)
@@ -1263,11 +1316,21 @@ class App(tk.Tk):
             lvl = int(cfg.get("sens_lvl", SENS_DEFAULT))
             self.sens_var.set(lvl)
             self.sens = sens_from_slider(lvl)
-            self.depth_var.set(int(cfg.get("depth", 4)))
+            self.depth_var.set(int(cfg.get("depth", 6)))
             self.play_var.set(bool(cfg.get("auto_play", False)))
             if self.region:
                 self.region_label.config(text="区域 %s" % (self.region,))
         except (OSError, ValueError, KeyError):
+            pass
+        # 棋子库：上次跑出来的直接接着用，省得每次开局都点「学棋子」
+        try:
+            with open(BOOK_PATH, "r", encoding="utf-8") as f:
+                self.book.load(json.load(f))
+            if len(self.book):
+                self.book_from_disk = True
+                self.book_msg = "上次的，可直接用"
+                self._refresh_book_label()
+        except (OSError, ValueError, KeyError, TypeError):
             pass
 
     def _save_config(self):
@@ -1277,6 +1340,12 @@ class App(tk.Tk):
                 json.dump({"region": self.region, "sens_lvl": int(self.sens_var.get()),
                            "depth": self.depth_var.get(), "auto_play": self.play_var.get()}, f)
         except OSError:
+            pass
+        try:
+            if len(self.book):
+                with open(BOOK_PATH, "w", encoding="utf-8") as f:
+                    json.dump(self.book.dump(), f)
+        except (OSError, TypeError, ValueError):
             pass
 
     # ---------- 渲染 ----------
@@ -1432,6 +1501,7 @@ class App(tk.Tk):
         self.rebase_pending = True
         self.our_move_at = time.time()
         self.board_at = time.time()
+        self._sync_at = time.time()
         self._maybe_reply()
 
     def check_end(self):
@@ -1468,6 +1538,7 @@ class App(tk.Tk):
         self.draw()
         self.check_end()
         self.board_at = time.time()
+        self._sync_at = time.time()
         self._maybe_reply()
 
     def _insufficient(self):
@@ -1523,12 +1594,14 @@ class App(tk.Tk):
         self.busy = True
         self.result.config(text="正在算…")
         depth = self.depth_var.get()
+        # 深度是上限，真正卡时间：纯 Python 引擎再深也搜不完，给个随深度变长的预算
+        budget = int(min(10000, 800 + depth * 700))
         board = list(self.st["board"])
         st = {"castling": dict(self.st["castling"]), "ep": self.st["ep"], "half": self.st["half"]}
         white = self.st["turn"] == "w"
 
         def run():
-            res = self.search_engine.best_move(board, white, st, depth, 2400)
+            res = self.search_engine.best_move(board, white, st, depth, budget)
             self.ui_queue.put(lambda: self._after_think(res))
 
         threading.Thread(target=run, daemon=True).start()
@@ -1541,8 +1614,8 @@ class App(tk.Tk):
         m = res["move"]
         san = to_san(self.st["board"], self.st, m)
         sc = res["score"] / 100.0
-        txt = "建议走：%s\n评分 %+.2f · 深度 %d · %s 节点 · %d ms" % (
-            san, sc, res["depth"], format(res["nodes"], ","), res["ms"])
+        txt = "建议走：%s\n评分 %+.2f · 深度 %d/%d · %s 节点 · %d ms" % (
+            san, sc, res["depth"], self.depth_var.get(), format(res["nodes"], ","), res["ms"])
         if abs(res["score"]) > MATE - 1000:
             txt = "建议走：%s（%s）" % (san, "将杀" if res["score"] > 0 else "被将杀")
         # 只把建议画在棋盘上，不写进自己的局面：真实棋盘才是唯一的真相，
@@ -1551,6 +1624,10 @@ class App(tk.Tk):
         self.clicked_at = 0.0
         self.draw()
         if self.play_var.get() and self.region and not m[3]:
+            if time.time() - self._sync_at > 2.5:
+                # 局面没和画面对上就千万别点：一乱点，真实棋局会被点成一锅粥
+                self.result.config(text=txt + "\n局面还没和画面对上，这次不自动落子。")
+                return
             self.result.config(text=txt + "\n已模拟点击：没落到棋盘上就手动走这步。")
             self.clicked_at = time.time()
             self._auto_play(m)
@@ -1817,11 +1894,11 @@ class App(tk.Tk):
                 return hits[0], 30.0, side
         return None, 0.0, None
 
-    def _adopt_board(self, rb):
+    def _adopt_board(self, rb, turn=None):
         """对不上任何一步、画面又明明变了：直接把内部局面换成画面读到的样子。
 
         只在读得很干净（认不准 ≤ 4 格）时才做，而且会明说「已按画面重建」，
-        免得悄悄跟真实棋盘分家。
+        免得悄悄跟真实棋盘分家。turn 不给就默认切一手（正常走一步的情况）。
         """
         cur = self.st["board"]
         known = sum(1 for x in rb if x is not None)
@@ -1833,9 +1910,10 @@ class App(tk.Tk):
         for sq in range(64):
             if nb[sq] in "Pp" and (sq < 8 or sq >= 56):
                 return False             # 兵站在底线：这读数不可信
-        if sum(1 for a, b in zip(nb, cur) if a != b) < 2:
+        if turn is None and sum(1 for a, b in zip(nb, cur) if a != b) < 2:
             return False
-        turn = "w" if self.st["turn"] == "b" else "b"
+        if turn is None:
+            turn = "w" if self.st["turn"] == "b" else "b"
         self.stack.append(self.snapshot())
         self.st["board"] = nb
         self.st["turn"] = turn
@@ -1854,12 +1932,31 @@ class App(tk.Tk):
         self.board_at = time.time()
         return True
 
+    def _occ_mismatch(self, sig):
+        """画面上的「有子 / 没子」和程序局面差几格。
+
+        不认识棋子也能算：只看格心有没有东西。这是「局面到底对不对」的硬指标——
+        正常走一步只差 2 格（易位 4 格），差到六七格以上就说明局面已经和画面分家了。
+        """
+        flip = self.flip()
+        board = self.st["board"]
+        bad = 0
+        for sq in range(64):
+            if cell_occupied(sig, to_screen(sq, flip) if flip else sq) != (board[sq] != "."):
+                bad += 1
+        return bad
+
     def _learn(self, sig, force=False):
         """在「画面和内部棋盘确定一致」的帧上记住每格图案。
 
-        学过之后再学要先自检：用现有库读这帧，如果认不准或者读出来跟棋盘本来就不一样，
-        说明这帧的标注不可靠，宁可不学。
+        两道关：占位要先对上（差 ≤2 格），第二道是拿现有库回读这帧，认不准或读出来不一样
+        就不学。以前只靠第二道，而第一帧（force）根本没把关——用错局面标注一次，
+        整库棋子形状就教歪了，那之后一直「认不准 49 格」，怎么点都救不回来。
         """
+        bad = self._occ_mismatch(sig)
+        if bad > 2:
+            self.book_msg = "占位差 %d 格" % bad
+            return False
         if not force and self.book.ready():
             diff, ok, _ = self._board_read(sig)
             if not ok or diff:
@@ -1926,13 +2023,22 @@ class App(tk.Tk):
         if img_signature(img2) != first:
             self._set_result("画面还在动（棋子动画 / 闪烁），等它停稳再点「学棋子」。")
             return
-        self._learn(first, force=True)
+        if not self._learn(first, force=True):
+            self._refresh_book_label()
+            self._set_result("画面上的棋子和程序局面对不上（%s），没法学。\n"
+                             "先在程序棋盘上把局面摆成屏幕上那样（点击/拖动，或用下面的输入框），"
+                             "再点「③ 学棋子」。" % (self.book_msg or "占位差异"))
+            return
         self._refresh_book_label()
-        self._set_result("已按当前局面学了：%s。\n若画面和程序里的局面不一样，"
-                         "点「重置棋子库」再把局面摆对后重学。" % self.book_summary())
+        self._set_result("已按当前局面学了：%s。" % self.book_summary())
 
     def reset_book(self):
         self.book.clear()
+        self.book_from_disk = False
+        try:
+            os.remove(BOOK_PATH)
+        except OSError:
+            pass
         self._refresh_book_label()
         self._set_result("棋子库已清空，画面稳定下来会重新学一遍。")
 
@@ -2087,9 +2193,23 @@ class App(tk.Tk):
             self._scan_still = 0
             self._scan_hinted = False
             self._view_marks = []
-            self._learn(sig, force=True)         # 先把眼下这盘的棋子形状记下来
+            learned = self._learn(sig, force=True)      # 先把眼下这盘的棋子形状记下来
             self._refresh_book_label()
-            self._set_result("已取基线，并记住 %d 类棋子图案。" % len(self.book))
+            if learned:
+                self._sync_at = time.time()
+                self._set_result("已取基线，并记住 %d 类棋子图案。" % len(self.book))
+                return
+            if self.book.ready():
+                # 棋子库能认、只是程序局面和画面对不上（比如中途接手一盘）：按画面重建
+                rb, unsure = self._read_board(sig)
+                if rb is not None:
+                    self.ui_queue.put(lambda b=rb, u=unsure: self._adopt_ui(b, u, self.human))
+                    self._set_result("画面和程序局面不一样（%s），正按画面重建局面…"
+                                     % (self.book_msg or "占位差异"))
+                    return
+            self._set_result("取到画面了，但画面上的棋子和程序局面对不上（%s）。\n"
+                             "先在开局时框选／点「新局」，或把程序棋盘摆成屏幕上那样再点「重取基线」。"
+                             % (self.book_msg or "占位差异"))
             return
 
         scores = sign_diff(self.shot_base, sig)
@@ -2132,6 +2252,25 @@ class App(tk.Tk):
             return
 
         if not changed:
+            occ = self._occ_mismatch(sig)
+            if occ <= 2:
+                self._sync_at = time.time()     # 画面和局面确实一致，才允许自动落子
+                self._book_bad = 0
+            elif self.book.ready() and book_unsure >= 30:
+                # 棋子库已经读不动这盘了（大面积认不准）：多半是以前被错局面教歪过。
+                # 清库重来——重学会走占位那一关，不会再被教歪。
+                self._book_bad += 1
+                if self._book_bad >= 10 and time.time() - self._book_reset_at > 8:
+                    self._book_reset_at = time.time()
+                    self._book_bad = 0
+                    self.book.clear()
+                    if self._learn(sig, force=True):
+                        self._refresh_book_label()
+                        self._set_result("棋子库认不动这盘（%s），已清空按画面重学。" % self.book_msg)
+                    else:
+                        self._refresh_book_label()
+                        self._set_result("棋子库认不动这盘，已清空；但画面和程序局面对不上（%s），"
+                                         "先按画面对齐再重学。" % (self.book_msg or "占位差异"))
             # 画面和基线一致、局面也刚确认过 → 把这一帧的图案再记一遍（多帧平均更稳）
             if (still and self.board_at and time.time() - self.board_at < 4.0
                     and time.time() - self.learn_at > 0.8):
@@ -2187,9 +2326,9 @@ class App(tk.Tk):
             self._set_result("画面变了但对不上任何走法（最高 %.0f）· 点「重取基线」，"
                              "或在棋盘上把这一步点出来" % sc)
 
-    def _adopt_ui(self, rb, unsure):
+    def _adopt_ui(self, rb, unsure, turn=None):
         """在 UI 线程里重建局面（要碰控件，不能在识别线程里做）。"""
-        if not self._adopt_board(rb):
+        if not self._adopt_board(rb, turn):
             return
         self.shot_base = self._last_sig
         self._scan_hinted = False
