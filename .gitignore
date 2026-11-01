@@ -1,4 +1,5 @@
 offline/.cache/
+.cache/
 desk/*/dist/
 desk/*/app/
 desk/py/build/
