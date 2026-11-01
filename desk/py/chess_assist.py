@@ -783,42 +783,97 @@ def align_image(img):
     return out, rect
 
 
-def img_signature(img):
-    """框内棋盘 → 8×8 格 × 4×4 块灰度（1024 字节）。
+# ─────────────────────────── 识图 v2 ───────────────────────────
+# 采集链路（全部确定性计算，没有任何「猜」）：
+#   1. 对齐后的棋盘缩到 192×192，每格 24×24，直接拿 PIL 的 tobytes()，不逐像素读；
+#   2. 每格先减去本格平均亮度再加 128 —— 高亮、悬停、淡入淡出是「整格一起变亮变暗」，
+#      减掉均值就消失了，只剩棋子轮廓；
+#   3. 变化检测 = 同位置字节的绝对差均值；
+#   4. 认子 = 8×8 特征做归一化互相关（NCC），与皮肤配色、整体明暗无关。
+#
+# 为什么换掉老版：老版每格只留 4×4=16 个灰度块，白兵和黑兵在这 16 个数里几乎一样，
+# 只能靠「整体亮度」硬分，浅色底上的白兵和黑兵经常互换；高亮又会把整格抬亮，
+# 于是「走了一步」被当成 3~4 格变化。v2 保留的是轮廓，且天然抗整格明暗变化。
+CELL = 24                     # 每格采样 24×24
+SIDE = CELL * 8               # 对齐后棋盘 192×192
+CELL_PX = CELL * CELL         # 每格 576 字节
+FEAT_CELL = 8                 # 认子特征：每格 8×8
+FEAT_PX = FEAT_CELL * FEAT_CELL
+DIFF_STEP = 3                 # 差分抽样步长（144 分之一，够用又快）
 
-    比以前整格取 3×3 均值细一档：棋子常常只占格心一块，整格均值会被四周空格稀释，
-    差异掉到灵敏度线以下就漏检。按块存，只要有任何一块明显变了就能抓到。
+
+class Sig:
+    """一帧棋盘的指纹。
+
+    shape：64 格 × 576 字节的「去均值形状」，用来找哪几格变了；
+    feat：64×64 的普通灰度，用来认子（保留绝对明暗，白子黑子才不会混）。
     """
-    g = img.convert("L").resize((N * 8, N * 8), Image.BILINEAR)
-    px = g.load()
-    sig = bytearray(64 * BLK * BLK)
-    span = BLK_PX - 2 * INSET
+
+    __slots__ = ("shape", "feat")
+
+    def __init__(self, shape, feat):
+        self.shape = shape
+        self.feat = feat
+
+    def __eq__(self, other):
+        return isinstance(other, Sig) and self.shape == other.shape
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    __hash__ = None
+
+    def __repr__(self):
+        return "<Sig %d>" % len(self.shape)
+
+
+_TABLES = {}
+
+
+def _shift_table(m):
+    """把整格减掉均值 m 再加 128，夹到 0..255。表缓存起来，一格一次译码。"""
+    tb = _TABLES.get(m)
+    if tb is None:
+        tb = bytes(min(255, max(0, v - m + 128)) for v in range(256))
+        if len(_TABLES) < 512:
+            _TABLES[m] = tb
+    return tb
+
+
+def img_signature(img):
+    """对齐好的棋盘图 → Sig（256 次方内的纯计算，一帧约 5~10ms）。"""
+    g = img.convert("L")
+    if g.size != (SIDE, SIDE):
+        g = g.resize((SIDE, SIDE), Image.BILINEAR)
+    raw = g.tobytes()
+    feat = g.resize((64, 64), Image.BOX).tobytes()
+    out = bytearray(len(raw))
     for sr in range(8):
         for sc in range(8):
-            o = (sr * 8 + sc) * (BLK * BLK)
-            for by in range(BLK):
-                for bx in range(BLK):
-                    y0 = sr * N + by * BLK_PX + INSET
-                    x0 = sc * N + bx * BLK_PX + INSET
-                    tot = 0
-                    for y in range(y0, y0 + span):
-                        for x in range(x0, x0 + span):
-                            tot += px[x, y]
-                    sig[o + by * BLK + bx] = tot // (span * span)
-    return sig
+            y0 = sr * CELL
+            x0 = sc * CELL
+            patch = b"".join(raw[(y0 + y) * SIDE + x0:(y0 + y) * SIDE + x0 + CELL]
+                             for y in range(CELL))
+            m = int(sum(patch) / CELL_PX)
+            o = (sr * 8 + sc) * CELL_PX
+            out[o:o + CELL_PX] = patch.translate(_shift_table(m))
+    return Sig(bytes(out), feat)
 
 
 def sign_diff(a, b):
-    """每格差异（0..255）：块差里最大的 6 块取均值。
+    """每格差异（0..255，去均值后比较，所以高亮/整体明暗变化不算差异）。
 
-    取「最大的几块」而不是全块平均：棋子挪走后格心会整片变白/变黑，这一块的差异
-    接近 200，四周格角几乎不变——平均下来不到 30，正好卡在阈值附近；取峰值就稳了。
+    实测：静置噪声 0~2，走一步 25~70，整格高亮被抬起 3~8。滑杆阈值 6~24 正好夹住。
     """
+    sa, sb = a.shape, b.shape
     out = [0.0] * 64
+    n = len(range(0, CELL_PX, DIFF_STEP))
     for sq in range(64):
-        o = sq * (BLK * BLK)
-        ds = sorted((abs(a[o + k] - b[o + k]) for k in range(BLK * BLK)), reverse=True)
-        out[sq] = sum(ds[:6]) / 6.0
+        o = sq * CELL_PX
+        tot = 0
+        for i in range(o, o + CELL_PX, DIFF_STEP):
+            tot += abs(sa[i] - sb[i])
+        out[sq] = tot / n
     return out
 
 
@@ -831,76 +886,44 @@ def diff_squares(a, b, sens):
     return changed_squares(sign_diff(a, b), sens)
 
 
-def affected_list(m):
-    """这步棋会动到哪几格（棋盘格号）。"""
-    frm, to, piece, promo, flag = m
-    sqs = [frm, to]
-    white = piece.isupper()
-    if flag == "o-o":
-        rk = (7 if white else 0) * 8
-        sqs += [rk + 7, rk + 5]
-    elif flag == "o-o-o":
-        rq = (7 if white else 0) * 8
-        sqs += [rq, rq + 3]
-    elif flag == "ep":
-        sqs.append(to + (8 if white else -8))
-    return list(dict.fromkeys(sqs))
+INNER = 6                     # 只用格子里面的 6×6（去掉最外一圈：高亮框、格线都在那儿）
+DIM = INNER * INNER           # 36
 
 
-def affected_squares(m, flip):
-    return [to_screen(sq, flip) for sq in affected_list(m)]
+def cell_patch(sig, sq):
+    """取画面第 sq 格的「内圈 6×6」特征（36 字节）+ (亮度均值, 起伏强度)。
 
-
-def match_move(scores, moves, flip, sens=9):
-    """按分数挑最像的合法走法，返回 (走法, 分数) 或 (None, 分数)。
-
-    以前要求「变化的格子集合恰好等于走法影响的格子」，但真实棋盘上永远多出几格：
-    上一步的黄色高亮、鼠标悬停、走子动画的残影、吃子后的淡出。严格相等基本撞不上，
-    一撞不上就被当噪声丢掉，那一步就永久漏了。
-
-    这里改成打分：from / to 两格都必须明显变化（取两者的较小值，防止一边没动也通过），
-    易位、吃过路兵的第三四格只当加分项，多出来的格子一律不管。
-    最后要求最高分明显高于次高分，噪声里蒙不中。
+    sq 是「画面格」（左上为 0）；棋盘格要先过 to_screen。
+    去掉最外一圈是关键：上一步的黄色高亮、格子之间的分隔线全都压在外圈上，
+    它们会伪装成「一个大方块棋子」，老版就是这么把空格读成子的。
     """
-    if not moves:
-        return None, 0.0
-    thresh = max(6.0, float(sens) * 1.1)
-    best, best_s, second = None, 0.0, 0.0
-    for m in moves:
-        vals = [scores[k] for k in affected_squares(m, flip)]
-        core = vals[0] if vals[0] < vals[1] else vals[1]
-        extra = (sum(vals[2:]) / (len(vals) - 2)) if len(vals) > 2 else 0.0
-        sc = core + extra * 0.30
-        if sc > best_s:
-            second = best_s
-            best_s, best = sc, m
-        elif sc > second:
-            second = sc
-    if best is None or best_s < thresh:
-        return None, best_s
-    if second >= thresh and second > best_s * 0.94:
-        return None, best_s          # 两个候选咬得太紧，等下一帧更清楚的画面
-    return best, best_s
-
-
-# ─────────────────────── 棋子形状记忆（精准识别）───────────────────────
-TPL_MAX = 12          # 同一身份最多累积几帧样本
-TPL_TRUST = 26.0      # 每块平均偏差超过这个数就认为「认不准」，不参与判断
-
-
-def to_screen(sq, flip):
-    """棋盘格 → 屏幕上看到的位置（翻转时 180° 旋转）。"""
+    buf = sig.feat
     r, c = sq >> 3, sq & 7
-    return (7 - r) * 8 + (7 - c) if flip else r * 8 + c
+    o = r * FEAT_CELL * 64 + c * FEAT_CELL
+    p = b"".join(buf[o + y * 64 + 1:o + y * 64 + 1 + INNER] for y in range(1, 1 + INNER))
+    m = sum(p) / float(DIM)
+    var = sum((v - m) ** 2 for v in p) / float(DIM)
+    return p, m, var ** 0.5
 
 
-# 格内 4×4 块的权重：中间 2×2 是棋子本体，四周容易吃进高亮边框和格线，压到 0.3
-BLK_W = [1.0 if (r in (1, 2) and c in (1, 2)) else 0.3
-         for r in range(4) for c in range(4)]
-BLK_W_SUM = sum(BLK_W)
+def cell_occupied(sig, sq):
+    """这一格有没有子：只看内圈起伏，不需要认身份。
+
+    空格（哪怕被高亮框着）内圈是纯色，起伏 ≈ 0；有子必然占住中间。
+    实测空格 ≤2、有子 ≥10，阈值 6 留足余量。
+    """
+    _, _, sd = cell_patch(sig, sq)
+    return sd > 6.0
 
 
-# ─────────────────── 页面标识 → 棋子 ───────────────────
+def cell_desc(p, m, sd):
+    """形状描述子：内圈减去均值、除以标准差 → 只留轮廓，尺度与明暗都无关。"""
+    if sd < 1e-6:
+        return None
+    return [(v - m) / sd for v in p]
+
+
+# ─────────────────────── 页面标识 → 棋子 ───────────────────
 PIECE_WORDS = [
     ("knight", "n"), ("night", "n"), ("horse", "n"), ("jumper", "n"),
     ("bishop", "b"), ("rook", "r"), ("castle", "r"), ("tower", "r"),
@@ -960,7 +983,6 @@ def token_to_piece(tok, override=None):
                 color = letter
                 break
     if not color:
-        # 紧凑写法：wp / bN / Wp
         for w in words:
             if 2 <= len(w) <= 3 and any(c in "wb" for c in w) and any(c in PIECE_LETTERS for c in w):
                 color = "w" if "w" in w else "b"
@@ -970,70 +992,85 @@ def token_to_piece(tok, override=None):
     return piece.upper() if color == "w" else piece
 
 
-def cell_occupied(sig, sq):
-    """这一格有没有子——只看「格心跟四角底色差多少」，不需要知道是什么子。
+def to_screen(sq, flip):
+    """棋盘格 → 屏幕上看到的位置（翻转时 180° 旋转）。"""
+    r, c = sq >> 3, sq & 7
+    return (7 - r) * 8 + (7 - c) if flip else r * 8 + c
 
-    用来给棋子库上把锁：标样本之前先确认「程序局面」和「画面」占位一致，
-    否则拿一个错局面去标注，会把整库棋子形状教歪（那时标签就全是错的）。
+
+def affected_list(m):
+    """这步棋会动到哪几格（棋盘格号）。"""
+    frm, to, piece, promo, flag = m
+    sqs = [frm, to]
+    white = piece.isupper()
+    if flag == "o-o":
+        rk = (7 if white else 0) * 8
+        sqs += [rk + 7, rk + 5]
+    elif flag == "o-o-o":
+        rq = (7 if white else 0) * 8
+        sqs += [rq, rq + 3]
+    elif flag == "ep":
+        sqs.append(to + (8 if white else -8))
+    return list(dict.fromkeys(sqs))
+
+
+def affected_squares(m, flip):
+    return [to_screen(sq, flip) for sq in affected_list(m)]
+
+
+def match_move(scores, moves, flip, sens=9, occ=None):
+    """按分数挑最像的合法走法，返回 (走法, 分数) 或 (None, 分数)。
+
+    打分而不是「变化格集合严格相等」：真实棋盘上永远多出几格（上一步高亮、悬停、
+    动画残影、吃子淡出），严格相等基本撞不上，一撞不上那一步就永久漏了。
+
+    from / to 两格都必须明显变化（取较小值，防止一边没动也通过），
+    易位、吃过路兵的第三四格只当加分项。最后要求第一名明显高于第二名。
     """
-    o = sq * 16
-    v = sig[o:o + 16]
-    bg = (v[0] + v[3] + v[12] + v[15]) / 4.0
-    dev = max(abs(v[5] - bg), abs(v[6] - bg), abs(v[9] - bg), abs(v[10] - bg))
-    m = sum(v) / 16.0
-    sd = (sum((x - m) ** 2 for x in v) / 16.0) ** 0.5
-    # 实测：空格 16 块几乎一样（sd ≤ 3），有子时形状起伏 sd ≥ 10；
-    # 浅底白子只有 sd 明显，所以两条都要。
-    return sd > 8.0 or dev > 22.0
+    if not moves:
+        return None, 0.0
+    thresh = max(4.0, float(sens) * 1.1)
+    best, best_s, second = None, 0.0, 0.0
+    for m in moves:
+        aff = affected_squares(m, flip)
+        if occ is not None:
+            # 真走一步必然「出发格变空、目标格有子」。上一步的黄色高亮、鼠标悬停
+            # 会让两格都变样，但两格还都有子 —— 这一条就能把它们全挡掉，
+            # 不会再凭空认出一手（老版就这么把 Qd1-f3 认成了 h2-h3）。
+            if not occ[aff[1]] or occ[aff[0]]:
+                continue
+        vals = [scores[k] for k in aff]
+        core = vals[0] if vals[0] < vals[1] else vals[1]
+        extra = (sum(vals[2:]) / (len(vals) - 2)) if len(vals) > 2 else 0.0
+        sc = core + extra * 0.30
+        if sc > best_s:
+            second = best_s
+            best_s, best = sc, m
+        elif sc > second:
+            second = sc
+    if best is None or best_s < thresh:
+        return None, best_s
+    if second >= thresh and second > best_s * 0.94:
+        return None, best_s          # 两个候选咬得太紧，等下一帧更清楚的画面
+    return best, best_s
 
 
-def cell_stats(sig, sq):
-    """一格的 (16 块灰度, 加权平均灰度, 加权形状强度)。"""
-    o = sq * 16
-    v = sig[o:o + 16]
-    m = 0.0
-    for i in range(16):
-        m += v[i] * BLK_W[i]
-    m /= BLK_W_SUM
-    var = 0.0
-    for i in range(16):
-        var += BLK_W[i] * (v[i] - m) ** 2
-    var /= BLK_W_SUM
-    return v, m, var ** 0.5
-
-
-CENTER = (5, 6, 9, 10)      # 4×4 块里正中间那 2×2，棋子本体落在这里
-
-
-def center_flat(v):
-    """格心那块有多平：高亮边框只影响四周，格心平整就还是空格。"""
-    vals = [v[i] for i in CENTER]
-    m = sum(vals) / 4.0
-    return (sum((x - m) ** 2 for x in vals) / 4.0) ** 0.5
-
-
-def shape_of(v, m, sd):
-    """去掉整体明暗后的形状：只留「哪块亮哪块暗」。"""
-    if sd < 2.0:
-        return [0.0] * 16
-    return [(x - m) / sd for x in v]
+# ─────────────────────── 棋子形状记忆（精准识别）───────────────────────
+TPL_MAX = 8           # 同一身份最多累积几帧样本
+TPL_TRUST = 26.0      # 与最像的那类差到这个数以上 → 认不准
 
 
 class PieceBook:
-    """记住每格图案长什么样，之后就能直接认出「这格现在是什么」。
+    """记住每种棋子长什么样，之后整盘读。
 
-    特征分两段，因为棋盘皮肤千差万别：
-    · 形状：格内 16 个块减去本格均值再除以标准差 → 与底色、整体明暗无关，
-      换皮肤也还是同一块图案。
-    · 明暗：格子的平均灰度单独留一维，用来分白子 / 黑子。
-    空格另存一套原型（平均灰度 + 形状强度），因为纯色格归一化后全是噪声。
-
-    身份来自程序自己的棋盘，只用「画面和棋盘确定一致」的帧学。
+    每种 (身份, 底色) 存一个「去均值单位化描述子的和」；比较用归一化互相关：
+        ncc = Σ(样本描述子平均 · 当前描述子) / 36
+    ncc 只跟轮廓有关，与皮肤、棋盘配色、整体亮度无关；1 = 完全一样，0 = 毫无关系。
     """
 
     def __init__(self):
-        self.pieces = {}        # (char, parity) -> [形状和(16), 亮度和, 样本数]
-        self.empties = {}       # parity -> [亮度和, 形状强度和, 样本数]
+        self.pieces = {}      # (char, parity) -> [desc 和(36), 样本数, 亮度和, 起伏和]
+        self.empties = {}     # parity -> [亮度和, 起伏和, 样本数]
 
     def __len__(self):
         return len(self.pieces) + len(self.empties)
@@ -1053,90 +1090,96 @@ class PieceBook:
         for sq in range(64):
             if skip and sq in skip:
                 continue
-            ch = board[sq]
+            scr = to_screen(sq, flip) if flip else sq
             par = self.parity(sq)
-            v, m, sd = cell_stats(sig, to_screen(sq, flip))
+            p, m, sd = cell_patch(sig, scr)
+            ch = board[sq]
             if ch == ".":
                 e = self.empties.get(par)
                 if e is None:
                     self.empties[par] = [float(m), float(sd), 1]
-                elif e[2] < TPL_MAX:
+                elif e[2] < TPL_MAX * 4:
                     e[0] += m
                     e[1] += sd
                     e[2] += 1
                 continue
-            z = shape_of(v, m, sd)
-            e = self.pieces.get((ch, par))
-            if e is None:
-                self.pieces[(ch, par)] = [[x for x in z], float(m), 1]
-            elif e[2] < TPL_MAX:
-                for i in range(16):
-                    e[0][i] += z[i]
-                e[1] += m
-                e[2] += 1
+            des = cell_desc(p, m, sd)
+            if des is None:
+                continue
+            it = self.pieces.get((ch, par))
+            if it is None:
+                self.pieces[(ch, par)] = [list(des), 1, float(m), float(sd)]
+            elif it[1] < TPL_MAX:
+                for i in range(DIM):
+                    it[0][i] += des[i]
+                it[1] += 1
+                it[2] += m
+                it[3] += sd
 
     def dump(self):
-        """存成 JSON：下次开程序不用再点「学棋子」。"""
+        """存成 JSON（v2 格式）：下次开程序不用再点「学棋子」。"""
         return {
-            "pieces": [[ch, p, n, round(ms, 3), [round(z, 4) for z in zs]]
-                       for (ch, p), (zs, ms, n) in self.pieces.items()],
-            "empties": [[p, round(e[0], 2), round(e[1], 2), e[2]]
-                        for p, e in self.empties.items()],
+            "v": 2,
+            "pieces": [[ch, p, n, round(ms / n, 2), round(sds / n, 2),
+                        [round(z / n, 5) for z in zs]]
+                       for (ch, p), (zs, n, ms, sds) in self.pieces.items()],
+            "empties": [[p, round(e[0] / e[2], 2), round(e[1] / e[2], 2)]
+                        for p, e in self.empties.items() if e[2]],
         }
 
     def load(self, d):
         try:
-            for ch, p, n, ms, zs in d.get("pieces", []):
-                if len(zs) != 16 or not n:
+            if int(d.get("v", 0)) != 2:
+                raise ValueError("旧版棋子库")
+            for ch, p, n, ms, sds, zs in d.get("pieces", []):
+                if len(zs) != DIM or not n:
                     continue
-                self.pieces[(ch, int(p))] = [list(zs), float(ms), int(n)]
-            for p, s1, s2, n in d.get("empties", []):
-                self.empties[int(p)] = [float(s1), float(s2), int(n)]
+                # 存的是平均值，读回来换算成「和 + 样本数」，与 add 的数据结构保持一致
+                self.pieces[(ch, int(p))] = [[z * n for z in zs], int(n),
+                                             float(ms) * n, float(sds) * n]
+            for p, m, sd in d.get("empties", []):
+                self.empties[int(p)] = [float(m), float(sd), 1]
         except (TypeError, ValueError, KeyError):
             self.pieces.clear()
             self.empties.clear()
 
     def classify(self, sig, sq, flip=False):
-        """返回 (身份, 偏差)。sq 是棋盘格，内部按 flip 换算成画面格再取图案。
+        """返回 (身份, 偏差)。sq 是棋盘格，flip 时按 180° 换成画面格。
 
-        以前这里直接把棋盘格当画面格用，翻转（我执黑）时整盘取到的是 180° 对面的
-        那一格，于是「认不准 N 格」、整盘比对给出乱七八糟的差异，最后凭噪声认出一手
-        根本不存在的棋（比如把 Qd1-f3 认成 h2-h3）。
+        偏差 ≈ (1 - 相似度) × 50：完美 0，像 0.9 → 5，像 0.5 → 25，认不准 > TPL_TRUST。
         """
         par = self.parity(sq)
-        v, m, sd = cell_stats(sig, to_screen(sq, flip) if flip else sq)
+        p, m, sd = cell_patch(sig, to_screen(sq, flip) if flip else sq)
 
-        # 先看是不是空格：纯色格形状强度低，灰度也贴近学到的底色
+        # 空格优先：亮度贴近底色、起伏也像底色。只看亮度不够（浅底上的白子亮度接近底色），
+        # 只看起伏也不够（深色皮肤上的黑子起伏小），两条一起才稳。
         e = self.empties.get(par) or self.empties.get(1 - par)
-        if e:
+        if e and e[2]:
             m0, sd0 = e[0] / e[2], e[1] / e[2]
-            dm = abs(m - m0)
-            # 亮度接近 + 图案强度和空格原型接近 → 空格。
-            # 只用亮度不够：浅底上的白子在整格均值上跟空格几乎一样。
-            if dm < 18 and sd < max(6.0, sd0 + 8.0):
-                return ".", dm
+            if abs(m - m0) < 20 and sd < max(5.0, sd0 * 2.0 + 3.0):
+                return ".", abs(m - m0)
 
-        z = shape_of(v, m, sd)
-        best, bestd = None, 1e18
-        for (ch, p), (zs, ms, n) in self.pieces.items():
-            d = 0.0
-            for i in range(16):
-                t = zs[i] / n - z[i]
-                d += BLK_W[i] * t * t
-            d /= BLK_W_SUM
-            # 明暗差折算成同一量纲：灰度差 40 记作 1
-            lt = (ms / n - m) / 40.0
-            d += lt * lt
-            if p != par:
-                # 同一种子落在黑格/白格上：底色不同，形状归一到同一空间后仍差一截，
-                # 给一点惩罚让它排在「本色格」样本后面，但不至于整格认不出来
-                d += 0.30
-            if d < bestd:
-                bestd, best = d, ch
+        des = cell_desc(p, m, sd)
+        if des is None:
+            return None, 1e9
+        best, best_ncc = None, -2.0
+        for (ch, pr), (zs, n, ms, sds) in self.pieces.items():
+            if not n:
+                continue
+            dot = 0.0
+            for i in range(DIM):
+                dot += zs[i] * des[i]
+            ncc = dot / (n * DIM)
+            if pr != par:
+                # 同一种子落在另一种底色上：形状一样，但底纹方向不同，略降优先
+                ncc -= 0.10
+            # 亮度差补一点点（白子黑子的轮廓有时过于接近）
+            ncc -= abs(ms / n - m) / 900.0
+            if ncc > best_ncc:
+                best_ncc, best = ncc, ch
         if best is None:
-            return None, 1e18
-        # 形状距离开方后 × 30，凑成「大致等于多少灰度差」，好跟阈值比
-        return best, (bestd ** 0.5) * 30.0
+            return None, 1e9
+        return best, (1.0 - best_ncc) * 50.0
 
 
 # ─────────────────────────── 鼠标 ───────────────────────────
@@ -1171,28 +1214,92 @@ CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "C
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 BOOK_PATH = os.path.join(CONFIG_DIR, "book.json")
 PIECES_PATH = os.path.join(CONFIG_DIR, "pieces.json")
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 SENS_DEFAULT = 44          # 滑杆位置（1..50，越大越灵敏）
 
+# ── 配色（偏暖、低饱和，长时间看不刺眼）──
+FONT = "Microsoft YaHei UI"
+C_BG = "#f2ecdf"
+C_CARD = "#fffdf8"
+C_LINE = "#ded3ba"
+C_INK = "#33302a"
+C_MUTED = "#8b8268"
+C_ACCENT = "#3f6b3a"
+C_BTN = "#efe6d2"
+C_BTN_HI = "#e4d7bb"
+C_BTN_INK = "#3a3630"
+C_BOARD_L = "#efdfc2"
+C_BOARD_D = "#b98a5d"
+C_BOARD_BG = "#5f5140"
+C_SEL = "#d9a520"
+C_SUG = "#2f6fd0"
+C_CHECK = "#c0392b"
+
+
+class ScrollPane(tk.Frame):
+    """可滚动容器：窗口再小也能把所有控件滚出来，不会把按钮挤没。"""
+
+    def __init__(self, master, width=380):
+        super().__init__(master, bg=C_BG)
+        self.canvas = tk.Canvas(self, bg=C_BG, highlightthickness=0, bd=0, width=width)
+        self.bar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self._on_scroll)
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.body = tk.Frame(self.canvas, bg=C_BG)
+        self._win = self.canvas.create_window((0, 0), window=self.body, anchor="nw")
+        self.body.bind("<Configure>", self._sync)
+        self.canvas.bind("<Configure>", self._fit)
+        self.bind("<Enter>", self._bind_wheel)
+        self.bind("<Leave>", self._unbind_wheel)
+
+    def _sync(self, _=None):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def _fit(self, e):
+        self.canvas.itemconfigure(self._win, width=e.width)
+
+    def _on_scroll(self, first, last):
+        if float(first) <= 0.0 and float(last) >= 1.0:
+            self.bar.pack_forget()
+        else:
+            self.bar.pack(side="right", fill="y")
+        self.bar.set(first, last)
+
+    def _bind_wheel(self, _=None):
+        self.canvas.bind_all("<MouseWheel>", self._wheel)
+
+    def _unbind_wheel(self, _=None):
+        self.canvas.unbind_all("<MouseWheel>")
+
+    def _wheel(self, e):
+        self.canvas.yview_scroll(-1 if e.delta > 0 else 1, "units")
+
 
 def sens_from_slider(v):
-    """滑杆位置 → 差分阈值。往右 = 阈值更小 = 更容易认出（6..24）。"""
+    """滑杆位置 → 差分阈值。往右 = 阈值更小 = 更容易认出（4..14）。
+
+    v2 的差分是去均值后的绝对差，静置噪声实测 0.0，走一步 12~44，
+    所以整条区间可以压到 4~14：默认位置就足够灵敏，也不会被轻微抖动触发。
+    """
     try:
         v = int(v)
     except (TypeError, ValueError):
         v = SENS_DEFAULT
     v = max(1, min(50, v))
-    return 6.0 + (50 - v) * 18.0 / 49.0
+    return 4.0 + (50 - v) * 10.0 / 49.0
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("国象应招器")
-        self.geometry("1120x760")
-        self.minsize(1000, 700)
-        self.configure(bg="#fbf7ec")
+        self.title("国象应招器 · 应招助手")
+        self.configure(bg=C_BG)
+        sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
+        w, h = min(1220, int(sw * 0.90)), min(860, int(sh * 0.90))
+        self.geometry("%dx%d+%d+%d" % (w, h, max(0, (sw - w) // 2),
+                                       max(0, (sh - h) // 2 - 24)))
+        self.minsize(720, 480)
 
         self.st = new_state()
         self.human = "w"            # 我方（程序替我算的一方）
@@ -1270,147 +1377,285 @@ class App(tk.Tk):
         self.after(60, self._pump_ui)
 
     # ---------- 界面 ----------
+    # ── 界面 ───────────────────────────────────────────────
     def _build_ui(self):
-        left = tk.Frame(self, bg="#fbf7ec")
-        left.pack(side="left", fill="both", expand=False, padx=12, pady=12)
-        self.canvas = tk.Canvas(left, width=512, height=512, bg="#e9d6b3",
-                                highlightthickness=2, highlightbackground="#7a6a52")
-        self.canvas.pack()
-        self.canvas.bind("<Button-1>", self.on_board_click)
-
+        st = ttk.Style(self)
+        try:
+            st.theme_use("clam")
+        except tk.TclError:
+            pass
+        st.configure("HS.Horizontal.TScale", background=C_CARD, troughcolor="#e6dbc3",
+                     bordercolor=C_CARD, lightcolor=C_ACCENT, darkcolor=C_ACCENT,
+                     gripcount=0, sliderthickness=14)
+        st.configure("HS.Horizontal.TScrollbar", background="#dfd3b9",
+                     troughcolor=C_BG, bordercolor=C_BG, arrowcolor=C_INK,
+                     lightcolor="#dfd3b9", darkcolor="#dfd3b9")
+        self.pane_style = st
         self.status = tk.StringVar(value="白先")
-        tk.Label(left, textvariable=self.status, bg="#fbf7ec", fg="#3b3b33",
-                 font=("Microsoft YaHei UI", 10, "bold")).pack(pady=(8, 0))
+        self._draw_job = None
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
 
-        right = tk.Frame(self, bg="#fbf7ec")
-        right.pack(side="left", fill="both", expand=True, padx=(0, 12), pady=12)
+        # ── 顶栏 ──
+        head = tk.Frame(self, bg=C_BG)
+        head.grid(row=0, column=0, sticky="ew", padx=14, pady=(12, 6))
+        tk.Label(head, text="国象应招器", bg=C_BG, fg=C_INK,
+                 font=(FONT, 16, "bold")).pack(side="left")
+        tk.Label(head, text="v" + VERSION, bg=C_BG, fg=C_MUTED,
+                 font=("Consolas", 9)).pack(side="left", padx=(8, 0), pady=(6, 0))
+        self.status_pill = tk.Label(head, textvariable=self.status, bg=C_ACCENT,
+                                    fg="#f8f5ec", font=(FONT, 9, "bold"),
+                                    padx=12, pady=5)
+        self.status_pill.pack(side="right")
 
-        def group(title):
-            f = tk.LabelFrame(right, text=title, bg="#fbf7ec", fg="#454434",
-                              font=("Microsoft YaHei UI", 9, "bold"), bd=1, relief="solid")
-            f.pack(fill="x", pady=(0, 8))
-            return f
+        # ── 主体：左棋盘 / 右控制区 ──
+        body = tk.Frame(self, bg=C_BG)
+        body.grid(row=1, column=0, sticky="nsew", padx=14)
+        body.grid_columnconfigure(0, weight=1)
+        body.grid_rowconfigure(0, weight=1)
 
-        g1 = group("对局")
-        row = tk.Frame(g1, bg="#fbf7ec")
-        row.pack(fill="x", padx=8, pady=6)
-        tk.Label(row, text="我执", bg="#fbf7ec").pack(side="left")
+        board_card = tk.Frame(body, bg=C_CARD, highlightbackground=C_LINE,
+                              highlightthickness=1)
+        board_card.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+        board_card.grid_columnconfigure(0, weight=1)
+        board_card.grid_rowconfigure(0, weight=1)
+
+        self.canvas = tk.Canvas(board_card, bg=C_CARD, highlightthickness=0, bd=0)
+        self.canvas.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        self.canvas.bind("<Button-1>", self.on_board_click)
+        self.canvas.bind("<Configure>", self._on_board_resize)
+
+        foot = tk.Frame(board_card, bg=C_CARD)
+        foot.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 10))
+        self.turn_label = tk.Label(foot, text="", bg=C_CARD, fg=C_MUTED,
+                                   font=(FONT, 9), anchor="w")
+        self.turn_label.pack(side="left")
+
+        self.pane = ScrollPane(body, width=386)
+        self.pane.grid(row=0, column=1, sticky="ns")
+        right = self.pane.body
+
+        def card(title, hint=""):
+            f = tk.Frame(right, bg=C_CARD, highlightbackground=C_LINE,
+                         highlightthickness=1)
+            f.pack(fill="x", pady=(0, 10))
+            bar = tk.Frame(f, bg=C_CARD)
+            bar.pack(fill="x")
+            tk.Label(bar, text=title, bg=C_CARD, fg=C_INK,
+                     font=(FONT, 9, "bold")).pack(side="left", padx=10, pady=(7, 2))
+            if hint:
+                tk.Label(bar, text=hint, bg=C_CARD, fg=C_MUTED,
+                         font=(FONT, 8)).pack(side="right", padx=10)
+            tk.Frame(f, bg=C_ACCENT, height=2).pack(fill="x", padx=10, pady=(0, 6))
+            inner = tk.Frame(f, bg=C_CARD)
+            inner.pack(fill="x", padx=10, pady=(0, 9))
+            return inner
+
+        def btn(parent, text, cmd, kind="normal"):
+            bg = C_ACCENT if kind == "accent" else C_BTN
+            fg = "#f8f5ec" if kind == "accent" else C_BTN_INK
+            hi = "#35592f" if kind == "accent" else C_BTN_HI
+            b = tk.Button(parent, text=text, command=cmd, font=(FONT, 9), bg=bg, fg=fg,
+                          activebackground=hi, activeforeground=fg, relief="flat",
+                          bd=0, padx=9, pady=4, cursor="hand2", highlightthickness=0)
+            b.bind("<Enter>", lambda e, w=b, c=hi: w.config(bg=c))
+            b.bind("<Leave>", lambda e, w=b, c=bg: w.config(bg=c))
+            return b
+
+        def lab(parent, text, muted=True, size=9):
+            return tk.Label(parent, text=text, bg=C_CARD,
+                            fg=C_MUTED if muted else C_INK, font=(FONT, size))
+
+        # ① 对局
+        g1 = card("对局", "轮到我方时自动算")
+        row = tk.Frame(g1, bg=C_CARD)
+        row.pack(fill="x")
+        lab(row, "我执").pack(side="left")
         self.side_var = tk.StringVar(value="w")
         for txt, val in (("白", "w"), ("黑", "b")):
             tk.Radiobutton(row, text=txt, value=val, variable=self.side_var,
-                           command=self.on_side_change, bg="#fbf7ec",
-                           activebackground="#fbf7ec").pack(side="left", padx=4)
-        tk.Checkbutton(row, text="自动应招", variable=tk.BooleanVar(value=True),
-                       command=lambda: None, bg="#fbf7ec").pack(side="left", padx=(16, 0))
+                           command=self.on_side_change, bg=C_CARD, fg=C_INK,
+                           activebackground=C_CARD, selectcolor=C_CARD,
+                           highlightthickness=0,
+                           font=(FONT, 9)).pack(side="left", padx=(6, 0))
         self.auto_var = tk.BooleanVar(value=True)
-        row.winfo_children()[-1].configure(variable=self.auto_var, command=self.on_auto_toggle)
+        tk.Checkbutton(row, text="自动应招", variable=self.auto_var, bg=C_CARD,
+                       fg=C_INK, activebackground=C_CARD, selectcolor=C_CARD,
+                       highlightthickness=0, font=(FONT, 9),
+                       command=self.on_auto_toggle).pack(side="left", padx=(14, 0))
 
-        row2 = tk.Frame(g1, bg="#fbf7ec")
-        row2.pack(fill="x", padx=8, pady=(0, 6))
-        tk.Label(row2, text="深度", bg="#fbf7ec").pack(side="left")
+        row2 = tk.Frame(g1, bg=C_CARD)
+        row2.pack(fill="x", pady=(6, 0))
+        lab(row2, "深度").pack(side="left")
         self.depth_var = tk.IntVar(value=6)
-        tk.Scale(row2, from_=2, to=20, orient="horizontal", variable=self.depth_var,
-                 showvalue=True, length=150, bg="#fbf7ec", highlightthickness=0
-                 ).pack(side="left", padx=6)
-        tk.Button(row2, text="算我这一步", command=self.think).pack(side="left", padx=4)
-        tk.Button(row2, text="悔棋", command=self.undo).pack(side="left")
-        tk.Button(row2, text="新局", command=self.new_game).pack(side="left", padx=4)
+        self.depth_val = tk.Label(row2, text="6", bg=C_CARD, fg=C_INK, width=2,
+                                  font=("Consolas", 9))
+        self.depth_val.pack(side="left", padx=(2, 0))
+        self.depth_scale = ttk.Scale(row2, from_=2, to=20, orient="horizontal",
+                                     length=92, style="HS.Horizontal.TScale",
+                                     command=self._on_depth)
+        self.depth_scale.set(6)
+        self.depth_scale.pack(side="left", padx=(0, 6))
+        btn(row2, "算我这一步", self.think, "accent").pack(side="left")
+        btn(row2, "悔棋", self.undo).pack(side="left", padx=4)
+        btn(row2, "新局", self.new_game).pack(side="left")
 
-        g2 = group("读取棋盘")
-        row0 = tk.Frame(g2, bg="#fbf7ec")
-        row0.pack(fill="x", padx=8, pady=(6, 2))
-        tk.Label(row0, text="数据源", bg="#fbf7ec").pack(side="left")
+        # ② 分析
+        g3 = card("分析", "只给建议，不替你落子")
+        self.result = tk.Label(g3, text="等你落子 / 录对手的棋", bg=C_CARD, fg=C_INK,
+                               font=("Consolas", 10), justify="left", anchor="w",
+                               wraplength=340)
+        self.result.pack(fill="x")
+
+        # ③ 读取棋盘
+        g2 = card("读取棋盘")
+        row0 = tk.Frame(g2, bg=C_CARD)
+        row0.pack(fill="x")
+        lab(row0, "数据源").pack(side="left")
         self.src_var = tk.StringVar(value="screen")
         for txt, val in (("浏览器读取", "dom"), ("屏幕识别", "screen")):
             tk.Radiobutton(row0, text=txt, value=val, variable=self.src_var,
-                           bg="#fbf7ec", command=self.on_source).pack(side="left", padx=(8, 0))
-        tk.Button(row0, text="诊断", command=self.dump_diag).pack(side="right")
-        tk.Button(row0, text="装扩展", command=self.export_ext).pack(side="right", padx=4)
-        self.dom_label = tk.Label(g2, text="浏览器读取：已关闭（用屏幕识别）", bg="#fbf7ec",
-                                  fg="#8a8266", font=("Consolas", 9), anchor="w",
-                                  justify="left", wraplength=250)
-        self.dom_label.pack(fill="x", padx=8, pady=(0, 2))
+                           command=self.on_source, bg=C_CARD, fg=C_INK,
+                           activebackground=C_CARD, selectcolor=C_CARD,
+                           highlightthickness=0,
+                           font=(FONT, 9)).pack(side="left", padx=(6, 0))
+        rowA = tk.Frame(g2, bg=C_CARD)
+        rowA.pack(fill="x", pady=(5, 0))
+        btn(rowA, "装扩展（浏览器读取）", self.export_ext).pack(side="left")
+        btn(rowA, "诊断", self.dump_diag).pack(side="left", padx=5)
 
-        row3 = tk.Frame(g2, bg="#fbf7ec")
-        row3.pack(fill="x", padx=8, pady=6)
-        b_pick = tk.Button(row3, text="① 框选棋盘", command=self.pick_region)
+        self.dom_label = tk.Label(g2, text="浏览器读取：已关闭（用屏幕识别）", bg=C_CARD,
+                                  fg=C_MUTED, font=("Consolas", 8), anchor="w",
+                                  justify="left", wraplength=340)
+        self.dom_label.pack(fill="x", pady=(4, 2))
+
+        row3 = tk.Frame(g2, bg=C_CARD)
+        row3.pack(fill="x", pady=(4, 0))
+        b_pick = btn(row3, "① 框选棋盘", self.pick_region)
         b_pick.pack(side="left")
-        self.btn_scan = tk.Button(row3, text="② 开始识别", command=self.toggle_scan)
-        self.btn_scan.pack(side="left", padx=6)
-        b_clear = tk.Button(row3, text="清区域", command=self.clear_region)
+        self.btn_scan = btn(row3, "② 开始识别", self.toggle_scan, "accent")
+        self.btn_scan.pack(side="left", padx=5)
+        b_clear = btn(row3, "清区域", self.clear_region)
         b_clear.pack(side="left")
 
-        row3b = tk.Frame(g2, bg="#fbf7ec")
-        row3b.pack(fill="x", padx=8, pady=(0, 4))
-        b_align = tk.Button(row3b, text="⌖ 自动对齐", command=self.do_align)
+        row3b = tk.Frame(g2, bg=C_CARD)
+        row3b.pack(fill="x", pady=(6, 4))
+        b_align = btn(row3b, "⌖ 自动对齐", self.do_align)
         b_align.pack(side="left")
-        b_learn = tk.Button(row3b, text="③ 学棋子", command=self.learn_now)
-        b_learn.pack(side="left", padx=6)
-        b_rebase = tk.Button(row3b, text="重取基线", command=self.rebase)
+        b_learn = btn(row3b, "③ 学棋子", self.learn_now)
+        b_learn.pack(side="left", padx=5)
+        b_rebase = btn(row3b, "重取基线", self.rebase)
         b_rebase.pack(side="left")
         self._screen_widgets = [b_pick, self.btn_scan, b_clear, b_align, b_learn, b_rebase]
 
-        # 识别区域：程序实际截到的那一块，带 8×8 网格和识别标记
-        self.view = tk.Canvas(g2, width=248, height=248, bg="#12130f",
-                              highlightthickness=1, highlightbackground="#4a4a3c")
-        self.view.pack(padx=8, pady=(0, 4))
-        self.view.create_text(124, 124, text="框完棋盘这里会显示程序看到的画面",
-                              fill="#7d7660", font=("Microsoft YaHei UI", 9))
+        # 识别区域预览（随面板宽度自适应）
+        self._view_side = 300
+        self.view = tk.Canvas(g2, width=self._view_side, height=self._view_side,
+                              bg="#12130f", highlightthickness=0, bd=0)
+        self.view.pack(pady=(2, 4))
+        self.view.create_text(self._view_side // 2, self._view_side // 2,
+                              text="框完棋盘，这里会显示程序看到的画面",
+                              fill="#b9b19a", font=(FONT, 9), width=self._view_side - 40,
+                              justify="center")
         self.view.bind("<ButtonPress-1>", self._view_down)
         self.view.bind("<B1-Motion>", self._view_move)
         self.view.bind("<ButtonRelease-1>", self._view_up)
         self.view.bind("<MouseWheel>", self._view_wheel)
-        rowb = tk.Frame(g2, bg="#fbf7ec")
-        rowb.pack(fill="x", padx=8, pady=(0, 6))
+        self.pane.body.bind("<Configure>", self._on_pane_resize, add="+")
+
+        rowb = tk.Frame(g2, bg=C_CARD)
+        rowb.pack(fill="x")
         self.book_label = tk.Label(rowb, text="棋子库：空（点「③ 学棋子」采集）",
-                                   bg="#fbf7ec", fg="#8a8266", font=("Consolas", 9),
+                                   bg=C_CARD, fg=C_MUTED, font=("Consolas", 8),
                                    anchor="w", justify="left", wraplength=250)
         self.book_label.pack(side="left", fill="x", expand=True)
-        tk.Button(rowb, text="重置", command=self.reset_book).pack(side="right")
+        btn(rowb, "重置", self.reset_book).pack(side="right")
 
-        row4 = tk.Frame(g2, bg="#fbf7ec")
-        row4.pack(fill="x", padx=8, pady=(0, 6))
-        tk.Checkbutton(row4, text="自动落子（模拟鼠标）", variable=tk.BooleanVar(value=False),
-                       bg="#fbf7ec").pack(side="left")
+        row4 = tk.Frame(g2, bg=C_CARD)
+        row4.pack(fill="x", pady=(6, 0))
         self.play_var = tk.BooleanVar(value=False)
-        row4.winfo_children()[-1].configure(variable=self.play_var)
-        tk.Label(row4, text="灵敏度", bg="#fbf7ec").pack(side="left", padx=(14, 4))
-        # 滑杆往右 = 更灵敏（阈值更小）。以前是往右更迟钝，谁都会顺手拉到底，
-        # 结果阈值高到认不出任何走法。
+        tk.Checkbutton(row4, text="自动落子", variable=self.play_var, bg=C_CARD,
+                       fg=C_INK, activebackground=C_CARD, selectcolor=C_CARD,
+                       highlightthickness=0, font=(FONT, 9)).pack(side="left")
+        lab(row4, "灵敏度").pack(side="left", padx=(10, 2))
         self.sens_var = tk.IntVar(value=SENS_DEFAULT)
-        tk.Scale(row4, from_=1, to=50, orient="horizontal", variable=self.sens_var,
-                 showvalue=False, length=120, bg="#fbf7ec", highlightthickness=0,
-                 command=self._on_sens
-                 ).pack(side="left")
-        self.region_label = tk.Label(g2, text="未选择区域", bg="#fbf7ec", fg="#8a8266",
-                                     font=("Consolas", 9), anchor="w")
-        self.region_label.pack(fill="x", padx=8, pady=(0, 6))
+        self.sens_scale = ttk.Scale(row4, from_=1, to=50, orient="horizontal",
+                                    length=92, style="HS.Horizontal.TScale",
+                                    command=self._on_sens)
+        self.sens_scale.set(SENS_DEFAULT)
+        self.sens_scale.pack(side="left")
+        self.region_label = tk.Label(g2, text="未选择区域", bg=C_CARD, fg=C_MUTED,
+                                     font=("Consolas", 8), anchor="w")
+        self.region_label.pack(fill="x", pady=(2, 0))
 
-        g3 = group("分析")
-        self.result = tk.Label(g3, text="等你落子 / 录对手的棋", bg="#fbf7ec", fg="#3b3b33",
-                               font=("Consolas", 11), justify="left", anchor="w", wraplength=420)
-        self.result.pack(fill="x", padx=8, pady=6)
-
-        g4 = group("着法记录")
-        self.logbox = tk.Listbox(g4, height=8, font=("Consolas", 10), bg="#fffdf6",
-                                 activestyle="none")
-        self.logbox.pack(fill="both", expand=True, padx=8, pady=(6, 2))
-        row5 = tk.Frame(g4, bg="#fbf7ec")
-        row5.pack(fill="x", padx=8, pady=(0, 6))
-        tk.Button(row5, text="复制棋谱", command=self.copy_log).pack(side="left")
-        tk.Button(row5, text="复制 FEN", command=self.copy_fen).pack(side="left", padx=6)
+        # ④ 着法记录
+        g4 = card("着法记录")
+        self.logbox = tk.Listbox(g4, height=6, font=("Consolas", 10), bg="#fffdf6",
+                                 activestyle="none", relief="flat", bd=0,
+                                 highlightthickness=1, highlightbackground=C_LINE,
+                                 selectbackground=C_ACCENT, selectforeground="#f8f5ec")
+        self.logbox.pack(fill="both", expand=True)
+        row5 = tk.Frame(g4, bg=C_CARD)
+        row5.pack(fill="x", pady=(6, 0))
+        btn(row5, "复制棋谱", self.copy_log).pack(side="left")
+        btn(row5, "复制 FEN", self.copy_fen).pack(side="left", padx=4)
         self.input_var = tk.StringVar()
-        ent = tk.Entry(row5, textvariable=self.input_var, width=18, font=("Consolas", 10))
-        ent.pack(side="left", padx=(6, 4))
+        ent = tk.Entry(row5, textvariable=self.input_var, width=12, font=("Consolas", 10),
+                       relief="flat", bd=0, highlightthickness=1,
+                       highlightbackground=C_LINE, highlightcolor=C_ACCENT,
+                       bg="#fffdf6", fg=C_INK)
+        ent.pack(side="left", padx=(4, 4), ipady=3)
         ent.bind("<Return>", lambda e: self.apply_input())
-        tk.Button(row5, text="走这步", command=self.apply_input).pack(side="left")
+        btn(row5, "走这步", self.apply_input).pack(side="left")
+        tk.Frame(right, bg=C_BG, height=6).pack(fill="x")
 
-        self.hint = tk.Label(self, text="推荐「浏览器读取」：装一次扩展，程序直接抄站点的局面，不存在识别错误。"
-                                        "屏幕识别是兜底。程序只给建议，真实棋盘才是准的。"
-                                        "识图没反应就点「重取基线」，"
-                                        "或把灵敏度往右调（越靠右越容易认出）。",
-                             bg="#fbf7ec", fg="#7d7660", font=("Microsoft YaHei UI", 9), anchor="w")
-        self.hint.pack(side="bottom", fill="x", padx=14, pady=(0, 10))
+        # ── 底栏 ──
+        self.hint = tk.Label(self, text="程序只读、只建议，真实棋盘才是准的。"
+                                        "推荐用「浏览器读取」——装一次扩展，直接抄站点局面；"
+                                        "屏幕识别是兜底：框歪了点「自动对齐」，认不出点「重取基线」。",
+                             bg=C_BG, fg=C_MUTED, font=(FONT, 9), anchor="w",
+                             justify="left")
+        self.hint.grid(row=2, column=0, sticky="ew", padx=16, pady=(4, 10))
+        self.bind("<Configure>", self._on_root_resize)
+
+    def _on_root_resize(self, e):
+        if e.widget is not self:
+            return
+        self.hint.config(wraplength=max(200, e.width - 40))
+        want = int(max(300, min(392, e.width * 0.40)))
+        if abs(want - getattr(self, "_pane_w", 0)) > 6:
+            self._pane_w = want
+            self.pane.canvas.config(width=want)
+
+    def _on_pane_resize(self, e=None):
+        """面板宽度变了：预览框跟着变，文字换行宽度也跟着变。"""
+        width = self.pane.canvas.winfo_width()
+        side = max(180, min(300, width - 46))
+        if abs(side - self._view_side) > 2:
+            self._view_side = side
+            self.view.config(width=side, height=side)
+            if self._view_im is not None:
+                self._paint_view()
+            else:
+                self.view.delete("all")
+                self.view.create_text(side // 2, side // 2,
+                                      text="框完棋盘，这里会显示程序看到的画面",
+                                      fill="#b9b19a", font=(FONT, 9), width=side - 40,
+                                      justify="center")
+        wrap = max(200, width - 40)
+        self.result.config(wraplength=wrap)
+        self.dom_label.config(wraplength=wrap)
+        self.book_label.config(wraplength=max(120, wrap - 60))
+
+    def _on_board_resize(self, e=None):
+        """棋盘画布尺寸变了：40ms 合并一次重绘，拖窗口时不会卡。"""
+        if getattr(self, "_draw_job", None):
+            return
+        self._draw_job = self.after(40, self._redraw_board)
+
+    def _redraw_board(self):
+        self._draw_job = None
+        self.draw()
 
     # ---------- 浏览器读取（主通道） ----------
     def _init_bridge(self):
@@ -1627,8 +1872,22 @@ class App(tk.Tk):
             self._set_result("导出失败：%s" % e)
 
     # ---------- 配置 ----------
+    def _on_depth(self, v):
+        try:
+            lvl = int(round(float(v)))
+        except (TypeError, ValueError):
+            return
+        self.depth_var.set(lvl)
+        if hasattr(self, "depth_val"):
+            self.depth_val.config(text=str(lvl))
+
     def _on_sens(self, v):
-        self.sens = sens_from_slider(v)
+        try:
+            lvl = int(round(float(v)))
+        except (TypeError, ValueError):
+            return
+        self.sens_var.set(lvl)
+        self.sens = sens_from_slider(lvl)
 
     def _load_config(self):
         try:
@@ -1637,14 +1896,21 @@ class App(tk.Tk):
             self.region = tuple(cfg["region"]) if cfg.get("region") else None
             lvl = int(cfg.get("sens_lvl", SENS_DEFAULT))
             self.sens_var.set(lvl)
+            self.sens_scale.set(lvl)
             self.sens = sens_from_slider(lvl)
-            self.depth_var.set(int(cfg.get("depth", 6)))
+            dep = int(cfg.get("depth", 6))
+            self.depth_var.set(dep)
+            self.depth_scale.set(dep)
+            self.depth_val.config(text=str(dep))
             self.play_var.set(bool(cfg.get("auto_play", False)))
             src = str(cfg.get("source", "screen"))
             self.source = "dom" if src == "dom" else "screen"
             self.src_var.set(self.source)
             if self.region:
                 self.region_label.config(text="区域 %s" % (self.region,))
+            geo = str(cfg.get("geom") or "")
+            if re.fullmatch(r"\d+x\d+([+-]-?\d+){2}", geo):
+                self.geometry(geo)
         except (OSError, ValueError, KeyError):
             pass
         # 棋子库：上次跑出来的直接接着用，省得每次开局都点「学棋子」
@@ -1664,7 +1930,7 @@ class App(tk.Tk):
             with open(CONFIG_PATH, "w", encoding="utf-8") as f:
                 json.dump({"region": self.region, "sens_lvl": int(self.sens_var.get()),
                            "depth": self.depth_var.get(), "auto_play": self.play_var.get(),
-                           "source": self.source}, f)
+                           "source": self.source, "geom": self.geometry()}, f)
         except OSError:
             pass
         try:
@@ -1678,80 +1944,136 @@ class App(tk.Tk):
     def flip(self):
         return self.orient == "b"
 
+    def _geom(self):
+        """棋盘画布的实际几何：居中、正方形、随窗口缩放。
+
+        留出一圈边距（pad）专门放坐标字母，不然 a~h 会压在底排棋子上。
+        """
+        w = self.canvas.winfo_width()
+        h = self.canvas.winfo_height()
+        if w < 40 or h < 40:            # 还没完成布局
+            w = h = 480
+        total = min(w, h)
+        pad = max(9, int(total * 0.038))
+        cell = max(6.0, (total - 2 * pad) / 8.0)
+        ox = (w - total) / 2.0 + pad
+        oy = (h - total) / 2.0 + pad
+        self._pad = pad
+        return ox, oy, cell * 8.0, cell
+
     def cell_center(self, sq):
+        ox, oy, side, cell = getattr(self, "_geo", None) or self._geom()
         r, c = sq >> 3, sq & 7
         sr, sc = (7 - r, 7 - c) if self.flip() else (r, c)
-        return (sc + 0.5) * 64, (sr + 0.5) * 64
+        return ox + (sc + 0.5) * cell, oy + (sr + 0.5) * cell
 
     def draw(self):
         cv = self.canvas
         cv.delete("all")
+        ox, oy, side, cell = self._geom()
+        self._geo = (ox, oy, side, cell)
         flip = self.flip()
-        king_sq = find_king(self.st["board"], self.st["turn"] == "w")
-        check = in_check(self.st["board"], self.st["turn"] == "w")
+        board = self.st["board"]
+        king_sq = find_king(board, self.st["turn"] == "w")
+        check = in_check(board, self.st["turn"] == "w")
+        thin = max(1, int(cell * 0.035))
+        thick = max(2, int(cell * 0.065))
+        r3 = max(2, int(cell * 0.06))
+
+        # 外框：一圈深色底（坐标就写在这圈上），看起来像实体棋盘
+        pad = getattr(self, "_pad", 10)
+        cv.create_rectangle(ox - pad, oy - pad, ox + side + pad, oy + side + pad,
+                            fill=C_BOARD_BG, outline="")
+        cv.create_rectangle(ox - 1, oy - 1, ox + side + 1, oy + side + 1,
+                            outline="#5a4f3f", width=1)
 
         for sr in range(8):
             for sc in range(8):
                 r = 7 - sr if flip else sr
                 c = 7 - sc if flip else sc
                 i = r * 8 + c
-                x0, y0 = sc * 64, sr * 64
-                cv.create_rectangle(x0, y0, x0 + 64, y0 + 64,
-                                    fill="#e9d6b3" if (r + c) % 2 == 0 else "#b28460",
-                                    width=0)
+                x0 = ox + sc * cell
+                y0 = oy + sr * cell
+                x1, y1 = x0 + cell, y0 + cell
+                cv.create_rectangle(x0, y0, x1, y1,
+                                    fill=C_BOARD_L if (r + c) % 2 == 0 else C_BOARD_D,
+                                    outline="", width=0)
                 if self.last_move and i in (self.last_move[0], self.last_move[1]):
-                    cv.create_rectangle(x0 + 3, y0 + 3, x0 + 61, y0 + 61,
-                                        outline="#4f8a2a" if i == self.last_move[1] else "#6a6a55",
-                                        width=3)
-                if i == self.selected:
-                    cv.create_rectangle(x0 + 2, y0 + 2, x0 + 62, y0 + 62, outline="#d9a520", width=4)
+                    cv.create_rectangle(x0 + thin, y0 + thin, x1 - thin, y1 - thin,
+                                        outline="#4f7f3f" if i == self.last_move[1]
+                                        else "#7d8f6d", width=thick)
                 if self.suggest and i in (self.suggest[0], self.suggest[1]):
-                    cv.create_rectangle(x0 + 6, y0 + 6, x0 + 58, y0 + 58,
-                                        outline="#2f6fd0" if i == self.suggest[1] else "#8fb4ea",
-                                        width=3)
+                    cv.create_rectangle(x0 + thick, y0 + thick, x1 - thick, y1 - thick,
+                                        outline=C_SUG if i == self.suggest[1]
+                                        else "#9dc0f0", width=thick)
+                if i == self.selected:
+                    cv.create_rectangle(x0 + thin, y0 + thin, x1 - thin, y1 - thin,
+                                        outline=C_SEL, width=thick + 1)
                 if i == king_sq and check:
-                    cv.create_rectangle(x0 + 2, y0 + 2, x0 + 62, y0 + 62, outline="#c0392b", width=4)
+                    cv.create_rectangle(x0 + thin, y0 + thin, x1 - thin, y1 - thin,
+                                        outline=C_CHECK, width=thick + 1)
 
         # 合法落点
         if self.selected >= 0:
             for m in self.legal:
                 if m[0] == self.selected:
                     cx, cy = self.cell_center(m[1])
-                    if self.st["board"][m[1]] == "." and m[4] != "ep":
-                        cv.create_oval(cx - 7, cy - 7, cx + 7, cy + 7, fill="#5b6b3a", outline="")
+                    if board[m[1]] == "." and m[4] != "ep":
+                        rr = max(3, int(cell * 0.11))
+                        cv.create_oval(cx - rr, cy - rr, cx + rr, cy + rr,
+                                       fill="#5b6b3a", outline="")
                     else:
-                        cv.create_oval(cx - 25, cy - 25, cx + 25, cy + 25, outline="#a33030", width=4)
+                        rr = cell * 0.40
+                        cv.create_oval(cx - rr, cy - rr, cx + rr, cy + rr,
+                                       outline="#a33030", width=thick)
 
-        for i, p in enumerate(self.st["board"]):
+        # 棋子
+        fs = max(10, int(cell * 0.62))
+        off = max(1, int(cell * 0.030))
+        for i, p in enumerate(board):
             if p == ".":
                 continue
             cx, cy = self.cell_center(i)
             g = GLYPH[p.lower()]
             if p.isupper():
-                for dx, dy in ((-2, 0), (2, 0), (0, -2), (0, 2), (1, 1), (-1, 1)):
-                    cv.create_text(cx + dx, cy + dy, text=g, font=("Segoe UI Symbol", 30),
+                for dx, dy in ((-off, 0), (off, 0), (0, -off), (0, off)):
+                    cv.create_text(cx + dx, cy + dy, text=g, font=("Segoe UI Symbol", fs),
                                    fill="#4a4238")
-                cv.create_text(cx, cy, text=g, font=("Segoe UI Symbol", 30), fill="#ffffff")
+                cv.create_text(cx, cy, text=g, font=("Segoe UI Symbol", fs), fill="#ffffff")
             else:
-                cv.create_text(cx + 1, cy + 1, text=g, font=("Segoe UI Symbol", 30), fill="#cfc7b8")
-                cv.create_text(cx, cy, text=g, font=("Segoe UI Symbol", 30), fill="#17171a")
+                cv.create_text(cx + 1, cy + 1, text=g, font=("Segoe UI Symbol", fs),
+                               fill="#cfc7b8")
+                cv.create_text(cx, cy, text=g, font=("Segoe UI Symbol", fs), fill="#18181c")
 
+        # 坐标：写在棋盘外面那一圈上
+        cf = max(7, int(min(cell * 0.30, pad * 0.78)))
         for k in range(8):
             f = FILES[k] if not flip else FILES[7 - k]
-            cv.create_text(k * 64 + 58, 8 * 64 - 9, text=f, font=("Consolas", 9), fill="#6b5b43")
+            cv.create_text(ox + (k + 0.5) * cell, oy + side + pad * 0.52,
+                           text=f, font=("Consolas", cf), fill="#9b8f76")
             rn = str(8 - k) if not flip else str(k + 1)
-            cv.create_text(9, k * 64 + 9, text=rn, font=("Consolas", 9), fill="#6b5b43")
+            cv.create_text(ox - pad * 0.52, oy + (k + 0.5) * cell,
+                           text=rn, font=("Consolas", cf), fill="#9b8f76")
 
         self.update_status()
 
     def update_status(self):
         if self.over:
             self.status.set(self.over)
+            self._turn_text(self.over)
             return
         side = "白" if self.st["turn"] == "w" else "黑"
         mine = self.st["turn"] == self.human
-        self.status.set("%s方走 · %s" % (
-            side, "该你（建议在下，蓝框）" if mine else "对手（盯着屏幕认）"))
+        self.status.set("%s方走 · %s" % (side, "该你" if mine else "等对手"))
+        self._turn_text("%s方走 · 你执%s · %s" % (
+            side, "白" if self.human == "w" else "黑",
+            "点「算我这一步」要建议" if mine else "等对手落子"))
+        if hasattr(self, "status_pill"):
+            self.status_pill.config(bg=C_ACCENT if mine else "#8a7a55")
+
+    def _turn_text(self, t):
+        if hasattr(self, "turn_label"):
+            self.turn_label.config(text=t)
 
     # ---------- 对局 ----------
     def refresh_legal(self):
@@ -1892,7 +2214,8 @@ class App(tk.Tk):
     def on_board_click(self, ev):
         if self.busy or self.over:
             return
-        sc, sr = int(ev.x // 64), int(ev.y // 64)
+        ox, oy, side, cell = getattr(self, "_geo", None) or self._geom()
+        sc, sr = int((ev.x - ox) // cell), int((ev.y - oy) // cell)
         if not (0 <= sc < 8 and 0 <= sr < 8):
             return
         flip = self.flip()
@@ -2086,8 +2409,10 @@ class App(tk.Tk):
         self._view_photo = None
         self.region_label.config(text="未选择区域")
         self.view.delete("all")
-        self.view.create_text(124, 124, text="框完棋盘这里会显示程序看到的画面",
-                              fill="#7d7660", font=("Microsoft YaHei UI", 9))
+        self.view.create_text(self._view_side // 2, self._view_side // 2,
+                              text="框完棋盘，这里会显示程序看到的画面",
+                              fill="#b9b19a", font=(FONT, 9), width=self._view_side - 40,
+                              justify="center")
         self._save_config()
 
     def pick_region(self):
@@ -2292,6 +2617,10 @@ class App(tk.Tk):
         self.board_at = time.time()
         return True
 
+    def _occ_now(self, sig):
+        """这一帧「哪几格有子」（画面格顺序）。给走法匹配当硬闸门用。"""
+        return [cell_occupied(sig, i) for i in range(64)]
+
     def _occ_mismatch(self, sig):
         """画面上的「有子 / 没子」和程序局面差几格。
 
@@ -2412,18 +2741,27 @@ class App(tk.Tk):
     def _paint_view(self, img=None, changed=None):
         """把「程序实际看到的那块」画出来：截图形 + 8×8 网格 + 变化格/差异格标记。"""
         cv = self.view
+        side = self._view_side
         if img is not None:
-            self._view_im = img.convert("RGB").resize((248, 248))
-            self._view_photo = ImageTk.PhotoImage(self._view_im)
-        if self._view_photo is None:
+            self._view_im = img.convert("RGB")
+        if self._view_im is None:
             return
+        if min(self._view_im.size) < 64:
+            cv.delete("all")
+            cv.create_text(side // 2, side // 2, fill="#c8c0a8", font=(FONT, 9),
+                           width=side - 40, justify="center",
+                           text="区域只有 %d×%d 像素，太小了。\n"
+                                "重新点「① 框选棋盘」把整块棋盘框进去。"
+                                % self._view_im.size)
+            return
+        self._view_photo = ImageTk.PhotoImage(self._view_im.resize((side, side)))
         cv.delete("all")
         cv.create_image(0, 0, anchor="nw", image=self._view_photo)
-        step = 248 / 8.0
+        step = side / 8.0
         for i in range(9):
             x = int(i * step)
-            cv.create_line(x, 0, x, 248, fill="#5fd68d", dash=(2, 4))
-            cv.create_line(0, x, 248, x, fill="#5fd68d", dash=(2, 4))
+            cv.create_line(x, 0, x, side, fill="#5fd68d", dash=(2, 4))
+            cv.create_line(0, x, side, x, fill="#5fd68d", dash=(2, 4))
         for tag, color in self._view_marks:
             r, c = tag >> 3, tag & 7
             cv.create_rectangle(int(c * step) + 1, int(r * step) + 1,
@@ -2441,7 +2779,7 @@ class App(tk.Tk):
             return
         x0, y0, rect = self._drag
         l, t, k = rect
-        side = 248.0
+        side = float(self._view_side)
         l += (e.x - x0) / side * k
         t += (e.y - y0) / side * k
         self.rect = (l, t, k)
@@ -2453,7 +2791,7 @@ class App(tk.Tk):
 
     def _view_wheel(self, e):
         if self._raw is None:
-            return
+            return "break"
         k = self.rect[2] * (1.02 if e.delta > 0 else 0.98)
         k = max(0.2, min(2.0, k))
         l = self.rect[0] + (self.rect[2] - k) / 2.0
@@ -2461,6 +2799,7 @@ class App(tk.Tk):
         self.rect = (l, t, k)
         self.shot_base = None
         self._paint_view(self._crop(self._raw))
+        return "break"
 
     def rebase(self):
         """把基线对齐到当前画面：漏了一步、或棋盘被拖动/缩放过后手动点一下。"""
@@ -2579,7 +2918,7 @@ class App(tk.Tk):
         # 「稳不稳」按「跟上一帧一不一样」算，而不是跟基线比：
         # 跟基线比的话，只要有一格认不出来的变化挂着，_scan_still 就永远清零，
         # 于是「等它停稳再降阈值重扫 / 提示手动补一步」这两条永远不会触发。
-        still = self._last_sig is not None and bytes(self._last_sig) == bytes(sig)
+        still = self._last_sig is not None and self._last_sig == sig
         self._last_sig = sig
         self._scan_still = self._scan_still + 1 if still else 0
         if not still:
@@ -2641,7 +2980,8 @@ class App(tk.Tk):
         # 画面变了。先按像素差分挑走法（便宜），挑不出就整盘重读、按局面找走法。
         # 内部局面永远等于真实棋盘（程序只给建议、不替我落子），所以「该走的一方」
         # 就是 self.legal，我方走的和对手走的走法集合是同一个。
-        m, sc = match_move(scores, self.legal, self.flip(), sens)
+        occ = self._occ_now(sig)
+        m, sc = match_move(scores, self.legal, self.flip(), sens, occ)
         side = None
         how = "吻合 %.0f" % sc
         if not m and book_ok:
@@ -2656,7 +2996,8 @@ class App(tk.Tk):
                     m, sc, how = m2, sc2, "整盘确认"
         if not m and self._scan_still >= 2:
             # 画面停住了还认不出：阈值降到 55% 再扫一遍，捞那种图案偏淡的走法
-            m, sc = match_move(scores, self.legal, self.flip(), max(3.0, sens * 0.55))
+            m, sc = match_move(scores, self.legal, self.flip(),
+                               max(3.0, sens * 0.55), occ)
             side = None
             how = "宽松 %.0f" % sc
 
