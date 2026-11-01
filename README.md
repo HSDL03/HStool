@@ -158,7 +158,7 @@ python -m http.server 8000     # 或 npx serve .
 
 国象应招器可以**直接读你屏幕上的棋盘**：框住对手的棋盘，你在那边照常下，这边自动读出他走了哪步、给你应手。
 
-**桌面版 exe（推荐）**：[Releases · 国象应招器](https://github.com/HSDL03/HStool/releases/tag/chess-v1.3.0) 直接下 `ChessAssist-1.3.0.exe`（单文件免安装，19.6 MB）。
+**桌面版 exe（推荐）**：[Releases · 国象应招器](https://github.com/HSDL03/HStool/releases/tag/chess-v1.3.1) 直接下 `ChessAssist-1.3.1.exe`（单文件免安装，19.6 MB）。
 源码在 `desk/py`，Python + tkinter，识图与自动落子都在本地。
 
 ```bash
@@ -177,7 +177,7 @@ cd desk/py && build.cmd        # 或：py -m PyInstaller --onefile --windowed --
   `%APPDATA%\ChessAssist\book.json`，下次开程序直接能用。
 - **界面**：卡片式布局，棋盘与预览随窗口自适应（720×480 到 4K 都能用），右栏内容超长时自动滚动，
   窗口大小会被记住。
-- **识图（v2）**：程序每 0.12 秒截一次那块区域，对齐后缩到 192×192（每格 24×24）直接取字节，
+- **识图（v2）**：程序每 0.5 秒截一次那块区域，对齐后缩到 192×192（每格 24×24）直接取字节，
   **每格先减掉本格平均亮度**——上一步的黄色高亮、悬停、淡入淡出都是「整格一起变亮变暗」，
   减掉均值就没了，只剩棋子轮廓。变化分 = 同位置字节的绝对差均值（静置实测 0.0，走一步 12~44）。
   匹配时还有一道硬闸门：真走一步必然「出发格变空、目标格有子」，只有高亮没有走子的两格

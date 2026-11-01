@@ -794,6 +794,7 @@ def align_image(img):
 # 为什么换掉老版：老版每格只留 4×4=16 个灰度块，白兵和黑兵在这 16 个数里几乎一样，
 # 只能靠「整体亮度」硬分，浅色底上的白兵和黑兵经常互换；高亮又会把整格抬亮，
 # 于是「走了一步」被当成 3~4 格变化。v2 保留的是轮廓，且天然抗整格明暗变化。
+SCAN_INTERVAL = 0.5           # 每 0.5 秒取一次屏幕（以前 0.12 秒，白烧 CPU）
 CELL = 24                     # 每格采样 24×24
 SIDE = CELL * 8               # 对齐后棋盘 192×192
 CELL_PX = CELL * CELL         # 每格 576 字节
@@ -1214,7 +1215,7 @@ CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "C
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 BOOK_PATH = os.path.join(CONFIG_DIR, "book.json")
 PIECES_PATH = os.path.join(CONFIG_DIR, "pieces.json")
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 
 SENS_DEFAULT = 44          # 滑杆位置（1..50，越大越灵敏）
 
@@ -1610,7 +1611,8 @@ class App(tk.Tk):
         tk.Frame(right, bg=C_BG, height=6).pack(fill="x")
 
         # ── 底栏 ──
-        self.hint = tk.Label(self, text="程序只读、只建议，真实棋盘才是准的。"
+        self.hint = tk.Label(self, text="每 0.5 秒取一次画面；右边建议永远按左边当前的局面算"
+                                        "（局面变了旧建议就作废重算）。程序只读、只建议，真实棋盘才是准的。"
                                         "推荐用「浏览器读取」——装一次扩展，直接抄站点局面；"
                                         "屏幕识别是兜底：框歪了点「自动对齐」，认不出点「重取基线」。",
                              bg=C_BG, fg=C_MUTED, font=(FONT, 9), anchor="w",
@@ -2093,6 +2095,7 @@ class App(tk.Tk):
         self.over = ""
         self.busy = False
         self.orient = self.human
+        self.suggest = None
         self.refresh_legal()
         self.push_key()
         self.logbox.delete(0, "end")
@@ -2237,6 +2240,12 @@ class App(tk.Tk):
         self.draw()
 
     # ---------- 引擎 ----------
+    def _pos_key(self):
+        """左边棋盘当前局面的指纹：搜索完拿它比对，局面一变结果就作废。"""
+        b = self.st
+        return ("".join(b["board"]), b["turn"], b["ep"],
+                tuple(sorted(b["castling"].items())), b["half"])
+
     def think(self, from_scan=False):
         if self.busy or self.over or self.st["turn"] != self.human:
             return
@@ -2248,15 +2257,26 @@ class App(tk.Tk):
         board = list(self.st["board"])
         st = {"castling": dict(self.st["castling"]), "ep": self.st["ep"], "half": self.st["half"]}
         white = self.st["turn"] == "w"
+        key = self._pos_key()          # 出发时的局面
 
         def run():
             res = self.search_engine.best_move(board, white, st, depth, budget)
-            self.ui_queue.put(lambda: self._after_think(res))
+            self.ui_queue.put(lambda: self._after_think(res, key))
 
         threading.Thread(target=run, daemon=True).start()
 
-    def _after_think(self, res):
+    def _after_think(self, res, key=None):
         self.busy = False
+        if key is not None and key != self._pos_key():
+            # 右边只能按左边算：搜索期间左边棋盘已经变了（识别到对手落子、悔棋、手动摆棋），
+            # 这条结果算的是旧局面，画上去就是错的建议。丢掉，按新局面重算。
+            self.suggest = None
+            self.draw()
+            if not self.over and self.st["turn"] == self.human and self.auto_var.get():
+                self.after(120, self.think)
+            else:
+                self.result.config(text="局面变了，刚才那条建议已作废。")
+            return
         if not res or not res["move"]:
             self.result.config(text="没算出可走的棋。")
             return
@@ -2351,9 +2371,12 @@ class App(tk.Tk):
         if self.stack and self.st["turn"] != self.human:
             self.restore(self.stack.pop())
         self.over = ""
+        self.suggest = None            # 旧建议是别的局面上的，必须清掉
+        self.selected = -1
         self.refresh_log()
         self.draw()
         self.result.config(text="已悔棋。")
+        self._maybe_reply()            # 悔回我方走：按新（旧）局面重算
 
     # ---------- 输入 ----------
     def apply_input(self):
@@ -2849,16 +2872,18 @@ class App(tk.Tk):
         return img
 
     def _scan_loop(self):
-        """每 0.12 秒截一次，交给 _scan_step 判断。"""
+        """每 SCAN_INTERVAL（0.5 秒）截一次，交给 _scan_step 判断。"""
         self._scan_still = 0
         self._scan_hinted = False
         self._last_sig = None
         self._adopt_tried = False
         tick = 0
         while self.running:
-            time.sleep(0.12)
-            if self.busy or self.over:
+            time.sleep(SCAN_INTERVAL)
+            if self.over:
                 continue
+            # 注意：引擎在想的时候也要继续取图。左边（程序局面）必须一直跟得上真实棋盘，
+            # 否则算完的「建议」是旧局面的；现在的做法是算完发现局面变了就作废重算。
             try:
                 img = self._crop(self._grab())
                 sig = img_signature(img)
@@ -2872,9 +2897,8 @@ class App(tk.Tk):
                 time.sleep(0.3)
                 continue
             tick += 1
-            if tick % 3 == 0:                # 约 0.36 秒刷新一次预览
-                marks = self._view_marks
-                self.ui_queue.put(lambda im=img, mk=marks: self._paint_view(im, mk))
+            marks = self._view_marks          # 每次取图都刷新一次预览（0.5 秒一帧）
+            self.ui_queue.put(lambda im=img, mk=marks: self._paint_view(im, mk))
 
     def _scan_step(self, sig):
         """拿当前帧跟基线比。基线只代表「真实棋盘上一次确认的画面」。
@@ -2921,6 +2945,8 @@ class App(tk.Tk):
         still = self._last_sig is not None and self._last_sig == sig
         self._last_sig = sig
         self._scan_still = self._scan_still + 1 if still else 0
+        # 一律按「秒」判断停稳时长：帧率是可以改的，用帧数当阈值一定会错位
+        still_secs = self._scan_still * SCAN_INTERVAL
         if not still:
             self._adopt_tried = False        # 画面又动了：允许下一次停稳后再重建一次
 
@@ -2959,7 +2985,7 @@ class App(tk.Tk):
                 # 棋子库已经读不动这盘了（大面积认不准）：多半是以前被错局面教歪过。
                 # 清库重来——重学会走占位那一关，不会再被教歪。
                 self._book_bad += 1
-                if self._book_bad >= 10 and time.time() - self._book_reset_at > 8:
+                if self._book_bad * SCAN_INTERVAL >= 5.0 and time.time() - self._book_reset_at > 8:
                     self._book_reset_at = time.time()
                     self._book_bad = 0
                     self.book.clear()
@@ -2994,7 +3020,7 @@ class App(tk.Tk):
                 m2, sc2, side = self._match_by_read(rb)
                 if m2:
                     m, sc, how = m2, sc2, "整盘确认"
-        if not m and self._scan_still >= 2:
+        if not m and still_secs >= 1.0:
             # 画面停住了还认不出：阈值降到 55% 再扫一遍，捞那种图案偏淡的走法
             m, sc = match_move(scores, self.legal, self.flip(),
                                max(3.0, sens * 0.55), occ)
@@ -3016,13 +3042,13 @@ class App(tk.Tk):
 
         # 还认不出：画面明明停下了，就按画面重建一次局面（比一直傻等到底强）。
         # 只试一次，试不出来就老实提示，免得每帧重读、把提示憋住不显示。
-        if self._scan_still >= 12 and not self._adopt_tried:
+        if still_secs >= 6.0 and not self._adopt_tried:
             self._adopt_tried = True
             rb, unsure = self._read_board(sig)
             if rb is not None:
                 self.ui_queue.put(lambda b=rb, u=unsure: self._adopt_ui(b, u))
                 return
-        if self._scan_still >= 20 and not self._scan_hinted:
+        if still_secs >= 10.0 and not self._scan_hinted:
             self._scan_hinted = True
             self._set_result("画面变了但对不上任何走法（最高 %.0f）· 点「重取基线」，"
                              "或在棋盘上把这一步点出来" % sc)
