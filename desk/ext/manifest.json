@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "国象应招器 · 棋盘读取器",
+  "version": "1.0.0",
+  "description": "把网页棋盘的当前局面发给本机的国象应招器（只读，不改页面）",
+  "host_permissions": ["http://127.0.0.1:8765/*"],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}

@@ -16,11 +16,14 @@ import json
 import queue
 import os
 import sys
+import re
+import shutil
 import threading
 import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+import dom_bridge
 from PIL import Image, ImageGrab, ImageTk
 
 # ─────────────────────────── 常量 ───────────────────────────
@@ -897,6 +900,76 @@ BLK_W = [1.0 if (r in (1, 2) and c in (1, 2)) else 0.3
 BLK_W_SUM = sum(BLK_W)
 
 
+# ─────────────────── 页面标识 → 棋子 ───────────────────
+PIECE_WORDS = [
+    ("knight", "n"), ("night", "n"), ("horse", "n"), ("jumper", "n"),
+    ("bishop", "b"), ("rook", "r"), ("castle", "r"), ("tower", "r"),
+    ("queen", "q"), ("king", "k"), ("pawn", "p"), ("peon", "p"), ("soldier", "p"),
+    ("兵", "p"), ("马", "n"), ("象", "b"), ("车", "r"), ("後", "q"), ("后", "q"), ("王", "k"),
+]
+COLOR_WORDS = (("white", "w"), ("light", "w"), ("w", "w"), ("白", "w"),
+               ("black", "b"), ("dark", "b"), ("b", "b"), ("黑", "b"))
+PIECE_LETTERS = "pnbrqk"
+
+
+def token_to_piece(tok, override=None):
+    """把页面上图子的 class / 文件名 / aria-label 猜成 FEN 字母。
+
+    按「整词」判断，不是子串——否则 bishop 里的 b 会被当成黑方。
+    实在认不出就返回 ""，由界面把原始标识显示出来（宁可不认，也别认错）。
+    """
+    if not tok:
+        return ""
+    low = str(tok).lower()
+    if override:
+        for key, val in override.items():
+            if key and key in low:
+                return val
+    words = [w for w in re.split(r"[^0-9a-z\u4e00-\u9fa5]+", low) if w]
+
+    # chess.com 这类「颜色+棋子」两字母缩写：br = 黑车、wp = 白兵。
+    # 必须最先判，否则 br 里的 b 会被当成象。
+    for w in words:
+        if re.fullmatch(r"[wb][pnbrqk]", w):
+            return w[1].upper() if w[0] == "w" else w[1]
+
+    piece = ""
+    for name, letter in PIECE_WORDS:
+        if name in low and any(name in w for w in words):
+            piece = letter
+            break
+    if not piece:
+        for w in words:
+            if len(w) in (1, 2):
+                for ch in w:
+                    if ch in PIECE_LETTERS:
+                        piece = ch
+                        break
+            if piece:
+                break
+    if not piece:
+        return ""
+    color = ""
+    for name, letter in COLOR_WORDS:
+        if name in words:
+            color = letter
+            break
+    if not color:
+        for name, letter in (("白", "w"), ("黑", "b")):
+            if name in low:
+                color = letter
+                break
+    if not color:
+        # 紧凑写法：wp / bN / Wp
+        for w in words:
+            if 2 <= len(w) <= 3 and any(c in "wb" for c in w) and any(c in PIECE_LETTERS for c in w):
+                color = "w" if "w" in w else "b"
+                break
+    if not color:
+        return ""
+    return piece.upper() if color == "w" else piece
+
+
 def cell_occupied(sig, sq):
     """这一格有没有子——只看「格心跟四角底色差多少」，不需要知道是什么子。
 
@@ -1097,6 +1170,8 @@ def send_click(x, y):
 CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "ChessAssist")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 BOOK_PATH = os.path.join(CONFIG_DIR, "book.json")
+PIECES_PATH = os.path.join(CONFIG_DIR, "pieces.json")
+VERSION = "1.2.0"
 
 SENS_DEFAULT = 44          # 滑杆位置（1..50，越大越灵敏）
 
@@ -1147,6 +1222,13 @@ class App(tk.Tk):
         self.book = PieceBook()        # 棋子形状记忆库
         self.book_msg = ""
         self.book_from_disk = False
+        self.source = "screen"        # screen=屏幕识别 / dom=浏览器读取
+        self.dom_last = None
+        self.dom_at = 0.0
+        self.dom_flip = False
+        self.dom_status_at = 0.0
+        self.piece_map = {}
+        self.bridge = None
         self.board_at = 0.0            # 内部局面最后一次「确认与画面一致」的时间
         self.learn_at = 0.0
         self._view_photo = None
@@ -1165,6 +1247,7 @@ class App(tk.Tk):
 
         self._build_ui()
         self._load_config()
+        self._init_bridge()
         self.new_game(silent=True)
         self.after(60, self._pump_ui)
         self.after(600, self._first_view)
@@ -1180,6 +1263,10 @@ class App(tk.Tk):
                     print("UI 回调失败:", e)
         except queue.Empty:
             pass
+        try:
+            self._poll_dom()
+        except Exception as e:          # noqa: BLE001
+            print("浏览器读取出错:", e)
         self.after(60, self._pump_ui)
 
     # ---------- 界面 ----------
@@ -1229,19 +1316,39 @@ class App(tk.Tk):
         tk.Button(row2, text="悔棋", command=self.undo).pack(side="left")
         tk.Button(row2, text="新局", command=self.new_game).pack(side="left", padx=4)
 
-        g2 = group("识图（框选棋盘）")
+        g2 = group("读取棋盘")
+        row0 = tk.Frame(g2, bg="#fbf7ec")
+        row0.pack(fill="x", padx=8, pady=(6, 2))
+        tk.Label(row0, text="数据源", bg="#fbf7ec").pack(side="left")
+        self.src_var = tk.StringVar(value="screen")
+        for txt, val in (("浏览器读取", "dom"), ("屏幕识别", "screen")):
+            tk.Radiobutton(row0, text=txt, value=val, variable=self.src_var,
+                           bg="#fbf7ec", command=self.on_source).pack(side="left", padx=(8, 0))
+        tk.Button(row0, text="诊断", command=self.dump_diag).pack(side="right")
+        tk.Button(row0, text="装扩展", command=self.export_ext).pack(side="right", padx=4)
+        self.dom_label = tk.Label(g2, text="浏览器读取：已关闭（用屏幕识别）", bg="#fbf7ec",
+                                  fg="#8a8266", font=("Consolas", 9), anchor="w",
+                                  justify="left", wraplength=250)
+        self.dom_label.pack(fill="x", padx=8, pady=(0, 2))
+
         row3 = tk.Frame(g2, bg="#fbf7ec")
         row3.pack(fill="x", padx=8, pady=6)
-        tk.Button(row3, text="① 框选棋盘", command=self.pick_region).pack(side="left")
+        b_pick = tk.Button(row3, text="① 框选棋盘", command=self.pick_region)
+        b_pick.pack(side="left")
         self.btn_scan = tk.Button(row3, text="② 开始识别", command=self.toggle_scan)
         self.btn_scan.pack(side="left", padx=6)
-        tk.Button(row3, text="清区域", command=self.clear_region).pack(side="left")
+        b_clear = tk.Button(row3, text="清区域", command=self.clear_region)
+        b_clear.pack(side="left")
 
         row3b = tk.Frame(g2, bg="#fbf7ec")
         row3b.pack(fill="x", padx=8, pady=(0, 4))
-        tk.Button(row3b, text="⌖ 自动对齐", command=self.do_align).pack(side="left")
-        tk.Button(row3b, text="③ 学棋子", command=self.learn_now).pack(side="left", padx=6)
-        tk.Button(row3b, text="重取基线", command=self.rebase).pack(side="left")
+        b_align = tk.Button(row3b, text="⌖ 自动对齐", command=self.do_align)
+        b_align.pack(side="left")
+        b_learn = tk.Button(row3b, text="③ 学棋子", command=self.learn_now)
+        b_learn.pack(side="left", padx=6)
+        b_rebase = tk.Button(row3b, text="重取基线", command=self.rebase)
+        b_rebase.pack(side="left")
+        self._screen_widgets = [b_pick, self.btn_scan, b_clear, b_align, b_learn, b_rebase]
 
         # 识别区域：程序实际截到的那一块，带 8×8 网格和识别标记
         self.view = tk.Canvas(g2, width=248, height=248, bg="#12130f",
@@ -1298,11 +1405,226 @@ class App(tk.Tk):
         ent.bind("<Return>", lambda e: self.apply_input())
         tk.Button(row5, text="走这步", command=self.apply_input).pack(side="left")
 
-        self.hint = tk.Label(self, text="程序只读你的屏幕、只给建议：真实棋盘才是准的，"
-                                        "你走哪一步它就跟到哪一步。识图没反应就点「重取基线」，"
+        self.hint = tk.Label(self, text="推荐「浏览器读取」：装一次扩展，程序直接抄站点的局面，不存在识别错误。"
+                                        "屏幕识别是兜底。程序只给建议，真实棋盘才是准的。"
+                                        "识图没反应就点「重取基线」，"
                                         "或把灵敏度往右调（越靠右越容易认出）。",
                              bg="#fbf7ec", fg="#7d7660", font=("Microsoft YaHei UI", 9), anchor="w")
         self.hint.pack(side="bottom", fill="x", padx=14, pady=(0, 10))
+
+    # ---------- 浏览器读取（主通道） ----------
+    def _init_bridge(self):
+        """本地桥：只监听 127.0.0.1，扩展往里发局面。"""
+        self.piece_map = {}
+        try:
+            with open(PIECES_PATH, "r", encoding="utf-8") as f:
+                m = json.load(f)
+            if isinstance(m, dict):
+                self.piece_map = {str(k).lower(): str(v) for k, v in m.items() if len(str(v)) == 1}
+        except (OSError, ValueError):
+            pass
+        try:
+            self.bridge = dom_bridge.Bridge()
+            if not self.bridge.start():
+                self.bridge = None
+        except Exception as e:                       # noqa: BLE001
+            self.bridge = None
+            print("本地桥启动失败:", e)
+        if self.source == "dom":
+            self._apply_source_ui()
+
+    def on_source(self):
+        src = self.src_var.get()
+        self.source = src
+        if src == "dom":
+            if self.running:
+                self.running = False
+                self.btn_scan.config(text="② 开始识别")
+            self._set_result("已切到浏览器读取：装好扩展、打开棋局页面，这里会自己连上。\n"
+                             "（不再需要框选和对齐；点了也不生效）")
+        else:
+            self._set_result("已切回屏幕识别。")
+        self._apply_source_ui()
+
+    def _apply_source_ui(self):
+        dom = self.source == "dom"
+        try:
+            state = "normal" if not dom else "disabled"
+            for w in getattr(self, "_screen_widgets", []):
+                w.config(state=state)
+        except tk.TclError:
+            pass
+        self._dom_status("浏览器：等待数据…" if dom else "浏览器读取：已关闭（用屏幕识别）")
+
+    def _dom_status(self, text):
+        if not hasattr(self, "dom_label"):
+            return
+        now = time.time()
+        if now - self.dom_status_at < 0.2 and getattr(self, "_dom_last_text", "") == text:
+            return
+        self.dom_status_at = now
+        self._dom_last_text = text
+        self.dom_label.config(text=text)
+
+    def _poll_dom(self):
+        """界面每 60ms 来掏一次信箱。"""
+        if not self.bridge:
+            return
+        data = self.bridge.poll()
+        if data is None:
+            if self.source == "dom":
+                last = self.dom_at
+                if last and time.time() - last > 2.0:
+                    self._dom_status("浏览器：2 秒没数据了（扩展被停用 / 页面关了 / 程序被拦）")
+            return
+        self.dom_at = time.time()
+        if self.source != "dom":
+            return
+        try:
+            self._dom_apply(data)
+        except Exception as e:                       # noqa: BLE001
+            self._dom_status("解析出错：%s" % e)
+
+    def _dom_apply(self, p):
+        """收到一帧浏览器局面：exact 局面比对，不再有任何「猜」。"""
+        self.dom_last = p
+        cells = p.get("cells") or []
+        note = (p.get("note") or "").strip()
+        if len(cells) != 64:
+            self._dom_status("浏览器：%s" % (note or "没读到棋盘"))
+            return
+        flip = bool(p.get("flip"))
+        board = [None] * 64
+        unknown = {}
+        for i, tok in enumerate(cells):
+            row, col = divmod(i, 8)
+            sq = (7 - row) * 8 + (7 - col) if flip else row * 8 + col
+            ch = token_to_piece(tok, self.piece_map) if tok else "."
+            if ch:
+                board[sq] = ch
+            else:
+                unknown[tok] = unknown.get(tok, 0) + 1
+        if unknown:
+            bad = "、".join("%s×%d" % (k.strip()[:24], v)
+                            for k, v in list(unknown.items())[:4])
+            self._dom_status("有 %d 个棋子认不出：%s · 点「诊断」把这一页发我"
+                             % (sum(unknown.values()), bad))
+            return
+        if sum(1 for x in board if x in "K") != 1 or sum(1 for x in board if x == "k") != 1:
+            self._dom_status("浏览器：%s · 但读到的局面对不上（没有唯一的王），先不动"
+                             % (note or "已连上"))
+            return
+
+        self.dom_flip = flip
+        # 程序里的棋盘跟着页面朝向画，手动点击才不会错位
+        want = "b" if flip else "w"
+        if self.orient != want:
+            self.orient = want
+            self.draw()
+
+        # 点击自检：点过了但局面没动
+        if self.clicked_at and time.time() - self.clicked_at > 2.0:
+            self.clicked_at = 0.0
+            self._set_result("自动落子点了，但浏览器里没变化——多半是坐标偏了，请手动走这步。")
+
+        if board == self.st["board"]:
+            self._sync_at = time.time()
+            self._dom_status("浏览器：%s · 局面一致" % (note or "已连上"))
+            return
+
+        mv, side = self._find_move_exact(board)
+        if mv:
+            san = to_san(self.st["board"], self.st, mv)
+            if side is not None and side != self.st["turn"]:
+                self._apply_keep_turn(mv)
+                self._set_result("补上漏掉的一手：%s（浏览器读取）" % san)
+            else:
+                self.do_move(mv)
+                self._set_result("读到 %s（浏览器读取）" % san)
+            self._dom_status("浏览器：%s · 局面一致" % (note or "已连上"))
+            return
+
+        # 差不止一步：DOM 是准的，直接照抄局面；轮谁走不确定，先不自动落子
+        if self._adopt_board(board, turn=self.st["turn"]):
+            self._sync_at = 0.0
+            self._set_result("浏览器局面和程序差了不止一步，已照抄局面。\n"
+                             "轮谁走不确定：确认后点「算我这一步」，或等对方走一步就自动接上。")
+            self._dom_status("浏览器：%s · 已按页面重建局面" % (note or "已连上"))
+        else:
+            self._dom_status("浏览器：读到的局面没法用（先「新局」再连）")
+
+    def _find_move_exact(self, nb):
+        """新读到的局面是哪一步走出来的？两个方向都试，局面完全一致才算。"""
+        cur = self.st["board"]
+        if nb == cur:
+            return None, None
+        other = "w" if self.st["turn"] == "b" else "b"
+        for side in (self.st["turn"], other):
+            hits = []
+            for mv in legal_moves(cur, side == "w", self.st):
+                if self._simulate(mv) == nb:
+                    hits.append(mv)
+            if hits:
+                promo = [m for m in hits if m[3] and m[3].lower() == "q"]
+                return (promo[0] if promo else hits[0]), side
+        return None, None
+
+    def export_ext(self):
+        """把内置的扩展文件放出来，并说明怎么装。"""
+        src = ""
+        meipass = getattr(sys, "_MEIPASS", "")
+        if meipass:
+            cand = os.path.join(meipass, "ext")
+            if os.path.isdir(cand):
+                src = cand
+        if not src:
+            here = os.path.dirname(os.path.abspath(__file__))
+            for cand in (os.path.join(here, os.pardir, "ext"), os.path.join(here, "ext")):
+                if os.path.isdir(cand):
+                    src = cand
+                    break
+        if not src:
+            self._set_result("程序里没带扩展文件（打包时漏了 ext 目录）。")
+            return
+        dst = os.path.join(CONFIG_DIR, "ext")
+        try:
+            os.makedirs(dst, exist_ok=True)
+            for name in ("manifest.json", "content.js"):
+                shutil.copyfile(os.path.join(src, name), os.path.join(dst, name))
+        except OSError as e:
+            self._set_result("导出失败：%s" % e)
+            return
+        try:
+            os.startfile(dst)
+        except OSError:
+            pass
+        self._set_result(
+            "扩展已导出到：\n%s\n\n"
+            "装法（只看一次）：\n"
+            "1. 浏览器地址栏输 chrome://extensions（Edge 是 edge://extensions）\n"
+            "2. 右上角打开「开发者模式」\n"
+            "3. 点「加载已解压的扩展程序」，选上面那个文件夹\n"
+            "4. 回到棋局页面刷新一下，这里就会显示「已连上」" % dst)
+
+    def dump_diag(self):
+        """把浏览器最后一帧原样存下来，方便我照着你那个站点调。"""
+        path = os.path.join(CONFIG_DIR, "diag.json")
+        try:
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            data = dict(self.dom_last or {})
+            data["_app"] = VERSION
+            data["_parsed"] = ""
+            cells = data.get("cells") or []
+            if len(cells) == 64:
+                data["_parsed"] = "".join(
+                    (token_to_piece(t, self.piece_map) or ("?" if t else ".")) if t else "."
+                    for t in cells)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=1)
+            self._set_result("已导出诊断：%s\n把这个文件发给我，我照着你的站点调标识映射。"
+                             % path)
+        except OSError as e:
+            self._set_result("导出失败：%s" % e)
 
     # ---------- 配置 ----------
     def _on_sens(self, v):
@@ -1318,6 +1640,9 @@ class App(tk.Tk):
             self.sens = sens_from_slider(lvl)
             self.depth_var.set(int(cfg.get("depth", 6)))
             self.play_var.set(bool(cfg.get("auto_play", False)))
+            src = str(cfg.get("source", "screen"))
+            self.source = "dom" if src == "dom" else "screen"
+            self.src_var.set(self.source)
             if self.region:
                 self.region_label.config(text="区域 %s" % (self.region,))
         except (OSError, ValueError, KeyError):
@@ -1338,7 +1663,8 @@ class App(tk.Tk):
             os.makedirs(CONFIG_DIR, exist_ok=True)
             with open(CONFIG_PATH, "w", encoding="utf-8") as f:
                 json.dump({"region": self.region, "sens_lvl": int(self.sens_var.get()),
-                           "depth": self.depth_var.get(), "auto_play": self.play_var.get()}, f)
+                           "depth": self.depth_var.get(), "auto_play": self.play_var.get(),
+                           "source": self.source}, f)
         except OSError:
             pass
         try:
@@ -1638,6 +1964,11 @@ class App(tk.Tk):
         if m[3]:
             self.result.config(text=self.result.cget("text") + "\n（升变这步需要你手动选一下棋子）")
             return
+        if self.source == "dom":
+            self._auto_play_dom(m)
+            return
+        if not self.region:
+            return
         x1, y1, x2, y2 = self.region
         W, H = x2 - x1, y2 - y1
         l, t, k = self.rect               # 自动对齐后的真实棋盘范围，不能用框本身，否则点击会整体偏
@@ -1649,6 +1980,31 @@ class App(tk.Tk):
             r, c = sq >> 3, sq & 7
             sr, sc = (7 - r, 7 - c) if flip else (r, c)
             return (bx + (sc + 0.5) * side / 8.0, by + (sr + 0.5) * side / 8.0)
+
+        def run():
+            send_click(*point(m[0]))
+            time.sleep(0.12)
+            send_click(*point(m[1]))
+
+        threading.Thread(target=run, daemon=True).start()
+
+    def _auto_play_dom(self, m):
+        """按浏览器报上来的棋盘位置点，不用框选，也不会偏。"""
+        p = self.dom_last or {}
+        bd = p.get("board") or {}
+        if not bd.get("width"):
+            self.result.config(text="没拿到棋盘位置，这步请手动走。")
+            return
+        flip = bool(p.get("flip"))
+        dpr = float(p.get("dpr") or 1)
+        ox, oy = float(bd.get("screenX") or 0), float(bd.get("screenY") or 0)
+        bx, by = ox + float(bd["left"]), oy + float(bd["top"])
+        cw, ch = float(bd["width"]) / 8.0, float(bd["height"]) / 8.0
+
+        def point(sq):
+            r, c = sq >> 3, sq & 7
+            sr, sc = (7 - r, 7 - c) if flip else (r, c)
+            return ((bx + (sc + 0.5) * cw) * dpr, (by + (sr + 0.5) * ch) * dpr)
 
         def run():
             send_click(*point(m[0]))
@@ -1806,6 +2162,10 @@ class App(tk.Tk):
             self.running = False
             self.btn_scan.config(text="② 开始识别")
             self.result.config(text="已停止识别。")
+            return
+        if self.source == "dom":
+            self._set_result("当前是浏览器读取模式，不用（也不该）开图像识别。\n"
+                             "要回到识图就把数据源切到「屏幕识别」。")
             return
         if not self.region:
             messagebox.showinfo("还没框棋盘", "先点「① 框选棋盘」把屏幕上的棋盘框进去。")
@@ -2410,6 +2770,15 @@ def selftest(path):
     mm2, ms2 = match_move(sign_diff(base, base), legal_moves(stt["board"], False, stt), False, 12)
     lines.append("静止画面不误判 -> %s %s" % (mm2 is None, mm2 is None))
     lines.append("搜索 -> %s" % (Searcher().best_move(list(START), True, new_state(), 4, 1200),))
+
+    # 浏览器通道：标识解析 + 局面精确比对
+    cases = [("piece br square-56", "r"), ("piece wp square-52", "P"),
+             ("white pawn", "P"), ("black-knight", "n"),
+             ("pieces/white_queen.png", "Q"), ("chessground piece black king", "k")]
+    bad = [(t, got, want) for t, want in cases for got in [token_to_piece(t)] if got != want]
+    lines.append("标识解析 %d/%d -> %s" % (len(cases) - len(bad), len(cases), not bad))
+    if bad:
+        lines.append("  错: %s" % bad)
     text = "\n".join(lines)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text + "\n")
