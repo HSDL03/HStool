@@ -400,6 +400,47 @@ select.select{
 .card.dim:hover{opacity:1;filter:none;border-style:solid}
 .card.dim .cname{color:var(--muted)}
 
+/* ── 文件夹卡片：占 1 列 × 2 行 ─────────────────────────────────────── */
+.card.folder{grid-row:span 2}
+.card.folder .card-body.fold{
+  flex-direction:column;align-items:stretch;justify-content:space-between;
+  gap:11px;height:100%;padding:15px 17px}
+.card.folder .fold-top{display:flex;align-items:center;gap:12px;min-width:0}
+.card.folder .fold-ico{position:relative}
+/* 文件夹后面露出两层「纸」，一眼看出这是个文件夹 */
+.card.folder .fold-ico::before,
+.card.folder .fold-ico::after{
+  content:"";position:absolute;left:4px;right:4px;height:8px;border-radius:4px;
+  background:var(--bg);border:1px solid var(--bd-soft);z-index:-1;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.card.folder .fold-ico::before{top:-6px;opacity:.75}
+.card.folder .fold-ico::after{top:-11px;left:9px;right:9px;opacity:.5}
+.card.folder:hover .fold-ico::before{transform:translateY(-2px)}
+.card.folder:hover .fold-ico::after{transform:translateY(-3px)}
+.card.folder .cname{white-space:normal}
+/* 描述最多两行，多的省略，别把卡片顶变形 */
+.card.folder .cdesc{
+  white-space:normal;overflow:hidden;text-overflow:clip;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-clamp:2}
+.card.folder .fold-peek{
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:auto}
+.card.folder .peek-i{
+  display:grid;place-items:center;height:36px;font-size:16px;line-height:1;
+  background:var(--bg);border:1px solid var(--bd-soft);border-radius:6px;
+  transition:transform .25s,background .25s}
+.card.folder:hover .peek-i{background:var(--bg2)}
+.card.folder:hover .peek-i:nth-child(odd){transform:translateY(-2px)}
+.card.folder:hover .peek-i:nth-child(even){transform:translateY(1px)}
+.card.folder .cmeta{margin-top:0;align-items:center}
+.card.folder .carrow{opacity:1;transform:none;margin-left:auto}
+.grid.list .card.folder{grid-row:auto}
+.grid.list .card.folder .card-body.fold{flex-direction:row;align-items:center;gap:13px;height:auto}
+.grid.list .card.folder .fold-peek{display:none}
+@media(max-width:700px){
+  .card.folder{grid-row:auto}
+  .card.folder .fold-peek{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+
 /* 列表视图 */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:13px}
 .grid.list{grid-template-columns:1fr;gap:9px}

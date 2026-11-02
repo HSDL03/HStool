@@ -1,5 +1,28 @@
 [
   {
+    "id": "folder-legacy",
+    "icon": "📁",
+    "name": "未优化工具",
+    "desc": "28 个我的世界小工具：换算、红石、附魔、建造，能用但还没打磨",
+    "tag": "工具",
+    "url": "./pages/legacy.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false,
+    "isFolder": true,
+    "span": 2,
+    "count": 28,
+    "peek": [
+      "🧭",
+      "⚒",
+      "🔴",
+      "⛏",
+      "🧪",
+      "📦"
+    ]
+  },
+  {
     "id": "tool-muqpu75z-33d0",
     "icon": "./assets/mc-icons/mc.png",
     "name": "mc",
@@ -105,7 +128,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "换算"
   },
   {
     "id": "tool-mc-xp",
@@ -117,7 +142,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "换算"
   },
   {
     "id": "tool-mc-anvil",
@@ -129,7 +156,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "换算"
   },
   {
     "id": "tool-mc-food",
@@ -141,7 +170,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "生存"
   },
   {
     "id": "tool-mc-durability",
@@ -153,7 +184,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "生存"
   },
   {
     "id": "tool-mc-redstone",
@@ -165,7 +198,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "红石"
   },
   {
     "id": "tool-mc-enchant",
@@ -177,7 +212,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "附魔"
   },
   {
     "id": "tool-mc-brew",
@@ -189,7 +226,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "附魔"
   },
   {
     "id": "tool-mc-signal",
@@ -201,7 +240,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "红石"
   },
   {
     "id": "tool-mc-mine",
@@ -213,7 +254,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "生存"
   },
   {
     "id": "tool-mc-damage",
@@ -225,7 +268,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "生存"
   },
   {
     "id": "tool-mc-stack",
@@ -237,7 +282,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "换算"
   },
   {
     "id": "tool-mc-fuel",
@@ -249,7 +296,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "合成"
   },
   {
     "id": "tool-mc-beacon",
@@ -261,7 +310,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "建造"
   },
   {
     "id": "tool-mc-slime",
@@ -273,7 +324,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "建造"
   },
   {
     "id": "tool-mc-command",
@@ -285,7 +338,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "合成"
   },
   {
     "id": "tool-muqd83p5-btk7",
@@ -729,7 +784,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "红石"
   },
   {
     "id": "tool-json-ts",
@@ -789,7 +846,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "合成"
   },
   {
     "id": "tool-uuid",
@@ -825,7 +884,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "换算"
   },
   {
     "id": "tool-mc-light",
@@ -837,7 +898,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "建造"
   },
   {
     "id": "tool-mc-chunk",
@@ -849,7 +912,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "换算"
   },
   {
     "id": "tool-subnet",
@@ -909,7 +974,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "建造"
   },
   {
     "id": "tool-mc-enchant-check",
@@ -921,7 +988,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "附魔"
   },
   {
     "id": "tool-mc-spawner",
@@ -933,7 +1002,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "建造"
   },
   {
     "id": "tool-mc-circle",
@@ -945,7 +1016,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "建造"
   },
   {
     "id": "tool-mc-water",
@@ -957,7 +1030,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "建造"
   },
   {
     "id": "tool-mc-hopper",
@@ -969,7 +1044,9 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false
+    "hidden": false,
+    "folder": "legacy",
+    "group": "红石"
   },
   {
     "id": "tool-gitignore",
@@ -1006,5 +1083,19 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false
+  },
+  {
+    "id": "tool-mc-map",
+    "icon": "🗺",
+    "name": "MC 地图坐标",
+    "desc": "把游戏坐标标到地图上，算方位与距离",
+    "tag": "工具",
+    "url": "./tools/mc-map.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false,
+    "folder": "legacy",
+    "group": "换算"
   }
 ]

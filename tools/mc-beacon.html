@@ -85,7 +85,7 @@
           <tbody id="matBody"></tbody>
         </table>
       </div>
-      <div class="kv" style="margin-top:8px"><span>紫水晶</span><b id="amat">紫水晶块不是信标底座材料，仅作参考</b></div>
+      <div class="kv" style="margin-top:8px"><span>合计</span><b id="amat">—</b></div>
     </div>
 
     <div class="panel">
@@ -155,7 +155,8 @@ function render(){
   $('matBody').innerHTML=MATS.map(function(m){
     return '<tr><td>'+m.n+'</td><td>'+fmt(total)+'</td><td>×'+m.per+'</td><td class="hi">'+fmt(total*m.per)+' '+m.u+'</td></tr>';
   }).join('');
-  $('amat').textContent=fmt(total)+' 块紫水晶块 = '+fmt(total*4)+' 个紫水晶碎片（4 碎片/块），但紫水晶块不能当底座';
+  // 底座只能用铁 / 金 / 钻石 / 绿宝石 / 下界合金块，且四层必须同一种材质，不能混搭
+  $('amat').textContent=fmt(total)+' 块方块，四层必须是同一种材质（紫水晶块、青金石块、红石块都不能用）';
 
   $('verdict').innerHTML=lv+' 层信标：半径 <b>'+RADIUS[lv-1]+'</b> 格，要 <b>'+total+'</b> 个方块 —— 全用铁块就是 <b>'+fmt(total*9)+'</b> 个铁锭'
     +'（'+fmt(Math.ceil(total*9/64))+' 组多 '+((total*9)%64)+' 个）。';

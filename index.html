@@ -379,7 +379,13 @@
       category: cat,
       deprecated: !!t.deprecated,
       disabled: !!t.disabled,
-      hidden: !!t.hidden
+      hidden: !!t.hidden,
+      /* 被收进文件夹的工具带 folder 标记；文件夹本身带 isFolder */
+      folder: typeof t.folder === 'string' ? t.folder : '',
+      isFolder: !!t.isFolder,
+      peek: Array.isArray(t.peek) ? t.peek.slice(0, 6) : null,
+      count: typeof t.count === 'number' ? t.count : 0,
+      group: typeof t.group === 'string' ? t.group : ''
     };
   }
   function normAll(arr) {
@@ -509,7 +515,33 @@
     }
     return HS.esc(s);
   }
+  /* 文件夹卡片：占 1 列 × 2 行（grid-row:span 2），像桌面上的一个文件夹 */
+  function folderHTML(t, delay) {
+    var peek = (t.peek || []).slice(0, 6).map(function (ic) {
+      return '<span class="peek-i">' + HS.esc(ic) + '</span>';
+    }).join('');
+    return '<a class="card folder reveal" href="' + HS.esc(absUrl(t.url)) + '"' +
+      ' data-id="' + HS.esc(t.id) + '" style="transition-delay:' + Math.min(delay, 280) + 'ms">' +
+      '<span class="glow"></span>' +
+      '<div class="card-body fold">' +
+      '<div class="fold-top">' +
+      '<div class="cico fold-ico">' + iconHTML(t.icon) + '</div>' +
+      '<div class="cinfo">' +
+      '<div class="cname">' + HS.esc(t.name) + '</div>' +
+      '<div class="cdesc">' + HS.esc(t.desc || '') + '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="fold-peek">' + peek + '</div>' +
+      '<div class="cmeta">' +
+      '<span class="badge">' + HS.esc(t.tag) + '</span>' +
+      '<span class="badge ok">' + (t.count || (t.peek || []).length || 0) + ' 个工具</span>' +
+      '<span class="carrow">→</span>' +
+      '</div>' +
+      '</div></a>';
+  }
+
   function cardHTML(t, delay) {
+    if (t.isFolder) return folderHTML(t, delay);
     var external = isExternal(t.url);
     var dbBadge = t.category === 'needDB'
       ? '<span class="badge muted" title="需要后端或账号">☁ 需后端</span>'
@@ -576,7 +608,10 @@
 
   /* ── 筛选与渲染 ── */
   /* hidden=true 是数据层面下架；hide 是用户本机收起来的，两类都不在首页显示 */
-  function visible() { return TOOLS.filter(function (t) { return !t.hidden && !inPref('hide', t.id); }); }
+  /* folder 字段 = 被收进「未优化工具」文件夹，不在主列表单独出现 */
+  function visible() {
+    return TOOLS.filter(function (t) { return !t.hidden && !t.folder && !inPref('hide', t.id); });
+  }
 
   function passed(t) {
     if (state.favOnly && !inPref('fav', t.id)) return false;
@@ -995,7 +1030,7 @@
       { icon: '🗂️', title: '数据管理', desc: '编辑站点 JSON 数据', run: function () { location.href = HS.site.url('pages/admin.html'); } }
     ],
     source: function () {
-      return TOOLS.filter(function (t) { return !t.hidden && !inPref('hide', t.id); }).map(function (t) {
+      return TOOLS.filter(function (t) { return !t.hidden && !t.folder && !inPref('hide', t.id); }).map(function (t) {
         return {
           icon: t.icon, title: t.name, desc: (t.desc || t.tag), group: '工具',
           keywords: t.tag + ' ' + (t.desc || ''), href: absUrl(t.url)

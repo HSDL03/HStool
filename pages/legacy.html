@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>未优化工具 · 红石的小站</title>
+<meta name="description" content="28 个我的世界小工具：坐标换算、红石、附魔、建造、合成，功能可用但界面还没打磨。">
+<meta name="theme-color" content="#3d521f">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📁</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+  .lg-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+    padding:10px 2px;margin:2px 0 6px;background:var(--bg);border-bottom:1px solid var(--bd-soft)}
+  .lg-bar input{
+    flex:1 1 200px;max-width:320px;height:34px;padding:0 11px;font:inherit;font-size:13.5px;
+    color:var(--text);background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
+    outline:none;box-shadow:var(--bevel-in);transition:border-color .18s}
+  .lg-bar input:focus{border-color:var(--ac)}
+  .lg-bar .chip{padding:5px 11px;font-size:12.5px;cursor:pointer;border:2px solid var(--bd2);
+    background:var(--bg2);color:var(--text);border-radius:var(--r);box-shadow:var(--bevel)}
+  .lg-bar .chip:hover{border-color:var(--ac)}
+  .lg-bar .chip.active{background:var(--acs);border-color:var(--ac);color:var(--ac);font-weight:800}
+  .lg-bar .n{font-size:11px;opacity:.7;margin-left:3px}
+  .lg-cnt{margin-left:auto;font-size:12px;color:var(--faint)}
+
+  .lg-sec{margin:18px 0 0}
+  .lg-sec>h2{display:flex;align-items:center;gap:8px;margin:0 0 9px;font-size:14px;letter-spacing:.01em}
+  .lg-sec>h2 .bar{width:4px;height:15px;border-radius:2px;background:var(--ac)}
+  .lg-sec>h2 .n{font-size:11.5px;font-weight:400;color:var(--faint)}
+
+  .lg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:11px}
+  .lg-grid .card-body{padding:12px 14px;gap:11px}
+  .lg-grid .cico{width:42px;height:42px;font-size:20px;border-radius:10px}
+  .lg-grid .cname{font-size:14px}
+  .lg-grid .cdesc{font-size:11.5px;white-space:normal;line-height:1.4}
+  .lg-empty{padding:36px 0;text-align:center;color:var(--muted);font-size:13.5px}
+  @media(max-width:640px){
+    .lg-grid{grid-template-columns:1fr}
+    .lg-bar input{max-width:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<main class="wrap">
+  <div class="page-head">
+    <div>
+      <h1>📁 未优化工具</h1>
+      <p class="sub">28 个我的世界小工具，都能用；界面和数据还没统一打磨，所以先收在这个文件夹里。</p>
+    </div>
+    <div class="actions"><a class="btn" href="../index.html">← 回首页</a></div>
+  </div>
+
+  <div class="hero-note">
+    <span>🧭</span>
+    <span class="grow"><b>为什么单独放一页</b>：这些工具的算法是对的，但版式、单位说明、移动端还没逐个过一遍，
+      放在首页会把主列表撑得太长。等哪个收拾干净了，就挪回首页。</span>
+  </div>
+
+  <div class="lg-bar">
+    <input id="q" type="search" placeholder="搜工具 / 用途，比如「红石」「附魔」「坐标」" autocomplete="off" aria-label="搜索工具">
+    <div id="chips" style="display:flex;gap:7px;flex-wrap:wrap"></div>
+    <span class="lg-cnt" id="cnt">—</span>
+  </div>
+
+  <div id="sections"></div>
+  <div class="lg-empty" id="empty" hidden>没有匹配的工具，换个词试试。</div>
+</main>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function () {
+  'use strict';
+  var ORDER = ['换算', '生存', '红石', '附魔', '建造', '合成'];
+  var FILES = null;      // 数据里只存 url，这里把相对站点的路径改成相对本页
+
+  function rel(url) {
+    // ./tools/mc-x.html → ../tools/mc-x.html
+    return url.replace(/^\.\//, '../');
+  }
+  function esc(s) { return HS.esc(String(s == null ? '' : s)); }
+
+  function iconHTML(icon) {
+    var s = String(icon || '🧰');
+    if (/\.(png|jpe?g|webp|gif|svg)$/i.test(s)) {
+      // 数据里的图片路径是相对站点根（./assets/...），本页在 pages/ 下，要退一级
+      return '<img src="' + esc(rel(s)) + '" alt="" loading="lazy" decoding="async"' +
+        ' style="width:70%;height:70%;object-fit:contain">';
+    }
+    return esc(s);
+  }
+
+  function card(t) {
+    return '<a class="card reveal" href="' + esc(rel(t.url)) + '" data-id="' + esc(t.id) + '">' +
+      '<span class="glow"></span>' +
+      '<div class="card-body">' +
+      '<div class="cico">' + iconHTML(t.icon) + '</div>' +
+      '<div class="cinfo">' +
+      '<div class="cname">' + esc(t.name) + '</div>' +
+      '<div class="cdesc">' + esc(t.desc || '') + '</div>' +
+      '</div>' +
+      '<span class="carrow">→</span>' +
+      '</div></a>';
+  }
+
+  var state = { q: '', group: '__all__' };
+  var ALL = [];
+
+  function match(t) {
+    if (state.group !== '__all__' && t.group !== state.group) return false;
+    if (!state.q) return true;
+    var hay = (t.name + ' ' + (t.desc || '') + ' ' + (t.group || '') + ' ' + (t.group || '')).toLowerCase();
+    return hay.indexOf(state.q.toLowerCase()) !== -1;
+  }
+
+  function renderChips() {
+    var cnt = {};
+    ALL.forEach(function (t) { cnt[t.group] = (cnt[t.group] || 0) + 1; });
+    var h = '<button class="chip' + (state.group === '__all__' ? ' active' : '') + '" data-g="__all__">全部<span class="n">' + ALL.length + '</span></button>';
+    ORDER.forEach(function (g) {
+      if (!cnt[g]) return;
+      h += '<button class="chip' + (state.group === g ? ' active' : '') + '" data-g="' + esc(g) + '">' +
+        esc(g) + '<span class="n">' + cnt[g] + '</span></button>';
+    });
+    document.getElementById('chips').innerHTML = h;
+  }
+
+  function render() {
+    var shown = ALL.filter(match);
+    var byGroup = {};
+    shown.forEach(function (t) { (byGroup[t.group] = byGroup[t.group] || []).push(t); });
+
+    var html = '';
+    ORDER.forEach(function (g) {
+      var list = byGroup[g];
+      if (!list || !list.length) return;
+      html += '<section class="lg-sec"><h2><span class="bar"></span>' + esc(g) +
+        '<span class="n">' + list.length + '</span></h2><div class="lg-grid">' +
+        list.map(card).join('') + '</div></section>';
+    });
+    document.getElementById('sections').innerHTML = html;
+    document.getElementById('empty').hidden = shown.length > 0;
+    document.getElementById('cnt').textContent = shown.length === ALL.length
+      ? '共 ' + ALL.length + ' 个' : '筛出 ' + shown.length + ' / ' + ALL.length;
+    renderChips();
+    HS.reveal();
+  }
+
+  document.getElementById('q').addEventListener('input', function () {
+    state.q = this.value.trim();
+    render();
+  });
+  document.getElementById('chips').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-g]');
+    if (!b) return;
+    state.group = b.getAttribute('data-g');
+    render();
+  });
+
+  HS.data('tools-data').then(function (list) {
+    ALL = (list || []).filter(function (t) { return t.folder === 'legacy' && !t.hidden; });
+    // 没有 group 的兜到最后一组，别让它们消失
+    ALL.forEach(function (t) { if (ORDER.indexOf(t.group) < 0) t.group = '合成'; });
+    ALL.sort(function (a, b) {
+      var d = ORDER.indexOf(a.group) - ORDER.indexOf(b.group);
+      return d !== 0 ? d : String(a.name).localeCompare(String(b.name), 'zh');
+    });
+    render();
+  }).catch(function () {
+    document.getElementById('sections').innerHTML =
+      '<div class="lg-empty">数据没加载出来（data/tools-data.json）。刷新一次试试。</div>';
+  });
+})();
+</script>
+</body>
+</html>
