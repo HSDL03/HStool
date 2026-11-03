@@ -3,7 +3,7 @@
     "id": "folder-legacy",
     "icon": "📁",
     "name": "未优化工具",
-    "desc": "28 个我的世界小工具：换算、红石、附魔、建造，能用但还没打磨",
+    "desc": "22 个我的世界小工具：换算、红石、附魔、建造，能用但还没打磨",
     "tag": "工具",
     "url": "./pages/legacy.html",
     "category": "noDB",
@@ -12,7 +12,7 @@
     "hidden": false,
     "isFolder": true,
     "span": 2,
-    "count": 28,
+    "count": 22,
     "peek": [
       "🧭",
       "⚒",
@@ -21,6 +21,20 @@
       "🧪",
       "📦"
     ]
+  },
+  {
+    "id": "tool-mc-calc",
+    "icon": "🧮",
+    "name": "MC 计算器",
+    "desc": "坐标/区块/地图 · 堆叠 · 经验 · 时间 · 铁砧，五合一",
+    "tag": "工具",
+    "url": "./tools/mc-calc.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false,
+    "folder": "legacy",
+    "group": "换算"
   },
   {
     "id": "tool-muqpu75z-33d0",
@@ -128,7 +142,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false,
+    "hidden": true,
     "folder": "legacy",
     "group": "换算"
   },
@@ -142,7 +156,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false,
+    "hidden": true,
     "folder": "legacy",
     "group": "换算"
   },
@@ -156,7 +170,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false,
+    "hidden": true,
     "folder": "legacy",
     "group": "换算"
   },
@@ -282,7 +296,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false,
+    "hidden": true,
     "folder": "legacy",
     "group": "换算"
   },
@@ -884,7 +898,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false,
+    "hidden": true,
     "folder": "legacy",
     "group": "换算"
   },
@@ -912,7 +926,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false,
+    "hidden": true,
     "folder": "legacy",
     "group": "换算"
   },
@@ -1094,7 +1108,7 @@
     "category": "noDB",
     "deprecated": false,
     "disabled": false,
-    "hidden": false,
+    "hidden": true,
     "folder": "legacy",
     "group": "换算"
   }

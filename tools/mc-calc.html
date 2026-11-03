@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="mc-wiki">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MC 计算器 · 红石的小站</title>
+<meta name="description" content="我的世界计算器：坐标/区块/地图像素、堆叠与箱子、经验等级、时间换算、铁砧成本，一处算完。">
+<meta name="theme-color" content="#3d521f">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
+<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="../assets/css/core.css">
+<style>
+  .tabs{margin:2px 0 14px}
+  .tabs button{white-space:nowrap}
+  .panel[hidden]{display:none}
+
+  .res{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:2px}
+  .cell{padding:11px 13px;background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);min-width:0}
+  .cell em{display:block;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+  .cell b{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:clamp(1rem,2.6vw,1.22rem);font-weight:800;line-height:1.25;word-break:break-all}
+  .cell big{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:clamp(1.35rem,4.4vw,1.9rem);font-weight:800;line-height:1.15;word-break:break-all;color:var(--ac)}
+  .cell small{display:block;margin-top:3px;font-size:11.5px;color:var(--muted);line-height:1.45}
+
+  .kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:13.5px;flex-wrap:wrap}
+  .kv:last-child{border-bottom:0}
+  .kv span{flex:none;width:104px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+  .kv b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all}
+  .kv b.hi{color:var(--ac)}
+
+  .verdict{margin-top:11px;padding:10px 12px;font-size:13.5px;line-height:1.7;
+    background:var(--acs);border:2px solid var(--ac);border-radius:var(--r);word-break:break-word}
+  .verdict b{font-family:var(--mono);color:var(--ac);font-size:15px}
+  .verdict.warn{background:var(--bg3);border-color:#c08b2a}
+  .verdict.warn b{color:#a9751f}
+  .verdict.bad{background:var(--bg3);border-color:var(--dgr)}
+  .verdict.bad b{color:var(--dgr)}
+
+  .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .tbl th,.tbl td{padding:6px 8px;text-align:right;border-bottom:1px dashed var(--bd)}
+  .tbl th:first-child,.tbl td:first-child{text-align:left}
+  .tbl th{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+  .tbl td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .tbl .ok-c{color:var(--ok)}
+  .tbl .bad-c{color:var(--dgr)}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .err{color:var(--dgr);font-size:12.5px;margin-top:6px}
+  /* 「改名」这类勾选项：跟输入框等高，别被 .fld label 的小字号大写样式带歪 */
+  .fld label.ck{display:flex;align-items:center;gap:8px;min-height:40px;
+    font-size:13.5px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text);cursor:pointer}
+  .fld label.ck input{width:auto;flex:none;margin:0;box-shadow:none}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .mini{font-size:11.5px;color:var(--faint)}
+  @media(max-width:640px){
+    .kv span{width:86px}
+    .res{grid-template-columns:1fr}
+    .tabs{width:100%}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="回首页"><span class="ico">🧰</span><span class="txt">红石的小站</span></a>
+  <span class="spacer"></span>
+  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
+</header>
+
+<div class="decor" aria-hidden="true"></div>
+
+<main class="wrap">
+  <div class="tool">
+    <div class="page-head">
+      <div>
+        <h1>🧮 MC 计算器</h1>
+        <p class="sub">坐标 / 区块 / 地图、堆叠、经验、时间、铁砧 —— 原来五个工具合成一个，不用来回切</p>
+      </div>
+    </div>
+
+    <div class="seg tabs" id="tabs" role="tablist">
+      <button type="button" data-tab="coord" aria-pressed="true">🧭 坐标</button>
+      <button type="button" data-tab="stack" aria-pressed="false">📦 堆叠</button>
+      <button type="button" data-tab="xp" aria-pressed="false">✨ 经验</button>
+      <button type="button" data-tab="time" aria-pressed="false">🌗 时间</button>
+      <button type="button" data-tab="anvil" aria-pressed="false">⚒ 铁砧</button>
+    </div>
+
+    <!-- ═══════════════ 坐标 ═══════════════ -->
+    <section class="panel" data-panel="coord">
+      <h2 class="panel-title">坐标 · 区块 · 地图</h2>
+
+      <div class="fld" style="margin-bottom:11px">
+        <label>我现在在</label>
+        <div class="seg" id="dimSeg">
+          <button type="button" data-dim="over" aria-pressed="true">主世界</button>
+          <button type="button" data-dim="nether" aria-pressed="false">下界</button>
+        </div>
+      </div>
+
+      <div class="res" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+        <div class="fld"><label for="x">X</label><input id="x" class="mono" inputmode="numeric" autocomplete="off" value="1200"></div>
+        <div class="fld"><label for="y">Y</label><input id="y" class="mono" inputmode="numeric" autocomplete="off" value="64"></div>
+        <div class="fld"><label for="z">Z</label><input id="z" class="mono" inputmode="numeric" autocomplete="off" value="-800"></div>
+      </div>
+
+      <div class="res">
+        <div class="cell"><em>换算到另一边</em><big id="oNether">—</big><small id="oNetherSub">Y 不变</small></div>
+        <div class="cell"><em>所在区块</em><b id="oChunk">—</b><small id="oChunkSub">—</small></div>
+        <div class="cell"><em>区块范围（方块）</em><b id="oRange">—</b><small>含首尾，共 16×16</small></div>
+      </div>
+
+      <div style="margin-top:11px">
+        <div class="kv"><span>区块内偏移</span><b id="oOffset">—</b></div>
+        <div class="kv"><span>区域文件</span><b id="oFile">—</b></div>
+        <div class="kv"><span>文件内索引</span><b id="oIndex">—</b></div>
+        <div class="kv"><span>forceload</span><b id="oForceload">—</b></div>
+      </div>
+
+      <div class="fld" style="margin-top:14px">
+        <label for="zoomLv">地图缩放（手绘地图 / 空地图）</label>
+        <div class="seg" id="zoomSeg">
+          <button type="button" data-lv="0" aria-pressed="true">0 级</button>
+          <button type="button" data-lv="1" aria-pressed="false">1 级</button>
+          <button type="button" data-lv="2" aria-pressed="false">2 级</button>
+          <button type="button" data-lv="3" aria-pressed="false">3 级</button>
+          <button type="button" data-lv="4" aria-pressed="false">4 级</button>
+        </div>
+      </div>
+      <div class="kv"><span>覆盖范围</span><b id="oMapRange">—</b></div>
+      <div class="kv"><span>地图上位置</span><b id="oMapPx">—</b></div>
+      <div class="kv"><span>这张图边长</span><b id="oMapSide">—</b></div>
+
+      <div class="row">
+        <button class="btn primary" id="btnCopyCoord" type="button">📋 复制坐标</button>
+        <button class="btn ghost" id="btnSwap" type="button">↔ 交换维度</button>
+        <button class="btn ghost" id="btnCopyCmd" type="button">📋 复制 forceload</button>
+      </div>
+
+      <h2 class="panel-title" style="margin-top:22px">两点距离</h2>
+      <div class="grid2">
+        <div class="res" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0">
+          <div class="fld"><label for="ax">A · X</label><input id="ax" class="mono" inputmode="numeric" value="0"></div>
+          <div class="fld"><label for="ay">A · Y</label><input id="ay" class="mono" inputmode="numeric" value="64"></div>
+          <div class="fld"><label for="az">A · Z</label><input id="az" class="mono" inputmode="numeric" value="0"></div>
+        </div>
+        <div class="res" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0">
+          <div class="fld"><label for="bx">B · X</label><input id="bx" class="mono" inputmode="numeric" value="1000"></div>
+          <div class="fld"><label for="by">B · Y</label><input id="by" class="mono" inputmode="numeric" value="64"></div>
+          <div class="fld"><label for="bz">B · Z</label><input id="bz" class="mono" inputmode="numeric" value="0"></div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="kv"><span>水平距离</span><b id="dFlat">—</b></div>
+        <div class="kv"><span>空间距离</span><b id="dFull">—</b></div>
+        <div class="kv"><span>步行</span><b id="dWalk">—</b><small class="mini" style="margin-left:auto">4.317 格/秒</small></div>
+        <div class="kv"><span>冲刺</span><b id="dSprint">—</b><small class="mini" style="margin-left:auto">5.612 格/秒</small></div>
+      </div>
+
+      <div class="tip" style="margin-top:13px">
+        下界 1 格 = 主世界 8 格，所以<strong>下界坐标 = 主世界 ÷ 8</strong>，Y 不变。
+        传送门会先在水平半径 <code>128</code>（主世界）/ <code>16</code>（下界）内找已有的门并尝试对接，
+        找不到才新建 —— 这也是「门跑偏」的常见原因。
+      </div>
+    </section>
+
+    <!-- ═══════════════ 堆叠 ═══════════════ -->
+    <section class="panel" data-panel="stack" hidden>
+      <h2 class="panel-title">物品 ↔ 组 ↔ 箱子</h2>
+      <div class="grid2">
+        <div class="fld"><label for="cnt">物品数量</label><input id="cnt" class="mono" inputmode="numeric" autocomplete="off" value="1000"></div>
+        <div class="fld"><label for="ss">堆叠上限</label><select id="ss">
+          <option value="64">64（多数方块 / 材料）</option>
+          <option value="16">16（鸡蛋、雪球、末影珍珠、告示牌）</option>
+          <option value="32">32（部分食物与杂项）</option>
+          <option value="1">1（药水、工具、盔甲）</option>
+        </select></div>
+      </div>
+      <div class="res" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+        <div class="cell"><em>满组</em><big id="sStacks">—</big><small>组</small></div>
+        <div class="cell"><em>还余</em><b id="sRest">—</b><small>个</small></div>
+        <div class="cell"><em>占用</em><b id="sSlots">—</b><small>格槽位</small></div>
+      </div>
+      <div class="verdict" id="sVerdict">—</div>
+      <div style="margin-top:10px">
+        <div class="kv"><span>箱子（27 格）</span><b id="sChest">—</b></div>
+        <div class="kv"><span>大箱子（54 格）</span><b id="sLarge">—</b></div>
+        <div class="kv"><span>潜影盒（27 格）</span><b id="sShulker">—</b></div>
+        <div class="kv"><span>凑满下一组</span><b id="sNextStack">—</b></div>
+      </div>
+      <div class="err" id="cntErr" hidden></div>
+      <div class="row">
+        <button class="btn ghost sm" data-set="64" type="button">1 组</button>
+        <button class="btn ghost sm" data-set="1728" type="button">1 箱</button>
+        <button class="btn ghost sm" data-set="3456" type="button">1 大箱</button>
+        <button class="btn primary" id="btnCopyStack" type="button">📋 复制结论</button>
+      </div>
+
+      <h2 class="panel-title" style="margin-top:22px">容器 → 容量</h2>
+      <div class="grid2">
+        <div class="fld"><label for="ctype">容器</label><select id="ctype"></select></div>
+        <div class="fld"><label for="cnum">个数</label><input id="cnum" class="mono" inputmode="numeric" autocomplete="off" value="3"></div>
+      </div>
+      <div class="res" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+        <div class="cell"><em>总容量</em><big id="cTotal">—</big><small>个物品</small></div>
+        <div class="cell"><em>折合</em><b id="cStacks">—</b><small>组</small></div>
+        <div class="cell"><em>大箱子</em><b id="cLarge">—</b><small>个</small></div>
+      </div>
+      <div class="verdict" id="cVerdict">—</div>
+    </section>
+
+    <!-- ═══════════════ 经验 ═══════════════ -->
+    <section class="panel" data-panel="xp" hidden>
+      <h2 class="panel-title">等级 ↔ 经验</h2>
+      <div class="grid2">
+        <div class="fld"><label for="lv">当前等级</label><input id="lv" class="mono" inputmode="numeric" autocomplete="off" value="30"></div>
+        <div class="fld"><label for="xpIn">累计经验点</label><input id="xpIn" class="mono" inputmode="numeric" autocomplete="off" value="1395"></div>
+      </div>
+      <div class="res">
+        <div class="cell"><em>从 0 级攒到 <span id="lvEcho">30</span> 级</em><big id="xTotal">—</big><small>点经验</small></div>
+        <div class="cell"><em>这些经验点能到</em><b id="xLevel">—</b><small id="xLevelSub">—</small></div>
+        <div class="cell"><em>再升一级要</em><b id="xNext">—</b><small>点</small></div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="kv"><span>说明</span><b id="xSeg">—</b></div>
+        <div class="kv"><span>附魔 30 级</span><b id="xEnch">—</b></div>
+      </div>
+
+      <h2 class="panel-title" style="margin-top:22px">从 A 级到 B 级</h2>
+      <div class="grid2">
+        <div class="fld"><label for="lvA">A</label><input id="lvA" class="mono" inputmode="numeric" value="0"></div>
+        <div class="fld"><label for="lvB">B</label><input id="lvB" class="mono" inputmode="numeric" value="30"></div>
+      </div>
+      <div class="kv"><span>需要</span><b id="xSpan" class="hi">—</b></div>
+
+      <h2 class="panel-title" style="margin-top:22px">常用等级</h2>
+      <div class="scroll">
+        <table class="tbl"><thead><tr><th>等级</th><th>累计经验</th><th>本级需要</th></tr></thead>
+          <tbody id="xpTable"></tbody></table>
+      </div>
+    </section>
+
+    <!-- ═══════════════ 时间 ═══════════════ -->
+    <section class="panel" data-panel="time" hidden>
+      <h2 class="panel-title">游戏时间</h2>
+      <div class="fld"><label for="tick">世界时间（tick）</label><input id="tick" class="mono" inputmode="numeric" autocomplete="off" value="6000"></div>
+      <div class="res">
+        <div class="cell"><em>游戏内时钟</em><big id="clock">—</big><small id="phase">—</small></div>
+        <div class="cell"><em>今天的进度</em><b id="progress">—</b><small>一天 24000 tick</small></div>
+        <div class="cell"><em>现实时间</em><b id="realMin">—</b><small>一天 ≈ 20 分钟</small></div>
+      </div>
+      <div class="kv" style="margin-top:10px"><span>距离</span><b id="tLeft">—</b></div>
+      <div class="kv"><span>指令</span><b id="tCmd">—</b></div>
+      <div class="row">
+        <button class="btn ghost sm" data-tick="0" type="button">日出</button>
+        <button class="btn ghost sm" data-tick="6000" type="button">正午</button>
+        <button class="btn ghost sm" data-tick="13000" type="button">入夜</button>
+        <button class="btn ghost sm" data-tick="18000" type="button">午夜</button>
+        <button class="btn primary" id="btnCopyTime" type="button">📋 复制 /time set</button>
+      </div>
+
+      <h2 class="panel-title" style="margin-top:22px">现实分钟 → tick</h2>
+      <div class="fld"><label for="mins">现实分钟</label><input id="mins" class="mono" inputmode="numeric" autocomplete="off" value="20"></div>
+      <div class="kv"><span>折合</span><b id="minsOut" class="hi">—</b></div>
+      <div class="kv"><span>说明</span><b id="minsHint">—</b></div>
+    </section>
+
+    <!-- ═══════════════ 铁砧 ═══════════════ -->
+    <section class="panel" data-panel="anvil" hidden>
+      <h2 class="panel-title">一次合并要几级</h2>
+      <div class="grid2">
+        <div class="fld"><label for="leftN">左边物品上过几次铁砧</label><select id="leftN"></select></div>
+        <div class="fld"><label for="rightN">右边物品上过几次铁砧</label><select id="rightN"></select></div>
+      </div>
+      <div class="grid2">
+        <div class="fld"><label for="enchCost">附魔额外等级</label><input id="enchCost" class="mono" inputmode="numeric" value="8"></div>
+        <div class="fld"><label>改名</label>
+          <label class="ck"><input type="checkbox" id="renamed" checked> 改名（+1 级）</label>
+        </div>
+      </div>
+      <div class="res">
+        <div class="cell"><em>总等级</em><big id="aTotal">—</big><small>生存模式消耗</small></div>
+        <div class="cell"><em>合并后惩罚值</em><b id="aAfter">—</b><small id="aAfterSub">—</small></div>
+        <div class="cell"><em>左 / 右惩罚</em><b id="aPen">—</b><small>2ⁿ − 1</small></div>
+      </div>
+      <div class="verdict" id="aVerdict">—</div>
+      <div class="row">
+        <button class="btn ghost" id="btnResetAnvil" type="button">↺ 重置</button>
+        <button class="btn primary" id="btnCopyAnvil" type="button">📋 复制结论</button>
+      </div>
+
+      <h2 class="panel-title" style="margin-top:22px">再叠 6 次会怎样</h2>
+      <div class="scroll">
+        <table class="tbl"><thead><tr><th>次数</th><th>本次要</th><th>之后惩罚</th><th>结果</th></tr></thead>
+          <tbody id="aFuture"></tbody></table>
+      </div>
+      <div class="tip" style="margin-top:12px">
+        惩罚值 = <code>2^n − 1</code>（n = 上过几次铁砧）；合并后取两边较大的那个再翻倍加一。
+        总等级 ≥ <code>40</code> 时生存模式显示「过于昂贵！」，操作做不了。
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="../assets/js/core.js"></script>
+<script>
+(function(){
+'use strict';
+function $(id){ return document.getElementById(id); }
+var toast = HS.toast;
+
+/* ───────── 通用 ───────── */
+function num(el){
+  var s = String(el.value).trim().replace(/，/g, ',');
+  if (s === '') return null;
+  if (!/^-?\d+(\.\d+)?$/.test(s)) return NaN;
+  return Number(s);
+}
+function int(el){ var v = num(el); return (v === null || isNaN(v)) ? null : Math.floor(v); }
+function fmt(n){
+  if (!isFinite(n)) return '—';
+  var r = Math.round(n * 100) / 100;
+  return String(r);
+}
+function fmtInt(n){ return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function dur(sec){
+  if (!isFinite(sec)) return '—';
+  if (sec < 1) return '不到 1 秒';
+  var s = Math.round(sec), m = Math.floor(s / 60), h = Math.floor(m / 60);
+  if (h > 0) return h + ' 时 ' + (m % 60) + ' 分';
+  if (m > 0) return m + ' 分 ' + (s % 60) + ' 秒';
+  return s + ' 秒';
+}
+function mod(v, n){ return ((v % n) + n) % n; }
+
+/* ───────── Tab ───────── */
+document.getElementById('tabs').addEventListener('click', function(e){
+  var b = e.target.closest('[data-tab]');
+  if (!b) return;
+  var key = b.getAttribute('data-tab');
+  Array.prototype.forEach.call(this.querySelectorAll('[data-tab]'), function(x){
+    x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-panel]'), function(p){
+    p.hidden = p.getAttribute('data-panel') !== key;
+  });
+  if (history.replaceState) history.replaceState(null, '', '#' + key);
+});
+
+/* ═══════════════ ① 坐标 ═══════════════ */
+var dim = 'over', zoomLv = 0;
+
+function chunkCalc(){
+  var x = int($('x')), y = int($('y')), z = int($('z'));
+  var bad = [x, y, z].some(function(v){ return v === null; });
+
+  if (bad){
+    ['oNether','oNetherSub','oChunk','oChunkSub','oRange','oOffset','oFile','oIndex','oForceload',
+     'oMapRange','oMapPx','oMapSide'].forEach(function(id){ $(id).textContent = '—'; });
+    return;
+  }
+  if (Math.abs(x) > 30000000 || Math.abs(z) > 30000000){
+    $('oNether').textContent = '超出世界边界';
+    $('oNetherSub').textContent = '原版世界是 ±3000 万格';
+    return;
+  }
+
+  /* 维度换算：下界 = 主世界 ÷ 8（向下取整，和游戏一致） */
+  var k = dim === 'over' ? 1 / 8 : 8;
+  var tx = Math.floor(x * k), tz = Math.floor(z * k);
+  $('oNether').textContent = tx + ' ' + y + ' ' + tz;
+  $('oNetherSub').textContent = '换算到' + (dim === 'over' ? '下界' : '主世界') + ' · Y 不变';
+
+  /* 区块 */
+  var cx = Math.floor(x / 16), cz = Math.floor(z / 16);
+  $('oChunk').textContent = cx + ', ' + cz;
+  $('oChunkSub').textContent = '另一边的区块 ' + Math.floor(tx / 16) + ', ' + Math.floor(tz / 16);
+  $('oRange').textContent = (cx * 16) + '~' + (cx * 16 + 15) + ' × ' + (cz * 16) + '~' + (cz * 16 + 15);
+  $('oOffset').textContent = mod(x, 16) + ', ' + mod(z, 16) + '（从区块西北角起算）';
+
+  /* 区域文件 */
+  var rx = Math.floor(cx / 32), rz = Math.floor(cz / 32);
+  var ix = mod(cx, 32), iz = mod(cz, 32);
+  $('oFile').textContent = 'r.' + rx + '.' + rz + '.mca';
+  $('oIndex').textContent = ix + ', ' + iz + '（第 ' + (ix + iz * 32) + ' 个）';
+  var cmd = '/forceload add ' + (cx * 16) + ' ' + (cz * 16) + ' ' + (cx * 16 + 15) + ' ' + (cz * 16 + 15);
+  $('oForceload').textContent = cmd;
+
+  /* 地图（缩放 lv：1 像素 = 2^lv 方块，整张 128×128 像素） */
+  var s = 1 << zoomLv, half = 64 * s;
+  var left = x - half, right = x + half - 1, top = z - half, bottom = z + half - 1;
+  $('oMapSide').textContent = (128 * s) + ' × ' + (128 * s) + ' 方块（1 像素 = ' + s + ' 方块）';
+  $('oMapRange').textContent = left + '~' + right + ' × ' + top + '~' + bottom;
+  var px = Math.floor((x - left) / s), py = Math.floor((z - top) / s);
+  var cw = Math.ceil((128 * s) / 16);
+  $('oMapPx').textContent = '像素 ' + px + ', ' + py + '（整张图跨 ' + cw + '×' + cw + ' 个区块）';
+}
+
+function distCalc(){
+  var v = ['ax','ay','az','bx','by','bz'].map(function(id){ return int($(id)); });
+  if (v.some(function(n){ return n === null; })){
+    ['dFlat','dFull','dWalk','dSprint'].forEach(function(id){ $(id).textContent = '—'; });
+    return;
+  }
+  var dx = v[3] - v[0], dy = v[4] - v[1], dz = v[5] - v[2];
+  var flat = Math.sqrt(dx * dx + dz * dz), full = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  $('dFlat').textContent = fmt(flat) + ' 格';
+  $('dFull').textContent = fmt(full) + ' 格';
+  $('dWalk').textContent = dur(flat / 4.317);
+  $('dSprint').textContent = dur(flat / 5.612);
+}
+
+$('dimSeg').addEventListener('click', function(e){
+  var b = e.target.closest('[data-dim]');
+  if (!b) return;
+  dim = b.getAttribute('data-dim');
+  Array.prototype.forEach.call(this.querySelectorAll('[data-dim]'), function(x){
+    x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+  });
+  chunkCalc();
+});
+$('zoomSeg').addEventListener('click', function(e){
+  var b = e.target.closest('[data-lv]');
+  if (!b) return;
+  zoomLv = +b.getAttribute('data-lv');
+  Array.prototype.forEach.call(this.querySelectorAll('[data-lv]'), function(x){
+    x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+  });
+  chunkCalc();
+});
+['x','y','z'].forEach(function(id){ $(id).addEventListener('input', chunkCalc); });
+['ax','ay','az','bx','by','bz'].forEach(function(id){ $(id).addEventListener('input', distCalc); });
+
+$('btnSwap').addEventListener('click', function(){
+  var x = int($('x')), y = int($('y')), z = int($('z'));
+  if (x === null || y === null || z === null){ toast('先填好坐标'); return; }
+  var k = dim === 'over' ? 1 / 8 : 8;
+  var tx = Math.floor(x * k), tz = Math.floor(z * k);
+  dim = dim === 'over' ? 'nether' : 'over';
+  $('x').value = String(tx); $('y').value = String(y); $('z').value = String(tz);
+  Array.prototype.forEach.call($('dimSeg').querySelectorAll('[data-dim]'), function(b){
+    b.setAttribute('aria-pressed', b.getAttribute('data-dim') === dim ? 'true' : 'false');
+  });
+  chunkCalc();
+  toast('已切到' + (dim === 'over' ? '主世界' : '下界'));
+});
+$('btnCopyCoord').addEventListener('click', function(){
+  var t = $('oNether').textContent;
+  if (!t || t === '—' || t.indexOf('超出') === 0){ toast('先填一个有效坐标'); return; }
+  HS.copy(t); toast('已复制 ' + t);
+});
+$('btnCopyCmd').addEventListener('click', function(){
+  var t = $('oForceload').textContent;
+  if (!t || t === '—'){ toast('先填好坐标'); return; }
+  HS.copy(t); toast('已复制指令');
+});
+
+/* ═══════════════ ② 堆叠 ═══════════════ */
+var CONTAINERS = [
+  ['箱子', 27], ['大箱子', 54], ['潜影盒', 27], ['漏斗', 5],
+  ['发射器 / 投掷器', 9], ['熔炉 / 烟熏炉 / 高炉', 3], ['矿车（箱子）', 27],
+  ['末影箱', 27], ['木桶', 27]
+];
+(function fillContainers(){
+  var sel = $('ctype');
+  CONTAINERS.forEach(function(c, i){
+    sel.appendChild(new Option(c[0] + '（' + c[1] + ' 格）', String(i)));
+  });
+  sel.value = '0';
+})();
+
+function stackCalc(){
+  var n = int($('cnt'));
+  var size = +$('ss').value;
+  var errEl = $('cntErr');
+  if (n === null || n < 0){
+    errEl.hidden = false; errEl.textContent = '填一个 0 或以上的整数';
+    ['sStacks','sRest','sSlots','sChest','sLarge','sShulker','sNextStack'].forEach(function(id){ $(id).textContent = '—'; });
+    $('sVerdict').textContent = '—';
+    return;
+  }
+  errEl.hidden = true;
+  var stacks = Math.floor(n / size), rest = n % size;
+  var slots = stacks + (rest ? 1 : 0);
+  $('sStacks').textContent = fmtInt(stacks);
+  $('sRest').textContent = fmtInt(rest);
+  $('sSlots').textContent = fmtInt(slots);
+  var chest = Math.ceil(slots / 27), large = Math.ceil(slots / 54);
+  $('sChest').textContent = slots ? fmtInt(chest) + ' 个（第 ' + fmtInt(chest) + ' 个才装得下）' : '0 个';
+  $('sLarge').textContent = slots ? fmtInt(large) + ' 个' : '0 个';
+  $('sShulker').textContent = slots ? fmtInt(Math.ceil(slots / 27)) + ' 个' : '0 个';
+  $('sNextStack').textContent = rest ? '第 ' + fmtInt(stacks + 1) + ' 组还差 ' + fmtInt(size - rest) + ' 个' : '刚好整组';
+  if (n === 0){
+    $('sVerdict').innerHTML = '0 个物品，什么都不用搬。';
+  } else {
+    $('sVerdict').innerHTML = '<b>' + fmtInt(n) + '</b> 个 = ' + fmtInt(stacks) + ' 组 + ' + fmtInt(rest) +
+      ' 个，占 <b>' + fmtInt(slots) + '</b> 格 —— 装进 ' + fmtInt(chest) + ' 个箱子。';
+  }
+}
+
+function containerCalc(){
+  var v = int($('cnum')), size = +$('ss').value;
+  var c = CONTAINERS[+$('ctype').value];
+  if (v === null || v < 0){
+    ['cTotal','cStacks','cLarge'].forEach(function(id){ $(id).textContent = '—'; });
+    $('cVerdict').textContent = '填一个 0 或以上的整数';
+    return;
+  }
+  var total = v * c[1] * size, stacks = v * c[1];
+  $('cTotal').textContent = fmtInt(total);
+  $('cStacks').textContent = fmtInt(stacks);
+  $('cLarge').textContent = (total / 3456).toFixed(2).replace(/\.00$/, '');
+  $('cVerdict').innerHTML = v === 0 ? '0 个容器，装 0 个。'
+    : fmtInt(v) + ' 个' + c[0] + '（每个 ' + c[1] + ' 格）= <b>' + fmtInt(total) + ' 个物品</b>，折合 <b>' +
+      fmtInt(stacks) + ' 组</b>（按 ' + size + '/组）。';
+}
+
+$('cnt').addEventListener('input', stackCalc);
+$('ss').addEventListener('change', function(){ stackCalc(); containerCalc(); });
+$('cnum').addEventListener('input', containerCalc);
+$('ctype').addEventListener('change', containerCalc);
+document.querySelectorAll('[data-set]').forEach(function(b){
+  b.addEventListener('click', function(){ $('cnt').value = b.getAttribute('data-set'); stackCalc(); });
+});
+$('btnCopyStack').addEventListener('click', function(){
+  var t = $('sVerdict').textContent;
+  if (!t || t === '—'){ toast('先填物品数量'); return; }
+  HS.copy(t); toast('已复制结论');
+});
+
+/* ═══════════════ ③ 经验 ═══════════════ */
+function totalXp(lv){
+  if (lv <= 16) return lv * lv + 6 * lv;
+  if (lv <= 31) return Math.floor(2.5 * lv * lv - 40.5 * lv + 360);
+  return Math.floor(4.5 * lv * lv - 162.5 * lv + 2220);
+}
+function stepXp(lv){
+  if (lv <= 15) return 2 * lv + 7;
+  if (lv <= 30) return 5 * lv - 38;
+  return 9 * lv - 158;
+}
+function levelFromXp(xp){
+  if (xp < 7) return { level: 0, rest: xp };
+  var lv = 0;
+  if (xp <= 352) lv = Math.floor((-6 + Math.sqrt(36 + 4 * xp)) / 2);
+  else if (xp <= 1507) lv = Math.floor((40.5 + Math.sqrt(40.5 * 40.5 - 10 * (360 - xp))) / 5);
+  else lv = Math.floor((162.5 + Math.sqrt(162.5 * 162.5 - 18 * (2220 - xp))) / 9);
+  if (lv < 0) lv = 0;
+  while (totalXp(lv + 1) <= xp) lv++;
+  while (lv > 0 && totalXp(lv) > xp) lv--;
+  return { level: lv, rest: xp - totalXp(lv) };
+}
+
+function xpCalc(){
+  var lv = int($('lv')), xp = int($('xpIn'));
+  $('lvEcho').textContent = lv === null ? '—' : String(lv);
+  if (lv === null || lv < 0){
+    $('xTotal').textContent = '—'; $('xSeg').textContent = '等级要填 0 或以上';
+  } else {
+    $('xTotal').textContent = fmtInt(totalXp(lv));
+    var seg = lv <= 15 ? '0~15 级：每级 2L+7'
+      : lv <= 30 ? '16~30 级：每级 5L−38'
+      : '31 级以上：每级 9L−158';
+    $('xSeg').textContent = seg + '（L 是当前等级）';
+  }
+  if (xp === null || xp < 0){
+    $('xLevel').textContent = '—'; $('xLevelSub').textContent = '—'; $('xNext').textContent = '—';
+  } else {
+    var r = levelFromXp(xp);
+    $('xLevel').textContent = r.level + ' 级';
+    $('xLevelSub').textContent = '还余 ' + fmtInt(r.rest) + ' 点（' +
+      Math.round(r.rest / stepXp(r.level) * 100) + '% 进度）';
+    $('xNext').textContent = fmtInt(stepXp(r.level));
+  }
+  $('xEnch').textContent = '要 ' + fmtInt(totalXp(30)) + ' 点（附魔台最高 30 级）';
+
+  var a = int($('lvA')), b = int($('lvB'));
+  if (a === null || b === null || a < 0 || b < 0){
+    $('xSpan').textContent = '—';
+  } else {
+    var d = totalXp(b) - totalXp(a);
+    $('xSpan').textContent = (d >= 0 ? '' : '倒退了 ' + fmtInt(-d) + ' 点：') +
+      '从 ' + a + ' 级到 ' + b + ' 级需要 ' + fmtInt(Math.abs(d)) + ' 点';
+  }
+}
+(function xpTable(){
+  var rows = '';
+  [0, 5, 10, 15, 20, 25, 30, 35, 40, 50].forEach(function(lv){
+    rows += '<tr><td>' + lv + ' 级</td><td>' + fmtInt(totalXp(lv)) +
+      '</td><td>' + fmtInt(stepXp(lv)) + '</td></tr>';
+  });
+  $('xpTable').innerHTML = rows;
+})();
+['lv','xpIn','lvA','lvB'].forEach(function(id){ $(id).addEventListener('input', xpCalc); });
+
+/* ═══════════════ ④ 时间 ═══════════════ */
+var PRESETS = [
+  { n: '日出（白天开始）', t: 0 }, { n: '上午', t: 1000 }, { n: '正午', t: 6000 },
+  { n: '下午', t: 9000 }, { n: '日落', t: 12000 }, { n: '夜幕降临', t: 13000 },
+  { n: '可以睡觉', t: 12542 }, { n: '午夜', t: 18000 }, { n: '黎明前', t: 23000 }
+];
+function clockOf(tick){
+  var mins = Math.floor(tick / 1000 * 60);
+  var h = Math.floor(mins / 60) + 6, m = mins % 60;
+  h = ((h % 24) + 24) % 24;
+  return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+}
+function phaseOf(t){
+  if (t < 1000) return '日出，天色正在亮';
+  if (t < 6000) return '上午，光照充足';
+  if (t < 12000) return '下午，正午已过';
+  if (t < 13000) return '日落，天正在黑';
+  if (t < 18000) return '夜晚，怪物成片刷';
+  if (t < 23000) return '深夜，离天亮还早';
+  return '黎明前，快天亮了';
+}
+function realMin(t){ return t / 20 / 60; }
+
+function timeCalc(){
+  var t = int($('tick'));
+  if (t === null || t < 0) t = 0;
+  var day = Math.floor(t / 24000), d = t % 24000;
+  $('clock').textContent = clockOf(d);
+  var hit = '';
+  for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].t === d) { hit = ' · ' + PRESETS[i].n; break; }
+  $('phase').textContent = phaseOf(d) + (day > 0 ? ' · 第 ' + (day + 1) + ' 天' : '') + hit;
+  $('progress').textContent = Math.round(d / 24000 * 100) + '%';
+  $('realMin').textContent = realMin(d).toFixed(1) + ' 分钟';
+  $('tLeft').textContent = d < 13000
+    ? '距天黑还要 ' + realMin(13000 - d).toFixed(1) + ' 分钟'
+    : '距天亮还要 ' + realMin(24000 - d).toFixed(1) + ' 分钟';
+  $('tCmd').textContent = '/time set ' + t;
+}
+
+function minsCalc(){
+  var m = num($('mins'));
+  if (m === null || isNaN(m) || m < 0){
+    $('minsOut').textContent = '分钟数要 ≥ 0';
+    $('minsHint').textContent = '—';
+    return;
+  }
+  var tick = Math.round(m * 60 * 20);
+  $('minsOut').textContent = fmtInt(tick) + ' tick';
+  $('minsHint').textContent = '世界时间前进 ' + fmtInt(tick) + ' tick（约 ' + (tick / 24000).toFixed(2) +
+    ' 天，游戏内时钟走 ' + (tick / 1000).toFixed(1) + ' 小时）';
+}
+
+$('tick').addEventListener('input', timeCalc);
+$('mins').addEventListener('input', minsCalc);
+document.querySelectorAll('[data-tick]').forEach(function(b){
+  b.addEventListener('click', function(){ $('tick').value = b.getAttribute('data-tick'); timeCalc(); });
+});
+$('btnCopyTime').addEventListener('click', function(){
+  var t = $('tCmd').textContent;
+  if (!t || t === '—'){ toast('先填时间'); return; }
+  HS.copy(t); toast('已复制 ' + t);
+});
+
+/* ═══════════════ ⑤ 铁砧 ═══════════════ */
+var MAXN = 9, LIMIT = 40;
+function rcOf(n){ return Math.pow(2, n) - 1; }
+function nextRc(a, b){ var m = Math.max(a, b); return m >= LIMIT ? m : m * 2 + 1; }
+
+(function fillAnvil(){
+  for (var i = 0; i <= MAXN; i++){
+    var label = i + ' 次' + (i === 0 ? '（全新）' : '');
+    $('leftN').appendChild(new Option(label, String(i)));
+    $('rightN').appendChild(new Option(label, String(i)));
+  }
+  $('leftN').value = '1'; $('rightN').value = '0';
+})();
+
+function anvilCalc(){
+  var nl = +$('leftN').value, nr = +$('rightN').value;
+  var pl = rcOf(nl), pr = rcOf(nr);
+  var ec = int($('enchCost'));
+  if (ec === null || ec < 0) ec = 0;
+  var renamed = $('renamed').checked ? 1 : 0;
+  var total = pl + pr + ec + renamed;
+  var after = nextRc(pl, pr);
+
+  $('aTotal').textContent = fmtInt(total) + ' 级';
+  $('aAfter').textContent = fmtInt(after);
+  $('aAfterSub').textContent = '下次和全新物品合并至少 ' + fmtInt(after) + ' 级';
+  $('aPen').textContent = pl + ' / ' + pr;
+
+  var v = $('aVerdict');
+  v.className = 'verdict';
+  if (total >= LIMIT){
+    v.className = 'verdict bad';
+    v.innerHTML = '❌ <b>' + total + ' 级，超过上限。</b>生存模式下铁砧显示「过于昂贵！」，做不了 —— ' +
+      '换一件新的，或者用指令把惩罚值清零。';
+  } else if (total >= LIMIT - 8){
+    v.className = 'verdict warn';
+    v.innerHTML = '⚠️ <b>' + total + ' 级，已经很贵。</b>再叠一次大概率越线，下次至少 ' + (after + pr) + ' 级起。';
+  } else {
+    v.innerHTML = '✅ <b>' + total + ' 级，可以做。</b>做完后惩罚值变成 ' + after +
+      '，下次和全新物品合并最少要 ' + after + ' 级。';
+  }
+
+  var rows = '', rc = after;
+  for (var k = 1; k <= 6; k++){
+    var cost = rc + ec + renamed;
+    var ok = cost < LIMIT;
+    rows += '<tr><td>第 ' + k + ' 次</td><td>' + cost + '</td><td>' + rc + '</td><td class="' +
+      (ok ? 'ok-c' : 'bad-c') + '">' + (ok ? '可行' : '过于昂贵') + '</td></tr>';
+    rc = nextRc(rc, 0);
+  }
+  $('aFuture').innerHTML = rows;
+}
+['leftN','rightN','enchCost','renamed'].forEach(function(id){
+  $(id).addEventListener('input', anvilCalc);
+  $(id).addEventListener('change', anvilCalc);
+});
+$('btnResetAnvil').addEventListener('click', function(){
+  $('leftN').value = '0'; $('rightN').value = '0'; $('enchCost').value = '8'; $('renamed').checked = true;
+  anvilCalc(); toast('已重置');
+});
+$('btnCopyAnvil').addEventListener('click', function(){
+  var nl = +$('leftN').value, nr = +$('rightN').value;
+  var pl = rcOf(nl), pr = rcOf(nr);
+  var ec = int($('enchCost')) || 0;
+  var total = pl + pr + ec + ($('renamed').checked ? 1 : 0);
+  var txt = '铁砧：左(上过 ' + nl + ' 次, 惩罚 ' + pl + ') + 右(上过 ' + nr + ' 次, 惩罚 ' + pr +
+    ') + 附魔 ' + ec + ($('renamed').checked ? ' + 改名 1' : '') + ' = ' + total + ' 级，' +
+    (total >= LIMIT ? '超出上限，生存不可操作' : '可以操作') + '；合并后惩罚值 ' + nextRc(pl, pr) + '。';
+  HS.copy(txt); toast('已复制结论');
+});
+
+/* ───────── 初始化 ───────── */
+chunkCalc(); distCalc(); stackCalc(); containerCalc(); xpCalc(); timeCalc(); minsCalc(); anvilCalc();
+
+/* 支持 #coord / #stack 直达 */
+(function fromHash(){
+  var h = (location.hash || '').replace('#', '');
+  var b = h && document.querySelector('[data-tab="' + h + '"]');
+  if (b) b.click();
+})();
+})();
+</script>
+</body>
+</html>
