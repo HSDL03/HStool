@@ -514,7 +514,9 @@
 
   /* ─────────────────────────── 通用取数 ─────────────────────────── */
   function firstOK(urls) {
-    return new Promise(function (resolve, reject) {
+    // 告诉启动加载层「还有数据没回来」，进度条会等它，不会提前放行
+    var rel = (window.__hsb && window.__hsb.track) ? window.__hsb.track() : null;
+    var p = new Promise(function (resolve, reject) {
       (function next(i) {
         if (i >= urls.length) { reject(new Error('全部数据源均失败')); return; }
         fetch(urls[i], { cache: 'no-store' })
@@ -523,6 +525,8 @@
           .catch(function (e) { if (i === urls.length - 1) reject(e); else next(i + 1); });
       })(0);
     });
+    if (rel) p.then(rel, rel);
+    return p;
   }
   /* ─────────────────────────── 通用小工具 ───────────────────────── */
   function absUrl(u) {
