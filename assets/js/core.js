@@ -43,6 +43,9 @@
     { id: 'mc-end', name: '🌌 MC 末地', desc: '末地虚空紫', colors: ['#a060ff', '#0f0a1a', '#4a2080'], shape: 'spark' },
     { id: 'sakura', name: '🌸 樱花', desc: '粉嫩柔和', colors: ['#d04080', '#fffafc', '#ff80a0'], shape: 'petal' },
     { id: 'ocean', name: '🌊 海洋', desc: '清凉海蓝', colors: ['#0066cc', '#f0f8ff', '#40a0dc'], shape: 'bubble' },
+    { id: 'paper', name: '📜 牛皮纸', desc: '暖米纸感', colors: ['#b06a2c', '#f6f0e4', '#c98a3e'], shape: 'square' },
+    { id: 'lavender', name: '💜 薰衣草', desc: '雾紫冷调', colors: ['#6d4fc4', '#f7f5fb', '#9d7ce8'], shape: 'petal' },
+    { id: 'midnight', name: '🌃 午夜靛', desc: '深蓝夜色', colors: ['#6ea8ff', '#0e1220', '#4fd1c5'], shape: 'spark' },
     { id: 'github-light', name: '☀️ GitHub 浅色', desc: '清爽默认', colors: ['#0969da', '#f6f8fa', '#1f2328'], shape: 'square' },
     { id: 'github-dark', name: '🌙 GitHub 暗色', desc: '护眼夜间', colors: ['#4493f8', '#161b22', '#e6edf3'], shape: 'square' }
   ];

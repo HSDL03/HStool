@@ -121,6 +121,66 @@
   --topbar-bg:linear-gradient(180deg,#2080c0,#004890);--topbar-fg:#fff;--topbar-bd:#002040;
   --on-ac:#fff;
 }
+/* ☕ 牛皮纸：暖米底 + 琥珀棕，像摊开的笔记本 */
+[data-theme="paper"]{
+  --bg:#f6f0e4;--bg2:#efe7d7;--bg3:#e6dcc8;--bg4:#dbcfb6;
+  --text:#3a3228;--muted:#7d7060;--faint:#a2947f;
+  --bd:#d8c9ad;--bd2:#8a7654;--bd-soft:rgba(58,50,40,.12);
+  --ac:#b06a2c;--acs:#f3e2c8;--ac2:#c98a3e;
+  --ok:#4f7a3a;--warn:#b8860b;--dgr:#b2402e;
+  --sh:2px 2px 0 rgba(58,50,40,.14);
+  --sh-1:0 1px 2px rgba(58,50,40,.08);--sh-2:0 6px 18px rgba(58,50,40,.10);--sh-3:0 18px 40px rgba(58,50,40,.16);
+  --r:5px;--r-lg:10px;
+  --bevel:inset -1px -1px 0 rgba(58,50,40,.08),inset 1px 1px 0 rgba(255,255,255,.75);
+  --bevel-in:inset 1px 1px 0 rgba(58,50,40,.08),inset -1px -1px 0 rgba(255,255,255,.6);
+  --blob1:rgba(176,106,44,.10);--blob2:rgba(201,138,62,.08);--blob3:rgba(120,90,50,.06);
+  --grid:rgba(90,70,45,.045);
+  --p1:176,106,44;--p2:201,138,62;--p3:150,110,60;--p4:90,70,45;
+  --hero-grad:linear-gradient(135deg,#b06a2c,#8a4f1c);
+  --tile-accent:linear-gradient(135deg,#c98a3e,#b06a2c);
+  --topbar-bg:linear-gradient(180deg,#8a6a3a,#5c4526);--topbar-fg:#fff;--topbar-bd:#3a2a12;
+  --on-ac:#fff;
+}
+/* 🪻 薰衣草：雾紫灰底，低调的冷色 */
+[data-theme="lavender"]{
+  --bg:#f7f5fb;--bg2:#efeaf7;--bg3:#e6dff2;--bg4:#d9d0ea;
+  --text:#2f2a3d;--muted:#6d6484;--faint:#968daa;
+  --bd:#d5cde6;--bd2:#7a6f96;--bd-soft:rgba(47,42,61,.10);
+  --ac:#6d4fc4;--acs:#e9e1ff;--ac2:#9d7ce8;
+  --ok:#3f7a63;--warn:#b08900;--dgr:#c0392b;
+  --sh:2px 2px 0 rgba(47,42,61,.13);
+  --sh-1:0 1px 2px rgba(47,42,61,.07);--sh-2:0 6px 18px rgba(109,79,196,.12);--sh-3:0 18px 40px rgba(109,79,196,.18);
+  --r:8px;--r-lg:14px;
+  --bevel:inset -1px -1px 0 rgba(47,42,61,.06),inset 1px 1px 0 rgba(255,255,255,.8);
+  --bevel-in:inset 1px 1px 0 rgba(47,42,61,.06),inset -1px -1px 0 rgba(255,255,255,.7);
+  --blob1:rgba(109,79,196,.10);--blob2:rgba(157,124,232,.08);--blob3:rgba(200,150,230,.06);
+  --grid:rgba(109,79,196,.035);
+  --p1:109,79,196;--p2:157,124,232;--p3:200,150,230;--p4:60,50,90;
+  --hero-grad:linear-gradient(135deg,#6d4fc4,#9d7ce8);
+  --tile-accent:linear-gradient(135deg,#9d7ce8,#6d4fc4);
+  --topbar-bg:linear-gradient(180deg,#6b52b8,#4a3585);--topbar-fg:#fff;--topbar-bd:#2a1f52;
+  --on-ac:#fff;
+}
+/* 🌃 午夜靛：深靛底 + 冰蓝，比纯黑有层次 */
+[data-theme="midnight"]{
+  --bg:#0e1220;--bg2:#161c30;--bg3:#1f2740;--bg4:#2a3350;
+  --text:#dfe6f5;--muted:#8b96b0;--faint:#66708a;
+  --bd:#34405e;--bd2:#4a5878;--bd-soft:rgba(255,255,255,.07);
+  --ac:#6ea8ff;--acs:#1b2b4a;--ac2:#4fd1c5;
+  --ok:#57c98a;--warn:#e0b341;--dgr:#f07070;
+  --sh:2px 2px 0 rgba(0,0,0,.45);
+  --sh-1:0 1px 2px rgba(0,0,0,.35);--sh-2:0 4px 16px rgba(0,0,0,.4);--sh-3:0 18px 44px rgba(0,0,0,.55);
+  --r:7px;--r-lg:13px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.45),inset 1px 1px 0 rgba(255,255,255,.05);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.45),inset -1px -1px 0 rgba(255,255,255,.05);
+  --blob1:rgba(110,168,255,.12);--blob2:rgba(79,209,197,.08);--blob3:rgba(140,120,255,.07);
+  --grid:rgba(120,160,255,.035);
+  --p1:110,168,255;--p2:79,209,197;--p3:140,120,255;--p4:40,55,90;
+  --hero-grad:linear-gradient(135deg,#6ea8ff,#4fd1c5);
+  --tile-accent:linear-gradient(135deg,#6ea8ff,#4fd1c5);
+  --topbar-bg:linear-gradient(180deg,#1a2340,#0b1020);--topbar-fg:#e6eeff;--topbar-bd:#05080f;
+  --on-ac:#08101f;
+}
 [data-theme="github-light"]{
   --bg:#ffffff;--bg2:#f6f8fa;--bg3:#eef1f4;--bg4:#e4e8ec;
   --text:#1f2328;--muted:#59636e;--faint:#818b98;
@@ -251,7 +311,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   transition:border-color .2s,box-shadow .2s,background .2s;
 }
 [data-theme^="mc-"] .searchbox input{background:rgba(255,255,255,.94);border:2px solid var(--topbar-bd);color:#1f1f1f;box-shadow:var(--bevel-in)}
-[data-theme="mc-night"] .searchbox input,[data-theme="mc-nether"] .searchbox input,[data-theme="mc-end"] .searchbox input{background:#202020;color:#e0e0e0}
+[data-theme="mc-night"] .searchbox input,[data-theme="mc-nether"] .searchbox input,[data-theme="mc-end"] .searchbox input,[data-theme="midnight"] .searchbox input{background:#1a2138;color:#dfe6f5}
 [data-theme^="github-"] .searchbox input{background:var(--bg2)}
 .searchbox input::placeholder{color:var(--faint)}
 .searchbox input:focus{background:var(--bg);border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
@@ -388,8 +448,16 @@ select.select{
 [data-theme="mc-end"] .card .cname{color:#e2d2ff;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
 [data-theme="sakura"] .card .cname{color:#8a2050;text-shadow:1px 1px 0 rgba(255,255,255,.5)}
 [data-theme="ocean"] .card .cname{color:#0a3060;text-shadow:1px 1px 0 rgba(255,255,255,.5)}
+[data-theme="paper"] .card .cname{color:#4a3a20;text-shadow:1px 1px 0 rgba(255,255,255,.55)}
+[data-theme="lavender"] .card .cname{color:#3b2f5c;text-shadow:1px 1px 0 rgba(255,255,255,.6)}
+[data-theme="midnight"] .card .cname{color:#e8f0ff;text-shadow:1px 1px 0 rgba(0,0,0,.5)}
 .card:hover .cname{color:var(--ac)}
-.card .cdesc{font-size:12px;color:var(--muted);line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+/* 描述最多两行：单行截断会把「能用但还没打磨完」这种关键后半句切掉 */
+.card .cdesc{
+  font-size:12px;color:var(--muted);line-height:1.42;margin-top:2px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  line-clamp:2;overflow:hidden;white-space:normal;text-overflow:clip;
+}
 .card .cmeta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
 .card .carrow{
   flex:none;font-size:18px;font-weight:800;color:var(--ac);opacity:0;
@@ -495,9 +563,10 @@ select.select{
 .modal-foot{padding:10px 14px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end;flex:none;background:var(--bg2)}
 
 /* 主题选择卡 */
-.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+/* 主题选择：数量变多后不再固定两列，窄卡片也能一行排 3~4 个 */
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:7px}
 .theme-card{
-  display:flex;flex-direction:column;gap:7px;padding:10px;
+  display:flex;flex-direction:column;gap:5px;padding:8px;min-width:0;
   background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);
   box-shadow:var(--bevel);cursor:pointer;text-align:left;
   transition:all .2s cubic-bezier(.34,1.56,.64,1);font-family:inherit;color:var(--text);
@@ -505,10 +574,11 @@ select.select{
 [data-theme^="github-"] .theme-card{border-width:1px;box-shadow:none}
 .theme-card:hover{transform:translateY(-2px);border-color:var(--ac)}
 .theme-card.active{border-color:var(--ac);box-shadow:var(--bevel),0 0 0 2px var(--acs)}
-.theme-prev{display:flex;height:28px;border:1px solid var(--bd);border-radius:2px;overflow:hidden}
-.theme-prev span{flex:1}
-.theme-name{font-size:12.5px;font-weight:800}
-.theme-desc{font-size:10.5px;color:var(--muted);margin-top:-4px}
+/* button 当 flex 容器时子项宽度不会自动撑满，这里必须写死 100% */
+.theme-prev{display:flex;width:100%;height:22px;border:1px solid var(--bd);border-radius:3px;overflow:hidden}
+.theme-prev span{flex:1 1 0;min-width:0;display:block}
+.theme-name{font-size:12px;font-weight:800;line-height:1.3}
+.theme-desc{font-size:10px;color:var(--muted);line-height:1.3;margin-top:-2px}
 
 /* ── Toast ────────────────────────────────────────────────────────────── */
 .toast{
