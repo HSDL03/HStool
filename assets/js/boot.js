@@ -60,6 +60,10 @@
   rs.setProperty('--hsb-track', dark ? 'rgba(255,255,255,.09)' : 'rgba(0,0,0,.06)');
   rs.setProperty('--hsb-shadow', dark ? 'rgba(0,0,0,.55)' : 'rgba(0,0,0,.16)');
   rs.setProperty('--hsb-muted', dark ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.48)');
+  // 红石粉本身是暗红，深色底上会糊成一团，稍微提亮 + 拉饱和
+  rs.setProperty('--hsb-icon-fx', dark
+    ? 'brightness(1.28) saturate(1.15) drop-shadow(0 3px 0 rgba(0,0,0,.55))'
+    : 'drop-shadow(0 3px 0 rgba(0,0,0,.16))');
 
   /* ── 样式 ─────────────────────────────────────────────────────── */
   var css = ''
@@ -72,18 +76,10 @@
     + '#hsBoot.hsb-out{opacity:0;visibility:hidden;pointer-events:none}'
     + '#hsBoot .hsb-in{width:min(372px,76vw);display:flex;flex-direction:column;'
     + 'align-items:center;gap:14px}'
-    /* 草方块：上 38% 草绿、下土棕，加像素噪点和底部硬投影 */
-    + '#hsBoot .hsb-cube{position:relative;width:60px;height:60px;flex:none;'
-    + 'background:linear-gradient(#7a9c3c 0 38%,#7a5637 38% 100%);'
-    + 'border:2px solid var(--hsb-bd);'
-    + 'box-shadow:inset 0 3px 0 rgba(255,255,255,.26),inset 0 -3px 0 rgba(0,0,0,.24),'
-    + '0 4px 0 var(--hsb-shadow);animation:hsbFloat 2.6s ease-in-out infinite}'
-    + '#hsBoot .hsb-cube::before{content:"";position:absolute;left:6px;top:5px;width:6px;height:5px;'
-    + 'background:rgba(0,0,0,.15);box-shadow:17px 4px 0 rgba(0,0,0,.11),36px 0 0 rgba(0,0,0,.14),'
-    + '12px 11px 0 rgba(0,0,0,.09),30px 10px 0 rgba(0,0,0,.1)}'
-    + '#hsBoot .hsb-cube::after{content:"";position:absolute;left:7px;top:30px;width:6px;height:6px;'
-    + 'background:rgba(0,0,0,.24);box-shadow:16px 5px 0 rgba(0,0,0,.17),31px 1px 0 rgba(0,0,0,.21),'
-    + '9px 12px 0 rgba(0,0,0,.15),25px 11px 0 rgba(0,0,0,.19)}'
+    /* 图标：原版红石粉物品贴图 16×16，整数倍放大（64 / 48）保持像素锐利 */
+    + '#hsBoot .hsb-icon{display:block;width:80px;height:80px;flex:none;'
+    + 'image-rendering:pixelated;filter:var(--hsb-icon-fx,drop-shadow(0 3px 0 rgba(0,0,0,.16)));'
+    + 'animation:hsbFloat 2.6s ease-in-out infinite}'
     + '#hsBoot .hsb-name{font-size:23px;font-weight:800;letter-spacing:.06em;line-height:1.1;'
     + 'text-indent:.06em;color:var(--hsb-fg)}'
     + '#hsBoot .hsb-sub{margin-top:-9px;font-size:10.5px;font-weight:700;letter-spacing:.2em;'
@@ -104,10 +100,13 @@
     + '@keyframes hsbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}'
     + '@keyframes hsbStripe{from{background-position:0 0}to{background-position:14px 0}}'
     + '@media (prefers-reduced-motion:reduce){'
-    + '#hsBoot .hsb-cube,#hsBoot .hsb-fill::after{animation:none}'
+    + '#hsBoot .hsb-icon,#hsBoot .hsb-fill::after{animation:none}'
     + '#hsBoot,#hsBoot .hsb-fill{transition:none}}'
-    + '@media (max-width:420px){#hsBoot .hsb-in{width:min(300px,72vw)}'
-    + '#hsBoot .hsb-name{font-size:20px}#hsBoot .hsb-cube{width:46px;height:46px}}';
+    + '@media (max-width:420px){'
+    + '#hsBoot .hsb-in{width:min(300px,72vw)}'
+    + '#hsBoot .hsb-name{font-size:20px}'
+    + '#hsBoot .hsb-icon{width:64px;height:64px}'
+    + '}';
 
   var st = d.createElement('style');
   st.id = 'hsBootStyle';
@@ -115,18 +114,28 @@
   (d.head || ROOT).appendChild(st);
 
   /* ── DOM ──────────────────────────────────────────────────────── */
+  // 图标路径从 boot.js 自身地址反推站点根，根目录/子目录/404 页都不用改
+  var selfSrc = d.currentScript && d.currentScript.src;
+  var baseURL = selfSrc ? selfSrc.replace(/assets\/js\/boot\.js.*$/, '') : '';
+  var ICON = baseURL + 'assets/mc-textures/item_redstone.png';
+
   var layer = d.createElement('div');
   layer.id = 'hsBoot';
   layer.setAttribute('role', 'status');
   layer.setAttribute('aria-live', 'polite');
   layer.setAttribute('aria-label', '页面加载中');
   layer.innerHTML = '<div class="hsb-in">'
-    + '<div class="hsb-cube"></div>'
+    + '<img class="hsb-icon" alt="" width="80" height="80">'
     + '<div class="hsb-name">红石的小站</div>'
     + '<div class="hsb-sub">工具与资源集散地</div>'
     + '<div class="hsb-bar"><i class="hsb-fill"></i></div>'
     + '<div class="hsb-meta"><span class="hsb-pct">0%</span><span class="hsb-stage">正在解析页面</span></div>'
     + '</div>';
+  var ico = layer.querySelector('.hsb-icon');
+  // 万一贴图取不到（离线/路径异常），隐藏图标而不是留一个破图框
+  ico.addEventListener('error', function () { ico.style.display = 'none'; });
+  ico.src = ICON;
+
   var host = d.body || ROOT;
   host.appendChild(layer);
 
@@ -260,7 +269,7 @@
       if (layer.parentNode) layer.parentNode.removeChild(layer);
       ROOT.style.overflow = prevOverflow || '';
       // 主题变量已用不到了，撤掉免得以后改动互相干扰
-      ['--hsb-bg', '--hsb-fg', '--hsb-ac', '--hsb-bd', '--hsb-track', '--hsb-shadow', '--hsb-muted']
+      ['--hsb-bg', '--hsb-fg', '--hsb-ac', '--hsb-bd', '--hsb-track', '--hsb-shadow', '--hsb-muted', '--hsb-icon-fx']
         .forEach(function (k) { rs.removeProperty(k); });
     }, 380);
   }
