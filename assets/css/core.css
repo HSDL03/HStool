@@ -412,14 +412,15 @@ select.select{
 .card{
   position:relative;display:block;color:inherit;text-decoration:none;
   background:linear-gradient(135deg,var(--bg2),var(--bg));
-  border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel),inset 0 1px 0 rgba(255,255,255,.55);
   overflow:hidden;isolation:isolate;
   transition:border-color .25s,box-shadow .25s,transform .25s cubic-bezier(.34,1.56,.64,1);
 }
 [data-theme^="github-"] .card{border-width:1px;background:var(--bg);box-shadow:var(--sh-1);border-radius:var(--r-lg)}
 .card::before{content:"";position:absolute;inset:0;background:var(--tile-accent);opacity:0;transition:opacity .3s;pointer-events:none}
 .card:hover::before{opacity:.07}
-.card:hover{border-color:var(--ac);box-shadow:var(--bevel),0 14px 30px rgba(0,0,0,.16),0 0 0 1px rgba(var(--p1),.15);transform:translateY(-2px)}
+.card:hover{border-color:var(--ac);box-shadow:var(--bevel),inset 0 1px 0 rgba(255,255,255,.55),0 16px 34px rgba(0,0,0,.18),0 0 0 1px rgba(var(--p1),.15);transform:translateY(-3px)}
 [data-theme^="github-"] .card:hover{box-shadow:var(--sh-3)}
 .card .glow{
   position:absolute;width:260px;height:260px;border-radius:50%;pointer-events:none;
@@ -440,7 +441,10 @@ select.select{
 .card .cinfo{flex:1;min-width:0}
 .card .cname{
   font-size:15.5px;font-weight:800;line-height:1.25;letter-spacing:-.01em;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s;
+  transition:color .2s;
+  /* 长名字（下载页的文件名）允许折两行，不要截成「Ches…」 */
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  line-clamp:2;overflow:hidden;word-break:break-word;
 }
 [data-theme^="mc-wiki"] .card .cname{color:#2a3a1a;text-shadow:1px 1px 0 rgba(255,255,255,.45)}
 [data-theme="mc-night"] .card .cname{color:#e8ffd0;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
@@ -457,6 +461,7 @@ select.select{
   font-size:12px;color:var(--muted);line-height:1.42;margin-top:2px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   line-clamp:2;overflow:hidden;white-space:normal;text-overflow:clip;
+  min-height:2.85em; /* 固定两行高度，徽章行才能横向对齐 */
 }
 .card .cmeta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
 .card .carrow{
@@ -510,7 +515,7 @@ select.select{
 }
 
 /* 列表视图 */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px}
 .grid.list{grid-template-columns:1fr;gap:9px}
 .grid.list .card-body{padding:11px 15px}
 .grid.list .card .cico{width:40px;height:40px;font-size:19px}
@@ -526,7 +531,11 @@ select.select{
 .sec-title::before{content:"";width:8px;height:8px;background:var(--ac);box-shadow:var(--bevel);flex:none}
 [data-theme^="github-"] .sec-title::before{border-radius:50%;box-shadow:none}
 .sec-title .count{font-size:10.5px;padding:1px 7px;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;letter-spacing:0;text-transform:none;font-weight:700;color:var(--muted)}
-.sec-title .right{margin-left:auto;display:flex;gap:6px;letter-spacing:0;text-transform:none}
+.sec-title .right{margin-left:auto;display:flex;gap:6px;letter-spacing:0;text-transform:none;order:2}
+/* 标题右侧延伸的细线：把散落的标题和下面的网格连起来，不再像孤零零一行字 */
+.sec-title::after{content:"";order:1;flex:1;min-width:18px;height:1px;margin:0 2px 0 4px;
+  background:linear-gradient(90deg,var(--bd) 0,var(--bd-soft) 34%,transparent 78%)}
+.sec-title.dep-head::after{display:none}
 
 /* ── 空态 / 加载 ──────────────────────────────────────────────────────── */
 .empty{
@@ -538,7 +547,18 @@ select.select{
 .empty .s{font-size:12.5px;line-height:1.7}
 .skel{border-radius:var(--r);background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.3s infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skel-card{height:82px}
+.skel-card{height:96px;position:relative;overflow:hidden}
+.skel-card::after{
+  content:"";position:absolute;left:17px;top:50%;width:50px;height:50px;margin-top:-25px;
+  background:var(--bg);border:2px solid var(--bd-soft);border-radius:var(--r);opacity:.75;
+}
+/* 右侧再来三条文字占位，骨架才像一张卡片而不是一块砖 */
+.skel-card::before{
+  content:"";position:absolute;left:82px;right:24px;top:50%;height:9px;margin-top:-24px;
+  background:var(--bg3);border-radius:2px;opacity:.85;
+  box-shadow:0 15px 0 var(--bg3),0 30px 0 var(--bg3);
+  max-width:62%;
+}
 
 /* ── 模态框 ───────────────────────────────────────────────────────────── */
 .overlay{
@@ -760,13 +780,15 @@ select.select{
 .panel{
   position:static;display:block;overflow:visible;transform:none;
   padding:18px;margin-bottom:16px;
-  background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);box-shadow:var(--bevel);
+  background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
+  box-shadow:var(--bevel),0 6px 18px rgba(0,0,0,.05);
 }
 .panel::before{display:none}
-.panel:hover{transform:none;border-color:var(--bd2);box-shadow:var(--bevel)}
+.panel:hover{transform:none;border-color:var(--bd2);box-shadow:var(--bevel),0 6px 18px rgba(0,0,0,.05)}
 [data-theme^="github-"] .panel{border-width:1px;box-shadow:var(--sh-1);border-radius:var(--r-lg)}
 .panel-title{
-  display:flex;align-items:center;gap:8px;margin:0 0 13px;
+  display:flex;align-items:center;gap:8px;margin:0 0 14px;padding-bottom:9px;
+  border-bottom:1px solid var(--bd-soft);
   font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
 }
 .panel-title::before{content:"";width:8px;height:8px;background:var(--ac);box-shadow:var(--bevel);flex:none}

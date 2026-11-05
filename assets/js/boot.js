@@ -60,6 +60,13 @@
   rs.setProperty('--hsb-track', dark ? 'rgba(255,255,255,.09)' : 'rgba(0,0,0,.06)');
   rs.setProperty('--hsb-shadow', dark ? 'rgba(0,0,0,.55)' : 'rgba(0,0,0,.16)');
   rs.setProperty('--hsb-muted', dark ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.48)');
+  // 进度条填充的外部辉光，用主题主色调成半透明
+  rs.setProperty('--hsb-glow', (function (hex, a) {
+    var h = String(hex).replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var n = parseInt(h, 16);
+    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  })(c[2], dark ? 0.42 : 0.26));
   // 红石粉本身是暗红，深色底上会糊成一团，稍微提亮 + 拉饱和
   rs.setProperty('--hsb-icon-fx', dark
     ? 'brightness(1.28) saturate(1.15) drop-shadow(0 3px 0 rgba(0,0,0,.55))'
@@ -85,18 +92,31 @@
     + '#hsBoot .hsb-sub{margin-top:-9px;font-size:10.5px;font-weight:700;letter-spacing:.2em;'
     + 'text-indent:.2em;color:var(--hsb-muted)}'
     /* 进度槽：2px 描边 + 2px 内衬，仿原版经验条 */
-    + '#hsBoot .hsb-bar{position:relative;width:100%;height:18px;box-sizing:border-box;padding:3px;'
-    + 'margin-top:4px;background:var(--hsb-track);border:2px solid var(--hsb-bd);overflow:hidden}'
+    + '#hsBoot .hsb-bar{position:relative;width:100%;height:20px;box-sizing:border-box;padding:3px;'
+    + 'margin-top:6px;background:var(--hsb-track);border:2px solid var(--hsb-bd);overflow:hidden;'
+    + 'box-shadow:inset 0 2px 3px rgba(0,0,0,.16)}'
+    /* 填充：主题色打底，叠一层「上亮下暗」的立体高光 + 缓慢流动的细纹，右端留一道亮边 */
     + '#hsBoot .hsb-fill{position:relative;display:block;height:100%;width:0;'
-    + 'background:var(--hsb-ac);transition:width .2s linear}'
+    + 'background-color:var(--hsb-ac);'
+    + 'background-image:linear-gradient(180deg,rgba(255,255,255,.36) 0,rgba(255,255,255,.06) 46%,'
+    + 'rgba(0,0,0,.20) 100%);'
+    + 'box-shadow:inset -2px 0 0 rgba(255,255,255,.6),inset 1px 0 0 rgba(0,0,0,.12),'
+    + '0 0 10px var(--hsb-glow);'
+    + 'transition:width .2s linear}'
     + '#hsBoot .hsb-fill::after{content:"";position:absolute;inset:0;'
-    + 'background:repeating-linear-gradient(115deg,rgba(255,255,255,.26) 0 7px,rgba(255,255,255,0) 7px 14px);'
-    + 'animation:hsbStripe .85s linear infinite}'
-    + '#hsBoot .hsb-meta{display:flex;align-items:baseline;justify-content:space-between;gap:12px;'
-    + 'width:100%;font-size:11px;font-weight:700;letter-spacing:.06em;'
+    + 'background:repeating-linear-gradient(115deg,rgba(255,255,255,.34) 0 5px,rgba(255,255,255,0) 5px 10px);'
+    + 'animation:hsbStripe 1.1s linear infinite;opacity:.55}'
+    + '#hsBoot .hsb-meta{display:flex;align-items:baseline;justify-content:space-between;gap:10px;'
+    + 'width:100%;font-size:11px;font-weight:700;letter-spacing:.04em;'
     + 'font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;color:var(--hsb-muted)}'
-    + '#hsBoot .hsb-pct{font-variant-numeric:tabular-nums;color:var(--hsb-ac);font-weight:800}'
-    + '#hsBoot .hsb-stage{text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    + '#hsBoot .hsb-left{display:flex;align-items:baseline;gap:7px;flex:none}'
+    + '#hsBoot .hsb-pct{font-variant-numeric:tabular-nums;color:var(--hsb-ac);font-weight:800;'
+    + 'font-size:13px;letter-spacing:0}'
+    + '#hsBoot .hsb-count{font-style:normal;font-size:10px;opacity:.6;'
+    + 'font-variant-numeric:tabular-nums;letter-spacing:0}'
+    /* 进度条下方这行：现在到底在加载哪个文件 */
+    + '#hsBoot .hsb-stage{flex:1;min-width:0;text-align:right;overflow:hidden;'
+    + 'text-overflow:ellipsis;white-space:nowrap;opacity:.92}'
     + '@keyframes hsbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}'
     + '@keyframes hsbStripe{from{background-position:0 0}to{background-position:14px 0}}'
     + '@media (prefers-reduced-motion:reduce){'
@@ -129,7 +149,9 @@
     + '<div class="hsb-name">红石的小站</div>'
     + '<div class="hsb-sub">工具与资源集散地</div>'
     + '<div class="hsb-bar"><i class="hsb-fill"></i></div>'
-    + '<div class="hsb-meta"><span class="hsb-pct">0%</span><span class="hsb-stage">正在解析页面</span></div>'
+    + '<div class="hsb-meta">'
+    + '<span class="hsb-left"><b class="hsb-pct">0%</b><i class="hsb-count"></i></span>'
+    + '<span class="hsb-stage">正在解析页面</span></div>'
     + '</div>';
   var ico = layer.querySelector('.hsb-icon');
   // 万一贴图取不到（离线/路径异常），隐藏图标而不是留一个破图框
@@ -141,6 +163,7 @@
 
   var fill = layer.querySelector('.hsb-fill');
   var pctEl = layer.querySelector('.hsb-pct');
+  var countEl = layer.querySelector('.hsb-count');
   var stageEl = layer.querySelector('.hsb-stage');
 
   // 锁滚动：加载期间不能滚，不然后面的页面会跟着跑
@@ -160,6 +183,8 @@
   var done = 0;          // 已完成资源数
   var seen = [];         // 已计过数的元素（用 indexOf，避免 WeakSet 兼容问题）
   var dataPend = 0;      // 未完成的 HS.data 请求
+  var dataName = '';     // 正在取的 JSON 名（给进度条下面那行用）
+  var pending = [];      // DOMContentLoaded 时还没加载完的元素，队首就是「正在加载」的那个
   var loadFired = false;
   var finished = false;
   var finishing = false;
@@ -170,12 +195,35 @@
     return r > 1 ? 1 : r;
   }
 
+  /* 把 URL 压成短名：只留文件名，去掉 ?_=123 这类缓存参数 */
+  function shortName(u) {
+    if (!u) return '';
+    u = String(u).split('?')[0].split('#')[0];
+    var m = u.match(/\/([^\/]+)$/);
+    var n = m ? m[1] : u;
+    try { n = decodeURIComponent(n); } catch (e) { }
+    return n;
+  }
+  /* 元素 → 人类能看懂的名字 */
+  function elName(n) {
+    var tag = n.tagName;
+    if (tag === 'IMG') return shortName(n.currentSrc || n.src) || '图片';
+    if (tag === 'SCRIPT') return shortName(n.src) || '脚本';
+    if (tag === 'LINK') return shortName(n.href) || '样式表';
+    if (tag === 'IFRAME') return '嵌入式页面';
+    if (tag === 'VIDEO') return '视频';
+    return '';
+  }
+
   // 用捕获阶段统一接住所有资源元素的 load / error（它们本身不冒泡）
   function onRes(e) {
     var t = e.target;
     if (!t || t === w || !t.tagName) return;
     var tag = t.tagName;
     if (tag !== 'IMG' && tag !== 'SCRIPT' && tag !== 'LINK' && tag !== 'IFRAME' && tag !== 'VIDEO') return;
+    // 加载完了就从待办队列里划掉，队首自然变成「下一个还在等的」
+    var pi = pending.indexOf(t);
+    if (pi > -1) pending.splice(pi, 1);
     if (seen.indexOf(t) > -1) return;
     seen.push(t);
     done++;
@@ -188,6 +236,7 @@
     total = list.length;
     done = 0;
     seen = [];
+    pending = [];
     for (var i = 0; i < list.length; i++) {
       var n = list[i];
       var ok = false;
@@ -196,14 +245,17 @@
       else if (n.tagName === 'SCRIPT') ok = true; // 解析到这里说明已执行完
       else ok = false;
       if (ok) { seen.push(n); done++; }
+      else pending.push(n);
     }
   }
 
+  /* 进度条下面那行：说清楚现在到底在等什么 */
   function stageText() {
     if (finished) return '准备就绪';
+    if (dataPend > 0) return '正在获取 ' + (dataName || '数据');
+    if (pending.length) return '正在加载 ' + elName(pending[0]);
     if (phase === 'parse') return '正在解析页面';
-    if (dataPend > 0) return '正在获取数据';
-    if (total && done < total) return '正在加载资源 ' + done + '/' + total;
+    if (total && done < total) return '正在加载资源';
     return '正在准备界面';
   }
 
@@ -211,6 +263,9 @@
     var p = Math.floor(shown);
     fill.style.width = shown + '%';
     pctEl.textContent = p + '%';
+    // 计数只在资源阶段有意义，解析阶段留空避免显示 0/0
+    // 数据阶段计数没有意义（资源早就齐了），留空更干净
+    countEl.textContent = (phase === 'res' && total > 1 && !dataPend) ? done + '/' + total : '';
     stageEl.textContent = stageText();
   }
 
@@ -276,14 +331,16 @@
 
   /* ── 对外：给 HS.data() 报「还有几个请求没回来」 ───────────────── */
   w.__hsb = {
-    track: function () {
+    track: function (name) {
       if (finished) return function () { };
       dataPend++;
+      if (name) dataName = name;
       var off = false;
       return function () {
         if (off) return;
         off = true;
         if (dataPend > 0) dataPend--;
+        if (dataPend === 0) dataName = '';
       };
     },
     done: finish,

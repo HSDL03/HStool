@@ -509,13 +509,13 @@
       dataURL(name) + t,
       'https://raw.githubusercontent.com/' + SITE.repo + '/' + SITE.branch + '/' + tail + t,
       'https://cdn.jsdelivr.net/gh/' + SITE.repo + '@' + SITE.branch + '/' + tail
-    ]);
+    ], name + '.json');
   }
 
   /* ─────────────────────────── 通用取数 ─────────────────────────── */
-  function firstOK(urls) {
+  function firstOK(urls, label) {
     // 告诉启动加载层「还有数据没回来」，进度条会等它，不会提前放行
-    var rel = (window.__hsb && window.__hsb.track) ? window.__hsb.track() : null;
+    var rel = (window.__hsb && window.__hsb.track) ? window.__hsb.track(label || '') : null;
     var p = new Promise(function (resolve, reject) {
       (function next(i) {
         if (i >= urls.length) { reject(new Error('全部数据源均失败')); return; }

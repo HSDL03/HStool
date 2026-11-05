@@ -11,7 +11,12 @@
 <link rel="stylesheet" href="./assets/css/core.css">
 <style>
 /* ── 首页专属 ─────────────────────────────────────────────── */
-.hero{padding:26px 0 26px;text-align:center}
+.hero{position:relative;padding:34px 0 30px;text-align:center}
+/* 顶部一层极淡的主题色光晕，让首屏不至于是一块死平的米色 */
+.hero::before{
+  content:"";position:absolute;left:-40px;right:-40px;top:-30px;height:360px;pointer-events:none;
+  background:radial-gradient(62% 100% at 50% 0,rgba(var(--p1),.16) 0,rgba(var(--p1),.05) 44%,transparent 72%);
+}
 .hero-badge{
   display:inline-flex;align-items:center;gap:8px;padding:5px 14px;margin-bottom:16px;
   font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ac);

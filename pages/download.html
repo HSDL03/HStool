@@ -26,10 +26,15 @@
 
 /* 文件卡片 */
 .file{position:relative}
+#grid.grid{grid-template-columns:repeat(auto-fill,minmax(312px,1fr))}
 .file .card-body{align-items:flex-start}
 .file .cico{font-size:23px}
-.file .cname{display:flex;align-items:center;gap:6px;min-width:0}
-.file .cname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.file .cname{display:flex;align-items:flex-start;gap:6px;min-width:0}
+/* 文件名动辄 Chess-v1.3.1.exe，单行会被截成「Ches…」，给两行 */
+.file .cname .nm{
+  flex:1;min-width:0;overflow:hidden;word-break:break-word;line-height:1.28;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
 .file .cname .ext{
   font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.04em;
   padding:1px 5px;color:var(--muted);background:var(--bg3);
@@ -39,7 +44,7 @@
 .file .metaitem{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;color:var(--faint);font-family:var(--mono)}
 .file .acts{display:flex;gap:4px;flex:none;align-self:center;margin-left:4px}
 .file .act{
-  width:30px;height:30px;display:grid;place-items:center;font-size:13px;
+  width:27px;height:27px;display:grid;place-items:center;font-size:12.5px;flex:none;
   color:var(--muted);background:var(--bg);border:1px solid var(--bd);
   border-radius:var(--r);cursor:pointer;transition:all .16s;
 }
