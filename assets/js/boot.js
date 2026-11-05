@@ -81,8 +81,10 @@
     + '"Noto Sans SC","Segoe UI",system-ui,sans-serif;'
     + 'overflow:hidden;transition:opacity .32s ease,visibility .32s ease}'
     + '#hsBoot.hsb-out{opacity:0;visibility:hidden;pointer-events:none}'
-    + '#hsBoot .hsb-in{width:min(372px,76vw);display:flex;flex-direction:column;'
-    + 'align-items:center;gap:14px}'
+    /* 会飞的小方块画在这张全屏 canvas 上，垫在文字下面 */
+    + '#hsBoot .hsb-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}'
+    + '#hsBoot .hsb-in{position:relative;z-index:1;width:min(372px,76vw);display:flex;'
+    + 'flex-direction:column;align-items:center;gap:14px}'
     /* 图标：原版红石粉物品贴图 16×16，整数倍放大（64 / 48）保持像素锐利 */
     + '#hsBoot .hsb-icon{display:block;width:80px;height:80px;flex:none;'
     + 'image-rendering:pixelated;filter:var(--hsb-icon-fx,drop-shadow(0 3px 0 rgba(0,0,0,.16)));'
@@ -144,7 +146,8 @@
   layer.setAttribute('role', 'status');
   layer.setAttribute('aria-live', 'polite');
   layer.setAttribute('aria-label', '页面加载中');
-  layer.innerHTML = '<div class="hsb-in">'
+  layer.innerHTML = '<canvas class="hsb-fx"></canvas>'
+    + '<div class="hsb-in">'
     + '<img class="hsb-icon" alt="" width="80" height="80">'
     + '<div class="hsb-name">红石的小站</div>'
     + '<div class="hsb-sub">工具与资源集散地</div>'
@@ -165,6 +168,199 @@
   var pctEl = layer.querySelector('.hsb-pct');
   var countEl = layer.querySelector('.hsb-count');
   var stageEl = layer.querySelector('.hsb-stage');
+
+  /* ── 进度条两侧会飞的小方块（可以玩的）────────────────────────────
+     鼠标靠近会被推开，点一下会被打飞再弹回来。
+     画在全屏 canvas 上，pointer-events:none，不抢遮罩的点击。 */
+  (function blocks() {
+    var cv = layer.querySelector('.hsb-fx');
+    if (!cv || !cv.getContext) return;
+    var ctx = cv.getContext('2d');
+    var inner = layer.querySelector('.hsb-in');
+
+    // 七种 MC 方块配色：[主体色, 暗点色, 随机种子]
+    var KINDS = [
+      ['#7a9c3c', '#5d7a2c', 11],  // 草
+      ['#8a6a45', '#6a5136', 23],  // 土
+      ['#909090', '#6e6e6e', 37],  // 石
+      ['#b32626', '#871414', 53],  // 红石
+      ['#e0b040', '#b3871d', 71],  // 金
+      ['#4fc3c0', '#2f9a97', 89],  // 钻石
+      ['#9a5cc0', '#74409a', 101]  // 紫水晶
+    ];
+
+    // 16×16 像素材质预渲染一次，之后只 drawImage
+    function sprite(kdef) {
+      var s = d.createElement('canvas');
+      s.width = s.height = 16;
+      var c = s.getContext('2d');
+      c.fillStyle = kdef[0]; c.fillRect(0, 0, 16, 16);
+      var seed = kdef[2];
+      function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+      c.fillStyle = kdef[1];
+      for (var i = 0; i < 12; i++) {
+        c.fillRect(Math.floor(rnd() * 15), Math.floor(rnd() * 15),
+          1 + Math.floor(rnd() * 2), 1 + Math.floor(rnd() * 2));
+      }
+      c.fillStyle = 'rgba(255,255,255,.20)'; c.fillRect(0, 0, 16, 2);
+      c.fillStyle = 'rgba(0,0,0,.20)'; c.fillRect(0, 14, 16, 2);
+      return s;
+    }
+    var SPR = KINDS.map(sprite);
+
+    var W = 0, H = 0, DPR = 1;
+    var parts = [];
+    var ptr = { x: -999, y: -999, on: false };
+    var REACH = 110;   // 推开半径
+
+    function resize() {
+      DPR = Math.min(2, w.devicePixelRatio || 1);
+      W = layer.clientWidth || w.innerWidth;
+      H = layer.clientHeight || w.innerHeight;
+      cv.width = Math.round(W * DPR);
+      cv.height = Math.round(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+    }
+
+    // 撒点：优先塞到内容块左右两侧，两侧太窄（手机）就避开中央区域随机落
+    function spawn() {
+      parts = [];
+      var box = inner.getBoundingClientRect();
+      var lr = layer.getBoundingClientRect();
+      var pad = 24;
+      var bx0 = box.left - lr.left - pad, bx1 = box.right - lr.left + pad;
+      var by0 = box.top - lr.top - pad, by1 = box.bottom - lr.top + pad;
+      var leftW = Math.max(0, bx0), rightW = Math.max(0, W - bx1);
+      var sideOK = leftW > 96 && rightW > 96;
+      var want = W < 700 ? 8 : 14;
+
+      for (var n = 0, tries = 0; n < want && tries < 900; tries++) {
+        var r = W < 700 ? 8 + Math.random() * 6 : 11 + Math.random() * 9;
+        var x, y;
+        if (sideOK && Math.random() < 0.88) {
+          x = Math.random() < 0.5
+            ? 8 + r + Math.random() * Math.max(1, leftW - r * 2 - 16)
+            : bx1 + 8 + r + Math.random() * Math.max(1, rightW - r * 2 - 16);
+          y = 8 + r + Math.random() * Math.max(1, H - r * 2 - 16);
+        } else {
+          x = 8 + r + Math.random() * Math.max(1, W - r * 2 - 16);
+          y = 8 + r + Math.random() * Math.max(1, H - r * 2 - 16);
+          // 别盖在标题/进度条上
+          if (x > bx0 - r && x < bx1 + r && y > by0 - r && y < by1 + r) continue;
+        }
+        var clash = false;
+        for (var j = 0; j < parts.length; j++) {
+          var q = parts[j];
+          if (Math.hypot(q.x - x, q.y - y) < q.r + r + 10) { clash = true; break; }
+        }
+        if (clash) continue;
+        parts.push({
+          x: x, y: y, r: r,
+          vx: (Math.random() - .5) * .4, vy: (Math.random() - .5) * .4,
+          rot: Math.random() * 6.28, vr: (Math.random() - .5) * .03,
+          ang: Math.random() * 6.28,
+          k: Math.floor(Math.random() * KINDS.length),
+          pop: 0
+        });
+        n++;
+      }
+    }
+
+    function step() {
+      if (!cv.isConnected) return;          // 加载层撤了就停，不留后台循环
+      var t = Date.now();
+      var dt = last ? Math.min(50, t - last) : 16;
+      last = t;
+      var k = dt / 16.67;
+      ctx.clearRect(0, 0, W, H);
+
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+
+        // 指针靠近 → 被吹开
+        if (ptr.on) {
+          var dx = p.x - ptr.x, dy = p.y - ptr.y;
+          var d2 = dx * dx + dy * dy, R = REACH + p.r;
+          if (d2 < R * R && d2 > 0.5) {
+            var dd = Math.sqrt(d2), f = (1 - dd / R) * 1.6 * k;
+            p.vx += (dx / dd) * f;
+            p.vy += (dy / dd) * f;
+            p.vr += (dx > 0 ? 1 : -1) * f * 0.02;
+          }
+        }
+
+        // 自己慢慢飘：不碰也不至于僵在原地
+        p.ang += 0.009 * k;
+        p.vx += Math.cos(p.ang) * 0.011 * k;
+        p.vy += Math.sin(p.ang * 0.77) * 0.011 * k;
+
+        var damp = Math.pow(0.986, k);
+        p.vx *= damp; p.vy *= damp;
+        var sp = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+        if (sp > 9) { p.vx = p.vx / sp * 9; p.vy = p.vy / sp * 9; }
+
+        p.x += p.vx * k; p.y += p.vy * k;
+        p.rot += p.vr * k;
+        p.vr *= Math.pow(0.992, k);
+
+        // 撞到屏幕边弹回来
+        var m = p.r + 4;
+        if (p.x < m) { p.x = m; p.vx = Math.abs(p.vx) * 0.72; }
+        else if (p.x > W - m) { p.x = W - m; p.vx = -Math.abs(p.vx) * 0.72; }
+        if (p.y < m) { p.y = m; p.vy = Math.abs(p.vy) * 0.72; }
+        else if (p.y > H - m) { p.y = H - m; p.vy = -Math.abs(p.vy) * 0.72; }
+
+        var rr = p.r * (1 + p.pop * 0.35);
+        if (p.pop > 0) p.pop = Math.max(0, p.pop - 0.07 * k);
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.drawImage(SPR[p.k], -rr, -rr, rr * 2, rr * 2);
+        ctx.restore();
+      }
+      w.setTimeout(step, 16);
+    }
+
+    var last = 0;
+
+    // 点一下 → 给它一个向外冲的速度
+    function poke(cx, cy) {
+      var lr = layer.getBoundingClientRect();
+      var x = cx - lr.left, y = cy - lr.top;
+      var best = null, bd = 1e9;
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i], d = Math.hypot(p.x - x, p.y - y);
+        if (d < p.r + 24 && d < bd) { bd = d; best = p; }
+      }
+      if (!best) return;
+      var a = Math.atan2(best.y - y, best.x - x);
+      if (!isFinite(a) || (best.x === x && best.y === y)) a = Math.random() * 6.283;
+      best.vx += Math.cos(a) * 8.5;
+      best.vy += Math.sin(a) * 8.5;
+      best.vr += (Math.random() - 0.5) * 0.55;
+      best.pop = 1;
+    }
+
+    layer.addEventListener('pointermove', function (e) {
+      var lr = layer.getBoundingClientRect();
+      ptr.x = e.clientX - lr.left; ptr.y = e.clientY - lr.top; ptr.on = true;
+    }, { passive: true });
+    layer.addEventListener('pointerdown', function (e) {
+      var lr = layer.getBoundingClientRect();
+      ptr.x = e.clientX - lr.left; ptr.y = e.clientY - lr.top; ptr.on = true;
+      poke(e.clientX, e.clientY);
+    }, { passive: true });
+    layer.addEventListener('pointerleave', function () { ptr.on = false; });
+    w.addEventListener('resize', function () { resize(); });
+
+    resize();
+    spawn();
+    w.setTimeout(step, 16);
+    // body 还没解析完时布局可能不是最终值，DOM 就绪后重撒一次
+    d.addEventListener('DOMContentLoaded', function () { resize(); spawn(); });
+  })();
 
   // 锁滚动：加载期间不能滚，不然后面的页面会跟着跑
   var prevOverflow = ROOT.style.overflow;
