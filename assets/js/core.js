@@ -661,6 +661,14 @@
     // 图片/内容变化后再扫一次
     on(window, 'load', function () { decor.resize(); reveal(); });
     document.documentElement.classList.add('hs-ready');
+
+    /* 全站聊天框：右下角一个悬浮入口，懒加载不拖首屏 */
+    if (!HS.chat) {
+      var cs = document.createElement('script');
+      cs.src = SITE.url('assets/js/chat.js');
+      cs.async = true;
+      document.body.appendChild(cs);
+    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
