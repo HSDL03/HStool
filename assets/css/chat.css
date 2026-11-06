@@ -8,7 +8,8 @@
 #hsChat [hidden]{display:none!important}
 
 #hsChat{
-  position:fixed;right:12px;bottom:104px;z-index:920;
+  /* 贴死右下角：状态胶囊已经让位，这里不再需要为它抬高 */
+  position:fixed;right:12px;bottom:12px;z-index:920;
   font-family:var(--font);
   --hsc-r:var(--r,2px);
 }
@@ -41,7 +42,8 @@
 
 /* ── 面板 ─────────────────────────────────────────────────────────── */
 #hsChat .hsc-panel{
-  position:absolute;right:0;bottom:64px;width:348px;height:min(540px,72vh);
+  position:absolute;right:0;bottom:64px;width:366px;
+  height:min(688px,calc(100vh - 88px));
   display:flex;flex-direction:column;overflow:hidden;
   background:var(--bg);border:2px solid var(--bd2);border-radius:var(--hsc-r);
   box-shadow:var(--bevel),0 24px 48px rgba(0,0,0,.22);
@@ -50,7 +52,7 @@
   transition:opacity .2s ease,transform .24s cubic-bezier(.34,1.4,.64,1);
 }
 #hsChat.open .hsc-panel{opacity:1;transform:none;pointer-events:auto}
-#hsChat.guest .hsc-panel{height:min(420px,58vh)}
+#hsChat.guest .hsc-panel{height:min(480px,calc(100vh - 88px))}
 [data-theme^="github-"] #hsChat .hsc-panel{border-width:1px;border-radius:12px;box-shadow:0 24px 48px rgba(0,0,0,.28)}
 [data-theme^="github-"] #hsChat .hsc-fab{border-width:1px;border-radius:12px}
 
@@ -249,11 +251,11 @@
 
 /* ── 移动端：变成底部抽屉 ─────────────────────────────────────────── */
 @media (max-width:560px){
-  #hsChat{right:10px;bottom:100px}
+  #hsChat{right:10px;bottom:10px}
   #hsChat .hsc-fab{width:46px;height:46px;font-size:19px}
   #hsChat .hsc-panel{
     position:fixed;left:0;right:0;bottom:0;width:auto;
-    height:min(78vh,560px);border-left:0;border-right:0;border-bottom:0;
+    height:min(84vh,660px);border-left:0;border-right:0;border-bottom:0;
     border-radius:12px 12px 0 0;transform-origin:50% 100%;
   }
   #hsChat.open .hsc-panel{transform:none}
