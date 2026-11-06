@@ -662,12 +662,12 @@
     on(window, 'load', function () { decor.resize(); reveal(); });
     document.documentElement.classList.add('hs-ready');
 
-    /* 全站聊天框：右下角一个悬浮入口，懒加载不拖首屏 */
-    if (!HS.chat) {
-      var cs = document.createElement('script');
-      cs.src = SITE.url('assets/js/chat.js');
-      cs.async = true;
-      document.body.appendChild(cs);
+    /* 全站账号：顶栏右上角（account.js 就绪后会自己再挂上聊天框） */
+    if (!HS.account) {
+      var as = document.createElement('script');
+      as.src = SITE.url('assets/js/account.js');
+      as.async = true;
+      document.body.appendChild(as);
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

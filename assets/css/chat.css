@@ -56,9 +56,11 @@
 
 /* 头部 */
 .hsc-head{
-  flex:none;display:flex;align-items:center;gap:8px;padding:9px 8px 9px 13px;
+  flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 8px 9px 13px;
   background:var(--bg2);border-bottom:2px solid var(--bd2);
 }
+/* 头像昵称已经搬到顶栏，这里只留标题和收起按钮 */
 [data-theme^="github-"] .hsc-head{border-bottom-width:1px}
 .hsc-head .hsc-title{font-size:13px;font-weight:800;letter-spacing:.02em;color:var(--text)}
 .hsc-head .hsc-me{

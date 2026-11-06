@@ -474,6 +474,8 @@ select.select{
 .card.dim .cname{color:var(--muted)}
 
 /* ── 文件夹卡片：占 1 列 × 2 行 ─────────────────────────────────────── */
+/* 文件夹卡跨两行、内容少，描述不需要占满两行高度，否则底下空一大块 */
+.card.folder .cdesc{min-height:0}
 .card.folder{grid-row:span 2}
 .card.folder .card-body.fold{
   flex-direction:column;align-items:stretch;justify-content:space-between;

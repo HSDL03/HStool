@@ -1,0 +1,125 @@
+/* ============================================================================
+   红石的小站 · 全站账号 v1
+   account.css — 顶栏右上角账号入口 + 登录/注册弹窗
+   账号是整站的身份，不属于聊天，所以放在顶栏而不是聊天面板里
+   ========================================================================== */
+
+/* ── 顶栏入口 ─────────────────────────────────────────────────────── */
+#hsAccount{
+  display:inline-flex;align-items:center;gap:6px;flex:none;
+  height:30px;padding:0 10px;cursor:pointer;
+  font-family:var(--font);font-size:12px;font-weight:700;line-height:1;
+  color:var(--topbar-fg,#fff);
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.28);border-radius:var(--r,2px);
+  transition:background .16s,border-color .16s,transform .16s;
+  max-width:150px;
+}
+#hsAccount:hover{background:rgba(255,255,255,.26);border-color:rgba(255,255,255,.5)}
+#hsAccount:active{transform:scale(.96)}
+#hsAccount .acc-av{font-size:15px;line-height:1}
+#hsAccount .acc-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hsAccount.guest{opacity:.92}
+
+/* ── 弹窗 ─────────────────────────────────────────────────────────── */
+#hsAccMask{
+  position:fixed;inset:0;z-index:940;display:grid;place-items:center;padding:20px;
+  background:rgba(0,0,0,.44);
+  opacity:0;pointer-events:none;transition:opacity .2s ease;
+}
+#hsAccMask.on{opacity:1;pointer-events:auto}
+#hsAccBox{
+  width:min(352px,92vw);overflow:hidden;
+  background:var(--bg);color:var(--text);
+  border:2px solid var(--bd2);border-radius:var(--r,2px);
+  box-shadow:var(--bevel,0 0 0 transparent),0 24px 60px rgba(0,0,0,.34);
+  transform:translateY(12px) scale(.97);
+  transition:transform .26s cubic-bezier(.34,1.4,.64,1);
+  font-family:var(--font);
+}
+#hsAccMask.on #hsAccBox{transform:none}
+[data-theme^="github-"] #hsAccBox{border-width:1px;border-radius:12px}
+
+.acc-head{
+  display:flex;align-items:center;gap:8px;padding:11px 10px 11px 15px;
+  background:var(--bg2);border-bottom:2px solid var(--bd2);
+}
+[data-theme^="github-"] .acc-head{border-bottom-width:1px}
+.acc-head b{font-size:13px;font-weight:800;letter-spacing:.02em}
+.acc-x{
+  margin-left:auto;width:26px;height:26px;display:grid;place-items:center;cursor:pointer;
+  font-family:inherit;font-size:13px;line-height:1;color:var(--muted);
+  background:transparent;border:1px solid transparent;border-radius:var(--r,2px);
+  transition:all .15s;
+}
+.acc-x:hover{color:var(--text);background:var(--bg3);border-color:var(--bd)}
+
+.acc-body{padding:16px 16px 18px}
+.acc-body p{margin:0 0 12px;font-size:11.5px;line-height:1.7;color:var(--muted)}
+.acc-body label{
+  display:block;margin-bottom:5px;
+  font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+}
+.acc-body input{
+  width:100%;height:36px;margin-bottom:11px;padding:0 11px;
+  font-family:inherit;font-size:13px;color:var(--text);background:var(--bg);
+  border:2px solid var(--bd2);border-radius:var(--r,2px);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+[data-theme^="github-"] .acc-body input{border-width:1px}
+.acc-body input:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+
+.acc-err{min-height:17px;margin:-3px 0 8px;font-size:11.5px;line-height:1.5;color:var(--dgr)}
+.acc-err.shake{animation:accShake .3s}
+@keyframes accShake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+.acc-row{display:flex;gap:7px;margin-top:2px}
+.acc-row button{
+  flex:1;height:36px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:800;
+  color:var(--on-ac);background:var(--ac);border:2px solid var(--ac);border-radius:var(--r,2px);
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1),filter .15s;
+}
+.acc-row button.ghost{color:var(--text);background:var(--bg2);border-color:var(--bd2)}
+.acc-row button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.acc-row button:active{transform:scale(.96)}
+.acc-row button[disabled]{opacity:.55;cursor:not-allowed;transform:none;filter:none}
+
+/* 已登录时的资料卡 */
+.acc-me{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.acc-me .big{
+  flex:none;width:46px;height:46px;display:grid;place-items:center;font-size:24px;
+  background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r,2px);
+}
+.acc-me .meta{min-width:0}
+.acc-me .meta b{display:block;font-size:15px;font-weight:800;line-height:1.3}
+.acc-me .meta span{font-size:11px;color:var(--muted)}
+
+.acc-stat{
+  display:flex;gap:8px;margin-bottom:14px;
+}
+.acc-stat div{
+  flex:1;padding:8px 10px;text-align:center;
+  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r,2px);
+}
+.acc-stat b{display:block;font-size:16px;font-weight:800;color:var(--ac);line-height:1.3}
+.acc-stat span{font-size:10px;color:var(--faint);letter-spacing:.04em}
+
+.acc-tip{
+  margin-top:12px;padding:8px 10px;font-size:11px;line-height:1.6;color:var(--muted);
+  background:var(--bg2);border-left:3px solid var(--ac);border-radius:var(--r,2px);
+}
+
+@media (prefers-reduced-motion:reduce){
+  #hsAccMask,#hsAccBox,#hsAccount{transition:none;animation:none}
+}
+
+/* 窄屏顶栏本来就挤：只留头像，别把搜索框和图标按钮顶出去 */
+@media (max-width:600px){
+  #hsAccount{padding:0 7px;height:28px;gap:0}
+  #hsAccount .acc-nm{display:none}
+  #hsAccount .acc-av{font-size:15px}
+}
+@media (max-width:380px){
+  #hsAccount{padding:0 6px}
+  #hsAccount .acc-av{font-size:14px}
+}
