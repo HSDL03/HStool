@@ -9,6 +9,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 const SKIP_DIRS = new Set([
@@ -115,6 +116,18 @@ for (const f of files.filter((x) => x.endsWith('.js'))) {
   const r = rel(f);
   try { new Function(fs.readFileSync(f, 'utf8')); }
   catch (e) { errors.push(`${r} 语法错误：${e.message}`); }
+}
+// ES Module（.mjs，例如 Cloudflare Worker）：new Function 只认脚本语法，
+// 交给 node --check 按模块解析，不能因为「不是站点脚本」就漏检
+for (const f of files.filter((x) => x.endsWith('.mjs'))) {
+  const r = rel(f);
+  try {
+    execFileSync(process.execPath, ['--check', f], { stdio: 'pipe' });
+  } catch (e) {
+    const msg = String(e.stderr || e.message).split('\n').map((x) => x.trim())
+      .filter((x) => x && !/^\^+$/.test(x)).slice(0, 2).join(' / ');
+    errors.push(`${r} 语法错误（ESM）：${msg}`);
+  }
 }
 for (const f of files.filter((x) => x.endsWith('.css'))) {
   const css = fs.readFileSync(f, 'utf8');

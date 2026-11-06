@@ -1,0 +1,15 @@
+name = "sb-proxy"
+main = "worker.mjs"
+compatibility_date = "2026-11-01"
+
+# 用 wrangler 命令行部署时才需要这个文件。
+# 如果你是在 Cloudflare 网页控制台里粘贴代码，可以忽略。
+
+# 换 Supabase 项目时改这里，或者用 `wrangler secret put UPSTREAM`
+[vars]
+# UPSTREAM = "https://lxdyrajbsjftduesvosh.supabase.co"
+
+# 绑自定义域名：wrangler 的 routes 需要域名已托管在同一个 Cloudflare 账号下
+# routes = [
+#   { pattern = "api.hs.dpdns.org", custom_domain = true }
+# ]

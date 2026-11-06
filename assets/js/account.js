@@ -10,7 +10,21 @@
   'use strict';
 
   var HS = w.HS || {};
-  var SB_URL = (w.HS_CHAT_SB_URL || 'https://lxdyrajbsjftduesvosh.supabase.co').replace(/\/$/, '');
+
+  /* ── 后端地址 ────────────────────────────────────────────────────
+     按优先级排，第一个能连上的就用。
+       1. window.HS_CHAT_SB_URL  —— 手动覆盖（调试用）
+       2. SB_PROXY               —— Cloudflare 反代，国内可达
+       3. SB_DEFAULT             —— 直连 Supabase，反代挂了时的兜底
+     换后端只改这三行，别处不用动。 */
+  var SB_DEFAULT = 'https://lxdyrajbsjftduesvosh.supabase.co';
+  var SB_PROXY = '';   // ← 反代域名下来后填这里，例如 'https://api.hs.dpdns.org'
+
+  var SB_HOSTS = [w.HS_CHAT_SB_URL, SB_PROXY, SB_DEFAULT]
+    .map(function (x) { return String(x || '').replace(/\/+$/, ''); })
+    .filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+
+  var SB_URL = SB_HOSTS[0];
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
 
   function url(p) {
@@ -41,8 +55,12 @@
     if (/Password should be at least/i.test(m)) return '密码至少 6 位';
     if (/Email not confirmed/i.test(m)) return '账号还没确认，稍后再试一次';
     if (/rate limit|too many|Too many/i.test(m)) return '操作太频繁，歇一会儿';
-    if (/Failed to fetch|NetworkError|ERR_|fetch failed|load failed/i.test(m)) {
-      return '连不上服务器：你的网络到 supabase.co 的连接被中断了（不是密码问题）。开代理或换个网络再试。';
+    if (/Failed to fetch|NetworkError|ERR_|fetch failed|load failed|aborted/i.test(m)) {
+      var host = String(SB_URL || '').replace(/^https?:\/\//, '').split('/')[0];
+      if (SB_PROXY && SB_URL === SB_PROXY) {
+        return '连不上 ' + host + '（不是密码问题）：反代这边出状况了，稍后再试或换个网络。';
+      }
+      return '连不上 ' + host + '（不是密码问题）：你的网络到这个地址的连接被中断了，换个网络或开代理再试。';
     }
     return m.slice(0, 90);
   }
@@ -75,9 +93,51 @@
     });
   }
 
+  /* 只判断「这个地址连不连得上」，不读内容：no-cors 下拿不到响应体也无所谓 */
+  function probe(base, ms) {
+    return new Promise(function (res) {
+      var done = false;
+      function fin(v) { if (!done) { done = true; res(v); } }
+      var timer = setTimeout(function () { fin(false); }, ms);
+      try {
+        fetch(base + '/auth/v1/health', { mode: 'no-cors', cache: 'no-store' })
+          .then(function () { clearTimeout(timer); fin(true); })
+          .catch(function () { clearTimeout(timer); fin(false); });
+      } catch (e) { clearTimeout(timer); fin(false); }
+    });
+  }
+
+  /* 并发探一遍候选，按优先级取第一个通的。结果存 sessionStorage，
+     同一次会话里不重复等；换个标签页/新会话会重新判断（因为可能要挂梯子）。 */
+  function pickHost() {
+    if (SB_HOSTS.length < 2) return Promise.resolve(SB_HOSTS[0]);
+    try {
+      var c = JSON.parse(w.sessionStorage.getItem('hs-sb-host') || 'null');
+      if (c && c.h && Date.now() - c.t < 10 * 60 * 1000 && SB_HOSTS.indexOf(c.h) > -1) {
+        return Promise.resolve(c.h);
+      }
+    } catch (e) { }
+
+    // 串行试：第一个通了就不再去碰后面的，避免控制台多出一堆无谓的失败请求
+    var i = 0;
+    function next() {
+      if (i >= SB_HOSTS.length) return Promise.resolve(SB_HOSTS[0]);  // 全不通：先按第一个来，让报错文案说清楚
+      var h = SB_HOSTS[i++];
+      return probe(h, 2200).then(function (ok) { return ok ? h : next(); });
+    }
+
+    return next().then(function (pick) {
+      try { w.sessionStorage.setItem('hs-sb-host', JSON.stringify({ h: pick, t: Date.now() })); } catch (e) { }
+      return pick;
+    });
+  }
+
   function ensure() {
     if (!readyPromise) {
-      readyPromise = loadSDK().then(function () {
+      readyPromise = pickHost().then(function (host) {
+        SB_URL = host;
+        return loadSDK();
+      }).then(function () {
         st.sb = w.supabase.createClient(SB_URL, SB_KEY, { realtime: { params: { eventsPerSecond: 10 } } });
         st.sb.auth.onAuthStateChange(function (_ev, session) {
           var was = st.session && st.session.user ? st.session.user.id : null;
