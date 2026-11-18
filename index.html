@@ -3,21 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>红石的小站 · Minecraft 工具站</title>
-<meta name="description" content="红石的小站 —— Minecraft 小工具、资源与笔记。点开就用，不装任何东西。">
+<title>红石的小站</title>
+<meta name="description" content="红石的小站 —— Minecraft 的小玩具、资源与笔记。">
 <meta name="theme-color" content="#07080b">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='18' y='18' width='30' height='30' rx='6' fill='%235eead4'/><rect x='52' y='18' width='30' height='30' rx='6' fill='%23a78bfa'/><rect x='18' y='52' width='30' height='30' rx='6' fill='%23a78bfa'/><rect x='52' y='52' width='30' height='30' rx='6' fill='%23f472b6'/></svg>">
 <style>
-*,*::before,*::after{box-sizing:border-box}
-a{color:inherit}
-img,canvas{max-width:100%}
-::selection{background:var(--nx-c1);color:#04120f}
-:focus-visible{outline:2px solid var(--nx-c1);outline-offset:2px;border-radius:6px}
-
 /* ══════════════════════════════════════════════════════════════════
-   新首页 —— 深空 + 荧光。刻意不复用旧版的方块纸风，
-   只用一套自己的 token，旧样式只在账号/聊天面板里出现。
+   新首页 —— 深空 + 荧光。只有一块标题，什么都不挂。
    ══════════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box}
 :root{
   --nx-bg:#07080b;
   --nx-ink:#eaedf6;
@@ -28,19 +22,20 @@ img,canvas{max-width:100%}
   --nx-c1:#5eead4;
   --nx-c2:#a78bfa;
   --nx-c3:#f472b6;
-  --nx-glass:rgba(18,20,28,.62);
-  --nx-maxw:1120px;
 }
-
-/* 盖掉 core 的纸底与旧装饰背景 */
-html,html[data-theme]{background:var(--nx-bg)!important;scroll-behavior:smooth}
+html{background:var(--nx-bg);scroll-behavior:smooth}
 body{
-  background:var(--nx-bg)!important;color:var(--nx-ink)!important;
-  padding-top:64px!important;
+  margin:0;min-height:100vh;display:flex;flex-direction:column;
+  background:var(--nx-bg);color:var(--nx-ink);
   font-family:"Segoe UI","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,sans-serif;
-  overflow-x:hidden;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
 }
-/* ── 背景：极光 + 网格 + 粒子 canvas ───────────────────────────── */
+a{color:inherit}
+img,canvas{max-width:100%}
+::selection{background:var(--nx-c1);color:#04120f}
+:focus-visible{outline:2px solid var(--nx-c1);outline-offset:2px;border-radius:6px}
+
+/* ── 背景：极光 + 网格 + 漂浮方块 ─────────────────────────────── */
 #nxFx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 .nx-aura{position:fixed;pointer-events:none;z-index:0;filter:blur(70px);opacity:.55}
 .nx-aura.a1{left:-8vw;top:-14vh;width:52vw;height:52vw;border-radius:50%;
@@ -53,45 +48,35 @@ body{
   background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
                    linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
   background-size:64px 64px;
-  -webkit-mask-image:radial-gradient(circle at 50% 22%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
-  mask-image:radial-gradient(circle at 50% 22%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
+  -webkit-mask-image:radial-gradient(circle at 50% 30%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
+  mask-image:radial-gradient(circle at 50% 30%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
 }
-.nx-wrap{position:relative;z-index:2}
+.nx-main{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;padding:0 22px}
 
 /* ── 顶栏 ─────────────────────────────────────────────────────── */
 .topbar{
-  height:64px!important;padding:0 22px!important;
-  background:rgba(7,8,11,.55)!important;
-  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
-  border-bottom:1px solid transparent!important;box-shadow:none!important;
-  transition:background .3s,border-color .3s;
+  position:relative;z-index:2;height:64px;padding:0 22px;
   display:flex;align-items:center;gap:18px;
+  border-bottom:1px solid var(--nx-line);
+  background:rgba(7,8,11,.4);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
 }
-.topbar.scrolled{background:rgba(7,8,11,.86)!important;border-bottom-color:var(--nx-line)!important;box-shadow:0 10px 40px rgba(0,0,0,.5)!important}
 .nx-brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:15.5px;
-  color:var(--nx-ink)!important;letter-spacing:-.01em;text-decoration:none;flex:none}
+  color:var(--nx-ink);letter-spacing:-.01em;text-decoration:none;flex:none}
 .nx-logo{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:22px;height:22px;transform:rotate(8deg)}
 .nx-logo i{display:block;border-radius:2px;background:var(--nx-c1);opacity:.9}
 .nx-logo i:nth-child(2){background:var(--nx-c2)}
 .nx-logo i:nth-child(3){background:var(--nx-c2)}
 .nx-logo i:nth-child(4){background:var(--nx-c3)}
-.nx-links{display:flex;align-items:center;gap:2px;margin-left:8px;flex:1;min-width:0}
-.nx-links a{
-  position:relative;padding:7px 12px;border-radius:9px;font-size:13.5px;font-weight:600;
-  color:var(--nx-dim)!important;text-decoration:none;transition:color .18s,background .18s;white-space:nowrap;
-}
-.nx-links a:hover{color:var(--nx-ink)!important;background:rgba(255,255,255,.055)}
 .nx-nav-right{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
-.nx-ghost-sm{font-size:12.5px;font-weight:600;color:var(--nx-faint)!important;text-decoration:none;padding:7px 10px;border-radius:9px;transition:color .18s,background .18s}
-.nx-ghost-sm:hover{color:var(--nx-ink)!important;background:rgba(255,255,255,.055)}
+.nx-ghost-sm{font-size:12.5px;font-weight:600;color:var(--nx-faint);text-decoration:none;
+  padding:7px 10px;border-radius:9px;transition:color .18s,background .18s}
+.nx-ghost-sm:hover{color:var(--nx-ink);background:rgba(255,255,255,.055)}
 
-/* ── 主体 ─────────────────────────────────────────────────────── */
-.nx-main{max-width:var(--nx-maxw);margin:0 auto;padding:0 22px 80px}
-
-/* Hero */
-.nx-hero{padding:76px 0 34px;text-align:center;position:relative}
+/* ── Hero ─────────────────────────────────────────────────────── */
 .nx-badge{
-  display:inline-flex;align-items:center;gap:9px;padding:6px 14px;margin-bottom:24px;
+  display:inline-flex;align-items:center;gap:9px;padding:6px 14px;margin-bottom:26px;
   font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:700;letter-spacing:.14em;
   text-transform:uppercase;color:var(--nx-c1);
   border:1px solid rgba(94,234,212,.28);border-radius:999px;background:rgba(94,234,212,.07);
@@ -103,7 +88,7 @@ body{
 
 .nx-title{
   margin:0 0 22px;font-size:clamp(3rem,9vw,6.4rem);line-height:1.04;font-weight:900;
-  letter-spacing:0;
+  letter-spacing:0;text-align:center;
 }
 .nx-title .ln{display:block;overflow:hidden}
 .nx-title .ch{
@@ -119,99 +104,31 @@ body{
 .nx-title .grad{filter:drop-shadow(0 10px 46px rgba(94,234,212,.22))}
 @keyframes nxChIn{to{transform:none;opacity:1}}
 
-.nx-sub{margin:0 auto;max-width:560px;text-wrap:balance;font-size:clamp(13px,1.5vw,15px);line-height:1.85;color:var(--nx-dim)}
+.nx-sub{margin:0 auto;max-width:560px;text-align:center;text-wrap:balance;
+  font-size:clamp(13px,1.5vw,15px);line-height:1.85;color:var(--nx-dim)}
 .nx-sub b{color:var(--nx-ink);font-weight:700}
 
-/* KPI */
-.nx-kpis{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:40px 0 0}
-.nx-kpi{
-  min-width:112px;padding:14px 20px;border-radius:15px;text-align:left;
-  border:1px solid var(--nx-line);background:rgba(255,255,255,.025);
-}
-.nx-kpi b{display:block;font-size:24px;font-weight:800;letter-spacing:-.02em;
-  background:linear-gradient(180deg,#fff,#9fe8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.nx-kpi span{font-size:11px;color:var(--nx-faint);letter-spacing:.08em;text-transform:uppercase;font-family:ui-monospace,Consolas,monospace}
-
-/* ── 入口卡 ───────────────────────────────────────────────────── */
-.nx-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:56px}
-.nx-card{
-  position:relative;display:block;padding:22px;border-radius:18px;overflow:hidden;
-  border:1px solid var(--nx-line);background:var(--nx-glass);text-decoration:none;color:inherit;
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
-  transition:transform .28s cubic-bezier(.2,.9,.3,1),border-color .28s,box-shadow .28s;
-}
-.nx-card::before{
-  content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;pointer-events:none;
-  background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(94,234,212,.15),transparent 62%);
-}
-.nx-card:hover{transform:translateY(-4px);border-color:rgba(94,234,212,.34);
-  box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(94,234,212,.12)}
-.nx-card:hover::before{opacity:1}
-.nx-card .ico{
-  width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:21px;
-  background:linear-gradient(145deg,rgba(94,234,212,.16),rgba(167,139,250,.14));
-  border:1px solid rgba(255,255,255,.09);margin-bottom:16px;
-}
-.nx-card h3{margin:0 0 7px;font-size:16px;font-weight:800;display:flex;align-items:center;gap:7px}
-.nx-card p{margin:0;font-size:12.8px;line-height:1.75;color:var(--nx-dim)}
-.nx-card .go{
-  position:absolute;right:20px;top:22px;font-size:15px;color:var(--nx-faint);
-  transition:transform .28s,color .28s;
-}
-.nx-card:hover .go{transform:translate(3px,-3px);color:var(--nx-c1)}
-
-/* 公告 */
-.nx-ann{display:flex;flex-direction:column;gap:9px;margin-top:34px}
-.nx-ann[hidden]{display:none}
-.nx-ann-item{
-  display:flex;align-items:flex-start;gap:11px;padding:13px 15px;border-radius:13px;
-  border:1px solid var(--nx-line);background:rgba(255,255,255,.03);font-size:12.8px;line-height:1.75;color:var(--nx-dim);
-}
-.nx-ann-item .t{font-weight:800;color:var(--nx-ink);margin-right:6px}
-.nx-ann-item.warn{border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.06)}
-.nx-ann-item.danger{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06)}
-.nx-ann-item.success{border-color:rgba(94,234,212,.3);background:rgba(94,234,212,.06)}
-
-/* 页脚 */
+/* ── 页脚 ─────────────────────────────────────────────────────── */
 .nx-foot{
-  position:relative;z-index:2;max-width:var(--nx-maxw);margin:0 auto;
-  padding:26px 22px 46px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  position:relative;z-index:2;padding:24px 22px 40px;
+  display:flex;align-items:center;gap:14px;
   border-top:1px solid var(--nx-line);font-size:12px;color:var(--nx-faint);
 }
-.nx-foot a{color:var(--nx-dim);text-decoration:none}
-.nx-foot a:hover{color:var(--nx-c1)}
 .nx-foot .sp{flex:1}
 /* 「存档」：故意压得很淡，知道的人点得到，不知道的看不见 */
-.nx-archive{color:rgba(255,255,255,.2)!important;font-size:10.5px;letter-spacing:.06em;transition:color .25s}
-.nx-archive:hover{color:rgba(94,234,212,.7)!important}
-
-/* 入场 */
-.nx-reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1)}
-.nx-reveal.in{opacity:1;transform:none}
+.nx-archive{color:rgba(255,255,255,.2);font-size:10.5px;letter-spacing:.06em;text-decoration:none;transition:color .25s}
+.nx-archive:hover{color:rgba(94,234,212,.7)}
 
 /* ── 响应式 ───────────────────────────────────────────────────── */
-@media (max-width:900px){
-  .nx-cards{grid-template-columns:1fr}
-}
 @media (max-width:720px){
-  body{padding-top:58px!important
-  .topbar{height:58px!important;padding:0 14px!important;gap:10px}
-  .nx-links{display:none}
-  .nx-nav-right{margin-left:auto}
-  .nx-main{padding:0 14px 64px}
-  .nx-hero{padding:46px 0 24px}
-  .nx-badge{font-size:10px;padding:5px 11px;margin-bottom:20px}
-  .nx-kpis{gap:8px;margin-top:36px}
-  .nx-kpi{min-width:0;flex:1 1 calc(33.3% - 8px);padding:11px 12px;border-radius:12px}
-  .nx-kpi b{font-size:19px}
-  .nx-kpi span{font-size:9.5px;letter-spacing:.02em}
-  .nx-cards{margin-top:38px;gap:11px}
-  .nx-card{padding:18px}
+  .topbar{height:58px;padding:0 14px;gap:10px}
+  .nx-main{padding:0 16px}
+  .nx-foot{padding:20px 14px 34px}
+  .nx-badge{font-size:10px;padding:5px 11px;margin-bottom:22px}
 }
 
 @media (prefers-reduced-motion:reduce){
   .nx-title .ch{animation:none;transform:none;opacity:1}
-  .nx-reveal{opacity:1;transform:none;transition:none}
   #nxFx,.nx-aura{display:none}
   .nx-badge .dot{animation:none}
 }
@@ -225,65 +142,29 @@ body{
 <div class="nx-aura a3" aria-hidden="true"></div>
 <div class="nx-grid" aria-hidden="true"></div>
 
-<header class="topbar nx-nav" id="topbar">
+<header class="topbar">
   <a class="nx-brand" href="./index.html" aria-label="红石的小站 首页">
     <span class="nx-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     红石的小站
   </a>
-  <nav class="nx-links" aria-label="主导航">
-    <a href="./games/index.html">游戏厅</a>
-    <a href="./pages/wiki.html">Wiki</a>
-    <a href="./pages/download.html">下载站</a>
-  </nav>
-  <div class="nx-nav-right"><a class="nx-ghost-sm" href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GitHub</a></div>
+  <div class="nx-nav-right">
+    <a class="nx-ghost-sm" href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GitHub</a>
+  </div>
 </header>
 
-<main class="nx-wrap nx-main">
-
-  <section class="nx-hero">
-    <div class="nx-badge"><span class="dot"></span>STATION <span class="sep">/</span> ONLINE <span class="sep">/</span> <span id="nxStamp">2026</span></div>
+<main class="nx-main">
+  <section>
+    <div style="text-align:center">
+      <div class="nx-badge"><span class="dot"></span>STATION <span class="sep">/</span> ONLINE <span class="sep">/</span> <span id="nxStamp">2026</span></div>
+    </div>
     <h1 class="nx-title" id="nxTitle" aria-label="红石的小站"></h1>
     <p class="nx-sub">Minecraft 的小玩具、资源与笔记。<b>点开就用</b>，不装任何东西。</p>
-
-    <div class="nx-kpis">
-      <div class="nx-kpi"><b data-kpi="games">—</b><span>GAMES</span></div>
-      <div class="nx-kpi"><b data-kpi="wiki">—</b><span>WIKI</span></div>
-      <div class="nx-kpi"><b data-kpi="files">—</b><span>FILES</span></div>
-    </div>
   </section>
-
-  <div class="nx-cards">
-    <a class="nx-card nx-reveal" href="./games/index.html">
-      <span class="ico">🎮</span><span class="go">↗</span>
-      <h3>游戏厅</h3>
-      <p>五子棋、麻将、斗地主、Uno、自走棋，还有能真的挖方块搭房子的 Minecraft 模拟器。</p>
-    </a>
-    <a class="nx-card nx-reveal" href="./games/mc.html">
-      <span class="ico">🟩</span><span class="go">↗</span>
-      <h3>Minecraft 模拟器</h3>
-      <p>浏览器里的方块世界：挖掘、放置、合成、红石与水流，进度存在本地。</p>
-    </a>
-    <a class="nx-card nx-reveal" href="./pages/wiki.html">
-      <span class="ico">📚</span><span class="go">↗</span>
-      <h3>红石答辩 Wiki</h3>
-      <p>条目式笔记：机制、数据、踩过的坑，写给自己也写给别人。</p>
-    </a>
-    <a class="nx-card nx-reveal" href="./pages/download.html">
-      <span class="ico">📥</span><span class="go">↗</span>
-      <h3>下载站</h3>
-      <p>结构文件、资源包、存档。直链下载，不跳广告，不装客户端。</p>
-    </a>
-  </div>
-
-  <div class="nx-ann" id="nxAnn" hidden></div>
 </main>
 
 <footer class="nx-foot">
-  <span>© <span data-year>2026</span> 红石的小站</span>
+  <span>© <span id="nxYear">2026</span> 红石的小站</span>
   <span class="sp"></span>
-  <a href="./pages/wiki.html">Wiki</a>
-  <a href="./pages/download.html">下载</a>
-  <a href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GitHub</a>
   <a class="nx-archive" href="./pages/legacy-home.html" title="旧版首页存档">存档</a>
 </footer>
 
@@ -292,13 +173,7 @@ body{
   'use strict';
   var d = document, w = window;
   var $ = function (s, r) { return (r || d).querySelector(s); };
-  var $$ = function (s, r) { return Array.prototype.slice.call((r || d).querySelectorAll(s)); };
   var reduced = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* 首页固定深色，不让用户主题把它染成浅色 */
-  function lockTheme() { d.documentElement.setAttribute('data-theme', 'mc-night'); }
-  lockTheme(); d.addEventListener('DOMContentLoaded', lockTheme);
-  setTimeout(lockTheme, 0); setTimeout(lockTheme, 120);
 
   /* ── 标题逐字入场 ─────────────────────────────────────────────── */
   var TEXT = '红石的小站';
@@ -325,7 +200,7 @@ body{
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     function make() {
-      var n = W < 720 ? 13 : 24;
+      var n = W < 720 ? 13 : 22;
       cubes = [];
       for (var i = 0; i < n; i++) {
         cubes.push({
@@ -402,79 +277,10 @@ body{
     });
   })();
 
-  /* ── 卡片光斑跟随 ─────────────────────────────────────────────── */
-  $$('.nx-card').forEach(function (c) {
-    c.addEventListener('pointermove', function (e) {
-      var r = c.getBoundingClientRect();
-      c.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
-      c.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
-    });
-  });
-
-  /* ── 入场 ─────────────────────────────────────────────────────── */
-  var items = $$('.nx-reveal');
-  if (reduced || !('IntersectionObserver' in w)) {
-    items.forEach(function (n) { n.classList.add('in'); });
-  } else {
-    var io = new IntersectionObserver(function (es) {
-      es.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        var i = items.indexOf(en.target);
-        en.target.style.transitionDelay = Math.min(i, 6) * 60 + 'ms';
-        en.target.classList.add('in');
-        io.unobserve(en.target);
-      });
-    }, { threshold: 0.12 });
-    items.forEach(function (n) { io.observe(n); });
-    /* 兜底：任何情况下都不该有内容永久隐形 */
-    setTimeout(function () { items.forEach(function (n) { n.classList.add('in'); }); }, 1400);
-  }
-
-  /* ── 数字 ─────────────────────────────────────────────────────── */
-  function countUp(el, to) {
-    if (!el) return;
-    if (reduced) { el.textContent = to; return; }
-    var t0 = 0;
-    function step(ts) {
-      if (!t0) t0 = ts;
-      var p = Math.min(1, (ts - t0) / 700);
-      var e = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(to * e);
-      if (p < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-
-  function grab(name) {
-    return fetch('./data/' + name + '.json', { cache: 'no-cache' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; });
-  }
-
-  function renderAnn(list) {
-    var box = $('#nxAnn');
-    if (!box || !list) return;
-    var on = list.filter(function (a) { return a && a.enabled !== false && a.title; });
-    if (!on.length) { box.hidden = true; return; }
-    box.innerHTML = on.slice(0, 3).map(function (a) {
-      return '<div class="nx-ann-item ' + (a.type || 'info') + '">' +
-        '<span>' + (a.icon || '📢') + '</span><div><span class="t">' + (a.title || '') + '</span>' +
-        String(a.content || '').replace(/\n/g, '<br>') + '</div></div>';
-    }).join('');
-    box.hidden = false;
-  }
-
-  Promise.all([grab('announcement'), grab('wiki-data'), grab('download-data')]).then(function (r) {
-    countUp($('[data-kpi="games"]'), 13);
-    countUp($('[data-kpi="wiki"]'), Array.isArray(r[1]) ? r[1].length : 0);
-    countUp($('[data-kpi="files"]'), Array.isArray(r[2]) ? r[2].length : 0);
-    renderAnn(r[0]);
-  });
-
   var yr = new Date().getFullYear();
-  var stamp = $('#nxStamp');
+  var stamp = $('#nxStamp'), y2 = $('#nxYear');
   if (stamp) stamp.textContent = yr;
-  $$('[data-year]').forEach(function (n) { n.textContent = yr; });
+  if (y2) y2.textContent = yr;
 })();
 </script>
 </body>
