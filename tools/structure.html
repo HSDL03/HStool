@@ -731,7 +731,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
       if (rot) {
         // 反着转会很别扭：往右拖时物体应跟着往右转，所以相机朝反方向绕（同 OrbitControls）
         cam.yaw -= dx * 0.008;
-        cam.pitch = Math.max(-1.35, Math.min(1.45, cam.pitch + dy * 0.008));
+        cam.pitch = Math.max(-1.35, Math.min(1.45, cam.pitch - dy * 0.008));
       } else if (btn === 1) {
         panCam(dx, dy);
       } else if (btn === 0 && mode !== 'orbit' && moved > 16) {
