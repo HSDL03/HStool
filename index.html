@@ -122,26 +122,8 @@ body{
 .nx-sub{margin:0 auto;max-width:560px;text-wrap:balance;font-size:clamp(13px,1.5vw,15px);line-height:1.85;color:var(--nx-dim)}
 .nx-sub b{color:var(--nx-ink);font-weight:700}
 
-/* 两个入口按钮 */
-.nx-cta{display:flex;justify-content:center;gap:11px;flex-wrap:wrap;margin:34px 0 0}
-.nx-btn{
-  display:inline-flex;align-items:center;gap:9px;height:46px;padding:0 22px;border-radius:13px;
-  font-size:14px;font-weight:700;text-decoration:none;transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;
-  border:1px solid transparent;
-}
-.nx-btn.primary{
-  color:#04120f;background:linear-gradient(120deg,#5eead4,#a7f3e4 55%,#c4b5fd);
-  box-shadow:0 14px 40px rgba(94,234,212,.22);
-}
-.nx-btn.primary:hover{transform:translateY(-2px);box-shadow:0 20px 50px rgba(94,234,212,.3)}
-.nx-btn.ghost{
-  color:var(--nx-ink);border-color:var(--nx-line);background:rgba(255,255,255,.035);
-}
-.nx-btn.ghost:hover{transform:translateY(-2px);border-color:var(--nx-line-hi);background:rgba(255,255,255,.07)}
-.nx-btn .ar{font-size:13px;opacity:.75}
-
 /* KPI */
-.nx-kpis{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:44px 0 0}
+.nx-kpis{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:40px 0 0}
 .nx-kpi{
   min-width:112px;padding:14px 20px;border-radius:15px;text-align:left;
   border:1px solid var(--nx-line);background:rgba(255,255,255,.025);
@@ -212,15 +194,13 @@ body{
   .nx-cards{grid-template-columns:1fr}
 }
 @media (max-width:720px){
-  body{padding-top:58px!important}
+  body{padding-top:58px!important
   .topbar{height:58px!important;padding:0 14px!important;gap:10px}
   .nx-links{display:none}
   .nx-nav-right{margin-left:auto}
   .nx-main{padding:0 14px 64px}
   .nx-hero{padding:46px 0 24px}
   .nx-badge{font-size:10px;padding:5px 11px;margin-bottom:20px}
-  .nx-cta{margin-top:28px}
-  .nx-btn{height:44px;padding:0 16px;font-size:13.5px;flex:1 1 0;justify-content:center;max-width:200px}
   .nx-kpis{gap:8px;margin-top:36px}
   .nx-kpi{min-width:0;flex:1 1 calc(33.3% - 8px);padding:11px 12px;border-radius:12px}
   .nx-kpi b{font-size:19px}
@@ -264,11 +244,6 @@ body{
     <div class="nx-badge"><span class="dot"></span>STATION <span class="sep">/</span> ONLINE <span class="sep">/</span> <span id="nxStamp">2026</span></div>
     <h1 class="nx-title" id="nxTitle" aria-label="红石的小站"></h1>
     <p class="nx-sub">Minecraft 的小玩具、资源与笔记。<b>点开就用</b>，不装任何东西。</p>
-
-    <div class="nx-cta">
-      <a class="nx-btn primary" href="./games/index.html">进游戏厅 <span class="ar">↗</span></a>
-      <a class="nx-btn ghost" href="./pages/wiki.html">翻 Wiki <span class="ar">↗</span></a>
-    </div>
 
     <div class="nx-kpis">
       <div class="nx-kpi"><b data-kpi="games">—</b><span>GAMES</span></div>
