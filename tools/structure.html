@@ -82,6 +82,7 @@ img{image-rendering:pixelated}
 #view canvas{display:block;outline:none}
 #view.orbit{cursor:grab}
 #view.orbit:active{cursor:grabbing}
+#view.move{cursor:move}
 
 .hud{
   position:absolute;left:12px;top:12px;z-index:5;pointer-events:none;
@@ -468,7 +469,8 @@ input[type=range]{accent-color:var(--ac);background:transparent}
           <h2>把结构文件拖进来看</h2>
           <p class="sub">.mcstructure / .schem / .nbt / 本站 .json</p>
           <p><span class="k kbd">右键拖动</span> 旋转 · <span class="k kbd">滚轮</span> 缩放 · <span class="k kbd">中键</span> 平移</p>
-          <p><span class="k kbd">1–4</span> 切模式 · <span class="k kbd">Esc</span> 回查看 · 数据模式下拖框可批量选</p>
+          <p><span class="k kbd">1–5</span> 切模式 · <span class="k kbd">Esc</span> 回查看 · 数据模式下拖框可批量选</p>
+          <p>移动模式：拖拽平移整体（有选区就只挪选区），<span class="k kbd">Shift</span>+拖只上下，方向键逐格微调。</p>
           <p style="color:var(--faint);font-size:11.5px">原版贴图在浏览器里渲染，文件不上传。</p>
           <div class="acts">
             <button class="bt pri" id="gdOpen">打开结构文件</button>
@@ -504,6 +506,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
         <button data-m="place" title="放置方块 · 快捷键 2">⬛ 放置</button>
         <button data-m="erase" title="删除方块 · 快捷键 3">⬜ 删除</button>
         <button data-m="nbt" title="方块数据 · 快捷键 4">🏷 数据</button>
+        <button data-m="move" title="移动 · 拖拽整体/选区 · 快捷键 5">⇄ 移动</button>
       </div>
       <div class="tabs" id="dockTabs" role="tablist">
         <button data-pane="file" class="on">文件</button>
@@ -707,6 +710,12 @@ input[type=range]{accent-color:var(--ac);background:transparent}
           <div class="seg" id="miOrient">
             <button data-v="wall" class="on">立放（墙）</button>
             <button data-v="flat">平铺（地）</button>
+          </div>
+        </label>
+        <label class="fld"><span>素材怎么放进画框</span>
+          <div class="seg" id="miFit">
+            <button data-v="fit" class="on">适应（留白）</button>
+            <button data-v="cover">填充（裁切）</button>
           </div>
         </label>
         <div class="grid2">
@@ -968,12 +977,51 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       t[2] + r * Math.cos(cam.pitch) * Math.cos(cam.yaw));
     camera.lookAt(t[0], t[1], t[2]);
   }
+  /* ── 移动拖动：屏幕位移 → 世界格（水平取相机左右最近的主轴，竖直改 Y）── */
+  var moveDrag = null;
+  function cellPixels() {
+    if (!camera) return 20;
+    return VIEW.clientHeight / (2 * (cam.dist || 26) * Math.tan(55 * Math.PI / 360));
+  }
+  function moveStart(e) {
+    moveDrag = { x0: e.clientX, y0: e.clientY, ax: 0, ay: 0, az: 0 };
+  }
+  function moveApply(e) {
+    if (!moveDrag) return;
+    var k = cellPixels();
+    var dxs = (e.clientX - moveDrag.x0) / k;
+    var dys = -(e.clientY - moveDrag.y0) / k;
+    var dx = 0, dz = 0, dy = 0;
+    if (e.shiftKey) {
+      dy = Math.round(dys);
+    } else {
+      var cs = Math.cos(cam.yaw), sn = Math.sin(cam.yaw);
+      if (Math.abs(cs) >= Math.abs(sn)) dx = Math.round(dxs * cs);
+      else dz = Math.round(-dxs * sn);
+      dy = Math.round(dys);
+    }
+    var ddx = dx - moveDrag.ax, ddy = dy - moveDrag.ay, ddz = dz - moveDrag.az;
+    if (!ddx && !ddy && !ddz) return;
+    shiftBlocks(ddx, ddy, ddz);
+    moveDrag.ax = dx; moveDrag.ay = dy; moveDrag.az = dz;
+  }
+  function moveEnd() {
+    if (!moveDrag) return;
+    var d = moveDrag; moveDrag = null;
+    var parts = [];
+    if (d.ax) parts.push('X' + (d.ax > 0 ? '+' : '') + d.ax);
+    if (d.ay) parts.push('Y' + (d.ay > 0 ? '+' : '') + d.ay);
+    if (d.az) parts.push('Z' + (d.az > 0 ? '+' : '') + d.az);
+    if (parts.length) toast('已移动 ' + parts.join(' / ') + ' · 尺寸 ' + S.sx + '×' + S.sy + '×' + S.sz, 'ok');
+  }
+
   function bindPointer() {
     var btn = -1, lx = 0, ly = 0, moved = 0;
     VIEW.addEventListener('pointerdown', function (e) {
       btn = e.button; lx = e.clientX; ly = e.clientY; moved = 0;
       try { VIEW.setPointerCapture(e.pointerId); } catch (err) { }
       if (btn === 0 && mode === 'nbt') { e.preventDefault(); marqueeStart(e); }
+      else if (btn === 0 && mode === 'move') { e.preventDefault(); moveStart(e); }
       else if (btn === 0 && (mode === 'place' || mode === 'erase')) { e.preventDefault(); editAt(e); }
     });
     VIEW.addEventListener('pointermove', function (e) {
@@ -981,6 +1029,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       lx = e.clientX; ly = e.clientY;
       if (btn === -1) { if (S) hoverAt(e); return; }
       if (btn === 0 && mode === 'nbt') { marqueeMove(e); return; }
+      if (btn === 0 && mode === 'move') { moved += Math.abs(dx) + Math.abs(dy); moveApply(e); return; }
       moved += Math.abs(dx) + Math.abs(dy);
       var rot = (btn === 2) || (btn === 0 && mode === 'orbit');
       if (rot) {
@@ -996,6 +1045,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     });
     VIEW.addEventListener('pointerup', function (e) {
       if (btn === 0 && mode === 'nbt') marqueeEnd(e);
+      if (btn === 0 && mode === 'move') moveEnd();
       btn = -1;
       try { VIEW.releasePointerCapture(e.pointerId); } catch (err) { }
     });
@@ -1074,6 +1124,110 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   function updateStatus() {
     $('#stSize').textContent = S ? S.sx + '×' + S.sy + '×' + S.sz : '—';
     $('#stCount').textContent = S ? countBlocks() : 0;
+  }
+
+  /* ═════════════════ 平移（整体 / 选区）═════════════════
+     移动不丢东西：目标越界就先扩边（ox/oy/oz = 原点到新原点的偏移）。
+     所有索引都是 (y·sz+z)·sx+x，扩边等于整块重排，所以直接重建数组最稳。 */
+  function growStruct(ox, oy, oz, nsx, nsy, nsz) {
+    var osx = S.sx, osy = S.sy, osz = S.sz;
+    var selCoords = Object.keys(selection).map(function (k) {
+      var x = k % osx, t = (k - x) / osx, z = t % osz;
+      return [x, (t - z) / osz, z];
+    });
+    var nd = new Uint16Array(nsx * nsy * nsz);
+    var ns = new Uint16Array(nsx * nsy * nsz).fill(65535);
+    var np = {};
+    for (var y = 0; y < osy; y++) for (var z = 0; z < osz; z++) {
+      var ro = (y * osz + z) * osx, rn = ((y + oy) * nsz + (z + oz)) * nsx + ox;
+      for (var x = 0; x < osx; x++) {
+        var id = S.data[ro + x];
+        if (!id) continue;
+        nd[rn + x] = id;
+        ns[rn + x] = S.sidx[ro + x];
+        if (S.pdata[ro + x]) np[rn + x] = S.pdata[ro + x];
+      }
+    }
+    S = { sx: nsx, sy: nsy, sz: nsz, data: nd, sidx: ns, pal: S.pal, pdata: np, dirty: {} };
+    var nsel = {};
+    selCoords.forEach(function (c) {
+      var nx = c[0] + ox, ny = c[1] + oy, nz = c[2] + oz;
+      if (nx >= 0 && ny >= 0 && nz >= 0 && nx < nsx && ny < nsy && nz < nsz)
+        nsel[(ny * nsz + nz) * nsx + nx] = 1;
+    });
+    selection = nsel;
+    if (cam.target) {
+      cam.target[0] += ox; cam.target[1] += oy; cam.target[2] += oz;
+      camUpdate();
+    }
+    clearMeshes();
+    rebuildAllSync();
+    updateSelVis();
+  }
+
+  /* 把「选区（有选区时）」或「整个结构」平移 (ddx,ddy,ddz) */
+  function shiftBlocks(ddx, ddy, ddz) {
+    if (!S || (!ddx && !ddy && !ddz)) return;
+    var onlySel = selKeys().length > 0;
+
+    function scan() {
+      var out = [];
+      if (onlySel) {
+        var ks = selKeys();
+        for (var i = 0; i < ks.length; i++) if (S.data[ks[i]]) out.push(ks[i]);
+      } else {
+        for (var k = 0; k < S.data.length; k++) if (S.data[k]) out.push(k);
+      }
+      return out;
+    }
+    var list = scan();
+    if (!list.length) return;
+
+    // 目标包围盒 → 需要扩多少
+    var minx = 1e9, miny = 1e9, minz = 1e9, maxx = -1e9, maxy = -1e9, maxz = -1e9;
+    list.forEach(function (k) {
+      var c = unIdx(k);
+      if (c[0] < minx) minx = c[0]; if (c[0] > maxx) maxx = c[0];
+      if (c[1] < miny) miny = c[1]; if (c[1] > maxy) maxy = c[1];
+      if (c[2] < minz) minz = c[2]; if (c[2] > maxz) maxz = c[2];
+    });
+    var ox = minx + ddx < 0 ? -(minx + ddx) : 0;
+    var oy = miny + ddy < 0 ? -(miny + ddy) : 0;
+    var oz = minz + ddz < 0 ? -(minz + ddz) : 0;
+    var nsx = Math.max(S.sx + ox, maxx + ddx + 1 + ox);
+    var nsy = Math.max(S.sy + oy, maxy + ddy + 1 + oy);
+    var nsz = Math.max(S.sz + oz, maxz + ddz + 1 + oz);
+    var grew = (ox || oy || oz || nsx !== S.sx || nsy !== S.sy || nsz !== S.sz);
+    if (grew) { growStruct(ox, oy, oz, nsx, nsy, nsz); list = scan(); }
+
+    var moved = [];
+    for (var i = 0; i < list.length; i++) {
+      var k = list[i], c = unIdx(k);
+      moved.push({ x: c[0], y: c[1], z: c[2], id: S.data[k], sidx: S.sidx[k], pd: S.pdata[k] });
+    }
+    // 先清源，再写目标（同一批块之间不会互相吃掉）
+    moved.forEach(function (m) {
+      var k = idx(m.x, m.y, m.z);
+      S.data[k] = 0; S.sidx[k] = 65535; delete S.pdata[k];
+    });
+    moved.forEach(function (m) {
+      var nx = m.x + ddx, ny = m.y + ddy, nz = m.z + ddz;
+      if (!inB(nx, ny, nz)) return;
+      var k = idx(nx, ny, nz);
+      S.data[k] = m.id; S.sidx[k] = m.sidx;
+      if (m.pd) S.pdata[k] = m.pd;
+    });
+    // 选区跟着走：否则下一次按键还会按旧坐标去搬，搬到的格子已经空了
+    var nsel = {};
+    Object.keys(selection).forEach(function (k) {
+      var c = unIdx(k);
+      var nx = c[0] + ddx, ny = c[1] + ddy, nz = c[2] + ddz;
+      if (inB(nx, ny, nz)) nsel[idx(nx, ny, nz)] = 1;
+    });
+    selection = nsel;
+    rebuildAllSync();
+    updateSelVis();
+    renderNbtPanel();
   }
 
   /* ═════════════════ 几何构建 ═════════════════ */
@@ -1671,6 +1825,19 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     openDrawer('picker');
   });
 
+  /* ═════════════════ 本地设置 ═════════════════
+     地图画的尺寸 / 抖动 / 可用方块、对照方式与缩放都存 localStorage，
+     下次打开不用重设。改动合并 300ms 写一次。 */
+  var PREF_KEY = 'hs-struct', prefs = {};
+  try { prefs = JSON.parse(w.localStorage.getItem(PREF_KEY) || '{}') || {}; } catch (err) { prefs = {}; }
+  var prefT = 0;
+  function savePrefs() {
+    clearTimeout(prefT);
+    prefT = setTimeout(function () {
+      try { w.localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (err) { }
+    }, 300);
+  }
+
   /* ═════════════════ 地图画工作台 ═════════════════
      版式参考 mcpixelart：素材 → 并排对照预览 → 参数 / 可用方块 → 底部操作条。
      生成只是出预览，点「放进编辑器」才真正替换掉当前结构。 */
@@ -1684,6 +1851,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     paintZoom();
   }
   function closeStudio() {
+    persistMap();
     msEl.classList.remove('on');
     msEl.setAttribute('aria-hidden', 'true');
   }
@@ -1704,7 +1872,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   }
   $('#msTabs').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-k]');
-    if (b) setSrcKind(b.getAttribute('data-k'));
+    if (b) { setSrcKind(b.getAttribute('data-k')); persistMap(); }
   });
 
   /* 素材：点击 / 拖拽 */
@@ -1734,6 +1902,13 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     $$('#miOrient button').forEach(function (x) { x.classList.toggle('on', x === b); });
     refreshMap();
   });
+  $('#miFit').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    mapFit = b.getAttribute('data-v');
+    $$('#miFit button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    refreshMapSoon();
+  });
   $('#miAmt').addEventListener('input', function () {
     $('#miAmtLab').textContent = $('#miAmt').value + '%';
     refreshMap();
@@ -1753,6 +1928,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     $('#msFigSrc').classList.toggle('hidden', mapView === 'res');
     $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
     paintZoom();
+    persistMap();
   });
   $('#msZoom').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-z]');
@@ -1760,6 +1936,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     mapZoom = b.getAttribute('data-z');
     $$('#msZoom button').forEach(function (x) { x.classList.toggle('on', x === b); });
     paintZoom();
+    persistMap();
   });
   w.addEventListener('resize', function () { if (mapZoom === 'fit') paintZoom(); });
 
@@ -1855,7 +2032,11 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     if (mapLast || mapSrcKind === 'block') doPreview(false);
   }
   var mapTimer = 0;
-  function refreshMapSoon() { clearTimeout(mapTimer); mapTimer = setTimeout(refreshMap, 180); }
+  function refreshMapSoon() {
+    persistMap();
+    clearTimeout(mapTimer);
+    mapTimer = setTimeout(refreshMap, 180);
+  }
   function runMapSource(download) {
     if (mapSrcKind === 'image') {
       if (!mapImage) { toast('先选一张图片（拖进来或粘地址）', 'err'); return; }
@@ -1874,6 +2055,69 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     $('#docName').textContent = '地图画 ' + o.W + '×' + o.H + (o.orient === 'flat' ? ' · 平铺' : ' · 立放');
     closeStudio();
     toast('已放进编辑器 · ' + countBlocks() + ' 个方块', 'ok');
+  }
+
+  /* 设置存取 */
+  function persistMap() {
+    var sel = {};
+    ALL_PAL.forEach(function (id) { if (mapSel[id]) sel[id] = 1; });
+    prefs.map = {
+      W: +$('#miW').value || 64, H: +$('#miH').value || 64,
+      lock: $('#miLock').checked, D: +$('#miD').value || 1,
+      dither: $('#miDither').value, amt: +$('#miAmt').value,
+      orient: miOrient, fit: mapFit, preset: mapPreset, ratio: syncAspect.ratio || 1,
+      sel: sel, zoom: mapZoom, view: mapView, kind: mapSrcKind
+    };
+    savePrefs();
+  }
+  function applyPrefs() {
+    var m = prefs.map;
+    if (!m) return;
+    if (m.kind === 'block') setSrcKind('block');     // 先切来源：它会重置比例
+    if (m.W) $('#miW').value = m.W;
+    if (m.H) $('#miH').value = m.H;
+    if (typeof m.lock === 'boolean') $('#miLock').checked = m.lock;
+    if (m.D) $('#miD').value = m.D;
+    if (m.dither) $('#miDither').value = m.dither;
+    if (typeof m.amt === 'number') {
+      $('#miAmt').value = m.amt;
+      $('#miAmtLab').textContent = m.amt + '%';
+    }
+    if (m.orient === 'wall' || m.orient === 'flat') {
+      miOrient = m.orient;
+      $$('#miOrient button').forEach(function (x) {
+        x.classList.toggle('on', x.getAttribute('data-v') === miOrient);
+      });
+    }
+    if (m.fit === 'cover' || m.fit === 'fit') {
+      mapFit = m.fit;
+      $$('#miFit button').forEach(function (x) {
+        x.classList.toggle('on', x.getAttribute('data-v') === mapFit);
+      });
+    }
+    if (m.preset) {
+      mapPreset = m.preset;
+      $$('#msPresets button').forEach(function (x) {
+        x.classList.toggle('on', x.getAttribute('data-p') === mapPreset);
+      });
+    }
+    if (m.ratio) syncAspect.ratio = m.ratio;
+    if (m.sel) {
+      var any = false, o = {};
+      ALL_PAL.forEach(function (id) { if (m.sel[id]) { o[id] = 1; any = true; } });
+      if (any) mapSel = o;
+    }
+    countSel();
+    if (m.zoom) {
+      mapZoom = m.zoom;
+      $$('#msZoom button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-z') === mapZoom); });
+    }
+    if (m.view) {
+      mapView = m.view;
+      $$('#msView button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === mapView); });
+      $('#msFigSrc').classList.toggle('hidden', mapView === 'res');
+      $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
+    }
   }
 
   /* ═════════════════ 地图画（Map Art）═════════════════
@@ -2071,18 +2315,23 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     var id = +el.getAttribute('data-id');
     if (mapSel[id]) delete mapSel[id]; else mapSel[id] = 1;
     el.classList.toggle('on');
+    mapPreset = '';
+    $$('#msPresets button').forEach(function (x) { x.classList.remove('on'); });
     countSel();
+    persistMap();
     refreshMap();
   });
   $('#msPresets').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-p]');
     if (!b) return;
     var p = b.getAttribute('data-p');
+    mapPreset = (p === 'all' || p === 'none') ? '' : p;
     if (p === 'none') mapSel = {};
     else if (p === 'all') paletteIds('full').forEach(function (id) { mapSel[id] = 1; });
     else { mapSel = {}; paletteIds(p).forEach(function (id) { mapSel[id] = 1; }); }
     $$('#msPresets button').forEach(function (x) { x.classList.toggle('on', x === b && p !== 'none' && p !== 'all'); });
     syncSwatchState();
+    persistMap();
     refreshMap();
   });
 
@@ -2203,12 +2452,13 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   }
 
   /* ── 图片工具 ── */
-  function imageToCanvas(im, W, H) {
+  function imageToCanvas(im, W, H, cover) {
     var cv = d.createElement('canvas');
     cv.width = W; cv.height = H;
     var cx = cv.getContext('2d');
     var iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
-    var s2 = Math.min(W / iw, H / ih);
+    // 适应 = 整张图塞进来（四周留空 → 透明格）；填充 = 铺满后裁掉超出的部分
+    var s2 = cover ? Math.max(W / iw, H / ih) : Math.min(W / iw, H / ih);
     var w = Math.max(1, Math.round(iw * s2)), h = Math.max(1, Math.round(ih * s2));
     cx.imageSmoothingEnabled = false;
     cx.drawImage(im, Math.round((W - w) / 2), Math.round((H - h) / 2), w, h);
@@ -2232,7 +2482,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   }
 
   /* ── 主流程 ── */
-  var miOrient = 'wall';
+  var miOrient = 'wall', mapFit = 'fit', mapPreset = 'full';
   function mapOpts() {
     var W = Math.max(4, Math.min(256, +$('#miW').value || 64));
     var H = Math.max(4, Math.min(256, +$('#miH').value || 64));
@@ -2241,18 +2491,23 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       thick: Math.max(1, Math.min(8, +$('#miD').value || 1)),
       algo: $('#miDither').value,
       amt: +$('#miAmt').value,
-      orient: miOrient
+      orient: miOrient,
+      fit: mapFit
     };
   }
   function fmtInt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  var mapBusy = false;
   function renderMap(srcCv, download) {
     var o = mapOpts();
     if (srcCv && !countSel()) { toast('至少留一种可用方块', 'err'); return Promise.resolve(); }
+    if (mapBusy) return Promise.resolve();
+    mapBusy = true;
+    $('#btnIcon').disabled = true;
     $('#msState').textContent = '正在生成…';
     return buildPalette('custom', curBlock).then(function (pal) {
       if (!pal.length) throw new Error('选中的方块都没有贴图数据');
       var t0 = Date.now();
-      var cv = imageToCanvas(srcCv, o.W, o.H);
+      var cv = imageToCanvas(srcCv, o.W, o.H, o.fit === 'cover');
       var px = cv.getContext('2d').getImageData(0, 0, o.W, o.H).data;
       var idx = quantize(px, o.W, o.H, pal, o.algo, o.amt);
       var res = structFromMap(idx, o.W, o.H, pal, o.thick, o.orient);
@@ -2266,11 +2521,16 @@ input[type=range]{accent-color:var(--ac);background:transparent}
         if (!seen[idx[i]]) { seen[idx[i]] = 1; used++; }
       }
       var blocks = filled * o.thick;
+      var mapTiles = Math.ceil(o.W / 128) * Math.ceil(o.H / 128);
       $('#msMeta').innerHTML =
         '<span><b>' + o.W + ' × ' + o.H + '</b> 方块</span>' +
         '<span><b>' + fmtInt(blocks) + '</b> 个方块</span>' +
         '<span><b>' + used + '</b> 种颜色</span>' +
         '<span>结构 <b>' + res.sx + '×' + res.sy + '×' + res.sz + '</b></span>' +
+        (mapTiles > 1 ? '<span style="color:var(--warn)">约占 <b>' + mapTiles +
+          '</b> 张地图（单张 128×128）</span>' : '') +
+        (filled < o.W * o.H && o.fit !== 'cover'
+          ? '<span style="color:var(--warn)">' + (o.W * o.H - filled) + ' 格留白（可换成「填充」）</span>' : '') +
         '<span>' + (Date.now() - t0) + ' ms</span>';
       $('#msState').textContent = o.W + '×' + o.H + ' 预览就绪 · ' +
         (o.orient === 'flat' ? '平铺' : '立放') + ' · 点「放进编辑器」写到场景里';
@@ -2283,6 +2543,10 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     }).catch(function (err) {
       $('#msState').textContent = '生成失败';
       toast('生成失败：' + (err && err.message || err), 'err');
+    }).then(function (r) {
+      mapBusy = false;
+      $('#btnIcon').disabled = false;
+      return r;
     });
   }
   function downloadMap() {
@@ -2415,7 +2679,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   function setMode(m) {
     mode = m;
     $$('#modeSeg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === m); });
-    VIEW.className = m === 'orbit' ? 'orbit' : '';
+    VIEW.className = m === 'orbit' ? 'orbit' : (m === 'move' ? 'move' : '');
     if (m === 'nbt') panelOpen = true;
     renderNbtPanel();
   }
@@ -2428,7 +2692,19 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     else if (e.key === '2') setMode('place');
     else if (e.key === '3') setMode('erase');
     else if (e.key === '4') setMode('nbt');
+    else if (e.key === '5') setMode('move');
     else if (e.key === 'Escape') setMode('orbit');
+    else if (mode === 'move' && (/^Arrow/.test(e.key) || e.key === 'PageUp' || e.key === 'PageDown')) {
+      // 方向键逐格挪：左右 = X，上下 = Z，Shift+上下 = Y
+      e.preventDefault();
+      var st = e.shiftKey || e.key === 'PageUp' || e.key === 'PageDown';
+      if (e.key === 'ArrowLeft') shiftBlocks(-1, 0, 0);
+      else if (e.key === 'ArrowRight') shiftBlocks(1, 0, 0);
+      else if (e.key === 'ArrowUp') st ? shiftBlocks(0, 1, 0) : shiftBlocks(0, 0, -1);
+      else if (e.key === 'ArrowDown') st ? shiftBlocks(0, -1, 0) : shiftBlocks(0, 0, 1);
+      else if (e.key === 'PageUp') shiftBlocks(0, 1, 0);
+      else if (e.key === 'PageDown') shiftBlocks(0, -1, 0);
+    }
   });
 
   /* ═════════════════ 方块选择面板 ═════════════════ */
@@ -2998,8 +3274,9 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     }
   };
   try {
-    $('#tip').innerHTML = '<b>右键</b> 旋转 · <b>滚轮</b> 缩放 · <b>中键</b> 平移\n<b>1</b> 查看　<b>2</b> 放置　<b>3</b> 删除　<b>4</b> 数据';
+    $('#tip').innerHTML = '<b>右键</b> 旋转 · <b>滚轮</b> 缩放 · <b>中键</b> 平移\n<b>1</b> 查看　<b>2</b> 放置　<b>3</b> 删除　<b>4</b> 数据　<b>5</b> 移动';
     renderPicker('');
+    applyPrefs();
     initGL();
     newStruct(16, 16, 16);
     // 预放一小块示范平台，让人马上能上手
