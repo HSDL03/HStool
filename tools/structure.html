@@ -480,6 +480,19 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
         <p class="hintline" style="margin-top:4px">图标用原版贴图按等轴测（225° / 30°）实时渲染，再逐像素匹配最接近的方块颜色，所以是一张「立着的像素画」。</p>
         <p class="hintline">尺寸 64 时约 4096 个方块；尺寸越大越还原，也越吃性能。</p>
       </div>
+
+      <div style="border-top:1px solid var(--line);margin:2px 0 12px"></div>
+
+      <div>
+        <label class="fld"><span>或：用现成图片（MC 百科图标 / 截图）</span>
+          <input type="text" id="icUrl" placeholder="右键图片 → 复制图片地址，粘到这里">
+        </label>
+        <button class="bt" id="btnImgUrl" style="width:100%;height:32px;justify-content:center">用这个地址生成</button>
+        <button class="bt" id="btnImgFile" style="width:100%;height:32px;justify-content:center;margin-top:8px">选本地图片…</button>
+        <button class="bt" id="btnMcmod" style="width:100%;height:32px;justify-content:center;margin-top:8px">去 MC 百科搜这个方块…</button>
+        <input type="file" id="icFileIn" accept="image/*" class="hidden">
+        <p class="hintline" style="margin-top:4px">图片按 contain 居中铺满，透明处留空。跨域被拦时会自动走一次带 CORS 头的图床代理；还不行就换张图或存到本地再选。</p>
+      </div>
     </div>
 
     <div class="dbody" data-pane="text">
@@ -1462,6 +1475,27 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   $('#icPick').addEventListener('click', function () { openDrawer('picker'); });
   $('#btnIcon').addEventListener('click', function () { genIcon(false); });
   $('#btnIconDl').addEventListener('click', function () { genIcon(true); });
+  $('#btnImgUrl').addEventListener('click', function () {
+    var u = $('#icUrl').value.trim();
+    if (!u) return toast('先粘一个图片地址', 'err');
+    toast('正在取图…');
+    loadImageAny(u).then(genFromImage).catch(function (e) { toast(e.message, 'err'); });
+  });
+  $('#btnImgFile').addEventListener('click', function () { $('#icFileIn').click(); });
+  $('#icFileIn').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    var url = URL.createObjectURL(f);
+    loadImageAny(url).then(function (im) {
+      return genFromImage(im).then(function () { URL.revokeObjectURL(url); });
+    }).catch(function (er) { toast(er.message, 'err'); });
+    e.target.value = '';
+  });
+  $('#btnMcmod').addEventListener('click', function () {
+    var b = curBlock ? BLOCKS[curBlock] : null;
+    var q = b ? b.n : '';
+    w.open('https://www.mcmod.cn/s?key=' + encodeURIComponent(q), '_blank', 'noopener');
+  });
 
   /* ═════════════════ 图标地图画：方块/物品图标 → 立着的方块墙 ═════════════════
      图标不是贴图，而是用原版贴图在离屏 WebGL 里按等轴测（yaw 225° / pitch 30°）
@@ -1611,6 +1645,53 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     }
     return best;
   }
+  /* 画布像素 → 方块结构（图标和外部图片共用） */
+  function pixelStruct(cv, pal, size, thick) {
+    var ctx2 = cv.getContext('2d');
+    var px = ctx2.getImageData(0, 0, size, size).data;
+    var data = new Uint16Array(size * size * thick);
+    var used = {}, hit = 0;
+    for (var y = 0; y < size; y++) for (var x = 0; x < size; x++) {
+      var o = (y * size + x) * 4;
+      if (px[o + 3] < 110) continue;                       // 透明 = 空气
+      var e = nearestIn(pal, px[o], px[o + 1], px[o + 2]);
+      if (!e || !e.id) continue;
+      used[e.id] = 1; hit++;
+      var vy = size - 1 - y;
+      for (var z = 0; z < thick; z++) data[(vy * thick + z) * size + x] = e.id;
+    }
+    return { sx: size, sy: size, sz: thick, data: data, blocks: hit, colors: Object.keys(used).length, cv: cv };
+  }
+  /* 把任意图片按 contain 缩放铺到 size×size 画布上 */
+  function imageToCanvas(im, size) {
+    var cv = d.createElement('canvas');
+    cv.width = cv.height = size;
+    var cx = cv.getContext('2d');
+    var iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+    var s2 = Math.min(size / iw, size / ih);
+    var w = Math.max(1, Math.round(iw * s2)), h = Math.max(1, Math.round(ih * s2));
+    cx.imageSmoothingEnabled = false;               // 像素图放大不糊
+    cx.drawImage(im, Math.round((size - w) / 2), Math.round((size - h) / 2), w, h);
+    return cv;
+  }
+  /* 跨域图片：先直连（带 crossOrigin），失败再走带 CORS 头的图床代理 */
+  function loadImageAny(url) {
+    return new Promise(function (res, rej) {
+      function once(u, next) {
+        var im = new Image();
+        im.crossOrigin = 'anonymous';
+        im.onload = function () { res(im); };
+        im.onerror = function () { next && next(); };
+        im.src = u;
+      }
+      once(url, function () {
+        var u2 = url.replace(/^https?:\/\//i, '');
+        once('https://images.weserv.nl/?url=' + encodeURIComponent(u2), function () {
+          rej(new Error('图片加载失败（可能被防盗链拦了，换个图片地址试试）'));
+        });
+      });
+    });
+  }
   function buildIconStruct(blockId, size, thick, mode) {
     size = Math.max(8, Math.min(256, size | 0));
     thick = Math.max(1, Math.min(8, thick | 0));
@@ -1618,22 +1699,21 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     if (!bb) return Promise.reject(new Error('这个方块没有贴图数据'));
     return Promise.all([loadTile(bb.t), loadTile(bb.s || bb.t), loadTile(bb.b || bb.s || bb.t)])
       .then(function () { return iconPalette(mode, blockId); })
-      .then(function (pal) {
-        var cv = iconCanvas(blockId, size);
-        var px = cv.getContext('2d').getImageData(0, 0, size, size).data;
-        var data = new Uint16Array(size * size * thick);
-        var used = {}, hit = 0;
-        for (var y = 0; y < size; y++) for (var x = 0; x < size; x++) {
-          var o = (y * size + x) * 4;
-          if (px[o + 3] < 110) continue;                       // 透明 = 空气
-          var e = nearestIn(pal, px[o], px[o + 1], px[o + 2]);
-          if (!e || !e.id) continue;
-          used[e.id] = 1; hit++;
-          var vy = size - 1 - y;
-          for (var z = 0; z < thick; z++) data[(vy * thick + z) * size + x] = e.id;
-        }
-        return { sx: size, sy: size, sz: thick, data: data, blocks: hit, colors: Object.keys(used).length, cv: cv };
-      });
+      .then(function (pal) { return pixelStruct(iconCanvas(blockId, size), pal, size, thick); });
+  }
+  function genFromImage(im) {
+    var size = +$('#icSize').value || 64, thick = +$('#icD').value || 1, mode = $('#icPal').value;
+    size = Math.max(8, Math.min(256, size | 0));
+    thick = Math.max(1, Math.min(8, thick | 0));
+    return iconPalette(mode, curBlock).then(function (pal) {
+      var cv = imageToCanvas(im, size);
+      var res = pixelStruct(cv, pal, size, thick);
+      if (!res.blocks) { toast('这张图全是透明的，没东西可生成', 'err'); return; }
+      applyStruct({ sx: res.sx, sy: res.sy, sz: res.sz, data: res.data });
+      $('#docName').textContent = '图片地图画';
+      closeDrawer();
+      toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + res.blocks + ' 个方块 · 用了 ' + res.colors + ' 种', 'ok');
+    });
   }
   function genIcon(download) {
     if (!curBlock) { toast('先去方块库选一个方块', 'err'); openDrawer('picker'); return; }
