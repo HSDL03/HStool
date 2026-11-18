@@ -176,6 +176,16 @@ input::placeholder{color:var(--faint)}
 select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--faint) 50%),linear-gradient(135deg,var(--faint) 50%,transparent 50%);
   background-position:calc(100% - 13px) 12px,calc(100% - 8px) 12px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--sunk)}
+.seg button{
+  flex:1;height:28px;border:0;background:transparent;color:var(--dim);
+  font:inherit;font-size:11.5px;cursor:pointer;transition:background .14s var(--ease),color .14s var(--ease);
+}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--ac-s);color:var(--ac)}
+input[type=checkbox]{accent-color:var(--ac)}
+input[type=range]{accent-color:var(--ac);background:transparent}
 .hintline{font-size:11px;color:var(--faint);line-height:1.7;margin-top:-4px}
 .kbd{
   display:inline-block;min-width:17px;padding:0 4px;border-radius:3px;text-align:center;
@@ -366,7 +376,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 
     <div class="rsep"></div>
 
-    <button class="ri" id="railIcon" title="图标地图画：把方块/物品的图标立成一面方块墙" aria-label="图标地图画">
+    <button class="ri" id="railIcon" title="地图画：把图标 / 图片转成方块画（方向、配料、抖动都可调）" aria-label="地图画">
       <svg viewBox="0 0 18 18"><path d="M9 2.8 15 6v6l-6 3.2L3 12V6z"/><path d="M3 6l6 3.2L15 6M9 9.2v6"/></svg>
     </button>
     <button class="ri" id="railText" title="文字结构：把文字变成方块（中英文都行）" aria-label="文字结构">
@@ -461,37 +471,71 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 
     <div class="dbody" data-pane="icon">
       <div>
-        <p class="pcount" style="margin:0 0 8px">当前：<b id="icName">未选方块</b></p>
-        <button class="bt" id="icPick" style="width:100%;height:32px;justify-content:center;margin-bottom:10px">去方块库选一个</button>
-        <div class="grid3">
-          <label class="fld"><span>尺寸</span><input type="number" id="icSize" value="64" min="8" max="256" title="地图画的边长（方块）"></label>
-          <label class="fld"><span>厚度</span><input type="number" id="icD" value="1" min="1" max="8" title="Z 方向层数"></label>
-          <label class="fld"><span>配色</span>
-            <select id="icPal" title="用哪些方块来还原颜色">
-              <option value="concrete">混凝土 16 色</option>
-              <option value="wool">羊毛 16 色</option>
-              <option value="full" selected>综合调色板</option>
-              <option value="mono">单色（画笔方块）</option>
-            </select>
-          </label>
+        <label class="fld"><span>来源</span>
+          <select id="miSrc">
+            <option value="block">方块 / 物品的图标</option>
+            <option value="image">图片（地址或本地文件）</option>
+          </select>
+        </label>
+        <div id="miBlockBox">
+          <p class="pcount" style="margin:0 0 8px">当前：<b id="icName">未选方块</b></p>
+          <button class="bt" id="icPick" style="width:100%;height:30px;justify-content:center">去方块库选一个</button>
         </div>
-        <button class="bt pri" id="btnIcon" style="width:100%;height:34px;justify-content:center">生成地图画</button>
-        <button class="bt" id="btnIconDl" style="width:100%;height:32px;justify-content:center;margin-top:8px">生成并下载 .mcstructure</button>
-        <p class="hintline" style="margin-top:4px">图标用原版贴图按等轴测（225° / 30°）实时渲染，再逐像素匹配最接近的方块颜色，所以是一张「立着的像素画」。</p>
-        <p class="hintline">尺寸 64 时约 4096 个方块；尺寸越大越还原，也越吃性能。</p>
+        <div id="miImageBox" class="hidden">
+          <input type="text" id="icUrl" placeholder="右键图标 → 复制图片地址" style="margin-bottom:8px">
+          <div class="grid2">
+            <button class="bt" id="btnImgUrl" style="justify-content:center;height:30px">用地址</button>
+            <button class="bt" id="btnImgFile" style="justify-content:center;height:30px">本地图片</button>
+          </div>
+          <button class="bt" id="btnMcmod" style="width:100%;height:28px;justify-content:center;margin-top:8px">去 MC 百科搜这个方块…</button>
+          <input type="file" id="icFileIn" accept="image/*" class="hidden">
+        </div>
       </div>
 
-      <div style="border-top:1px solid var(--line);margin:2px 0 12px"></div>
+      <div>
+        <div class="grid2">
+          <label class="fld"><span>宽（方块）</span><input type="number" id="miW" value="64" min="4" max="256"></label>
+          <label class="fld"><span>高（方块）</span><input type="number" id="miH" value="64" min="4" max="256"></label>
+        </div>
+        <label class="fld" style="display:flex;align-items:center;gap:7px;margin-top:-4px">
+          <input type="checkbox" id="miLock" checked style="width:14px;height:14px">
+          <span style="margin:0;font-size:11.5px;letter-spacing:0;text-transform:none">锁定比例（按图片比例算高）</span>
+        </label>
+        <label class="fld"><span>方向</span>
+          <div class="seg" id="miOrient">
+            <button data-v="wall" class="on">立放（墙）</button>
+            <button data-v="flat">平铺（地面）</button>
+          </div>
+        </label>
+        <label class="fld"><span>厚度（层）</span><input type="number" id="miD" value="1" min="1" max="8"></label>
+      </div>
 
       <div>
-        <label class="fld"><span>或：用现成图片（MC 百科图标 / 截图）</span>
-          <input type="text" id="icUrl" placeholder="右键图片 → 复制图片地址，粘到这里">
+        <label class="fld"><span>配料（用哪些方块还原颜色）</span>
+          <select id="miPal">
+            <option value="concrete">混凝土 16 色</option>
+            <option value="wool">羊毛 16 色</option>
+            <option value="full" selected>综合调色板（约 70 种）</option>
+            <option value="mono">单色（画笔方块）</option>
+          </select>
         </label>
-        <button class="bt" id="btnImgUrl" style="width:100%;height:32px;justify-content:center">用这个地址生成</button>
-        <button class="bt" id="btnImgFile" style="width:100%;height:32px;justify-content:center;margin-top:8px">选本地图片…</button>
-        <button class="bt" id="btnMcmod" style="width:100%;height:32px;justify-content:center;margin-top:8px">去 MC 百科搜这个方块…</button>
-        <input type="file" id="icFileIn" accept="image/*" class="hidden">
-        <p class="hintline" style="margin-top:4px">图片按 contain 居中铺满，透明处留空。跨域被拦时会自动走一次带 CORS 头的图床代理；还不行就换张图或存到本地再选。</p>
+        <label class="fld"><span>抖动算法</span>
+          <select id="miDither">
+            <option value="none">不抖动（色块最干净）</option>
+            <option value="bayer4" selected>有序 4×4（Bayer）</option>
+            <option value="bayer8">有序 8×8（Bayer）</option>
+            <option value="fs">误差扩散（Floyd–Steinberg）</option>
+            <option value="atkinson">误差扩散（Atkinson，网点感）</option>
+            <option value="sierra">误差扩散（Sierra Lite）</option>
+            <option value="random">随机噪点</option>
+          </select>
+        </label>
+        <label class="fld"><span>抖动强度 <b id="miAmtLab">70%</b></span>
+          <input type="range" id="miAmt" min="0" max="100" value="70" style="width:100%;height:20px">
+        </label>
+        <button class="bt pri" id="btnIcon" style="width:100%;height:34px;justify-content:center">生成地图画</button>
+        <button class="bt" id="btnIconDl" style="width:100%;height:32px;justify-content:center;margin-top:8px">生成并下载 .mcstructure</button>
+        <p class="hintline" style="margin-top:4px">立放 = 一面墙（XY 平面）；平铺 = 铺在地上（XZ 平面）。抖动强度越大越接近原图细节，但方块颜色会更「麻」。</p>
       </div>
     </div>
 
@@ -1447,7 +1491,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 
   /* ═════════════════ 左侧抽屉 ═════════════════ */
   var drawer = $('#drawer'), dTitle = $('#dTitle');
-  var PANE_NAME = { file: '文件', picker: '方块库', icon: '图标地图画', text: '文字结构', export: '导出' };
+  var PANE_NAME = { file: '文件', picker: '方块库', icon: '地图画', text: '文字结构', export: '导出' };
   function openDrawer(pane) {
     $$('.dbody', drawer).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === pane); });
     dTitle.textContent = PANE_NAME[pane] || '';
@@ -1473,13 +1517,40 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     $('#icName').textContent = b ? (b.n + ' · ' + b.e) : '未选方块';
   }
   $('#icPick').addEventListener('click', function () { openDrawer('picker'); });
-  $('#btnIcon').addEventListener('click', function () { genIcon(false); });
-  $('#btnIconDl').addEventListener('click', function () { genIcon(true); });
+  var miImage = null;
+  $('#miSrc').addEventListener('change', function () {
+    var img = $('#miSrc').value === 'image';
+    $('#miBlockBox').classList.toggle('hidden', img);
+    $('#miImageBox').classList.toggle('hidden', !img);
+  });
+  $('#miOrient').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    miOrient = b.getAttribute('data-v');
+    $$('#miOrient button').forEach(function (x) { x.classList.toggle('on', x === b); });
+  });
+  $('#miAmt').addEventListener('input', function () { $('#miAmtLab').textContent = $('#miAmt').value + '%'; });
+  $('#miW').addEventListener('input', function () { if ($('#miLock').checked) syncAspect(); });
+  $('#miLock').addEventListener('change', function () { if ($('#miLock').checked) syncAspect(); });
+  function runMapSource(download) {
+    if ($('#miSrc').value === 'image') {
+      if (!miImage) return toast('先选一张图片（地址或本地文件）', 'err');
+      renderMap(miImage, download);
+    } else genFromBlock(download);
+  }
+  $('#btnIcon').addEventListener('click', function () { runMapSource(false); });
+  $('#btnIconDl').addEventListener('click', function () { runMapSource(true); });
+  function useImage(im) {
+    miImage = im;
+    var r = (im.naturalWidth || im.width) / (im.naturalHeight || im.height);
+    setAspect(r);
+    renderMap(im, false);
+  }
   $('#btnImgUrl').addEventListener('click', function () {
     var u = $('#icUrl').value.trim();
     if (!u) return toast('先粘一个图片地址', 'err');
     toast('正在取图…');
-    loadImageAny(u).then(genFromImage).catch(function (e) { toast(e.message, 'err'); });
+    loadImageAny(u).then(useImage).catch(function (e) { toast(e.message, 'err'); });
   });
   $('#btnImgFile').addEventListener('click', function () { $('#icFileIn').click(); });
   $('#icFileIn').addEventListener('change', function (e) {
@@ -1487,20 +1558,21 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     if (!f) return;
     var url = URL.createObjectURL(f);
     loadImageAny(url).then(function (im) {
-      return genFromImage(im).then(function () { URL.revokeObjectURL(url); });
+      useImage(im);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
     }).catch(function (er) { toast(er.message, 'err'); });
     e.target.value = '';
   });
   $('#btnMcmod').addEventListener('click', function () {
     var b = curBlock ? BLOCKS[curBlock] : null;
-    var q = b ? b.n : '';
-    w.open('https://www.mcmod.cn/s?key=' + encodeURIComponent(q), '_blank', 'noopener');
+    w.open('https://www.mcmod.cn/s?key=' + encodeURIComponent(b ? b.n : ''), '_blank', 'noopener');
   });
 
-  /* ═════════════════ 图标地图画：方块/物品图标 → 立着的方块墙 ═════════════════
-     图标不是贴图，而是用原版贴图在离屏 WebGL 里按等轴测（yaw 225° / pitch 30°）
-     实拍一遍 —— 和物品栏里的 3D 图标一个角度；然后把这张图像素化，逐格找最接近
-     颜色的方块。 */
+  /* ═════════════════ 地图画（Map Art）═════════════════
+     流程：来源图（方块图标 / 外部图片）→ 缩放到 W×H → 抖动量化到方块调色板 →
+     按「立放 / 平铺」铺成立体结构。抖动算法全部自己实现，不引外部库。 */
+
+  /* ── 离屏渲染方块图标（原版物品栏角度：yaw 225° / pitch 30°，正交投影）── */
   var IR = null, IS = null, IC = null, IT = null, IM = null;
   function iconSetup() {
     if (IR) return;
@@ -1512,9 +1584,8 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     var l1 = new THREE.DirectionalLight(0xffffff, 0.55); l1.position.set(0.7, 1, 0.55); IS.add(l1);
     var l2 = new THREE.DirectionalLight(0xffffff, 0.20); l2.position.set(-0.8, 0.25, -0.7); IS.add(l2);
     IC = new THREE.OrthographicCamera(-0.8, 0.8, 0.8, -0.8, 0.01, 20);
-    // 独立一份图集纹理：两个 WebGL 上下文不能共用同一张 texture 的状态
-    IT = new THREE.CanvasTexture(atlasCanvas);
-    IT.magFilter = THREE.NearestFilter; IT.minFilter = THREE.LinearFilter;
+    IT = new THREE.CanvasTexture(atlasCanvas);            // 独立一份纹理：
+    IT.magFilter = THREE.NearestFilter; IT.minFilter = THREE.LinearFilter;   // 两个上下文不能共用
     IT.generateMipmaps = false;
     IT.wrapS = IT.wrapT = THREE.ClampToEdgeWrapping;
     IM = new THREE.MeshLambertMaterial({ map: IT, vertexColors: true, alphaTest: 0.5, side: THREE.DoubleSide });
@@ -1535,7 +1606,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
       Array.prototype.push.apply(nor, b.nor);
       Array.prototype.push.apply(uvs, b.uvs);
       Array.prototype.push.apply(col, b.col);
-      for (var i = 0; i < b.idx.length; i++) idx.push(b.idx[i] + base);
+      for (var i2 = 0; i2 < b.idx.length; i2++) idx.push(b.idx[i2] + base);
       base += b.vc;
     });
     if (!idx.length) return null;
@@ -1550,15 +1621,15 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   function iconCanvas(id, px) {
     iconSetup();
     IR.setSize(px, px, false);
-    var d0 = 3.4, yaw = Math.PI * 1.25, pitch = 0.52;   // 原版图标角度
+    var d0 = 3.4, yaw = Math.PI * 1.25, pitch = 0.52;
     IC.position.set(
       0.5 + Math.cos(pitch) * Math.sin(yaw) * d0,
       0.5 + Math.sin(pitch) * d0,
       0.5 + Math.cos(pitch) * Math.cos(yaw) * d0);
     IC.lookAt(0.5, 0.5, 0.5);
     IC.updateProjectionMatrix();
-    var geo = iconGeo(id);
     var out = d.createElement('canvas'); out.width = out.height = px;
+    var geo = iconGeo(id);
     if (!geo) return out;
     var mesh = new THREE.Mesh(geo, IM);
     IS.add(mesh);
@@ -1570,7 +1641,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     return out;
   }
 
-  /* 方块平均色（用来做颜色匹配）：只统计不透明像素 */
+  /* ── 调色板：方块 → 平均色 ── */
   var tileAvgCache = {};
   function tileAvg(tile) {
     if (tileAvgCache[tile] !== undefined) return tileAvgCache[tile];
@@ -1603,7 +1674,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
         'red_terracotta', 'brown_terracotta', 'nether_bricks', 'end_stone']
     )
   };
-  function iconPalette(mode, brushId) {
+  function buildPalette(mode, brushId) {
     var names = mode === 'mono' ? [] : (PAL_SETS[mode] || PAL_SETS.full);
     var ids = [], seen = {};
     names.forEach(function (n) {
@@ -1614,9 +1685,8 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     });
     if (mode === 'mono' || !ids.length) {
       var bid = brushId || BY_NAME.white_concrete || BY_NAME.stone;
-      return Promise.resolve([{ id: bid, color: null }]);
+      return Promise.resolve([{ id: bid, c: null, lab: null }]);
     }
-    var b = BLOCKS[brushId || 0];
     var load = [];
     ids.forEach(function (id) {
       var bb = BLOCKS[id];
@@ -1628,53 +1698,141 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
       var out = [];
       ids.forEach(function (id) {
         var bb = BLOCKS[id];
-        var col = tileAvg(bb.s || bb.t) || tileAvg(bb.t) || tileAvg(bb.b || bb.t);
-        if (col) out.push({ id: id, color: col });
+        var col = tileAvg(bb.s || bb.t) || tileAvg(bb.t) || tileAvg(bb.b || bb.s || bb.t);
+        if (col) out.push({ id: id, c: col, lab: rgb2lab(col[0], col[1], col[2]) });
       });
       return out;
     });
   }
-  function nearestIn(pal, r, g, b) {
-    var best = pal[0], bd = Infinity;
+
+  /* ── 抖动矩阵 / 误差扩散 ── */
+  function bayer(n) {
+    var m = [[0]];
+    while (m.length < n) {
+      var s = m.length, nm = [], y, x;
+      for (y = 0; y < s * 2; y++) { nm.push(new Array(s * 2)); }
+      for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
+        var v = m[y][x] * 4;
+        nm[y][x] = v; nm[y][x + s] = v + 2; nm[y + s][x] = v + 3; nm[y + s][x + s] = v + 1;
+      }
+      m = nm;
+    }
+    return m;
+  }
+  var BAYER4 = bayer(4), BAYER8 = bayer(8);
+  /* 误差扩散核：dx, dy, 权重 */
+  var KERNELS = {
+    fs: [[1, 0, 7 / 16], [-1, 1, 3 / 16], [0, 1, 5 / 16], [1, 1, 1 / 16]],
+    atkinson: [[1, 0, 1 / 8], [2, 0, 1 / 8], [-1, 1, 1 / 8], [0, 1, 1 / 8], [1, 1, 1 / 8], [0, 2, 1 / 8]],
+    sierra: [[1, 0, 2 / 4], [-1, 1, 1 / 4], [0, 1, 1 / 4]]
+  };
+  /* 颜色匹配在 CIELAB 里做 —— RGB 里算距离会把「灰 190」判成粉色羊毛，
+     Lab 的 L/a/b 分开后，明度差和色相差互不干扰，灰阶才不会被染色。 */
+  function srgb2lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  function rgb2lab(r, g, b) {
+    var R = srgb2lin(r), G = srgb2lin(g), B = srgb2lin(b);
+    var x = (R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047;
+    var y = (R * 0.2126 + G * 0.7152 + B * 0.0722);
+    var z = (R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883;
+    function f(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
+    var fx = f(x), fy = f(y), fz = f(z);
+    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+  }
+  function nearestIdx(pal, r, g, b) {
+    var lab = rgb2lab(r, g, b);
+    var L = lab[0], A = lab[1], B2 = lab[2];
+    var best = 0, bd = Infinity;
     for (var i = 0; i < pal.length; i++) {
-      var c = pal[i].color;
-      if (!c) return pal[i];
-      var dr = r - c[0], dg = g - c[1], db = b - c[2];
-      var dist = dr * dr * 0.32 + dg * dg * 0.5 + db * db * 0.18;   // 人眼对绿最敏感
-      if (dist < bd) { bd = dist; best = pal[i]; }
+      var c = pal[i].c;
+      if (!c) return 0;
+      var pl = pal[i].lab;
+      var dl = L - pl[0], da = A - pl[1], db2 = B2 - pl[2];
+      var d2 = dl * dl + da * da + db2 * db2;      // ΔE76
+      if (d2 < bd) { bd = d2; best = i; }
     }
     return best;
   }
-  /* 画布像素 → 方块结构（图标和外部图片共用） */
-  function pixelStruct(cv, pal, size, thick) {
-    var ctx2 = cv.getContext('2d');
-    var px = ctx2.getImageData(0, 0, size, size).data;
-    var data = new Uint16Array(size * size * thick);
-    var used = {}, hit = 0;
-    for (var y = 0; y < size; y++) for (var x = 0; x < size; x++) {
-      var o = (y * size + x) * 4;
-      if (px[o + 3] < 110) continue;                       // 透明 = 空气
-      var e = nearestIn(pal, px[o], px[o + 1], px[o + 2]);
-      if (!e || !e.id) continue;
-      used[e.id] = 1; hit++;
-      var vy = size - 1 - y;
-      for (var z = 0; z < thick; z++) data[(vy * thick + z) * size + x] = e.id;
+  /* 返回 Int16Array(W*H)：调色板下标，-1 = 透明 */
+  function quantize(px, W, H, pal, algo, amount) {
+    var out = new Int16Array(W * H);
+    var amt = Math.max(0, Math.min(100, amount)) / 100;
+    var i, x, y, o;
+    if (algo === 'fs' || algo === 'atkinson' || algo === 'sierra') {
+      var buf = new Float32Array(W * H * 3);
+      for (i = 0; i < W * H; i++) {
+        buf[i * 3] = px[i * 4]; buf[i * 3 + 1] = px[i * 4 + 1]; buf[i * 3 + 2] = px[i * 4 + 2];
+      }
+      var kern = KERNELS[algo];
+      for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
+        var k = y * W + x;
+        if (px[k * 4 + 3] < 110) { out[k] = -1; continue; }
+        var r = buf[k * 3], g = buf[k * 3 + 1], b = buf[k * 3 + 2];
+        var idx = nearestIdx(pal, r, g, b);
+        out[k] = idx;
+        var pc = pal[idx].c;
+        if (!pc) continue;
+        function cl(v) { return v < -72 ? -72 : (v > 72 ? 72 : v); }
+        var er = cl((r - pc[0]) * amt), eg = cl((g - pc[1]) * amt), eb = cl((b - pc[2]) * amt);
+        for (var ki = 0; ki < kern.length; ki++) {
+          var kx = x + kern[ki][0], ky = y + kern[ki][1];
+          if (kx < 0 || kx >= W || ky < 0 || ky >= H) continue;
+          var kk = (ky * W + kx) * 3, wt = kern[ki][2];
+          buf[kk] += er * wt; buf[kk + 1] += eg * wt; buf[kk + 2] += eb * wt;
+        }
+      }
+      return out;
     }
-    return { sx: size, sy: size, sz: thick, data: data, blocks: hit, colors: Object.keys(used).length, cv: cv };
+    var mat = algo === 'bayer4' ? BAYER4 : (algo === 'bayer8' ? BAYER8 : null);
+    var n = mat ? mat.length : 0, spread = 128 * amt;
+    for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
+      o = (y * W + x) * 4;
+      var k2 = y * W + x;
+      if (px[o + 3] < 110) { out[k2] = -1; continue; }
+      var r2 = px[o], g2 = px[o + 1], b2 = px[o + 2];
+      if (mat) {
+        var t = mat[y % n][x % n] / (n * n) - 0.5;
+        r2 += t * spread; g2 += t * spread; b2 += t * spread;
+      } else if (algo === 'random') {
+        var rr = (Math.random() - 0.5) * 96 * amt;
+        r2 += rr; g2 += rr; b2 += rr;
+      }
+      out[k2] = nearestIdx(pal, r2, g2, b2);
+    }
+    return out;
   }
-  /* 把任意图片按 contain 缩放铺到 size×size 画布上 */
-  function imageToCanvas(im, size) {
+
+  /* ── 索引图 → 结构 ── */
+  function structFromMap(idx, W, H, pal, thick, orient) {
+    var flat = orient === 'flat';
+    var sx = W, sy = flat ? thick : H, sz = flat ? H : thick;
+    var data = new Uint16Array(sx * sy * sz);
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+      var k = idx[y * W + x];
+      if (k < 0) continue;
+      var id = pal[k].id;
+      if (!id) continue;
+      if (flat) {
+        for (var t2 = 0; t2 < thick; t2++) data[((t2) * sz + y) * sx + x] = id;
+      } else {
+        var vy = H - 1 - y;
+        for (var z = 0; z < thick; z++) data[(vy * sz + z) * sx + x] = id;
+      }
+    }
+    return { sx: sx, sy: sy, sz: sz, data: data };
+  }
+
+  /* ── 图片工具 ── */
+  function imageToCanvas(im, W, H) {
     var cv = d.createElement('canvas');
-    cv.width = cv.height = size;
+    cv.width = W; cv.height = H;
     var cx = cv.getContext('2d');
     var iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
-    var s2 = Math.min(size / iw, size / ih);
+    var s2 = Math.min(W / iw, H / ih);
     var w = Math.max(1, Math.round(iw * s2)), h = Math.max(1, Math.round(ih * s2));
-    cx.imageSmoothingEnabled = false;               // 像素图放大不糊
-    cx.drawImage(im, Math.round((size - w) / 2), Math.round((size - h) / 2), w, h);
+    cx.imageSmoothingEnabled = false;
+    cx.drawImage(im, Math.round((W - w) / 2), Math.round((H - h) / 2), w, h);
     return cv;
   }
-  /* 跨域图片：先直连（带 crossOrigin），失败再走带 CORS 头的图床代理 */
   function loadImageAny(url) {
     return new Promise(function (res, rej) {
       function once(u, next) {
@@ -1685,53 +1843,70 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
         im.src = u;
       }
       once(url, function () {
-        var u2 = url.replace(/^https?:\/\//i, '');
-        once('https://images.weserv.nl/?url=' + encodeURIComponent(u2), function () {
-          rej(new Error('图片加载失败（可能被防盗链拦了，换个图片地址试试）'));
+        once('https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//i, '')), function () {
+          rej(new Error('图片加载失败（可能被防盗链拦了，换个地址或存到本地再选）'));
         });
       });
     });
   }
-  function buildIconStruct(blockId, size, thick, mode) {
-    size = Math.max(8, Math.min(256, size | 0));
-    thick = Math.max(1, Math.min(8, thick | 0));
-    var bb = BLOCKS[blockId];
-    if (!bb) return Promise.reject(new Error('这个方块没有贴图数据'));
-    return Promise.all([loadTile(bb.t), loadTile(bb.s || bb.t), loadTile(bb.b || bb.s || bb.t)])
-      .then(function () { return iconPalette(mode, blockId); })
-      .then(function (pal) { return pixelStruct(iconCanvas(blockId, size), pal, size, thick); });
+
+  /* ── 主流程 ── */
+  var miOrient = 'wall';
+  function mapOpts() {
+    var W = Math.max(4, Math.min(256, +$('#miW').value || 64));
+    var H = Math.max(4, Math.min(256, +$('#miH').value || 64));
+    return {
+      W: W, H: H,
+      thick: Math.max(1, Math.min(8, +$('#miD').value || 1)),
+      pal: $('#miPal').value,
+      algo: $('#miDither').value,
+      amt: +$('#miAmt').value,
+      orient: miOrient
+    };
   }
-  function genFromImage(im) {
-    var size = +$('#icSize').value || 64, thick = +$('#icD').value || 1, mode = $('#icPal').value;
-    size = Math.max(8, Math.min(256, size | 0));
-    thick = Math.max(1, Math.min(8, thick | 0));
-    return iconPalette(mode, curBlock).then(function (pal) {
-      var cv = imageToCanvas(im, size);
-      var res = pixelStruct(cv, pal, size, thick);
-      if (!res.blocks) { toast('这张图全是透明的，没东西可生成', 'err'); return; }
-      applyStruct({ sx: res.sx, sy: res.sy, sz: res.sz, data: res.data });
-      $('#docName').textContent = '图片地图画';
+  function renderMap(srcCv, download) {
+    var o = mapOpts();
+    return buildPalette(o.pal, curBlock).then(function (pal) {
+      var cv = imageToCanvas(srcCv, o.W, o.H);
+      var px = cv.getContext('2d').getImageData(0, 0, o.W, o.H).data;
+      var idx = quantize(px, o.W, o.H, pal, o.algo, o.amt);
+      var res = structFromMap(idx, o.W, o.H, pal, o.thick, o.orient);
+      applyStruct(res);
+      var used = 0, seen = {};
+      for (var i = 0; i < idx.length; i++) if (idx[i] >= 0 && !seen[idx[i]]) { seen[idx[i]] = 1; used++; }
+      $('#docName').textContent = '地图画 ' + o.W + '×' + o.H + (o.orient === 'flat' ? ' · 平铺' : ' · 立放');
       closeDrawer();
-      toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + res.blocks + ' 个方块 · 用了 ' + res.colors + ' 种', 'ok');
-    });
-  }
-  function genIcon(download) {
-    if (!curBlock) { toast('先去方块库选一个方块', 'err'); openDrawer('picker'); return; }
-    var size = +$('#icSize').value || 64, thick = +$('#icD').value || 1, mode = $('#icPal').value;
-    toast('正在渲染图标…');
-    buildIconStruct(curBlock, size, thick, mode).then(function (res) {
-      applyStruct({ sx: res.sx, sy: res.sy, sz: res.sz, data: res.data });
-      $('#docName').textContent = '图标：' + (BLOCKS[curBlock] ? BLOCKS[curBlock].n : curBlock);
-      closeDrawer();
-      toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + res.blocks + ' 个方块 · 用了 ' + res.colors + ' 种', 'ok');
+      toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + countBlocks() + ' 个方块 · ' + used + ' 种颜色', 'ok');
       if (download) {
         try {
           var out = buildMc();
-          saveBlob(out.bytes, 'icon-' + res.sx + 'x' + res.sy + 'x' + res.sz + '.mcstructure');
+          saveBlob(out.bytes, 'mapart-' + o.W + 'x' + o.H + '.mcstructure');
           toast('已下载 .mcstructure', 'ok');
         } catch (err) { toast('导出失败：' + err.message, 'err'); }
       }
-    }).catch(function (err) { toast('生成失败：' + err.message, 'err'); });
+    }).catch(function (err) { toast('生成失败：' + (err && err.message || err), 'err'); });
+  }
+  function genFromBlock(download) {
+    if (!curBlock) { toast('先去方块库选一个方块', 'err'); openDrawer('picker'); return; }
+    var bb = BLOCKS[curBlock];
+    if (!bb) return toast('这个方块没有贴图数据', 'err');
+    var o = mapOpts();
+    toast('正在渲染图标…');
+    Promise.all([loadTile(bb.t), loadTile(bb.s || bb.t), loadTile(bb.b || bb.s || bb.t)]).then(function () {
+      var px = Math.max(o.W, o.H);
+      return renderMap(iconCanvas(curBlock, px), download);
+    });
+  }
+
+  function syncAspect() {
+    if (!$('#miLock').checked) return;
+    var W = Math.max(4, Math.min(256, +$('#miW').value || 64));
+    var st = syncAspect.ratio || 1;
+    $('#miH').value = Math.max(4, Math.min(256, Math.round(W * st)));
+  }
+  function setAspect(ratio) {
+    syncAspect.ratio = ratio || 1;
+    syncAspect();
   }
 
   /* ═════════════════ 文字 → 方块结构（中英文都支持）═════════════════
