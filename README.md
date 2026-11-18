@@ -2,7 +2,7 @@
 
 # 红石的小站
 
-**工具集 · 资源下载 · 个人 Wiki · 小游戏**
+**工具集 · 结构编辑器 · 资源下载 · 个人 Wiki · 小游戏**
 
 [![站点自检](https://github.com/HSDL03/HStool/actions/workflows/check.yml/badge.svg)](https://github.com/HSDL03/HStool/actions/workflows/check.yml)
 [![在线访问](https://img.shields.io/badge/在线访问-hsdl03.github.io%2FHStool-3d521f?style=flat-square)](https://hsdl03.github.io/HStool/)
@@ -10,12 +10,25 @@
 [![纯静态](https://img.shields.io/badge/部署-GitHub%20Pages-222?style=flat-square&logo=githubpages&logoColor=white)](https://hsdl03.github.io/HStool/)
 [![AI 制作](https://img.shields.io/badge/本项目由-AI%20制作-8b5cf6?style=flat-square)](#声明)
 
+<sub>没有框架、没有构建步骤、没有后端 —— <code>push</code> 就上线。</sub>
+
 </div>
 
-一个纯静态的个人站点：**没有框架、没有构建步骤**，`push` 到 `main` 后 GitHub Pages 自动上线（30~60 秒生效）。
+纯静态的个人站点：`push` 到 `main` 后 GitHub Pages 自动部署（30~60 秒生效）。
 所有页面共用一套设计系统（`assets/css/core.css`）和一份公共能力（`assets/js/core.js`），新页面只写自己的业务逻辑。
 
-> **数字一览**：收录 75 个条目、可见 68 个 —— 59 个工具（其中 22 个 MC 相关）、游戏厅 + 棋牌室、聊天室、下载站、Wiki、数据后台。
+> **一眼看全站**：85 个条目 / 69 个可见 —— **71 个单页工具**（23 个 MC 相关）、13 个游戏与棋牌、3 个整站页面（Wiki / 下载站 / 数据后台）。
+> 82 个纯前端（`noDB`），只剩 3 个走 GitHub API（`needDB`）。
+
+## 亮点
+
+| | |
+| --- | --- |
+| 🧱 **结构处理器** | 浏览器里打开 `.mcstructure` / `.schem` / `.nbt`，原版贴图 3D 渲染、方块级编辑、NBT 编辑、导出回游戏。还能用**地图画**（抖动算法可调）和**文字**生成结构 |
+| 🎮 **MC 复刻** | three.js 手写体素引擎：地形噪声、方块朝向、门、流动的水、活塞、物品栏与合成台 |
+| 🧮 **71 个小工具** | 坐标 / 经验 / 红石 / 附魔 / 酿造 / 合成 等 MC 计算，加上 JSON / 编解码 / 正则 / 时间戳 / 二维码 等日常工具 |
+| 🎲 **13 个游戏** | 围棋 · 中国象棋 · 国际象棋 · 斗地主 · UNO · 麻将 · 五子棋 · A\* 演示，支持局域网与 AI |
+| 📦 **离线也能用** | 全部纯前端工具可打成绿色单文件 exe（Electron portable），双击即用 |
 
 ---
 
@@ -23,8 +36,9 @@
 
 - [快速开始](#快速开始)
 - [目录结构](#目录结构)
+- [结构处理器](#结构处理器)
 - [页面地图](#页面地图)
-- [离线版 exe](#离线版-exe)
+- [桌面版 / 离线版](#桌面版--离线版)
 - [数据文件](#数据文件)
 - [视觉与主题](#视觉与主题)
 - [快捷键](#快捷键)
@@ -61,66 +75,87 @@ python -m http.server 8000     # 或 npx serve .
 ├─ README.md
 │
 ├─ assets/
-│  ├─ css/core.css         设计系统：8 套主题令牌 + 通用组件（.tool/.panel/.fld/.btn…）
+│  ├─ css/core.css         设计系统：主题令牌 + 通用组件（.tool/.panel/.fld/.btn…）
 │  ├─ js/core.js           主题引擎 / 命令面板 / 装饰背景 / Toast / 数据三级回落
 │  ├─ vendor/              本地化的第三方库（three.js、qrcode.js），缺失才回落 CDN
-│  ├─ mc-*.js              MC 复刻用的方块 / 模型 / 配方 / 贴图索引数据
-│  ├─ mc-icons/            工具卡片用的 MC 官方渲染图（zh.minecraft.wiki）
-│  ├─ mc-gui/              MC 原版 GUI 贴图与控件素材
-│  ├─ mc-textures/         MC 原版贴图（16px 图集、GUI、实体）
-│  └─ mc-sounds/           MC 原版音效
+│  ├─ mc-items-data.js     方块 / 物品 / 贴图索引（1164 方块 · 748 物品 · 1589 图集格）
+│  ├─ mc-models-data.js    692 个原版方块模型（elements + 逐面 UV）
+│  ├─ mc-recipes-data.js   1723 条原版合成配方
+│  ├─ mc-inline-textures.js 贴图内联成 data URL，离线也能显示
+│  ├─ mc-icons/            工具卡片用的 MC 官方渲染图
+│  ├─ mc-gui/              原版 GUI 贴图与控件素材
+│  └─ mc-textures/ mc-sounds/   原版贴图与音效
 │
 ├─ pages/
 │  ├─ wiki.html            答辩 Wiki 阅读器：章节树 / 目录 / 全文搜索 / 阅读进度
 │  ├─ download.html        下载站：GitHub Releases + 手动补录
 │  └─ admin.html           数据后台：用 GitHub Token 直接读写 JSON
 │
-├─ tools/                  单文件小工具，每页一个 .html（71 个文件）
-│                          通用：计算器 / JSON / 编解码 / 时间戳 / 颜色 / 正则 / JWT…
-│                          MC 专区：附魔 / 酿造 / 红石 / 挖掘 / 伤害 / 合成 / 指令…共 29 个
-│                          （原来单独收在「未优化工具」文件夹里，现已并入主列表）
+├─ tools/                  单页工具，每页一个 .html（71 个文件）
+│  │                       通用：计算器 / JSON / 编解码 / 时间戳 / 颜色 / 正则 / JWT…
+│  │                       MC 专区：附魔 / 酿造 / 红石 / 挖掘 / 伤害 / 合成 / 指令…
+│  └─ structure.html       ★ 结构处理器（导入 / 编辑 / 地图画 / 导出）
 │
 ├─ games/
-│  ├─ index.html           游戏厅：六张棋牌入口
-│  ├─ rules.html           六种玩法说明书（含与标准规则的差别）
-│  ├─ tri-chess.html       围棋 / 中国象棋 / 国际象棋三合一，国象可连云端引擎
-│  ├─ chess-auto.html      国象应招器（作弊向）：自动应招 / 评分 / 编辑棋局
-│  ├─ doudizhu.html        斗地主
-│  ├─ uno.html             UNO
-│  ├─ mahjong.html         麻将
-│  ├─ mc.html              MC 复刻（three.js，主战场）
+│  ├─ index.html           游戏厅：棋牌入口
+│  ├─ rules.html           玩法说明书（含与标准规则的差别）
+│  ├─ tri-chess.html       围棋 / 中国象棋 / 国际象棋三合一
+│  ├─ chess-auto.html      国象应招器：自动应招 / 评分 / 编辑棋局
+│  ├─ doudizhu.html uno.html mahjong.html
+│  ├─ mc.html              MC 复刻（three.js 体素引擎，主战场）
 │  ├─ astar.html           A* 寻路 3D 演示
-│  ├─ pvpga.html           PVP 小游戏
-│  └─ wuzi_game/hotel.html 五子棋对局 + 局域网大厅（同一浏览器多标签页）
+│  ├─ pvpga.html           方块战场（人机）
+│  └─ wuzi_game/hotel.html 五子棋 + 局域网大厅（同一浏览器多标签页）
 │
-├─ data/
-│  ├─ tools-data.json      工具卡片（顺序即首页渲染顺序）
-│  ├─ wiki-data.json       Wiki 条目
-│  ├─ download-data.json   资源补录
-│  └─ announcement.json    公告
-│
-├─ start-local.cmd         双击启动本地版（起 127.0.0.1 服务并打开国象应招器）
-├─ scripts/
-│  ├─ check.mjs            站点自检脚本（CI 与本地共用）
-│  ├─ serve-local.mjs      本地静态服务（8787，含自动开浏览器）
-│  ├─ build-chess-exe.mjs  打包国象应招器桌面版（借 offline/ 的 electron）
-│  ├─ build-offline.mjs    离线版打包（只挑 noDB 条目）
-│  └─ guard.mjs            命令熔断器（超时自动杀进程换方案）
-│
+├─ data/                   tools / wiki / download / announcement 四个 JSON
+├─ scripts/                check（站点自检）· serve-local · build-offline · guard（熔断器）
 ├─ offline/                Electron 打包工程（构建产物不入库）
-├─ desk/chess/             国象应招器桌面版（Electron + desktopCapturer 选窗口）
+├─ desk/                   国象应招器桌面版（Python / Electron）
 └─ .github/workflows/check.yml   push / PR 时自动跑自检
 ```
 
 > **路径约定**：只有 `index.html`、`404.html`、`README.md` 在根目录，其余页面都下沉一层。
-> 所以子目录页用 `../assets/`、`../data/`，首页引用页面用 `./pages/xxx.html`；
-> `404.html` 里的资源必须写 `/HStool/` 绝对路径（GitHub Pages 会在任意深度的坏链接上渲染它）。
+> 所以子目录页用 `../assets/`、`../data/`；`404.html` 里的资源必须写 `/HStool/` 绝对路径
+> （GitHub Pages 会在任意深度的坏链接上渲染它）。
+
+## 结构处理器
+
+[`tools/structure.html`](tools/structure.html) —— 一个完全跑在浏览器里的 Minecraft 结构编辑器，文件不上传、不联网。
+
+**能读**：`.mcstructure`（基岩，含 gzip）· `.schem`（Sponge v2/v3）· `.nbt`（Java 结构）· 本站 JSON。
+NBT 读写器全部手写（小端 + UTF-8 短长度字符串），导出的文件用 Python 独立解析器回读校验过「无冗余字节、偏移量对齐」。
+
+**能看**：原版贴图 + 原版模型渲染，一张方块图集（`tile → 图集格`）、Lambert 光照、按区块分块重建。
+51 MB / 109 万方块的结构导入 + 渲染约 6 秒，编辑时只重建所在分区。
+
+**能改**
+
+| 模式 | 快捷键 | 说明 |
+| --- | --- | --- |
+| 查看 | <kbd>1</kbd> | 右键拖动旋转（物体跟着鼠标走）· 滚轮缩放 · 中键平移 |
+| 放置 | <kbd>2</kbd> | 左键放方块，按住拖动连续画；1164 种方块可搜索 |
+| 删除 | <kbd>3</kbd> | 左键擦方块 |
+| 方块数据 | <kbd>4</kbd> | 点选 / Shift 多选 / 拖动框选，编辑 `block_entity_data`（命令方块的 Command、箱子内容、告示牌文字…） |
+
+**能生成**
+
+- **地图画**：把方块图标或任意图片转成方块画。尺寸自定义、**立放 / 平铺**两种方向、厚度 1~8 层；
+  配料可选混凝土 16 色 / 羊毛 16 色 / 综合约 70 种 / 单色；
+  抖动算法可选 不抖动 · Bayer 4×4 · Bayer 8×8 · Floyd–Steinberg · Atkinson · Sierra Lite · 随机，强度 0~100%。
+  颜色匹配在 CIELAB 里做（ΔE76），灰阶不会被误判成彩色方块。
+- **文字**：中英文直接变方块字，字高 / 厚度 / 精细度（2×~8× 超采样）可调。
+
+**能导出**：`.mcstructure`（调色板按「方块名 + 状态」去重，朝向等状态原样写回）· 本站 JSON（无损可再编辑）· PNG。
+
+> 基岩的 `block_indices` 是 **x 最慢、z 最快**（`i = (x·sizeY + y)·sizeZ + z`）。
+> 按 x 最快读会把整栋建筑摊成一层层散落的薄片 —— 这个坑自检脚本查不出来，只能拿真实存档验
+> （用「孤立方块比例」判定：正确顺序 0%，错误顺序 0.5%~2.7%）。
 
 ## 页面地图
 
 ### 工具（⚡ 纯前端，`noDB`）
 
-59 个可见工具，其中 **22 个 MC 相关**，大致分四类：
+71 个单页工具，其中 **23 个 MC 相关**，大致分四类：
 
 | 类别 | 代表 | 说明 |
 | --- | --- | --- |
@@ -135,13 +170,13 @@ python -m http.server 8000     # 或 npx serve .
 
 | 页面 | 路径 | 说明 |
 | --- | --- | --- |
-| 游戏厅 | `games/index.html` | 六张棋牌入口 + 玩法说明书 |
-| 围棋 / 中国象棋 / 国际象棋 | `games/tri-chess.html` | 三合一页面（`#go` / `#xq` / `#ch` 直达），国象可连云端 Stockfish |
-| 国象作弊器 | `games/chess-auto.html` | 输了对手走法就给你最优应手，带评分 / 深度 / 拖拽摆子 / 棋局编辑 |
-| 斗地主 · UNO · 麻将 | `games/doudizhu.html` 等 | 单机对局，规则见说明书 |
-| MC 复刻 | `games/mc.html` | three.js 手写体素引擎：区块生成、方块朝向、门、水、活塞、物品栏 |
-| A\* 寻路演示 | `games/astar.html` | 3D 网格画墙铺水，可视化搜索过程；支持批量模拟 1~1000 局 |
-| PVP / 五子棋 | `games/pvpga.html` / `wuzi_*.html` | 对 AI / 局域网对战（在线房间已下线） |
+| 游戏厅 | `games/index.html` | 棋牌入口 + 玩法说明书 |
+| 围棋 / 中国象棋 / 国际象棋 | `games/tri-chess.html` | 三合一（`#go` / `#xq` / `#ch` 直达），国象可连云端 Stockfish |
+| 国象应招器 | `games/chess-auto.html` | 读屏幕上的棋盘给最优应手，带评分 / 深度 / 拖拽摆子 |
+| 斗地主 · UNO · 麻将 | `games/*.html` | 单机对局，规则见说明书 |
+| MC 复刻 | `games/mc.html` | 区块生成、方块朝向、门、水、活塞、物品栏与合成台 |
+| A\* 寻路演示 | `games/astar.html` | 3D 网格画墙铺水，可视化搜索过程 |
+| 方块战场 / 五子棋 | `games/pvpga.html` / `wuzi_*.html` | 人机 / 局域网对战（在线房间已下线） |
 | 挖矿抽卡 | `tools/gacha.html` | 单抽 / 十连，带保底与图鉴 |
 
 ### 需要 GitHub API（☁ `needDB`）
@@ -153,95 +188,44 @@ python -m http.server 8000     # 或 npx serve .
 | 数据后台 | 用 GitHub Token 提交 JSON 改动 |
 
 > 站内自建后端（Supabase）**已全部下线**：账号、聊天、在线房间都不再连接任何服务器，
-> 代码里的地址与密钥已清空，`assets/vendor/supabase.js` 与 `cf/sb-proxy` 反代也已删除。
+> 代码里的地址与密钥已清空，`supabase.js` 与反代 Worker 也已删除。
 > MC 复刻只剩单机，五子棋改用局域网（同一浏览器开多个标签页）。
 
-## 桌面版 exe / 本地版（屏幕识别作弊）
+## 桌面版 / 离线版
 
-国象应招器可以**直接读你屏幕上的棋盘**：框住对手的棋盘，你在那边照常下，这边自动读出他走了哪步、给你应手。
+<details>
+<summary><b>国象应招器桌面版 exe</b> —— 读屏幕棋盘，自动给应手</summary>
 
-**桌面版 exe（推荐）**：[Releases · 国象应招器](https://github.com/HSDL03/HStool/releases/tag/chess-v1.3.1) 直接下 `ChessAssist-1.3.1.exe`（单文件免安装，19.6 MB）。
+**下载**：[Releases · 国象应招器](https://github.com/HSDL03/HStool/releases/tag/chess-v1.3.1) 里的 `ChessAssist-1.3.1.exe`（单文件免安装）。
 源码在 `desk/py`，Python + tkinter，识图与自动落子都在本地。
 
 ```bash
 cd desk/py && build.cmd        # 或：py -m PyInstaller --onefile --windowed --name 国象应招器 chess_assist.py
-# → desk/py/dist/国象应招器.exe
 ```
 
-- **框选与对齐**：框完会自动裁掉框里的纯色背景、再按「相邻格底色明暗交替 + 格内是否单一颜色」
-  搜出最贴合的 8×8 范围（框偏几十像素、大小差两成都能纠回来）。预览里按住拖动可以手动平移采样框，
-  滚轮缩放；点「⌖ 自动对齐」随时重来。
-- **识别区域**：右栏有一块画布，实时显示程序实际截到的画面，叠 8×8 网格 + 变化格（黄）/整盘差异格（红），
-  格子压没压住棋盘一眼可见。
-- **棋子形状记忆**：点「③ 学棋子」把当前每格按程序里的局面记下来（12 种棋子 + 2 种底色空格），
-  之后整盘重读就能认出「这格现在是什么」；程序也会在画面稳定时自动补学。学之前先比「有没有子」
-  （只看格内起伏，空格 ≈0、有子 ≥16），对不上就拒学，不会把库教歪；库会存盘到
-  `%APPDATA%\ChessAssist\book.json`，下次开程序直接能用。
-- **界面**：卡片式布局，棋盘与预览随窗口自适应（720×480 到 4K 都能用），右栏内容超长时自动滚动，
-  窗口大小会被记住。
-- **识图（v2）**：程序每 0.5 秒截一次那块区域，对齐后缩到 192×192（每格 24×24）直接取字节，
-  **每格先减掉本格平均亮度**——上一步的黄色高亮、悬停、淡入淡出都是「整格一起变亮变暗」，
-  减掉均值就没了，只剩棋子轮廓。变化分 = 同位置字节的绝对差均值（静置实测 0.0，走一步 12~44）。
-  匹配时还有一道硬闸门：真走一步必然「出发格变空、目标格有子」，只有高亮没有走子的两格
-  还都有子，直接被挡掉，不会凭空认出一手。
-- **认子**：把每格**里面的 6×6**（外圈留给高亮框和格线）做去均值单位化，得到 36 维轮廓，
-  用归一化互相关（NCC）跟「棋子库」比，与皮肤配色、整体明暗无关。
-- **漏识别怎么办**：基线只在「真实棋盘确认过的画面」上推进，一次没对上不会丢基线
-  （以前是连续 3 帧失败就重取，对手走子动画的中间帧会把它冲掉，那一步就永久丢了）。
-  另外每 0.7 秒会用更低的阈值把整盘重扫一遍；轮到我方却看见画面变了，会用**对手方的
-  合法走法**再匹配一次，对上就把漏掉的那步补进局面。真卡住了点「重取基线」。
-- **自动**：轮到你就自动算并落子；勾上「自动落子（模拟鼠标）」后，还会在真实棋盘上替你点两下走完。
-- 手动兜底：点自己的棋盘、或输入 `e2e4` / `Nf3` / `O-O`。
-- 规则与网页版同一套（易位 / 吃过路兵 / 升变 / 将杀 / 逼和 / 50 回合 / 三次重复 / 子力不足），perft 与 chess.js 对齐。
+- **框选与对齐**：自动裁掉纯色背景，再按「相邻格明暗交替 + 格内是否单色」搜出 8×8 范围（框偏几十像素、差两成都能纠回）。
+- **识别**：每 0.5 秒截一次，缩到 192×192，每格先减本格平均亮度 —— 高亮、悬停这类「整格一起变亮」的干扰就被消掉了。
+- **认子**：取每格内部 6×6 做去均值单位化，归一化互相关匹配「棋子库」，与皮肤配色无关；库存在 `%APPDATA%\ChessAssist\book.json`。
+- **漏识别**：基线只在确认过的画面上推进；轮到我方却看见画面变了，会用**对手的合法走法**再匹配一次补上。
+- 规则与网页版同一套（易位 / 过路兵 / 升变 / 将杀 / 逼和 / 50 回合 / 三次重复 / 子力不足），perft 与 chess.js 对齐。
 
-**旧的 Electron 版**（`desk/chess`，需要联网拉 nsis/winCodeSign，网络差时容易卡）：
-屏幕捕捉走 `desktopCapturer`，点「① 选屏幕 / 窗口」弹缩略图让你挑。
+</details>
+
+<details>
+<summary><b>离线版 exe</b> —— 全部纯前端工具打成一个绿色单文件</summary>
+
+Electron portable：双击即用，不安装、不联网、不写注册表、不留服务。
+`needDB` 的页面（下载站 / 答辩 Wiki / 数据后台 / MC 游戏）不会进包。
 
 ```bash
-node scripts/build-chess-exe.mjs    # → desk/chess/dist/ChessAuto-<版本>.exe
-# 或开发时直接跑：
-cd desk/chess && npm start
+node scripts/build-offline.mjs              # 只挑 category=noDB 的条目，生成 offline/www
+cd offline && npm install && npm run dist   # → offline/dist/HStool-Offline-<版本>.exe
 ```
 
-特性：便携单文件、不写注册表；额外带「窗口置顶」，方便把它盖在棋盘窗口旁边。
+`build-offline.mjs` 结尾会自检：生成的页面里只要还残留 `http(s)://` 外链就报错退出 ——
+「离线版能不能真的离线」是构建时卡住的，不靠人工检查。
 
-**网页本地版**（没装 exe 时用）：
-
-```bash
-# Windows：直接双击仓库根目录的 start-local.cmd
-# 或者手动：
-node scripts/serve-local.mjs        # → http://127.0.0.1:8787/games/chess-auto.html
-```
-
-用 Edge / Chrome 打开，点侧栏「① 选屏幕 / 窗口」→ 选中那个开着棋盘的窗口 → 在预览上**拖框住整块棋盘** → 「② 开始识别」。
-
-- 只做**格子级像素变化**比对，不认棋子长相，所以换任何网站/任何皮肤都能用。
-- 推理链：画面里哪两格变了 → 在当前局面的合法走法里找对得上的那一步 → 算应手 → 在预览上画箭头。
-- 你把自己那手在真实棋盘上走掉时，会被识别成「已知的我方走法」直接吞掉，不会重复落子。
-- 灵敏度默认 9（范围 3~50）：分不清就走低一点，误报多就走高一点。
-
-> 屏幕捕捉需要安全上下文：`localhost` 和 `https` 都行，直接双击 `file://` 打开不行——所以给了上面的本地服务。
-
-## 离线版 exe
-
-把全部**纯前端**工具打成一个绿色单文件 exe（Electron portable）：双击即用，不安装、不联网、不写注册表、不留服务。
-`needDB` 的页面（聊天室 / 下载站 / 答辩 Wiki / 数据后台 / MC 游戏）不会进包。
-
-- 下载：[Releases](https://github.com/HSDL03/HStool/releases) 里的 `HStool-Offline-<版本>.exe`，或站内[下载站](https://hsdl03.github.io/HStool/pages/download.html)。
-- 重新打包：
-
-```bash
-node scripts/build-offline.mjs          # 只挑 category=noDB 的条目，生成 offline/www
-cd offline
-npm install
-npm run dist                            # → offline/dist/HStool-Offline-<版本>.exe
-```
-
-`build-offline.mjs` 会在最后自检一遍：只要生成的页面里还残留 `http(s)://` 外链就报错退出，
-所以「离线版还能不能真的离线」是构建时就卡住的，不是靠人工检查。
-
-构建脚本挑工具的依据只有一条：`data/tools-data.json` 里 `category === 'noDB'` 且没隐藏/停用。
-新加的工具只要是纯前端，下次打包会自动进离线版，不用改脚本。
+</details>
 
 ## 数据文件
 
@@ -254,15 +238,16 @@ npm run dist                            # → offline/dist/HStool-Offline-<版�
 
 - `url` 写**相对站点根**的路径，如 `./tools/xxx.html`；`category` 取 `noDB`（纯前端）或 `needDB`（要后端/账号）。
 - 首页按 `category` 显示「⚡ 纯前端 / ☁ 需后端」徽标，`hidden` 的条目不下发。
-- 这些文件既可以用 `pages/admin.html` 改，也可以直接编辑提交——字段与旧版完全一致，后台无需同步改动。
+- 既可以用 `pages/admin.html` 改，也可以直接编辑提交 —— 字段与旧版一致，后台无需同步改动。
 
 ## 视觉与主题
 
-- 主色继承 MC Wiki 风格：米黄纸底 `#fffdf5` + 橄榄绿 `#3d521f`，2px 描边、硬投影、方块化圆角。
+- 主色继承 MC Wiki 风格：米黄纸底 `#fffdf5` + 橄榄绿 `#3d521f`，2px 描边、硬投影、方块化圆角；
+  首页另行采用浅色科技风（`#f6f8fb` 底 + 蓝紫点缀）。
 - 内置 8 套主题：MC Wiki / 夜晚 / 下界 / 末地 / 樱花 / 海洋 / GitHub 浅色 / 深色，外加「跟随系统」。
-- 主题存在 `localStorage: hs-theme`（兼容读取旧键 `wiki-theme`），切主题只改 `<html data-theme>`。
-- 页面里**只用 CSS 变量**（`--bg / --bg2 / --bd / --bd2 / --ac / --text / --muted …`），写死颜色换主题就会花。
-- 动效遵循系统「减弱动态效果」设置；触屏设备自动关掉鼠标跟随光晕这类桌面专属效果。
+- 主题存 `localStorage: hs-theme`（兼容旧键 `wiki-theme`），切主题只改 `<html data-theme>`。
+- 页面里**只用 CSS 变量**（`--bg / --bd / --ac / --text / --muted …`），写死颜色换主题就会花。
+- 动效遵循系统「减弱动态效果」；触屏设备自动关掉鼠标跟随光晕这类桌面专属效果。
 
 ## 快捷键
 
@@ -282,7 +267,7 @@ npm run dist                            # → offline/dist/HStool-Offline-<版�
 
 ### 换仓库 / 换分支
 
-只改一处——`assets/js/core.js` 里的 `SITE`：
+只改一处 —— `core.js` 里的 `SITE`：
 
 ```js
 var SITE = { repo: 'HSDL03/HStool', branch: 'main', ... };
@@ -292,8 +277,7 @@ var SITE = { repo: 'HSDL03/HStool', branch: 'main', ... };
 
 ### 新增一个页面
 
-1. 放到 `pages/`（整站页面）或 `tools/`（小工具）。
-2. 头部三件套（路径按目录层级写死，不要写绝对路径）：
+放到 `pages/` 或 `tools/`，头部三件套（路径按层级写，别写绝对路径）：
 
 ```html
 <link rel="stylesheet" href="../assets/css/core.css">
@@ -305,13 +289,13 @@ var SITE = { repo: 'HSDL03/HStool', branch: 'main', ... };
 <script src="../assets/js/core.js"></script>
 ```
 
-主题按钮、装饰背景、Toast、命令面板都由 `core.js` 提供，页面不用自己写。
+主题按钮、装饰背景、Toast、命令面板都由 `core.js` 提供。
 
 ### 读数据
 
 ```js
 HS.data('tools-data')     // → data/tools-data.json，自动走 本地 → raw → jsDelivr 三级回落
-HS.dataURL('wiki-data')   // → 只要地址（给状态条、预加载用）
+HS.dataURL('wiki-data')   // → 只要地址（状态条、预加载用）
 ```
 
 文件名传**完整基名**（`tools-data`，不是 `tools`）。
@@ -322,17 +306,17 @@ HS.dataURL('wiki-data')   // → 只要地址（给状态条、预加载用）
 | --- | --- |
 | `HS.toast(msg, {icon})` | 底部提示 |
 | `HS.copy(text)` | 复制到剪贴板（带降级） |
-| `HS.absUrl(p)` / `HS.isExternal(p)` | 相对路径转绝对、判断站外 |
+| `HS.absUrl(p)` / `HS.isExternal(p)` | 相对路径转绝对（**按站点根解析**）、判断站外 |
 | `HS.site.url(p)` | 站内路径 → 绝对地址（页面在任意层级都对） |
 | `HS.theme.open()` / `HS.theme.set(id)` | 主题面板 / 直接切主题 |
-| `HS.palette.init({actions, source})` | 命令面板；「切换风格」「回工具台」已内置，只传自己特有的 |
+| `HS.palette.init({actions, source})` | 命令面板；「切换风格」「回工具台」已内置 |
 | `HS.status.mount(url)` | 右下角延迟胶囊 |
 | `HS.esc(s)` / `HS.$` / `HS.$$` | 转义与选择器 |
 | `HS.store.json(k, d)` | 读写 localStorage（自带 try/catch） |
 
 ## 新增一个工具（最短路径）
 
-1. 新建 `tools/<slug>.html`——拿 [`tools/timestamp.html`](tools/timestamp.html) 当版式范本抄。
+1. 新建 `tools/<slug>.html` —— 拿 [`tools/timestamp.html`](tools/timestamp.html) 当版式范本。
 2. 页面内只写 `<style>` 和一段 IIFE，颜色全用 CSS 变量，复制用 `HS.copy()`，提示用 `HS.toast()`。
 3. 在 `data/tools-data.json` 末尾追加一张卡：
 
@@ -342,7 +326,7 @@ HS.dataURL('wiki-data')   // → 只要地址（给状态条、预加载用）
   "deprecated": false, "disabled": false, "hidden": false }
 ```
 
-4. 跑 `node scripts/check.mjs`，全绿就 `push`——首页会自动渲染新卡片，不用动 `index.html`。
+4. 跑 `node scripts/check.mjs`，全绿就 `push` —— 首页会自动渲染新卡片，不用动 `index.html`。
 
 **别踩的坑**
 
@@ -357,15 +341,15 @@ HS.dataURL('wiki-data')   // → 只要地址（给状态条、预加载用）
 node scripts/check.mjs
 ```
 
-`check.mjs` 会检查四类问题：
+`check.mjs` 检查四类问题：
 
 1. `data/*.json` 能否解析、顶层是否是数组；工具卡片的 `id` 是否唯一、`url` 是否指向真实文件；
-2. 所有 HTML 里的本地 `href` / `src` 是否存在（写成根路径 `/xxx` 会直接报错，GitHub Pages 项目站必 404）；
+2. 所有 HTML 里的本地 `href` / `src` 是否存在（写成根路径 `/xxx` 会直接报错，项目站必 404）；
 3. 内联 `<script>` 与 `assets/js/` 下脚本的语法；
 4. CSS 大括号是否配对。
 
 - 本地：`push` 前跑一遍，出错会打印具体文件和行。
-- CI：`.github/workflows/check.yml` 在 `push` / PR 时自动跑同样的脚本（见页面顶部的徽标）。
+- CI：`.github/workflows/check.yml` 在 `push` / PR 时自动跑同一份脚本（见顶部徽标）。
 - 部署：推到 `main` 后 GitHub Pages 自动构建，**30~60 秒**生效；改动没上线先等等再排查。
 
 ## 声明
