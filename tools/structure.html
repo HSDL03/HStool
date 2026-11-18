@@ -461,9 +461,17 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
         <label class="fld"><span>文字（中文 / 英文 / 数字，可换行）</span>
           <textarea id="txtIn" rows="3" spellcheck="false" placeholder="红石&#10;HStool">红石</textarea>
         </label>
-        <div class="grid2">
-          <label class="fld"><span>字高（方块）</span><input type="number" id="txtH" value="20" min="4" max="96"></label>
-          <label class="fld"><span>厚度（层）</span><input type="number" id="txtD" value="1" min="1" max="16"></label>
+        <div class="grid3">
+          <label class="fld"><span>字高</span><input type="number" id="txtH" value="20" min="4" max="96" title="字的方块高度"></label>
+          <label class="fld"><span>厚度</span><input type="number" id="txtD" value="1" min="1" max="16" title="Z 方向层数"></label>
+          <label class="fld"><span>精细度</span>
+            <select id="txtQ" title="每个方块采样多少像素，越高笔画越准">
+              <option value="2">2×</option>
+              <option value="4" selected>4×</option>
+              <option value="6">6×</option>
+              <option value="8">8×</option>
+            </select>
+          </label>
         </div>
         <label class="fld"><span>方块</span>
           <select id="txtBlock">
@@ -721,7 +729,8 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
       moved += Math.abs(dx) + Math.abs(dy);
       var rot = (btn === 2) || (btn === 0 && mode === 'orbit');
       if (rot) {
-        cam.yaw += dx * 0.008;
+        // 反着转会很别扭：往右拖时物体应跟着往右转，所以相机朝反方向绕（同 OrbitControls）
+        cam.yaw -= dx * 0.008;
         cam.pitch = Math.max(-1.35, Math.min(1.45, cam.pitch + dy * 0.008));
       } else if (btn === 1) {
         panCam(dx, dy);
@@ -1396,8 +1405,8 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
      思路和网页上的「像素字」一样：先把文字画到 canvas，再按 4×4 采样转成方块。
      中文走系统字体（Windows 微软雅黑 / macOS 苹方 / Linux Noto），笔画该连的连、
      该断的断；粗体保证小字号下不会细到没像素。 */
-  function textToStruct(text, cap, thick, blockId) {
-    var K = 4;                                     // 每个方块 = 4×4 画布像素（超采样后阈值化）
+  function textToStruct(text, cap, thick, blockId, quality) {
+    var K = Math.max(2, Math.min(8, quality | 0)) || 4;   // 每个方块采样 K×K 个画布像素
     var fontPx = Math.max(4, Math.min(96, cap | 0)) * K;
     var lines = String(text).replace(/\r/g, '').split('\n');
     var font = '700 ' + fontPx + 'px "Microsoft YaHei","PingFang SC","Hiragino Sans GB","Noto Sans SC","Source Han Sans SC",sans-serif';
@@ -1408,6 +1417,15 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     var lineH = Math.round(fontPx * 1.3);
     cv.width = Math.ceil(wMax) + fontPx;
     cv.height = lineH * lines.length + fontPx;
+    // 画布有上限（太宽会直接失败），面积超了就等比降精细度
+    var MAXPIX = 22e6, K0 = K;
+    while (cv.width * cv.height > MAXPIX && K > 2) {
+      K -= 1;
+      fontPx = Math.max(4, Math.min(96, cap | 0)) * K;
+      lineH = Math.round(fontPx * 1.3);
+      cv.width = Math.ceil(wMax * K / K0) + fontPx;   // 字号同步缩了，宽度按比例收
+      cv.height = lineH * lines.length + fontPx;
+    }
     cx = cv.getContext('2d');                      // 改尺寸会重置上下文，重新取
     cx.font = font; cx.textBaseline = 'top'; cx.fillStyle = '#fff';
     for (var j = 0; j < lines.length; j++) cx.fillText(lines[j], fontPx / 2, fontPx / 2 + lineH * j);
@@ -1445,7 +1463,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     var id = pick === '__brush' ? curBlock : BY_NAME[pick];
     if (!id) id = BY_NAME.stone || 1;
     if (!id) { toast('没找到这个方块，去方块库选一个吧', 'err'); return null; }
-    var res = textToStruct(txt, +$('#txtH').value || 20, +$('#txtD').value || 1, id);
+    var res = textToStruct(txt, +$('#txtH').value || 20, +$('#txtD').value || 1, id, +$('#txtQ').value || 4);
     if (!res) { toast('这段文字画不出内容（全是空白？）', 'err'); return null; }
     applyStruct(res);
     $('#docName').textContent = '文字：' + txt.split('\n')[0].slice(0, 16);
