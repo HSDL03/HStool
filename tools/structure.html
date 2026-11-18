@@ -305,6 +305,116 @@ input[type=range]{accent-color:var(--ac);background:transparent}
 
 .hidden{display:none!important}
 
+/* ── 地图画工作台 ──────────────────────────────────────────────── */
+.ms{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;background:var(--bg)}
+.ms.on{display:flex}
+.ms-top{
+  flex:none;height:var(--top);display:flex;align-items:center;gap:10px;padding:0 12px;
+  background:var(--panel);border-bottom:1px solid var(--line);
+}
+.ms-top b{font-size:13px;font-weight:700}
+.ms-sub{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.ms-body{
+  flex:1;min-height:0;overflow:auto;width:100%;max-width:1180px;margin:0 auto;
+  padding:16px;display:flex;flex-direction:column;gap:12px;
+}
+.ms-body::-webkit-scrollbar{width:9px}
+.ms-body::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px}
+.ms-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.ms-card>header{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.ms-card h3{margin:0;font-size:12px;font-weight:700;letter-spacing:.04em}
+.ms-cnt{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.ms-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.ms-tabs button{height:30px;padding:0 12px;font-size:12px;font-weight:600;color:var(--dim);border-bottom:2px solid transparent;margin-bottom:-1px}
+.ms-tabs button:hover{color:var(--ink)}
+.ms-tabs button.on{color:var(--ac);border-bottom-color:var(--ac)}
+.ms-drop{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:150px;
+  border:1px dashed var(--line-hi);border-radius:7px;background:var(--sunk);cursor:pointer;
+  text-align:center;transition:border-color .14s var(--ease),background .14s var(--ease);
+}
+.ms-drop:hover,.ms-drop.over{border-color:var(--ac);background:var(--ac-s)}
+.ms-drop svg{width:22px;height:22px;stroke:var(--faint);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ms-drop.over svg{stroke:var(--ac)}
+.ms-drop b{font-size:12.5px;font-weight:600;color:var(--ink)}
+.ms-drop span{font-size:11px;color:var(--faint)}
+.ms-row{
+  display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:6px;
+  background:var(--sunk);border:1px solid var(--line);
+}
+.ms-cur{font-size:11.5px;color:var(--dim)}
+.ms-cur b{color:var(--ink);font-weight:600}
+.ms-url{display:flex;gap:6px;margin-top:10px}
+.ms-url input{
+  flex:1;min-width:0;height:30px;padding:0 9px;border:1px solid var(--line);border-radius:5px;
+  background:var(--sunk);font-size:11.5px;color:var(--ink);
+}
+.ms-tools{display:flex;align-items:center;gap:8px}
+.ms-tools .sp{flex:1}
+.ms-tools .seg button{flex:none;height:28px;padding:0 11px;font-size:11.5px;white-space:nowrap}
+.ms-cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ms-fig{
+  position:relative;margin:0;display:flex;align-items:center;justify-content:center;
+  min-height:330px;padding:28px 12px 12px;border:1px solid var(--line);border-radius:8px;overflow:auto;
+  background:repeating-conic-gradient(#151a10 0 25%,#10140c 0 50%) 0 0/18px 18px;
+}
+.ms-fig figcaption{
+  position:absolute;left:10px;top:8px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.04em;color:var(--faint);pointer-events:none;
+}
+.ms-fig canvas{display:block;image-rendering:pixelated;border-radius:2px;box-shadow:0 0 0 1px rgba(168,221,79,.18),0 10px 26px rgba(0,0,0,.55)}
+.ms-ph{
+  position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  text-align:center;font-size:11.5px;color:var(--faint);padding:0 16px;line-height:1.8;
+}
+.ms-meta{display:flex;flex-wrap:wrap;gap:0 14px;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.ms-meta b{color:var(--dim);font-weight:600}
+.ms-meta span:not(:last-child)::after{content:/·/;padding-left:13px;color:var(--line-hi)}
+.ms-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.ms-check{display:flex;align-items:center;gap:7px;margin:-4px 0 10px;font-size:11.5px;color:var(--dim);cursor:pointer}
+.ms-check input{width:14px;height:14px;accent-color:var(--ac)}
+.ms-presets{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.ms-presets button{
+  height:24px;padding:0 9px;border-radius:12px;font-size:11px;font-weight:600;
+  color:var(--dim);border:1px solid var(--line);background:var(--panel2);
+}
+.ms-presets button:hover{color:var(--ink);border-color:var(--line-hi)}
+.ms-presets button.on{color:var(--ac);border-color:var(--ac);background:var(--ac-s)}
+.ms-swatches{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:4px;
+  max-height:300px;overflow:auto;padding-right:2px;
+}
+.ms-swatches::-webkit-scrollbar{width:8px}
+.ms-swatches::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:4px}
+.ms-sw{
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px 4px;
+  border-radius:5px;border:1px solid transparent;background:var(--sunk);
+  opacity:.32;transition:opacity .12s,border-color .12s;
+}
+.ms-sw:hover{border-color:var(--line-hi)}
+.ms-sw.on{opacity:1;border-color:var(--line);background:var(--panel2)}
+.ms-sw img{width:22px;height:22px;object-fit:contain}
+.ms-sw span{
+  font-size:9px;line-height:1.25;color:var(--faint);text-align:center;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ms-sw.on span{color:var(--dim)}
+.ms-foot{
+  flex:none;display:flex;align-items:center;gap:8px;padding:9px 14px;
+  background:var(--panel);border-top:1px solid var(--line-hi);
+}
+.ms-foot .sp{flex:1}
+.ms-foot>span{font-family:var(--mono);font-size:10.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ms-foot .bt{height:32px;padding:0 14px}
+@media (max-width:820px){
+  .ms-body{padding:10px}
+  .ms-cmp{grid-template-columns:1fr}
+  .ms-cols{grid-template-columns:1fr}
+  .ms-fig{min-height:230px}
+  .ms-foot>span{display:none}
+  .ms-tools .seg button{padding:0 8px}
+}
+
 @media (max-width:820px){
   :root{--dh:210px}
   .brand span{display:none}
@@ -440,71 +550,9 @@ input[type=range]{accent-color:var(--ac);background:transparent}
 
     <div class="dbody" data-pane="icon">
       <div>
-        <label class="fld"><span>来源</span>
-          <select id="miSrc">
-            <option value="block">方块 / 物品的图标</option>
-            <option value="image">图片（地址或本地文件）</option>
-          </select>
-        </label>
-        <div id="miBlockBox">
-          <p class="pcount" style="margin:0 0 8px">当前：<b id="icName">未选方块</b></p>
-          <button class="bt" id="icPick" style="width:100%;height:30px;justify-content:center">去方块库选一个</button>
-        </div>
-        <div id="miImageBox" class="hidden">
-          <input type="text" id="icUrl" placeholder="右键图标 → 复制图片地址" style="margin-bottom:8px">
-          <div class="grid2">
-            <button class="bt" id="btnImgUrl" style="justify-content:center;height:30px">用地址</button>
-            <button class="bt" id="btnImgFile" style="justify-content:center;height:30px">本地图片</button>
-          </div>
-          <button class="bt" id="btnMcmod" style="width:100%;height:28px;justify-content:center;margin-top:8px">去 MC 百科搜这个方块…</button>
-          <input type="file" id="icFileIn" accept="image/*" class="hidden">
-        </div>
-      </div>
-
-      <div>
-        <div class="grid2">
-          <label class="fld"><span>宽（方块）</span><input type="number" id="miW" value="64" min="4" max="256"></label>
-          <label class="fld"><span>高（方块）</span><input type="number" id="miH" value="64" min="4" max="256"></label>
-        </div>
-        <label class="fld" style="display:flex;align-items:center;gap:7px;margin-top:-4px">
-          <input type="checkbox" id="miLock" checked style="width:14px;height:14px">
-          <span style="margin:0;font-size:11.5px;letter-spacing:0;text-transform:none">锁定比例（按图片比例算高）</span>
-        </label>
-        <label class="fld"><span>方向</span>
-          <div class="seg" id="miOrient">
-            <button data-v="wall" class="on">立放（墙）</button>
-            <button data-v="flat">平铺（地面）</button>
-          </div>
-        </label>
-        <label class="fld"><span>厚度（层）</span><input type="number" id="miD" value="1" min="1" max="8"></label>
-      </div>
-
-      <div>
-        <label class="fld"><span>配料（用哪些方块还原颜色）</span>
-          <select id="miPal">
-            <option value="concrete">混凝土 16 色</option>
-            <option value="wool">羊毛 16 色</option>
-            <option value="full" selected>综合调色板（约 70 种）</option>
-            <option value="mono">单色（画笔方块）</option>
-          </select>
-        </label>
-        <label class="fld"><span>抖动算法</span>
-          <select id="miDither">
-            <option value="none">不抖动（色块最干净）</option>
-            <option value="bayer4" selected>有序 4×4（Bayer）</option>
-            <option value="bayer8">有序 8×8（Bayer）</option>
-            <option value="fs">误差扩散（Floyd–Steinberg）</option>
-            <option value="atkinson">误差扩散（Atkinson，网点感）</option>
-            <option value="sierra">误差扩散（Sierra Lite）</option>
-            <option value="random">随机噪点</option>
-          </select>
-        </label>
-        <label class="fld"><span>抖动强度 <b id="miAmtLab">70%</b></span>
-          <input type="range" id="miAmt" min="0" max="100" value="70" style="width:100%;height:20px">
-        </label>
-        <button class="bt pri" id="btnIcon" style="width:100%;height:34px;justify-content:center">生成地图画</button>
-        <button class="bt" id="btnIconDl" style="width:100%;height:32px;justify-content:center;margin-top:8px">生成并下载 .mcstructure</button>
-        <p class="hintline" style="margin-top:4px">立放 = 一面墙（XY 平面）；平铺 = 铺在地上（XZ 平面）。抖动强度越大越接近原图细节，但方块颜色会更「麻」。</p>
+        <p class="hintline" style="margin:0 0 10px">图片、方块图标、像素图都能转。点下面进工作台：左边原图、右边结果，参数和可用方块都在同一页。</p>
+        <button class="bt pri" id="msOpen" style="width:100%;height:34px;justify-content:center">打开地图画工作台</button>
+        <p class="hintline" style="margin-top:8px">并排对照 · 勾选可用方块 · 7 种抖动 · 立放/平铺 · 直接放进编辑器或存成 .mcstructure</p>
       </div>
     </div>
 
@@ -584,6 +632,129 @@ input[type=range]{accent-color:var(--ac);background:transparent}
 
 
 <div id="toast" role="status"></div>
+
+<!-- ═════════ 地图画工作台 ═════════
+     版式参考 mcpixelart：素材卡 → 对照预览 → 参数 / 可用方块 → 底部操作条 -->
+<div id="mapStudio" class="ms" role="dialog" aria-label="地图画工作台" aria-hidden="true">
+  <div class="ms-top">
+    <b>地图画工作台</b>
+    <span class="ms-sub">原版贴图配色 · 全程本地</span>
+    <span class="sp"></span>
+    <button class="bt" id="msClose">关闭</button>
+  </div>
+
+  <div class="ms-body">
+    <section class="ms-card">
+      <header><h3>素材</h3></header>
+      <div class="ms-tabs" id="msTabs">
+        <button data-k="image" class="on">上传图片</button>
+        <button data-k="block">方块图标</button>
+      </div>
+      <div class="ms-drop" id="msDrop" tabindex="0" role="button" aria-label="选择或拖拽图片">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        <b>选择或拖拽图片到此处</b>
+        <span>PNG / JPG / WebP，动图取第一帧，最大 30 MB</span>
+        <input type="file" id="icFileIn" accept="image/*" class="hidden">
+      </div>
+      <div class="ms-row hidden" id="msBlockBox">
+        <span class="ms-cur">当前方块：<b id="icName">未选方块</b></span>
+        <span class="sp"></span>
+        <button class="bt" id="icPick">去方块库选</button>
+        <button class="bt ghost" id="btnMcmod" title="去 MC 百科搜这个方块">MC 百科</button>
+      </div>
+      <div class="ms-url">
+        <input type="text" id="icUrl" placeholder="或粘贴图片地址（右键图标 → 复制图片地址）">
+        <button class="bt" id="btnImgUrl">用地址</button>
+      </div>
+    </section>
+
+    <div class="ms-tools">
+      <div class="seg" id="msView" role="group" aria-label="对照方式">
+        <button data-v="side" class="on">并排</button>
+        <button data-v="res">只看结果</button>
+      </div>
+      <span class="sp"></span>
+      <div class="seg" id="msZoom" role="group" aria-label="缩放">
+        <button data-z="fit" class="on">适应</button>
+        <button data-z="1">1×</button>
+        <button data-z="2">2×</button>
+        <button data-z="4">4×</button>
+      </div>
+    </div>
+
+    <div class="ms-cmp" id="msCmp">
+      <figure class="ms-fig" id="msFigSrc">
+        <canvas id="msSrc"></canvas>
+        <figcaption>原图</figcaption>
+      </figure>
+      <figure class="ms-fig" id="msFigRes">
+        <canvas id="msRes"></canvas>
+        <figcaption>生成预览</figcaption>
+        <div class="ms-ph" id="msPh">先选素材，再点「生成预览」</div>
+      </figure>
+    </div>
+    <div class="ms-meta" id="msMeta"></div>
+
+    <div class="ms-cols">
+      <section class="ms-card">
+        <header><h3>生成参数</h3></header>
+        <div class="grid2">
+          <label class="fld"><span>宽（方块）</span><input type="number" id="miW" value="64" min="4" max="256"></label>
+          <label class="fld"><span>高（方块）</span><input type="number" id="miH" value="64" min="4" max="256"></label>
+        </div>
+        <label class="ms-check"><input type="checkbox" id="miLock" checked> 锁定比例（按素材比例算高）</label>
+        <label class="fld"><span>朝向</span>
+          <div class="seg" id="miOrient">
+            <button data-v="wall" class="on">立放（墙）</button>
+            <button data-v="flat">平铺（地）</button>
+          </div>
+        </label>
+        <div class="grid2">
+          <label class="fld"><span>厚度（层）</span><input type="number" id="miD" value="1" min="1" max="8"></label>
+          <label class="fld"><span>抖动强度 <b id="miAmtLab">70%</b></span>
+            <input type="range" id="miAmt" min="0" max="100" value="70">
+          </label>
+        </div>
+        <label class="fld"><span>抖动算法</span>
+          <select id="miDither">
+            <option value="none">不抖动（色块最干净）</option>
+            <option value="bayer4" selected>有序 4×4（Bayer）</option>
+            <option value="bayer8">有序 8×8（Bayer）</option>
+            <option value="fs">误差扩散（Floyd–Steinberg）</option>
+            <option value="atkinson">误差扩散（Atkinson，网点感）</option>
+            <option value="sierra">误差扩散（Sierra Lite）</option>
+            <option value="random">随机噪点</option>
+          </select>
+        </label>
+        <p class="hintline" style="margin-top:-2px">立放 = 一面墙（XY 平面）；平铺 = 铺在地上（XZ 平面）。</p>
+      </section>
+
+      <section class="ms-card">
+        <header><h3>可用方块</h3><span class="ms-cnt" id="msPalCnt">已选 0 种</span></header>
+        <p class="hintline" style="margin-top:0">点方块可开关。能用的越少，颜色越统一、越好凑材料。</p>
+        <div class="ms-presets" id="msPresets">
+          <button data-p="concrete">混凝土</button>
+          <button data-p="wool">羊毛</button>
+          <button data-p="stone">石材</button>
+          <button data-p="wood">木头</button>
+          <button data-p="metal">金属矿物</button>
+          <button data-p="full" class="on">综合</button>
+          <button data-p="none">全不选</button>
+          <button data-p="all">全选</button>
+        </div>
+        <div class="ms-swatches" id="msSwatches"></div>
+      </section>
+    </div>
+  </div>
+
+  <footer class="ms-foot">
+    <span id="msState">还没生成</span>
+    <span class="sp"></span>
+    <button class="bt" id="btnIcon">生成预览</button>
+    <button class="bt" id="btnIconDl">下载 .mcstructure</button>
+    <button class="bt pri" id="msApply">放进编辑器</button>
+  </footer>
+</div>
 
 <script src="../assets/vendor/three.min.js"></script>
 <script src="../assets/mc-items-data.js"></script>
@@ -1490,59 +1661,220 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   openDrawer('file');
   function updateIconName() {
     var b = curBlock ? BLOCKS[curBlock] : null;
-    $('#icName').textContent = b ? (b.n + ' · ' + b.e) : '未选方块';
+    var t = $('#icName');
+    if (t) t.textContent = b ? (b.n + ' · ' + b.e) : '未选方块';
   }
-  $('#icPick').addEventListener('click', function () { openDrawer('picker'); });
-  var miImage = null;
-  $('#miSrc').addEventListener('change', function () {
-    var img = $('#miSrc').value === 'image';
-    $('#miBlockBox').classList.toggle('hidden', img);
-    $('#miImageBox').classList.toggle('hidden', !img);
+  var pickFromStudio = false;
+  $('#icPick').addEventListener('click', function () {
+    pickFromStudio = msEl.classList.contains('on');
+    if (pickFromStudio) closeStudio();
+    openDrawer('picker');
   });
-  $('#miOrient').addEventListener('click', function (e) {
+
+  /* ═════════════════ 地图画工作台 ═════════════════
+     版式参考 mcpixelart：素材 → 并排对照预览 → 参数 / 可用方块 → 底部操作条。
+     生成只是出预览，点「放进编辑器」才真正替换掉当前结构。 */
+  var mapSrcKind = 'image', mapImage = null, mapLast = null, mapZoom = 'fit', mapView = 'side';
+  var msEl = $('#mapStudio');
+  function openStudio() {
+    msEl.classList.add('on');
+    msEl.setAttribute('aria-hidden', 'false');
+    renderSwatches();
+    updateIconName();
+    paintZoom();
+  }
+  function closeStudio() {
+    msEl.classList.remove('on');
+    msEl.setAttribute('aria-hidden', 'true');
+  }
+  $('#msOpen').addEventListener('click', openStudio);
+  $('#msClose').addEventListener('click', closeStudio);
+  d.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && msEl.classList.contains('on')) { closeStudio(); e.stopPropagation(); }
+  }, true);
+
+  function setSrcKind(k) {
+    mapSrcKind = k;
+    $$('#msTabs button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-k') === k); });
+    $('#msBlockBox').classList.toggle('hidden', k !== 'block');
+    $('#msDrop').classList.toggle('hidden', k !== 'image');
+    $('#icUrl').parentNode.classList.toggle('hidden', k !== 'image');
+    if (k === 'block') { setAspect(1); $('#msPh').textContent = '点「生成预览」把当前方块渲染成地图画'; }
+    else $('#msPh').textContent = '先选素材，再点「生成预览」';
+  }
+  $('#msTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-k]');
+    if (b) setSrcKind(b.getAttribute('data-k'));
+  });
+
+  /* 素材：点击 / 拖拽 */
+  var dropEl = $('#msDrop');
+  dropEl.addEventListener('click', function () { $('#icFileIn').click(); });
+  dropEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#icFileIn').click(); }
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dropEl.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); dropEl.classList.add('over'); });
+  });
+  ['dragleave', 'dragend'].forEach(function (ev) {
+    dropEl.addEventListener(ev, function () { dropEl.classList.remove('over'); });
+  });
+  dropEl.addEventListener('drop', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    dropEl.classList.remove('over');
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadMapFile(f);
+  });
+
+  var miOrientEvt = $('#miOrient');
+  miOrientEvt.addEventListener('click', function (e) {
     var b = e.target.closest('button[data-v]');
     if (!b) return;
     miOrient = b.getAttribute('data-v');
     $$('#miOrient button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    refreshMap();
   });
-  $('#miAmt').addEventListener('input', function () { $('#miAmtLab').textContent = $('#miAmt').value + '%'; });
-  $('#miW').addEventListener('input', function () { if ($('#miLock').checked) syncAspect(); });
-  $('#miLock').addEventListener('change', function () { if ($('#miLock').checked) syncAspect(); });
-  function runMapSource(download) {
-    if ($('#miSrc').value === 'image') {
-      if (!miImage) return toast('先选一张图片（地址或本地文件）', 'err');
-      renderMap(miImage, download);
-    } else genFromBlock(download);
-  }
-  $('#btnIcon').addEventListener('click', function () { runMapSource(false); });
-  $('#btnIconDl').addEventListener('click', function () { runMapSource(true); });
+  $('#miAmt').addEventListener('input', function () {
+    $('#miAmtLab').textContent = $('#miAmt').value + '%';
+    refreshMap();
+  });
+  $('#miDither').addEventListener('change', refreshMap);
+  $('#miD').addEventListener('input', refreshMapSoon);
+  $('#miW').addEventListener('input', function () { if ($('#miLock').checked) syncAspect(); refreshMapSoon(); });
+  $('#miLock').addEventListener('change', function () { if ($('#miLock').checked) syncAspect(); refreshMapSoon(); });
+  $('#miH').addEventListener('input', refreshMapSoon);
+
+  /* 对照方式 / 缩放 */
+  $('#msView').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    mapView = b.getAttribute('data-v');
+    $$('#msView button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    $('#msFigSrc').classList.toggle('hidden', mapView === 'res');
+    $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
+    paintZoom();
+  });
+  $('#msZoom').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-z]');
+    if (!b) return;
+    mapZoom = b.getAttribute('data-z');
+    $$('#msZoom button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    paintZoom();
+  });
+  w.addEventListener('resize', function () { if (mapZoom === 'fit') paintZoom(); });
+
   function useImage(im) {
-    miImage = im;
+    mapImage = im;
     var r = (im.naturalWidth || im.width) / (im.naturalHeight || im.height);
     setAspect(r);
-    renderMap(im, false);
+    drawSource();
+    doPreview(false);
+  }
+  function loadMapFile(f) {
+    if (!/^image\//.test(f.type) && !/\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name)) {
+      toast('这不是图片文件', 'err'); return;
+    }
+    var url = URL.createObjectURL(f);
+    toast('正在读图…');
+    loadImageAny(url).then(function (im) {
+      setSrcKind('image');
+      useImage(im);
+      $('#msDrop').querySelector('b').textContent = f.name.length > 28 ? f.name.slice(0, 26) + '…' : f.name;
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    }).catch(function (er) { toast(er.message, 'err'); });
   }
   $('#btnImgUrl').addEventListener('click', function () {
     var u = $('#icUrl').value.trim();
     if (!u) return toast('先粘一个图片地址', 'err');
     toast('正在取图…');
-    loadImageAny(u).then(useImage).catch(function (e) { toast(e.message, 'err'); });
+    loadImageAny(u).then(function (im) { setSrcKind('image'); useImage(im); })
+      .catch(function (e) { toast(e.message, 'err'); });
   });
-  $('#btnImgFile').addEventListener('click', function () { $('#icFileIn').click(); });
   $('#icFileIn').addEventListener('change', function (e) {
     var f = e.target.files && e.target.files[0];
-    if (!f) return;
-    var url = URL.createObjectURL(f);
-    loadImageAny(url).then(function (im) {
-      useImage(im);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-    }).catch(function (er) { toast(er.message, 'err'); });
+    if (f) loadMapFile(f);
     e.target.value = '';
   });
   $('#btnMcmod').addEventListener('click', function () {
     var b = curBlock ? BLOCKS[curBlock] : null;
     w.open('https://www.mcmod.cn/s?key=' + encodeURIComponent(b ? b.n : ''), '_blank', 'noopener');
   });
+
+  /* 原图面板 */
+  function drawSource() {
+    var cv = $('#msSrc');
+    if (!mapImage) { cv.width = cv.height = 0; return; }
+    var iw = mapImage.naturalWidth || mapImage.width;
+    var ih = mapImage.naturalHeight || mapImage.height;
+    var cap = 512, s = Math.min(1, cap / Math.max(iw, ih));
+    cv.width = Math.max(1, Math.round(iw * s));
+    cv.height = Math.max(1, Math.round(ih * s));
+    var cx = cv.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    cx.clearRect(0, 0, cv.width, cv.height);
+    cx.drawImage(mapImage, 0, 0, cv.width, cv.height);
+    paintZoom();
+  }
+  /* 缩放只改 CSS 尺寸，1 格 = 1 px 的位图不重绘，永远像素干净 */
+  function paintZoom() {
+    var figs = $$('.ms-fig canvas');
+    figs.forEach(function (cv) {
+      if (!cv.width) { cv.style.width = ''; cv.style.height = ''; return; }
+      if (mapZoom === 'fit') {
+        var box = cv.parentNode.clientWidth - 28;
+        var maxW = Math.max(40, box);
+        var sc = Math.min(maxW / cv.width, (cv.parentNode.clientHeight - 44) / cv.height, 12);
+        sc = Math.max(sc, 0.5);
+        cv.style.width = Math.round(cv.width * sc) + 'px';
+        cv.style.height = Math.round(cv.height * sc) + 'px';
+      } else {
+        var z = +mapZoom;
+        cv.style.width = cv.width * z + 'px';
+        cv.style.height = cv.height * z + 'px';
+      }
+    });
+  }
+  /* 结果预览：1 格 = 1 像素直接写进 canvas；透明格留棋盘底 */
+  function paintResult(idx, W, H, pal) {
+    var cv = $('#msRes');
+    cv.width = W; cv.height = H;
+    var cx = cv.getContext('2d');
+    var img = cx.createImageData(W, H), p = img.data;
+    for (var i = 0; i < W * H; i++) {
+      var k = idx[i];
+      if (k < 0 || !pal[k] || !pal[k].c) { p[i * 4 + 3] = 0; continue; }
+      var c = pal[k].c;
+      p[i * 4] = c[0]; p[i * 4 + 1] = c[1]; p[i * 4 + 2] = c[2]; p[i * 4 + 3] = 255;
+    }
+    cx.putImageData(img, 0, 0);
+    $('#msPh').classList.add('hidden');
+    paintZoom();
+  }
+  function refreshMap() {
+    if (mapSrcKind === 'block' && !curBlock) return;
+    if (mapLast || mapSrcKind === 'block') doPreview(false);
+  }
+  var mapTimer = 0;
+  function refreshMapSoon() { clearTimeout(mapTimer); mapTimer = setTimeout(refreshMap, 180); }
+  function runMapSource(download) {
+    if (mapSrcKind === 'image') {
+      if (!mapImage) { toast('先选一张图片（拖进来或粘地址）', 'err'); return; }
+      return renderMap(mapImage, download);
+    }
+    genFromBlock(download);
+  }
+  function doPreview(download) { runMapSource(download); }
+  $('#btnIcon').addEventListener('click', function () { doPreview(false); });
+  $('#btnIconDl').addEventListener('click', function () { doPreview(true); });
+  $('#msApply').addEventListener('click', applyMap);
+  function applyMap() {
+    if (!mapLast) { toast('先点「生成预览」', 'err'); return; }
+    var o = mapLast.opts;
+    applyStruct(mapLast.res);
+    $('#docName').textContent = '地图画 ' + o.W + '×' + o.H + (o.orient === 'flat' ? ' · 平铺' : ' · 立放');
+    closeStudio();
+    toast('已放进编辑器 · ' + countBlocks() + ' 个方块', 'ok');
+  }
 
   /* ═════════════════ 地图画（Map Art）═════════════════
      流程：来源图（方块图标 / 外部图片）→ 缩放到 W×H → 抖动量化到方块调色板 →
@@ -1634,24 +1966,34 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   }
   var DYE = ['white', 'light_gray', 'gray', 'black', 'brown', 'red', 'orange', 'yellow',
     'lime', 'green', 'cyan', 'light_blue', 'blue', 'purple', 'magenta', 'pink'];
-  var PAL_SETS = {
+  /* 可当「颜料」的方块，按材料分组。用户在「可用方块」里逐个开关。 */
+  var PAL_GROUPS = {
     concrete: DYE.map(function (c) { return c + '_concrete'; }),
     wool: DYE.map(function (c) { return c + '_wool'; }),
-    full: DYE.map(function (c) { return c + '_concrete'; }).concat(
-      DYE.map(function (c) { return c + '_wool'; }),
-      ['stone', 'smooth_stone', 'stone_bricks', 'cobblestone', 'deepslate', 'tuff',
-        'dirt', 'grass_block', 'sand', 'sandstone', 'gravel', 'clay',
-        'oak_planks', 'spruce_planks', 'birch_planks', 'dark_oak_planks',
-        'gold_block', 'iron_block', 'copper_block', 'emerald_block', 'diamond_block',
-        'netherite_block', 'glowstone', 'sea_lantern', 'obsidian', 'bedrock',
-        'bricks', 'netherrack', 'soul_sand', 'prismarine', 'ice', 'snow_block',
-        'redstone_block', 'lapis_block', 'amethyst_block', 'moss_block',
-        'terracotta', 'black_terracotta', 'white_terracotta', 'orange_terracotta',
-        'red_terracotta', 'brown_terracotta', 'nether_bricks', 'end_stone']
-    )
+    stone: ['stone', 'smooth_stone', 'stone_bricks', 'mossy_stone_bricks', 'cobblestone',
+      'mossy_cobblestone', 'deepslate', 'polished_deepslate', 'deepslate_bricks', 'tuff',
+      'andesite', 'diorite', 'granite', 'blackstone', 'basalt', 'calcite',
+      'dripstone_block', 'bricks', 'nether_bricks', 'end_stone', 'obsidian', 'bedrock',
+      'prismarine', 'prismarine_bricks', 'dark_prismarine', 'sandstone', 'smooth_sandstone',
+      'red_sandstone', 'soul_sand', 'soul_soil', 'gravel', 'clay', 'dirt', 'coarse_dirt',
+      'moss_block', 'snow_block', 'ice', 'packed_ice', 'blue_ice'],
+    wood: ['oak_planks', 'spruce_planks', 'birch_planks', 'jungle_planks', 'acacia_planks',
+      'dark_oak_planks', 'mangrove_planks', 'cherry_planks', 'bamboo_planks',
+      'crimson_planks', 'warped_planks', 'oak_log', 'spruce_log', 'birch_log',
+      'dark_oak_log', 'stripped_oak_log', 'stripped_spruce_log', 'stripped_birch_log',
+      'stripped_dark_oak_log'],
+    metal: ['gold_block', 'iron_block', 'copper_block', 'exposed_copper', 'weathered_copper',
+      'oxidized_copper', 'emerald_block', 'diamond_block', 'netherite_block', 'lapis_block',
+      'redstone_block', 'coal_block', 'quartz_block', 'smooth_quartz', 'amethyst_block',
+      'glowstone', 'sea_lantern', 'shroomlight', 'raw_iron_block', 'raw_copper_block',
+      'raw_gold_block']
   };
-  function buildPalette(mode, brushId) {
-    var names = mode === 'mono' ? [] : (PAL_SETS[mode] || PAL_SETS.full);
+  PAL_GROUPS.full = PAL_GROUPS.concrete.concat(PAL_GROUPS.wool, PAL_GROUPS.stone,
+    PAL_GROUPS.wood, PAL_GROUPS.metal);
+
+  /* 英文名 → id，过滤掉本页没有的方块，去重 */
+  function paletteIds(setName) {
+    var names = PAL_GROUPS[setName] || PAL_GROUPS.full;
     var ids = [], seen = {};
     names.forEach(function (n) {
       var id = BY_NAME[n];
@@ -1659,6 +2001,18 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       if (kindOf(id) === 'none') return;
       seen[id] = 1; ids.push(id);
     });
+    return ids;
+  }
+  var ALL_PAL = paletteIds('full');
+  var mapSel = {};
+  ALL_PAL.forEach(function (id) { mapSel[id] = 1; });
+
+  function buildPalette(mode, brushId) {
+    var ids;
+    if (mode === 'mono') ids = [];
+    else if (mode === 'custom') {
+      ids = ALL_PAL.filter(function (id) { return mapSel[id]; });
+    } else ids = paletteIds(mode);
     if (mode === 'mono' || !ids.length) {
       var bid = brushId || BY_NAME.white_concrete || BY_NAME.stone;
       return Promise.resolve([{ id: bid, c: null, lab: null }]);
@@ -1680,6 +2034,57 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       return out;
     });
   }
+
+  /* 「可用方块」色板：点一下开关一种方块 */
+  var swatchesBuilt = false;
+  function renderSwatches() {
+    if (swatchesBuilt) { syncSwatchState(); return; }
+    var box = $('#msSwatches'), html = '';
+    ALL_PAL.forEach(function (id) {
+      var b = BLOCKS[id];
+      if (!b) return;
+      var u = tileURL(b.s || b.t) || tileURL(b.t);
+      html += '<button class="ms-sw' + (mapSel[id] ? ' on' : '') + '" data-id="' + id +
+        '" title="' + esc(b.n + ' · ' + b.e) + '">' +
+        (u ? '<img alt="" src="' + u + '" loading="lazy">' : '') +
+        '<span>' + esc(b.n) + '</span></button>';
+    });
+    box.innerHTML = html;
+    swatchesBuilt = true;
+    countSel();
+  }
+  function syncSwatchState() {
+    $$('#msSwatches .ms-sw').forEach(function (el) {
+      el.classList.toggle('on', !!mapSel[+el.getAttribute('data-id')]);
+    });
+    countSel();
+  }
+  function countSel() {
+    var n = ALL_PAL.filter(function (id) { return mapSel[id]; }).length;
+    $('#msPalCnt').textContent = '已选 ' + n + ' 种';
+    $('#msPalCnt').style.color = n ? '' : 'var(--dgr)';
+    return n;
+  }
+  $('#msSwatches').addEventListener('click', function (e) {
+    var el = e.target.closest('.ms-sw');
+    if (!el) return;
+    var id = +el.getAttribute('data-id');
+    if (mapSel[id]) delete mapSel[id]; else mapSel[id] = 1;
+    el.classList.toggle('on');
+    countSel();
+    refreshMap();
+  });
+  $('#msPresets').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-p]');
+    if (!b) return;
+    var p = b.getAttribute('data-p');
+    if (p === 'none') mapSel = {};
+    else if (p === 'all') paletteIds('full').forEach(function (id) { mapSel[id] = 1; });
+    else { mapSel = {}; paletteIds(p).forEach(function (id) { mapSel[id] = 1; }); }
+    $$('#msPresets button').forEach(function (x) { x.classList.toggle('on', x === b && p !== 'none' && p !== 'all'); });
+    syncSwatchState();
+    refreshMap();
+  });
 
   /* ── 抖动矩阵 / 误差扩散 ── */
   function bayer(n) {
@@ -1834,50 +2239,91 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     return {
       W: W, H: H,
       thick: Math.max(1, Math.min(8, +$('#miD').value || 1)),
-      pal: $('#miPal').value,
       algo: $('#miDither').value,
       amt: +$('#miAmt').value,
       orient: miOrient
     };
   }
+  function fmtInt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
   function renderMap(srcCv, download) {
     var o = mapOpts();
-    return buildPalette(o.pal, curBlock).then(function (pal) {
+    if (srcCv && !countSel()) { toast('至少留一种可用方块', 'err'); return Promise.resolve(); }
+    $('#msState').textContent = '正在生成…';
+    return buildPalette('custom', curBlock).then(function (pal) {
+      if (!pal.length) throw new Error('选中的方块都没有贴图数据');
+      var t0 = Date.now();
       var cv = imageToCanvas(srcCv, o.W, o.H);
       var px = cv.getContext('2d').getImageData(0, 0, o.W, o.H).data;
       var idx = quantize(px, o.W, o.H, pal, o.algo, o.amt);
       var res = structFromMap(idx, o.W, o.H, pal, o.thick, o.orient);
-      applyStruct(res);
-      var used = 0, seen = {};
-      for (var i = 0; i < idx.length; i++) if (idx[i] >= 0 && !seen[idx[i]]) { seen[idx[i]] = 1; used++; }
-      $('#docName').textContent = '地图画 ' + o.W + '×' + o.H + (o.orient === 'flat' ? ' · 平铺' : ' · 立放');
-      toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + countBlocks() + ' 个方块 · ' + used + ' 种颜色', 'ok');
-      if (download) {
-        try {
-          var out = buildMc();
-          saveBlob(out.bytes, 'mapart-' + o.W + 'x' + o.H + '.mcstructure');
-          toast('已下载 .mcstructure', 'ok');
-        } catch (err) { toast('导出失败：' + err.message, 'err'); }
+      mapLast = { idx: idx, W: o.W, H: o.H, pal: pal, res: res, opts: o };
+      paintResult(idx, o.W, o.H, pal);
+
+      var used = 0, seen = {}, filled = 0;
+      for (var i = 0; i < idx.length; i++) {
+        if (idx[i] < 0) continue;
+        filled++;
+        if (!seen[idx[i]]) { seen[idx[i]] = 1; used++; }
       }
-    }).catch(function (err) { toast('生成失败：' + (err && err.message || err), 'err'); });
+      var blocks = filled * o.thick;
+      $('#msMeta').innerHTML =
+        '<span><b>' + o.W + ' × ' + o.H + '</b> 方块</span>' +
+        '<span><b>' + fmtInt(blocks) + '</b> 个方块</span>' +
+        '<span><b>' + used + '</b> 种颜色</span>' +
+        '<span>结构 <b>' + res.sx + '×' + res.sy + '×' + res.sz + '</b></span>' +
+        '<span>' + (Date.now() - t0) + ' ms</span>';
+      $('#msState').textContent = o.W + '×' + o.H + ' 预览就绪 · ' +
+        (o.orient === 'flat' ? '平铺' : '立放') + ' · 点「放进编辑器」写到场景里';
+      if (download) downloadMap();
+      else {
+        var fr = $('#msCmp').getBoundingClientRect();
+        if (fr.top < 60 || fr.bottom > w.innerHeight) $('#msCmp').scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+      return mapLast;
+    }).catch(function (err) {
+      $('#msState').textContent = '生成失败';
+      toast('生成失败：' + (err && err.message || err), 'err');
+    });
+  }
+  function downloadMap() {
+    if (!mapLast) { toast('先点「生成预览」', 'err'); return; }
+    var o = mapLast.opts;
+    applyStruct(mapLast.res);
+    $('#docName').textContent = '地图画 ' + o.W + '×' + o.H + (o.orient === 'flat' ? ' · 平铺' : ' · 立放');
+    try {
+      var out = buildMc();
+      saveBlob(out.bytes, 'mapart-' + o.W + 'x' + o.H + '.mcstructure');
+      toast('已放进编辑器，并下载 .mcstructure', 'ok');
+    } catch (err) { toast('导出失败：' + err.message, 'err'); }
   }
   function genFromBlock(download) {
     if (!curBlock) { toast('先去方块库选一个方块', 'err'); openDrawer('picker'); return; }
     var bb = BLOCKS[curBlock];
     if (!bb) return toast('这个方块没有贴图数据', 'err');
     var o = mapOpts();
-    toast('正在渲染图标…');
+    if (mapSrcKind !== 'block') setSrcKind('block');
+    $('#msState').textContent = '正在渲染方块图标…';
     Promise.all([loadTile(bb.t), loadTile(bb.s || bb.t), loadTile(bb.b || bb.s || bb.t)]).then(function () {
-      var px = Math.max(o.W, o.H);
-      return renderMap(iconCanvas(curBlock, px), download);
+      var side = Math.max(o.W, o.H);
+      drawIconSource(curBlock, side);
+      return renderMap(iconCanvas(curBlock, Math.max(128, side * 4)), download);
     });
   }
-
+  /* 方块模式下「原图」面板显示的就是图标本身 */
+  function drawIconSource(id, side) {
+    var cv = $('#msSrc');
+    var ic = iconCanvas(id, 256);
+    cv.width = cv.height = 256;
+    var cx = cv.getContext('2d');
+    cx.clearRect(0, 0, 256, 256);
+    cx.drawImage(ic, 0, 0);
+    paintZoom();
+  }
   function syncAspect() {
     if (!$('#miLock').checked) return;
     var W = Math.max(4, Math.min(256, +$('#miW').value || 64));
-    var st = syncAspect.ratio || 1;
-    $('#miH').value = Math.max(4, Math.min(256, Math.round(W * st)));
+    var st = syncAspect.ratio || 1;            // ratio = 素材宽 / 素材高
+    $('#miH').value = Math.max(4, Math.min(256, Math.round(W / st)));
   }
   function setAspect(ratio) {
     syncAspect.ratio = ratio || 1;
@@ -2017,6 +2463,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     var b = BLOCKS[curBlock];
     $('#pbInfo').innerHTML = '画笔：<b>' + esc(b.n) + '</b> · ' + esc(b.e);
     updateIconName();
+    if (pickFromStudio) { pickFromStudio = false; setSrcKind('block'); openStudio(); genFromBlock(false); }
     if (mode === 'orbit') setMode('place');
   });
 
