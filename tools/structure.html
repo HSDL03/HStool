@@ -366,6 +366,9 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 
     <div class="rsep"></div>
 
+    <button class="ri" id="railIcon" title="图标地图画：把方块/物品的图标立成一面方块墙" aria-label="图标地图画">
+      <svg viewBox="0 0 18 18"><path d="M9 2.8 15 6v6l-6 3.2L3 12V6z"/><path d="M3 6l6 3.2L15 6M9 9.2v6"/></svg>
+    </button>
     <button class="ri" id="railText" title="文字结构：把文字变成方块（中英文都行）" aria-label="文字结构">
       <svg viewBox="0 0 18 18"><path d="M3.6 4.4h10.8M9 4.4V14M6.4 14h5.2"/></svg>
     </button>
@@ -454,6 +457,29 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
       <div class="pcount" id="pbInfo">未选画笔</div>
       <div class="pcount" id="nbtInfo">未选中方块</div>
       <span id="nbtCount" class="hidden"></span>
+    </div>
+
+    <div class="dbody" data-pane="icon">
+      <div>
+        <p class="pcount" style="margin:0 0 8px">当前：<b id="icName">未选方块</b></p>
+        <button class="bt" id="icPick" style="width:100%;height:32px;justify-content:center;margin-bottom:10px">去方块库选一个</button>
+        <div class="grid3">
+          <label class="fld"><span>尺寸</span><input type="number" id="icSize" value="64" min="8" max="256" title="地图画的边长（方块）"></label>
+          <label class="fld"><span>厚度</span><input type="number" id="icD" value="1" min="1" max="8" title="Z 方向层数"></label>
+          <label class="fld"><span>配色</span>
+            <select id="icPal" title="用哪些方块来还原颜色">
+              <option value="concrete">混凝土 16 色</option>
+              <option value="wool">羊毛 16 色</option>
+              <option value="full" selected>综合调色板</option>
+              <option value="mono">单色（画笔方块）</option>
+            </select>
+          </label>
+        </div>
+        <button class="bt pri" id="btnIcon" style="width:100%;height:34px;justify-content:center">生成地图画</button>
+        <button class="bt" id="btnIconDl" style="width:100%;height:32px;justify-content:center;margin-top:8px">生成并下载 .mcstructure</button>
+        <p class="hintline" style="margin-top:4px">图标用原版贴图按等轴测（225° / 30°）实时渲染，再逐像素匹配最接近的方块颜色，所以是一张「立着的像素画」。</p>
+        <p class="hintline">尺寸 64 时约 4096 个方块；尺寸越大越还原，也越吃性能。</p>
+      </div>
     </div>
 
     <div class="dbody" data-pane="text">
@@ -600,6 +626,28 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   var atlasCtx = atlasCanvas.getContext('2d');
   var atlasTexture = null, blockMat = null, decorMat = null, atlasDirty = false;
   var tileDrawn = {}, tileLoading = {}, tileOk = 0, tileFail = 0;
+  /* 原版这些贴图是灰度图，靠游戏里的 biomes 染色（草顶、树叶、草、藤…）。
+     不乘色的话草方块顶面会是灰的 —— 图标和结构里都一样。 */
+  var TINTS = {
+    grass_block_top: [145, 189, 89],
+    grass_block_side_overlay: [145, 189, 89],
+    short_grass: [145, 189, 89], tall_grass: [145, 189, 89], fern: [145, 189, 89],
+    oak_leaves: [119, 171, 47], spruce_leaves: [97, 153, 97], birch_leaves: [128, 167, 85],
+    jungle_leaves: [89, 174, 48], acacia_leaves: [186, 163, 74], dark_oak_leaves: [58, 104, 32],
+    mangrove_leaves: [141, 177, 39], cherry_leaves: [245, 195, 214],
+    vine: [72, 181, 24], lily_pad: [32, 128, 48], sugar_cane: [120, 192, 93],
+    water_still: [63, 118, 228], water_flow: [63, 118, 228]
+  };
+  function tintSlot(c, r, rgb) {
+    var img = atlasCtx.getImageData(c, r, TILE_PX, TILE_PX), dd = img.data;
+    for (var i = 0; i < dd.length; i += 4) {
+      if (!dd[i + 3]) continue;
+      dd[i] = dd[i] * rgb[0] / 255;
+      dd[i + 1] = dd[i + 1] * rgb[1] / 255;
+      dd[i + 2] = dd[i + 2] * rgb[2] / 255;
+    }
+    atlasCtx.putImageData(img, c, r);
+  }
 
   function ensureAtlas() {
     if (blockMat) return;
@@ -643,6 +691,8 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
         atlasCtx.beginPath(); atlasCtx.rect(c, r, TILE_PX, TILE_PX); atlasCtx.clip();
         atlasCtx.drawImage(im, c, r);        // 画到本格左上角；动画竖条被 clip 裁到第一帧
         atlasCtx.restore();
+        var tn = TEX[tile], tint = tn && TINTS[tn];
+        if (tint) tintSlot(c, r, tint);      // 灰度贴图乘上生物群系颜色
         tileDrawn[tile] = true; tileOk++;
         queueAtlas();
         res(true);
@@ -833,7 +883,8 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   // 面亮度不再手算 —— 换成 Lambert + 三盏灯，由法线自动决定明暗（照抄 mc.html 的光照）
   var FACE_LIT = [1, 1, 1, 1, 1, 1];
 
-  function isOcc(id) { return id !== 0 && kindOf(id) === 'full'; }
+  var NO_CULL = false;   // 图标预览：单块独立渲染，不按邻居剔面
+  function isOcc(id) { if (NO_CULL) return false; return id !== 0 && kindOf(id) === 'full'; }
 
   /* UV 取图集格子：局部 0..1 → 该 tile 所在格。0.002 的内缩是防「采样到隔壁格」
      （mipmap 会让相邻格子轻微混色，内缩半个像素后基本看不出来）。 */
@@ -1383,7 +1434,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 
   /* ═════════════════ 左侧抽屉 ═════════════════ */
   var drawer = $('#drawer'), dTitle = $('#dTitle');
-  var PANE_NAME = { file: '文件', picker: '方块库', text: '文字结构', export: '导出' };
+  var PANE_NAME = { file: '文件', picker: '方块库', icon: '图标地图画', text: '文字结构', export: '导出' };
   function openDrawer(pane) {
     $$('.dbody', drawer).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === pane); });
     dTitle.textContent = PANE_NAME[pane] || '';
@@ -1400,6 +1451,208 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   $('#railPick').addEventListener('click', function () { toggleDrawer('picker'); });
   $('#btnExport').addEventListener('click', function () { toggleDrawer('export'); });
   $('#railText').addEventListener('click', function () { toggleDrawer('text'); });
+  $('#railIcon').addEventListener('click', function () {
+    updateIconName();
+    toggleDrawer('icon');
+  });
+  function updateIconName() {
+    var b = curBlock ? BLOCKS[curBlock] : null;
+    $('#icName').textContent = b ? (b.n + ' · ' + b.e) : '未选方块';
+  }
+  $('#icPick').addEventListener('click', function () { openDrawer('picker'); });
+  $('#btnIcon').addEventListener('click', function () { genIcon(false); });
+  $('#btnIconDl').addEventListener('click', function () { genIcon(true); });
+
+  /* ═════════════════ 图标地图画：方块/物品图标 → 立着的方块墙 ═════════════════
+     图标不是贴图，而是用原版贴图在离屏 WebGL 里按等轴测（yaw 225° / pitch 30°）
+     实拍一遍 —— 和物品栏里的 3D 图标一个角度；然后把这张图像素化，逐格找最接近
+     颜色的方块。 */
+  var IR = null, IS = null, IC = null, IT = null, IM = null;
+  function iconSetup() {
+    if (IR) return;
+    IR = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    IR.setPixelRatio(1);
+    IR.setClearColor(0x000000, 0);
+    IS = new THREE.Scene();
+    IS.add(new THREE.AmbientLight(0xffffff, 0.62));
+    var l1 = new THREE.DirectionalLight(0xffffff, 0.55); l1.position.set(0.7, 1, 0.55); IS.add(l1);
+    var l2 = new THREE.DirectionalLight(0xffffff, 0.20); l2.position.set(-0.8, 0.25, -0.7); IS.add(l2);
+    IC = new THREE.OrthographicCamera(-0.8, 0.8, 0.8, -0.8, 0.01, 20);
+    // 独立一份图集纹理：两个 WebGL 上下文不能共用同一张 texture 的状态
+    IT = new THREE.CanvasTexture(atlasCanvas);
+    IT.magFilter = THREE.NearestFilter; IT.minFilter = THREE.LinearFilter;
+    IT.generateMipmaps = false;
+    IT.wrapS = IT.wrapT = THREE.ClampToEdgeWrapping;
+    IM = new THREE.MeshLambertMaterial({ map: IT, vertexColors: true, alphaTest: 0.5, side: THREE.DoubleSide });
+  }
+  function iconGeo(id) {
+    var g = {};
+    NO_CULL = true;
+    var kind = kindOf(id);
+    if (kind === 'model') pushModel(g, MODELS[id], id, 0, 0, 0);
+    else if (kind === 'cross') pushCross(g, id, 0, 0, 0);
+    else pushFull(g, id, 0, 0, 0);
+    NO_CULL = false;
+    var pos = [], nor = [], uvs = [], col = [], idx = [], base = 0;
+    Object.keys(g).forEach(function (k) {
+      var b = g[k];
+      if (!b.vc) return;
+      Array.prototype.push.apply(pos, b.pos);
+      Array.prototype.push.apply(nor, b.nor);
+      Array.prototype.push.apply(uvs, b.uvs);
+      Array.prototype.push.apply(col, b.col);
+      for (var i = 0; i < b.idx.length; i++) idx.push(b.idx[i] + base);
+      base += b.vc;
+    });
+    if (!idx.length) return null;
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    geo.setIndex(idx);
+    return geo;
+  }
+  function iconCanvas(id, px) {
+    iconSetup();
+    IR.setSize(px, px, false);
+    var d0 = 3.4, yaw = Math.PI * 1.25, pitch = 0.52;   // 原版图标角度
+    IC.position.set(
+      0.5 + Math.cos(pitch) * Math.sin(yaw) * d0,
+      0.5 + Math.sin(pitch) * d0,
+      0.5 + Math.cos(pitch) * Math.cos(yaw) * d0);
+    IC.lookAt(0.5, 0.5, 0.5);
+    IC.updateProjectionMatrix();
+    var geo = iconGeo(id);
+    var out = d.createElement('canvas'); out.width = out.height = px;
+    if (!geo) return out;
+    var mesh = new THREE.Mesh(geo, IM);
+    IS.add(mesh);
+    IT.needsUpdate = true;
+    IR.render(IS, IC);
+    out.getContext('2d').drawImage(IR.domElement, 0, 0);
+    IS.remove(mesh);
+    geo.dispose();
+    return out;
+  }
+
+  /* 方块平均色（用来做颜色匹配）：只统计不透明像素 */
+  var tileAvgCache = {};
+  function tileAvg(tile) {
+    if (tileAvgCache[tile] !== undefined) return tileAvgCache[tile];
+    var c = tile % ATLAS_COLS, r = Math.floor(tile / ATLAS_COLS);
+    if (r >= ATLAS_ROWS) { tileAvgCache[tile] = null; return null; }
+    var d0 = atlasCtx.getImageData(c * TILE_PX, r * TILE_PX, TILE_PX, TILE_PX).data;
+    var R = 0, G = 0, B = 0, n = 0;
+    for (var i = 0; i < d0.length; i += 4) {
+      if (d0[i + 3] > 170) { R += d0[i]; G += d0[i + 1]; B += d0[i + 2]; n++; }
+    }
+    var v = n ? [R / n, G / n, B / n] : null;
+    tileAvgCache[tile] = v;
+    return v;
+  }
+  var DYE = ['white', 'light_gray', 'gray', 'black', 'brown', 'red', 'orange', 'yellow',
+    'lime', 'green', 'cyan', 'light_blue', 'blue', 'purple', 'magenta', 'pink'];
+  var PAL_SETS = {
+    concrete: DYE.map(function (c) { return c + '_concrete'; }),
+    wool: DYE.map(function (c) { return c + '_wool'; }),
+    full: DYE.map(function (c) { return c + '_concrete'; }).concat(
+      DYE.map(function (c) { return c + '_wool'; }),
+      ['stone', 'smooth_stone', 'stone_bricks', 'cobblestone', 'deepslate', 'tuff',
+        'dirt', 'grass_block', 'sand', 'sandstone', 'gravel', 'clay',
+        'oak_planks', 'spruce_planks', 'birch_planks', 'dark_oak_planks',
+        'gold_block', 'iron_block', 'copper_block', 'emerald_block', 'diamond_block',
+        'netherite_block', 'glowstone', 'sea_lantern', 'obsidian', 'bedrock',
+        'bricks', 'netherrack', 'soul_sand', 'prismarine', 'ice', 'snow_block',
+        'redstone_block', 'lapis_block', 'amethyst_block', 'moss_block',
+        'terracotta', 'black_terracotta', 'white_terracotta', 'orange_terracotta',
+        'red_terracotta', 'brown_terracotta', 'nether_bricks', 'end_stone']
+    )
+  };
+  function iconPalette(mode, brushId) {
+    var names = mode === 'mono' ? [] : (PAL_SETS[mode] || PAL_SETS.full);
+    var ids = [], seen = {};
+    names.forEach(function (n) {
+      var id = BY_NAME[n];
+      if (id === undefined || seen[id]) return;
+      if (kindOf(id) === 'none') return;
+      seen[id] = 1; ids.push(id);
+    });
+    if (mode === 'mono' || !ids.length) {
+      var bid = brushId || BY_NAME.white_concrete || BY_NAME.stone;
+      return Promise.resolve([{ id: bid, color: null }]);
+    }
+    var b = BLOCKS[brushId || 0];
+    var load = [];
+    ids.forEach(function (id) {
+      var bb = BLOCKS[id];
+      load.push(loadTile(bb.t));
+      load.push(loadTile(bb.s || bb.t));
+      load.push(loadTile(bb.b || bb.s || bb.t));
+    });
+    return Promise.all(load).then(function () {
+      var out = [];
+      ids.forEach(function (id) {
+        var bb = BLOCKS[id];
+        var col = tileAvg(bb.s || bb.t) || tileAvg(bb.t) || tileAvg(bb.b || bb.t);
+        if (col) out.push({ id: id, color: col });
+      });
+      return out;
+    });
+  }
+  function nearestIn(pal, r, g, b) {
+    var best = pal[0], bd = Infinity;
+    for (var i = 0; i < pal.length; i++) {
+      var c = pal[i].color;
+      if (!c) return pal[i];
+      var dr = r - c[0], dg = g - c[1], db = b - c[2];
+      var dist = dr * dr * 0.32 + dg * dg * 0.5 + db * db * 0.18;   // 人眼对绿最敏感
+      if (dist < bd) { bd = dist; best = pal[i]; }
+    }
+    return best;
+  }
+  function buildIconStruct(blockId, size, thick, mode) {
+    size = Math.max(8, Math.min(256, size | 0));
+    thick = Math.max(1, Math.min(8, thick | 0));
+    var bb = BLOCKS[blockId];
+    if (!bb) return Promise.reject(new Error('这个方块没有贴图数据'));
+    return Promise.all([loadTile(bb.t), loadTile(bb.s || bb.t), loadTile(bb.b || bb.s || bb.t)])
+      .then(function () { return iconPalette(mode, blockId); })
+      .then(function (pal) {
+        var cv = iconCanvas(blockId, size);
+        var px = cv.getContext('2d').getImageData(0, 0, size, size).data;
+        var data = new Uint16Array(size * size * thick);
+        var used = {}, hit = 0;
+        for (var y = 0; y < size; y++) for (var x = 0; x < size; x++) {
+          var o = (y * size + x) * 4;
+          if (px[o + 3] < 110) continue;                       // 透明 = 空气
+          var e = nearestIn(pal, px[o], px[o + 1], px[o + 2]);
+          if (!e || !e.id) continue;
+          used[e.id] = 1; hit++;
+          var vy = size - 1 - y;
+          for (var z = 0; z < thick; z++) data[(vy * thick + z) * size + x] = e.id;
+        }
+        return { sx: size, sy: size, sz: thick, data: data, blocks: hit, colors: Object.keys(used).length, cv: cv };
+      });
+  }
+  function genIcon(download) {
+    if (!curBlock) { toast('先去方块库选一个方块', 'err'); openDrawer('picker'); return; }
+    var size = +$('#icSize').value || 64, thick = +$('#icD').value || 1, mode = $('#icPal').value;
+    toast('正在渲染图标…');
+    buildIconStruct(curBlock, size, thick, mode).then(function (res) {
+      applyStruct({ sx: res.sx, sy: res.sy, sz: res.sz, data: res.data });
+      $('#docName').textContent = '图标：' + (BLOCKS[curBlock] ? BLOCKS[curBlock].n : curBlock);
+      closeDrawer();
+      toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + res.blocks + ' 个方块 · 用了 ' + res.colors + ' 种', 'ok');
+      if (download) {
+        try {
+          var out = buildMc();
+          saveBlob(out.bytes, 'icon-' + res.sx + 'x' + res.sy + 'x' + res.sz + '.mcstructure');
+          toast('已下载 .mcstructure', 'ok');
+        } catch (err) { toast('导出失败：' + err.message, 'err'); }
+      }
+    }).catch(function (err) { toast('生成失败：' + err.message, 'err'); });
+  }
 
   /* ═════════════════ 文字 → 方块结构（中英文都支持）═════════════════
      思路和网页上的「像素字」一样：先把文字画到 canvas，再按 4×4 采样转成方块。
@@ -1534,6 +1787,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     it.classList.add('on');
     var b = BLOCKS[curBlock];
     $('#pbInfo').innerHTML = '画笔：<b>' + esc(b.n) + '</b> · ' + esc(b.e);
+    updateIconName();
     if (mode === 'orbit') setMode('place');
   });
 
