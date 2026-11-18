@@ -287,7 +287,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 <div class="wrap">
   <section class="hero">
     <h1>五子棋大厅</h1>
-    <p class="hero-sub">创建房间 · 等待对手 · 一局定胜负</p>
+    <p class="hero-sub">在线房间已下线 · 用「📡 局域网快打」开两个标签页对战</p>
   </section>
 
   <div class="lan-banner" id="lanBanner">
@@ -315,9 +315,9 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
     </div>
     <span class="sp"></span>
     <div class="tb-right" style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn" id="joinByCodeBtn" title="输入房间码加入">🔑 输入房间码</button>
+      <button class="btn" id="joinByCodeBtn" title="在线联机已下线" disabled style="opacity:.45;cursor:not-allowed">🔑 输入房间码</button>
       <button class="btn" id="lanBtn" title="一键创建局域网对局">📡 局域网快打</button>
-      <button class="btn btn-primary" id="createBtn">＋ 创建房间</button>
+      <button class="btn btn-primary" id="createBtn" disabled style="opacity:.45;cursor:not-allowed">＋ 创建房间</button>
     </div>
   </div>
 
@@ -326,7 +326,7 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
   <div class="empty" id="emptyState">
     <div class="empty-icon">🎴</div>
     <div class="empty-title">还没有房间</div>
-    <div class="empty-sub">点上方「＋ 创建房间」或「📡 局域网快打」开一局</div>
+    <div class="empty-sub">在线房间已下线，点上方「📡 局域网快打」开一局</div>
   </div>
 
   <div class="foot">
@@ -438,14 +438,13 @@ body{margin:0;padding-top:46px;background:transparent;color:var(--text);font-fam
 
 <div class="toast" id="toast"></div>
 
-<script src="../assets/vendor/supabase.js"></script>
-<script>if(typeof supabase==='undefined'){var _sb=document.createElement('script');_sb.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';document.head.appendChild(_sb);}</script>
+<!-- 联机后端已下线：不加载 supabase SDK -->
 <script>
 (function(){
 'use strict';
 
-var SUPABASE_URL='https://lxdyrajbsjftduesvosh.supabase.co';
-var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
+var SUPABASE_URL='';   /* 联机后端已下线 */
+var SUPABASE_KEY='';
 
 var K_THEME='wiki-theme',K_NICK='gomoku-nick',K_UID='gomoku-uid',K_LAST_ANN='gomoku-last-ann';
 var ROOM_TTL_MS=30*60*1000,POLL_MS=8*1000,ANN_POLL_MS=6*1000;
@@ -491,7 +490,21 @@ function renderMeChip(){
   if(nk){nk.textContent=myNick;}
 }
 
-var sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{realtime:{params:{eventsPerSecond:5}}});
+/* 联机后端已下线：给一个空壳客户端，所有请求都返回 OFFLINE，
+   让页面原有的「服务器无法访问 → 切局域网」降级逻辑自己接管 */
+function offlineClient(){
+  var res={data:[],error:{message:'联机后端已下线',code:'OFFLINE'}};
+  var ch={on:function(){return ch;},subscribe:function(){return ch;},unsubscribe:function(){}};
+  var api=new Proxy({},{get:function(t,k){
+    if(k==='then')return function(ok){return Promise.resolve(res).then(ok);};
+    if(k==='catch'||k==='finally')return function(){return Promise.resolve(res);};
+    if(k==='channel')return function(){return ch;};
+    if(k==='removeChannel'||k==='removeAllChannels')return function(){};
+    return function(){return api;};
+  }});
+  return api;
+}
+var sb=offlineClient();
 
 var connPill=$('connPill'),connText=$('connText');
 function setConn(state,text){
@@ -1101,21 +1114,21 @@ function quickLanCreate(){
         if(lanBtn) lanBtn.disabled=false;
         if(res.error){
           if(res.error.code==='23505'&&attempt<5){code=genRoomCode();return tryInsert();}
-          enterLanMode('服务器无法访问 · 已切换到局域网模式');
+          enterLanMode('在线联机已下线 · 已切换到局域网模式');
           setTimeout(function(){createLanRoom();},100);
           return;
         }
         gotoRoom(code);
       }).catch(function(){
         if(lanBtn) lanBtn.disabled=false;
-        enterLanMode('服务器无法访问 · 已切换到局域网模式');
+        enterLanMode('在线联机已下线 · 已切换到局域网模式');
         setTimeout(function(){createLanRoom();},100);
       });
     }
     tryInsert();
   }).catch(function(){
     if(lanBtn) lanBtn.disabled=false;
-    enterLanMode('服务器无法访问 · 已切换到局域网模式');
+    enterLanMode('在线联机已下线 · 已切换到局域网模式');
     setTimeout(function(){createLanRoom();},100);
   });
 }
@@ -1152,7 +1165,7 @@ if(createSave) createSave.addEventListener('click',function(){
         if(res.error){
           if(res.error.code==='23505'&&attempt<5){code=genRoomCode();return tryInsert();}
           createSave.disabled=false;
-          enterLanMode('服务器无法访问 · 已切换到局域网模式');
+          enterLanMode('在线联机已下线 · 已切换到局域网模式');
           closeCreate();
           setTimeout(function(){createLanRoom();},100);
           return;
@@ -1162,7 +1175,7 @@ if(createSave) createSave.addEventListener('click',function(){
         gotoRoom(code);
       }).catch(function(){
         createSave.disabled=false;
-        enterLanMode('服务器无法访问 · 已切换到局域网模式');
+        enterLanMode('在线联机已下线 · 已切换到局域网模式');
         closeCreate();
         setTimeout(function(){createLanRoom();},100);
       });
@@ -1170,7 +1183,7 @@ if(createSave) createSave.addEventListener('click',function(){
     tryInsert();
   }).catch(function(){
     createSave.disabled=false;
-    enterLanMode('服务器无法访问 · 已切换到局域网模式');
+    enterLanMode('在线联机已下线 · 已切换到局域网模式');
     closeCreate();
     setTimeout(function(){createLanRoom();},100);
   });

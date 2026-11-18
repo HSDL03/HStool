@@ -63,7 +63,7 @@ python -m http.server 8000     # 或 npx serve .
 ├─ assets/
 │  ├─ css/core.css         设计系统：8 套主题令牌 + 通用组件（.tool/.panel/.fld/.btn…）
 │  ├─ js/core.js           主题引擎 / 命令面板 / 装饰背景 / Toast / 数据三级回落
-│  ├─ vendor/              本地化的第三方库（three.js、supabase.js、qrcode.js），缺失才回落 CDN
+│  ├─ vendor/              本地化的第三方库（three.js、qrcode.js），缺失才回落 CDN
 │  ├─ mc-*.js              MC 复刻用的方块 / 模型 / 配方 / 贴图索引数据
 │  ├─ mc-icons/            工具卡片用的 MC 官方渲染图（zh.minecraft.wiki）
 │  ├─ mc-gui/              MC 原版 GUI 贴图与控件素材
@@ -73,12 +73,12 @@ python -m http.server 8000     # 或 npx serve .
 ├─ pages/
 │  ├─ wiki.html            答辩 Wiki 阅读器：章节树 / 目录 / 全文搜索 / 阅读进度
 │  ├─ download.html        下载站：GitHub Releases + 手动补录
-│  ├─ admin.html           数据后台：用 GitHub Token 直接读写 JSON
-│  └─ chat.html            聊天室（Supabase）
+│  └─ admin.html           数据后台：用 GitHub Token 直接读写 JSON
 │
-├─ tools/                  单文件小工具，每页一个 .html（61 个文件）
+├─ tools/                  单文件小工具，每页一个 .html（71 个文件）
 │                          通用：计算器 / JSON / 编解码 / 时间戳 / 颜色 / 正则 / JWT…
-│                          MC 专区：附魔 / 酿造 / 红石 / 挖掘 / 伤害 / 合成 / 指令…共 22 个
+│                          MC 专区：附魔 / 酿造 / 红石 / 挖掘 / 伤害 / 合成 / 指令…共 29 个
+│                          （原来单独收在「未优化工具」文件夹里，现已并入主列表）
 │
 ├─ games/
 │  ├─ index.html           游戏厅：六张棋牌入口
@@ -91,7 +91,7 @@ python -m http.server 8000     # 或 npx serve .
 │  ├─ mc.html              MC 复刻（three.js，主战场）
 │  ├─ astar.html           A* 寻路 3D 演示
 │  ├─ pvpga.html           PVP 小游戏
-│  └─ wuzi_game/hotel.html 五子棋对局 + 联机大厅（Supabase）
+│  └─ wuzi_game/hotel.html 五子棋对局 + 局域网大厅（同一浏览器多标签页）
 │
 ├─ data/
 │  ├─ tools-data.json      工具卡片（顺序即首页渲染顺序）
@@ -141,18 +141,20 @@ python -m http.server 8000     # 或 npx serve .
 | 斗地主 · UNO · 麻将 | `games/doudizhu.html` 等 | 单机对局，规则见说明书 |
 | MC 复刻 | `games/mc.html` | three.js 手写体素引擎：区块生成、方块朝向、门、水、活塞、物品栏 |
 | A\* 寻路演示 | `games/astar.html` | 3D 网格画墙铺水，可视化搜索过程；支持批量模拟 1~1000 局 |
-| PVP / 五子棋 | `games/pvpga.html` / `wuzi_*.html` | 双人对战；五子棋带联机大厅 |
+| PVP / 五子棋 | `games/pvpga.html` / `wuzi_*.html` | 对 AI / 局域网对战（在线房间已下线） |
 | 挖矿抽卡 | `tools/gacha.html` | 单抽 / 十连，带保底与图鉴 |
 
-### 需要后端（☁ `needDB`）
+### 需要 GitHub API（☁ `needDB`）
 
 | 页面 | 说明 |
 | --- | --- |
-| MC 复刻 | 登录与存档走 Supabase |
-| 聊天室 / 点击游戏 / 五子棋大厅 | Supabase 实时能力 |
 | 下载站 | GitHub Releases 聚合 + 手动补录 |
 | 答辩 Wiki | 章节树 + 全文搜索 + 阅读进度 |
 | 数据后台 | 用 GitHub Token 提交 JSON 改动 |
+
+> 站内自建后端（Supabase）**已全部下线**：账号、聊天、在线房间都不再连接任何服务器，
+> 代码里的地址与密钥已清空，`assets/vendor/supabase.js` 与 `cf/sb-proxy` 反代也已删除。
+> MC 复刻只剩单机，五子棋改用局域网（同一浏览器开多个标签页）。
 
 ## 桌面版 exe / 本地版（屏幕识别作弊）
 

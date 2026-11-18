@@ -1,28 +1,5 @@
 [
   {
-    "id": "folder-legacy",
-    "icon": "📁",
-    "name": "未优化工具",
-    "desc": "22 个我的世界小工具：换算、红石、附魔、建造，能用但还没打磨",
-    "tag": "工具",
-    "url": "./pages/legacy.html",
-    "category": "noDB",
-    "deprecated": false,
-    "disabled": false,
-    "hidden": false,
-    "isFolder": true,
-    "span": 2,
-    "count": 22,
-    "peek": [
-      "🧭",
-      "⚒",
-      "🔴",
-      "⛏",
-      "🧪",
-      "📦"
-    ]
-  },
-  {
     "id": "tool-mc-calc",
     "icon": "🧮",
     "name": "MC 计算器",
@@ -33,7 +10,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "换算"
   },
   {
@@ -43,7 +19,7 @@
     "desc": "测试ing",
     "tag": "游戏",
     "url": "./games/mc.html",
-    "category": "needDB",
+    "category": "noDB",
     "deprecated": false,
     "disabled": false,
     "hidden": false
@@ -55,7 +31,7 @@
     "desc": "博弈",
     "tag": "游戏",
     "url": "./games/wuzi_hotel.html",
-    "category": "needDB",
+    "category": "noDB",
     "deprecated": false,
     "disabled": false,
     "hidden": false
@@ -91,7 +67,7 @@
     "desc": "用来测试嗯对",
     "tag": "游戏",
     "url": "https://hsdl03.github.io/Click-the-game/",
-    "category": "needDB",
+    "category": "noDB",
     "deprecated": true,
     "disabled": true,
     "hidden": false
@@ -131,7 +107,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": true,
-    "folder": "legacy",
     "group": "换算"
   },
   {
@@ -145,7 +120,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": true,
-    "folder": "legacy",
     "group": "换算"
   },
   {
@@ -159,7 +133,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": true,
-    "folder": "legacy",
     "group": "换算"
   },
   {
@@ -173,7 +146,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "生存"
   },
   {
@@ -187,7 +159,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "生存"
   },
   {
@@ -201,7 +172,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "红石"
   },
   {
@@ -215,7 +185,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "附魔"
   },
   {
@@ -229,7 +198,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "附魔"
   },
   {
@@ -243,7 +211,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "红石"
   },
   {
@@ -257,7 +224,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "生存"
   },
   {
@@ -271,7 +237,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "生存"
   },
   {
@@ -285,7 +250,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": true,
-    "folder": "legacy",
     "group": "换算"
   },
   {
@@ -299,7 +263,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "合成"
   },
   {
@@ -313,7 +276,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "建造"
   },
   {
@@ -327,7 +289,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "建造"
   },
   {
@@ -341,7 +302,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "合成"
   },
   {
@@ -787,7 +747,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "红石"
   },
   {
@@ -849,7 +808,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "合成"
   },
   {
@@ -887,7 +845,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": true,
-    "folder": "legacy",
     "group": "换算"
   },
   {
@@ -901,7 +858,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "建造"
   },
   {
@@ -915,7 +871,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": true,
-    "folder": "legacy",
     "group": "换算"
   },
   {
@@ -977,7 +932,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "建造"
   },
   {
@@ -991,7 +945,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "附魔"
   },
   {
@@ -1005,7 +958,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "建造"
   },
   {
@@ -1019,7 +971,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "建造"
   },
   {
@@ -1033,7 +984,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "建造"
   },
   {
@@ -1047,7 +997,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": false,
-    "folder": "legacy",
     "group": "红石"
   },
   {
@@ -1097,7 +1046,6 @@
     "deprecated": false,
     "disabled": false,
     "hidden": true,
-    "folder": "legacy",
     "group": "换算"
   }
 ]

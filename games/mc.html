@@ -7,8 +7,7 @@
 <meta name="description" content="浏览器里的 3D 体素沙盒：无限地形、挖掘建造、生存/创造模式与多人房间。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧱</text></svg>">
 <script>try{document.documentElement.setAttribute('data-theme','mc-wiki')}catch(e){}</script>
-<script src="../assets/vendor/supabase.js"></script>
-<script>if(typeof supabase==='undefined')document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>')</script>
+<!-- 联机后端已下线：不加载 supabase SDK -->
 <style>
 :root{--bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--text:#1f1f1f;--muted:#5c5c5c;--bd:#a8a89a;--bd2:#4a4a3a;--ac:#3d521f;--acs:#e0e8d0;--dgr:#a02020;--sh:2px 2px 0 rgba(0,0,0,.2);--bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);--bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);--font:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;--topbar-bg:linear-gradient(180deg,#56682c,#3d521f);--topbar-fg:#fff;--topbar-bd:#2a3a1a}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -281,8 +280,6 @@ canvas#game3d{display:block}
 #loadingScreen .bar-outer{width:320px;height:16px;background:rgba(0,0,0,.4);border:2px solid #4a4a3a;position:relative;overflow:hidden}
 #loadingScreen .bar-fill{height:100%;background:linear-gradient(90deg,#8fd94f,#4a9e3a);transition:width .15s;width:0}
 #loadingScreen .status{margin-top:16px;font-size:13px;color:#8fd94f;font-family:monospace}
-#supabaseStatus{position:fixed;bottom:8px;right:12px;z-index:100;padding:4px 10px;font-size:11px;font-family:monospace;background:rgba(0,0,0,.6);color:#8fd94f;display:none}
-#supabaseStatus.show{display:block}
 #mobileControls{position:fixed;inset:0;z-index:17;pointer-events:none;display:none}
 #mobileControls.show{display:block}
 #mobileControls *{pointer-events:auto}
@@ -755,7 +752,6 @@ canvas#game3d{display:block}
 </head>
 <body>
 
-<div id="supabaseStatus"></div>
 
 <div id="loadingScreen" class="hidden">
   <div class="title">生成世界</div>
@@ -840,7 +836,7 @@ canvas#game3d{display:block}
   <div id="titleSplash">网页版也能玩！</div>
   <div id="titleBtnCol">
     <button class="vbtn" id="singlePlayerBtn">单人游戏</button>
-    <button class="vbtn" id="multiPlayerBtn">多人游戏</button>
+    <button class="vbtn" id="multiPlayerBtn" style="display:none" aria-hidden="true">多人游戏</button>
     <button class="vbtn" id="realmsBtn" disabled>Minecraft Realms</button>
     <div class="vrow">
       <button class="vbtn w98" id="optionsBtn2">选项...</button>
@@ -1060,14 +1056,9 @@ canvas#game3d{display:block}
   var isTouchUI=hasCoarse&&!hasFine;
   var supportsTouch=hasCoarse||('ontouchstart'in window)||(navigator.maxTouchPoints>0);
 
-  var SUPABASE_URL='https://lxdyrajbsjftduesvosh.supabase.co';
-  var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
-  var sbClient=null,supabaseReady=false;
-  (function(){if(window.supabase&&window.supabase.createClient){try{
-    sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);supabaseReady=true;
-    var st=$('supabaseStatus');st.textContent='☁ 已连接';st.classList.add('show');
-    setTimeout(function(){st.classList.remove('show')},3000);
-  }catch(e){console.error(e);}}})();
+  var SUPABASE_URL='';   /* 联机后端已下线 */
+  var SUPABASE_KEY='';
+  var sbClient=null,supabaseReady=false;   /* 联机已下线：不建立任何连接 */
 
   var appState='mainMenu',prevScreen='mainMenu';
   var gameMode='creative',difficulty='normal',worldType='default';

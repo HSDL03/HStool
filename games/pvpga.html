@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>方块战场</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='14' y='14' width='34' height='34' rx='7' fill='%230ea5e9'/><rect x='52' y='14' width='34' height='34' rx='7' fill='%238b5cf6'/><rect x='14' y='52' width='34' height='34' rx='7' fill='%2310b981'/><rect x='52' y='52' width='34' height='34' rx='7' fill='%23f59e0b'/></svg>">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden;background:#fff;overscroll-behavior:none}
@@ -313,9 +314,9 @@
       <span class="mode-title">人机模式</span>
       <span class="mode-desc">与 AI 对手作战 · 8 名敌人巡逻追击</span>
     </button>
-    <button class="mode-btn" id="btnModeMP">
+    <button class="mode-btn" id="btnModeMP" disabled style="opacity:.5;cursor:not-allowed">
       <span class="mode-title">真人模式</span>
-      <span class="mode-desc">房间列表 · 创建或加入在线对局</span>
+      <span class="mode-desc">联机服务器已下线 · 只能玩人机模式</span>
     </button>
   </div>
 </div>
@@ -402,23 +403,30 @@
 <button class="sound-btn hidden" id="soundBtn" title="音效开关">🔊</button>
 <div class="net-status hidden" id="netStatus">连接中…</div>
 
-<script src="../assets/vendor/supabase.js"></script>
-<script>if(typeof supabase==='undefined'){var _sb=document.createElement('script');_sb.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';document.head.appendChild(_sb);}</script>
+<!-- 联机后端已下线：不加载 supabase SDK -->
 <script>
 (function () {
   'use strict';
 
-  const SUPABASE_URL = 'https://lxdyrajbsjftduesvosh.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4ZHlyYWpic2pmdGR1ZXN2b3NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NzkyMzksImV4cCI6MjEwNjA1NTIzOX0.ZEC7EohRqr0YCxqACBRTVI3-TGNFWUGxq-aH_yqIhig';
+  const SUPABASE_URL='';   /* 联机后端已下线 */
+  const SUPABASE_KEY='';
 
-  let sb = null;
-  try {
-    if (window.supabase && window.supabase.createClient) {
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        realtime: { params: { eventsPerSecond: 50 } }
-      });
-    }
-  } catch (e) { console.warn('Supabase init failed:', e); }
+  /* 联机后端已下线：空壳客户端，所有请求返回 OFFLINE，不再连任何服务器 */
+  function offlineClient() {
+    const res = { data: [], error: { message: '联机后端已下线', code: 'OFFLINE' } };
+    const ch = { on() { return ch; }, subscribe() { return ch; }, unsubscribe() { } };
+    const api = new Proxy({}, {
+      get(t, k) {
+        if (k === 'then') return (ok) => Promise.resolve(res).then(ok);
+        if (k === 'catch' || k === 'finally') return () => Promise.resolve(res);
+        if (k === 'channel') return () => ch;
+        if (k === 'removeChannel' || k === 'removeAllChannels') return () => { };
+        return () => api;
+      }
+    });
+    return api;
+  }
+  let sb = offlineClient();
 
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');

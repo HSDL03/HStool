@@ -531,8 +531,10 @@
   /* ─────────────────────────── 通用小工具 ───────────────────────── */
   function absUrl(u) {
     if (!u) return '';
-    if (/^(https?:|mailto:|tel:|javascript:|data:|\/\/)/i.test(u)) return u;
-    try { return new URL(u, location.href).href; } catch (e) { return u; }
+    if (/^(https?:|mailto:|tel:|javascript:|data:|\/\/|#)/i.test(u)) return u;
+    /* 数据文件里的 ./xxx 是相对「站点根」写的（README 约定），
+       页面在 /pages/ 或 /tools/ 下时不能按自身路径解析，否则会变成 /pages/tools/xxx */
+    return SITE.url(u);
   }
   function isExternal(u) {
     try { return new URL(u, location.href).host !== location.host; } catch (e) { return false; }
@@ -661,14 +663,6 @@
     // 图片/内容变化后再扫一次
     on(window, 'load', function () { decor.resize(); reveal(); });
     document.documentElement.classList.add('hs-ready');
-
-    /* 全站账号：顶栏右上角（account.js 就绪后会自己再挂上聊天框） */
-    if (!HS.account) {
-      var as = document.createElement('script');
-      as.src = SITE.url('assets/js/account.js');
-      as.async = true;
-      document.body.appendChild(as);
-    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
