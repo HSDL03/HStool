@@ -122,6 +122,20 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
 .seg button:hover{color:var(--ink)}
 .seg button.on{background:var(--ac-s);color:var(--ac)}
 .hintline{font-size:11px;color:var(--faint);line-height:1.7;margin:-4px 0 0}
+  /* 高级参数折叠区 */
+  .adv{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+  .adv>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--dim);padding:3px 0;user-select:none}
+  .adv>summary::-webkit-details-marker{display:none}
+  .adv>summary::before{content:"▸";color:var(--faint);font-size:9px;transition:transform .15s var(--ease)}
+  .adv[open]>summary::before{transform:rotate(90deg)}
+  .adv>summary:hover{color:var(--ink)}
+  .adv .sub{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);margin:12px 0 6px}
+  .adv .seg{height:26px}
+  .adv select,.adv input[type=number]{height:26px;font-size:11.5px}
+  .adv .fld>span{font-size:9.5px;margin-bottom:4px}
+  .adv .fld{margin-bottom:8px}
 .hidden{display:none!important}
 
 /* ── 卡片 ── */
@@ -348,8 +362,15 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
     <div class="meta" id="msMeta"></div>
 
     <div class="cols">
-      <section class="card">
-        <header><h3>生成参数</h3></header>
+      <section class="card" id="miCard">
+        <header><h3>生成参数</h3><span class="cnt" id="miProf">标准</span></header>
+        <div class="presets" id="miPresets" style="margin-bottom:12px">
+          <button data-m="pixel" title="最近邻放大 + 不抖动：像素画、Logo、图标">像素画</button>
+          <button data-m="photo" class="on" title="Lanczos + 超采样 + FS 抖动：照片">照片</button>
+          <button data-m="flat" title="双线性 + 不抖动 + 颜色合并：海报、插画">色块简约</button>
+          <button data-m="fast" title="关超采样与锐化：最大尺寸也秒出">极速</button>
+          <button data-m="max" title="4× 超采样 + Lanczos + 锐化：最贵也最准">最高清晰度</button>
+        </div>
         <div class="grid2">
           <label class="fld"><span>宽（方块）</span><input type="number" id="miW" value="64" min="4" max="256"></label>
           <label class="fld"><span>高（方块）</span><input type="number" id="miH" value="64" min="4" max="256"></label>
@@ -370,21 +391,112 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
         <div class="grid2">
           <label class="fld"><span>厚度（层）</span><input type="number" id="miD" value="1" min="1" max="8"></label>
           <label class="fld"><span>抖动强度 <b id="miAmtLab">70%</b></span>
-            <input type="range" id="miAmt" min="0" max="100" value="70">
+            <input type="range" id="miAmt" min="0" max="200" value="70">
           </label>
         </div>
         <label class="fld"><span>抖动算法</span>
           <select id="miDither">
-            <option value="none">不抖动（色块最干净）</option>
-            <option value="bayer4" selected>有序 4×4（Bayer）</option>
-            <option value="bayer8">有序 8×8（Bayer）</option>
-            <option value="fs">误差扩散（Floyd–Steinberg）</option>
-            <option value="atkinson">误差扩散（Atkinson，网点感）</option>
-            <option value="sierra">误差扩散（Sierra Lite）</option>
-            <option value="random">随机噪点</option>
+            <optgroup label="不抖动">
+              <option value="none">不抖动（色块最干净）</option>
+            </optgroup>
+            <optgroup label="有序 / 噪点">
+              <option value="bayer2">有序 2×2（最粗）</option>
+              <option value="bayer4">有序 4×4（Bayer）</option>
+              <option value="bayer8">有序 8×8（Bayer）</option>
+              <option value="bayer16">有序 16×16（Bayer，最细）</option>
+              <option value="random">随机噪点（可设种子）</option>
+              <option value="ign">细噪（无网格纹）</option>
+            </optgroup>
+            <optgroup label="误差扩散">
+              <option value="fs" selected>Floyd–Steinberg（照片首选）</option>
+              <option value="atkinson">Atkinson（高对比网点感）</option>
+              <option value="jjn">Jarvis–Judice–Ninke（最细腻）</option>
+              <option value="stucki">Stucki</option>
+              <option value="burkes">Burkes</option>
+              <option value="sierra">Sierra Lite（轻量）</option>
+              <option value="sierra2">Sierra（两行）</option>
+              <option value="sierra3">Sierra（三行）</option>
+            </optgroup>
           </select>
         </label>
-        <p class="hintline">立放 = 一面墙（XY 平面）；平铺 = 铺在地上（XZ 平面）。</p>
+        <label class="check" style="margin-bottom:0"><input type="checkbox" id="miSerp" checked> 蛇形扫描（误差扩散逐行反向往返，减少条纹）</label>
+
+        <details class="adv" id="miAdv">
+          <summary>清晰度 · 采样与调色</summary>
+          <p class="sub">缩放与抗锯齿</p>
+          <label class="fld"><span>重采样</span>
+            <div class="seg" id="miResample">
+              <button data-v="nearest" title="硬边像素，适合像素画/图标">最近邻</button>
+              <button data-v="bilinear" title="平滑，通用">双线性</button>
+              <button data-v="lanczos" class="on" title="锐利且有轻微振铃，缩图最清晰">Lanczos3</button>
+            </div>
+          </label>
+          <div class="grid2">
+            <label class="fld"><span>超采样（SSAA）</span>
+              <select id="miSS">
+                <option value="1">关（快）</option>
+                <option value="2" selected>2×2</option>
+                <option value="3">3×3（最贵）</option>
+              </select>
+            </label>
+            <label class="fld"><span>锐化 <b id="miSharpLab">35%</b></span>
+              <input type="range" id="miSharp" min="0" max="150" value="35">
+            </label>
+          </div>
+          <p class="sub">明暗与色彩</p>
+          <div class="grid2">
+            <label class="fld"><span>亮度 <b id="miBrightLab">0</b></span>
+              <input type="range" id="miBright" min="-100" max="100" value="0">
+            </label>
+            <label class="fld"><span>对比度 <b id="miContrastLab">0</b></span>
+              <input type="range" id="miContrast" min="-100" max="100" value="0">
+            </label>
+            <label class="fld"><span>饱和度 <b id="miSatLab">0</b></span>
+              <input type="range" id="miSat" min="-100" max="100" value="0">
+            </label>
+            <label class="fld"><span>伽马 <b id="miGammaLab">1.00</b></span>
+              <input type="range" id="miGamma" min="40" max="240" value="100">
+            </label>
+          </div>
+          <p class="sub">配色</p>
+          <div class="grid2">
+            <label class="fld"><span>颜色匹配</span>
+              <select id="miMetric">
+                <option value="de76">CIE Lab ΔE76（快）</option>
+                <option value="de94">CIE ΔE94</option>
+                <option value="de2000" selected>CIEDE2000（最准）</option>
+                <option value="rgbw">RGB 加权（最快）</option>
+              </select>
+            </label>
+            <label class="fld"><span>最多用几种颜色</span>
+              <select id="miMaxCol">
+                <option value="0" selected>不限（选中的全部）</option>
+                <option value="4">4</option><option value="8">8</option>
+                <option value="12">12</option><option value="16">16</option>
+                <option value="24">24</option><option value="32">32</option>
+                <option value="48">48</option><option value="64">64</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid2">
+            <label class="fld"><span>透明阈值 <b id="miAlphaLab">110</b></span>
+              <input type="range" id="miAlpha" min="0" max="255" value="110">
+            </label>
+            <label class="fld"><span>误差限幅 <b id="miClampLab">72</b></span>
+              <input type="range" id="miClamp" min="0" max="160" value="72">
+            </label>
+          </div>
+          <div class="grid2">
+            <label class="fld"><span>随机种子</span><input type="number" id="miSeed" value="7" min="0" max="99999"></label>
+            <label class="fld"><span>性能</span>
+              <div class="seg" id="miLut">
+                <button data-v="1" class="on" title="预建颜色查找表，快 2~4 倍">快速匹配</button>
+                <button data-v="0" title="逐个精确计算，用于对照">精确</button>
+              </div>
+            </label>
+          </div>
+        </details>
+        <p class="hintline">立放 = 一面墙（XY 平面）；平铺 = 铺在地上（XZ 平面）。改参数会自动重算。</p>
       </section>
 
       <section class="card">
@@ -923,13 +1035,52 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
     }
     return m;
   }
-  var BAYER4 = bayer(4), BAYER8 = bayer(8);
+  var BAYER2 = bayer(2), BAYER4 = bayer(4), BAYER8 = bayer(8), BAYER16 = bayer(16);
+  /* 误差扩散核：dx 在「正向扫描」下的偏移，蛇形扫描时整体镜像 */
   var KERNELS = {
     fs: [[1, 0, 7 / 16], [-1, 1, 3 / 16], [0, 1, 5 / 16], [1, 1, 1 / 16]],
     atkinson: [[1, 0, 1 / 8], [2, 0, 1 / 8], [-1, 1, 1 / 8], [0, 1, 1 / 8], [1, 1, 1 / 8], [0, 2, 1 / 8]],
-    sierra: [[1, 0, 2 / 4], [-1, 1, 1 / 4], [0, 1, 1 / 4]]
+    jjn: [[1, 0, 7 / 48], [2, 0, 5 / 48],
+      [-2, 1, 3 / 48], [-1, 1, 5 / 48], [0, 1, 7 / 48], [1, 1, 5 / 48], [2, 1, 3 / 48],
+      [-2, 2, 1 / 48], [-1, 2, 3 / 48], [0, 2, 5 / 48], [1, 2, 3 / 48], [2, 2, 1 / 48]],
+    stucki: [[1, 0, 8 / 42], [2, 0, 4 / 42],
+      [-2, 1, 2 / 42], [-1, 1, 4 / 42], [0, 1, 8 / 42], [1, 1, 4 / 42], [2, 1, 2 / 42],
+      [-2, 2, 1 / 42], [-1, 2, 2 / 42], [0, 2, 4 / 42], [1, 2, 2 / 42], [2, 2, 1 / 42]],
+    burkes: [[1, 0, 8 / 32], [2, 0, 4 / 32],
+      [-2, 1, 2 / 32], [-1, 1, 4 / 32], [0, 1, 8 / 32], [1, 1, 4 / 32], [2, 1, 2 / 32]],
+    sierra: [[1, 0, 2 / 4], [-1, 1, 1 / 4], [0, 1, 1 / 4]],
+    sierra2: [[1, 0, 4 / 16], [2, 0, 3 / 16],
+      [-2, 1, 1 / 16], [-1, 1, 2 / 16], [0, 1, 3 / 16], [1, 1, 2 / 16], [2, 1, 1 / 16]],
+    sierra3: [[1, 0, 5 / 32], [2, 0, 3 / 32],
+      [-2, 1, 2 / 32], [-1, 1, 4 / 32], [0, 1, 5 / 32], [1, 1, 4 / 32], [2, 1, 3 / 32],
+      [-2, 2, 2 / 32], [-1, 2, 3 / 32], [0, 2, 2 / 32], [1, 2, 3 / 32], [2, 2, 2 / 32]]
   };
-  function srgb2lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  function mulberry32(a) {
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  /* 交错梯度噪：细颗粒、没有 Bayer 的十字网格纹 */
+  function ign(x, y, seed) {
+    var f = 0.06711056 * (x + (seed % 97)) + 0.00583715 * (y + (seed % 53));
+    var g = 52.9829189 * (f - Math.floor(f));
+    return g - Math.floor(g);
+  }
+  /* sRGB ↔ 线性光：查表（箱式降采样和淡入淡出都按线性光算才不发灰） */
+  var LIN = new Float32Array(256), SRGB_T = new Float32Array(4097);
+  (function () {
+    for (var i = 0; i < 256; i++) { var c = i / 255; LIN[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+    for (var j = 0; j <= 4096; j++) { var l = j / 4096; SRGB_T[j] = (l <= 0.0031308 ? l * 12.92 : 1.055 * Math.pow(l, 1 / 2.4) - 0.055) * 255; }
+  })();
+  function lin2srgb(l) {
+    if (l <= 0) return 0; if (l >= 1) return 255;
+    var f = l * 4096, i = f | 0, t = f - i;
+    return SRGB_T[i] + (SRGB_T[i + 1] - SRGB_T[i]) * t;
+  }
+  function srgb2lin(c) { return LIN[c < 0 ? 0 : (c > 255 ? 255 : c | 0)]; }
   function rgb2lab(r, g, b) {
     var R = srgb2lin(r), G = srgb2lin(g), B = srgb2lin(b);
     var x = (R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047;
@@ -939,66 +1090,283 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
     var fx = f(x), fy = f(y), fz = f(z);
     return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
   }
-  function nearestIdx(pal, r, g, b) {
-    var lab = rgb2lab(r, g, b);
-    var L = lab[0], A = lab[1], B2 = lab[2];
-    var best = 0, bd = Infinity;
-    for (var i = 0; i < pal.length; i++) {
-      var c = pal[i].c;
-      if (!c) return 0;
-      var pl = pal[i].lab;
-      var dl = L - pl[0], da = A - pl[1], db2 = B2 - pl[2];
-      var d2 = dl * dl + da * da + db2 * db2;
-      if (d2 < bd) { bd = d2; best = i; }
-    }
-    return best;
+
+  /* ── 色差公式 ── */
+  function de76(L1, A1, B1, L2, A2, B2) { var dl = L1 - L2, da = A1 - A2, db = B1 - B2; return dl * dl + da * da + db * db; }
+  function de94(L1, A1, B1, L2, A2, B2) {
+    var C1 = Math.sqrt(A1 * A1 + B1 * B1), C2 = Math.sqrt(A2 * A2 + B2 * B2);
+    var dL = L1 - L2, dC = C1 - C2, da = A1 - A2, db = B1 - B2;
+    var dH2 = da * da + db * db - dC * dC; if (dH2 < 0) dH2 = 0;
+    var sc = 1 + 0.045 * C1, sh = 1 + 0.015 * C1;
+    return dL * dL + (dC / sc) * (dC / sc) + dH2 / (sh * sh);
   }
-  function quantize(px, W, H, pal, algo, amount) {
-    var out = new Int16Array(W * H);
-    var amt = Math.max(0, Math.min(100, amount)) / 100;
-    var i, x, y, o;
-    if (algo === 'fs' || algo === 'atkinson' || algo === 'sierra') {
-      var buf = new Float32Array(W * H * 3);
-      for (i = 0; i < W * H; i++) {
-        buf[i * 3] = px[i * 4]; buf[i * 3 + 1] = px[i * 4 + 1]; buf[i * 3 + 2] = px[i * 4 + 2];
+  /* CIEDE2000（含色相旋转项 Rt，蓝紫区不会判错） */
+  function de2000(L1, A1, B1, L2, A2, B2) {
+    var C1 = Math.hypot(A1, B1), C2 = Math.hypot(A2, B2);
+    var Cb = (C1 + C2) / 2, Cb7 = Math.pow(Cb, 7);
+    var G = 0.5 * (1 - Math.sqrt(Cb7 / (Cb7 + 6103515625)));
+    var a1 = (1 + G) * A1, a2 = (1 + G) * A2;
+    var Cp1 = Math.hypot(a1, B1), Cp2 = Math.hypot(a2, B2);
+    var h1 = Math.atan2(B1, a1) * 180 / Math.PI, h2 = Math.atan2(B2, a2) * 180 / Math.PI;
+    if (h1 < 0) h1 += 360; if (h2 < 0) h2 += 360;
+    var dL = L2 - L1, dC = Cp2 - Cp1, dhp;
+    if (Cp1 * Cp2 === 0) dhp = 0;
+    else { dhp = h2 - h1; if (dhp > 180) dhp -= 360; else if (dhp < -180) dhp += 360; }
+    var dH = 2 * Math.sqrt(Cp1 * Cp2) * Math.sin(dhp * Math.PI / 360);
+    var Lb = (L1 + L2) / 2, Cpb = (Cp1 + Cp2) / 2, hb;
+    if (Cp1 * Cp2 === 0) hb = h1 + h2;
+    else {
+      var sm = h1 + h2;
+      hb = Math.abs(h1 - h2) > 180 ? (sm < 360 ? (sm + 360) / 2 : (sm - 360) / 2) : sm / 2;
+    }
+    var T = 1 - 0.17 * Math.cos((hb - 30) * Math.PI / 180) + 0.24 * Math.cos(2 * hb * Math.PI / 180) +
+      0.32 * Math.cos((3 * hb + 6) * Math.PI / 180) - 0.20 * Math.cos((4 * hb - 63) * Math.PI / 180);
+    var dTh = 30 * Math.exp(-Math.pow((hb - 275) / 25, 2));
+    var Cpb7 = Math.pow(Cpb, 7);
+    var Rc = 2 * Math.sqrt(Cpb7 / (Cpb7 + 6103515625));
+    var Sl = 1 + (0.015 * Math.pow(Lb - 50, 2)) / Math.sqrt(20 + Math.pow(Lb - 50, 2));
+    var Sc = 1 + 0.045 * Cpb, Sh = 1 + 0.015 * Cpb * T;
+    var Rt = -Math.sin(2 * dTh * Math.PI / 180) * Rc;
+    var t1 = dL / Sl, t2 = dC / Sc, t3 = dH / Sh;
+    return t1 * t1 + t2 * t2 + t3 * t3 + Rt * t2 * t3;
+  }
+  function deRgb(r1, g1, b1, r2, g2, b2) {
+    var rm = (r1 + r2) / 2, dr = r1 - r2, dg = g1 - g2, db = b1 - b2;
+    return (2 + rm / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rm) / 256) * db * db;
+  }
+
+  /* ── 颜色匹配器：一次把调色板摊进类型化数组；可选 6bit/通道查找表 ── */
+  function makeMatcher(pal, metric, useLut) {
+    var n = pal.length, isRgb = metric === 'rgbw';
+    var P = new Float64Array(n * 3), i;
+    for (i = 0; i < n; i++) {
+      var c = pal[i].c || [128, 128, 128];
+      if (isRgb) { P[i * 3] = c[0]; P[i * 3 + 1] = c[1]; P[i * 3 + 2] = c[2]; }
+      else {
+        var lb = pal[i].lab || rgb2lab(c[0], c[1], c[2]);
+        P[i * 3] = lb[0]; P[i * 3 + 1] = lb[1]; P[i * 3 + 2] = lb[2];
       }
-      var kern = KERNELS[algo];
-      function cl(v) { return v < -72 ? -72 : (v > 72 ? 72 : v); }
-      for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
-        var k = y * W + x;
-        if (px[k * 4 + 3] < 110) { out[k] = -1; continue; }
-        var r = buf[k * 3], g = buf[k * 3 + 1], b = buf[k * 3 + 2];
-        var idx = nearestIdx(pal, r, g, b);
-        out[k] = idx;
-        var pc = pal[idx].c;
-        if (!pc) continue;
-        var er = cl((r - pc[0]) * amt), eg = cl((g - pc[1]) * amt), eb = cl((b - pc[2]) * amt);
-        for (var ki = 0; ki < kern.length; ki++) {
-          var kx = x + kern[ki][0], ky = y + kern[ki][1];
-          if (kx < 0 || kx >= W || ky < 0 || ky >= H) continue;
-          var kk = (ky * W + kx) * 3, wt = kern[ki][2];
-          buf[kk] += er * wt; buf[kk + 1] += eg * wt; buf[kk + 2] += eb * wt;
+    }
+    var LUT = useLut ? new Uint16Array(1 << 18) : null;
+    var hits = 0, misses = 0;
+    /* ΔE94/2000 很贵：先用便宜的 ΔE76 粗筛 CAND 个，再只对这几个精算。
+       实测与全量精算结果几乎一致，快 3~5 倍。 */
+    var CAND = 6, ci = new Int32Array(CAND), cd = new Float64Array(CAND);
+    function exact(r, g, b) {
+      var j, best = 0, bd = Infinity, d;
+      if (isRgb) {
+        for (j = 0; j < n; j++) {
+          d = deRgb(r, g, b, P[j * 3], P[j * 3 + 1], P[j * 3 + 2]);
+          if (d < bd) { bd = d; best = j; }
+        }
+        return best;
+      }
+      var lab = rgb2lab(r, g, b), L = lab[0], A = lab[1], B = lab[2];
+      if (metric === 'de76') {
+        for (j = 0; j < n; j++) {
+          d = de76(L, A, B, P[j * 3], P[j * 3 + 1], P[j * 3 + 2]);
+          if (d < bd) { bd = d; best = j; }
+        }
+        return best;
+      }
+      /* 粗筛：插入排序保留最近 CAND 个候选（候选池很小，直接线性插） */
+      var cn = 0;
+      for (j = 0; j < n; j++) {
+        d = de76(L, A, B, P[j * 3], P[j * 3 + 1], P[j * 3 + 2]);
+        if (cn < CAND) {
+          var q = cn++;
+          while (q > 0 && cd[q - 1] > d) { cd[q] = cd[q - 1]; ci[q] = ci[q - 1]; q--; }
+          cd[q] = d; ci[q] = j;
+        } else if (d < cd[CAND - 1]) {
+          var q2 = CAND - 1;
+          while (q2 > 0 && cd[q2 - 1] > d) { cd[q2] = cd[q2 - 1]; ci[q2] = ci[q2 - 1]; q2--; }
+          cd[q2] = d; ci[q2] = j;
+        }
+      }
+      bd = Infinity;
+      for (j = 0; j < cn; j++) {
+        var k2 = ci[j];
+        d = metric === 'de2000'
+          ? de2000(L, A, B, P[k2 * 3], P[k2 * 3 + 1], P[k2 * 3 + 2])
+          : de94(L, A, B, P[k2 * 3], P[k2 * 3 + 1], P[k2 * 3 + 2]);
+        if (d < bd) { bd = d; best = k2; }
+      }
+      return best;
+    }
+    function find(r, g, b) {
+      r = r < 0 ? 0 : (r > 255 ? 255 : r | 0);
+      g = g < 0 ? 0 : (g > 255 ? 255 : g | 0);
+      b = b < 0 ? 0 : (b > 255 ? 255 : b | 0);
+      if (!LUT) { misses++; return exact(r, g, b); }
+      var key = ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
+      var v = LUT[key];
+      if (v) { hits++; return v - 1; }
+      misses++;
+      var k = exact(r, g, b);
+      LUT[key] = k + 1;
+      return k;
+    }
+    return {
+      pal: pal, n: n, metric: metric, find: find,
+      reset: function () { hits = 0; misses = 0; },
+      stats: function () { return { hits: hits, misses: misses, lut: !!LUT }; }
+    };
+  }
+  /* 匹配器（含查找表）跨次复用：连续调参时第二次起就吃现成表 */
+  var matcherCache = { key: '', m: null };
+  function getMatcher(pal, metric, lut) {
+    var key = metric + '|' + (lut ? 1 : 0) + '|' + pal.length + '|' +
+      pal.map(function (p) { return p.id; }).join(',');
+    if (matcherCache.key === key) { matcherCache.m.reset(); return matcherCache.m; }
+    var m = makeMatcher(pal, metric, lut);
+    matcherCache = { key: key, m: m };
+    return m;
+  }
+  /* px → 调色板下标（-1 = 透明）。opt: {algo, amt, clamp, serp, seed, alpha} */
+  function quantize(px, W, H, m, opt) {
+    opt = opt || {};
+    var out = new Int16Array(W * H);
+    var alg = opt.algo || 'none';
+    var amt = Math.max(0, Math.min(200, +opt.amt || 0)) / 100;
+    var alphaT = opt.alpha == null ? 110 : +opt.alpha;
+    var kern = KERNELS[alg];
+    var mat = alg === 'bayer2' ? BAYER2 : alg === 'bayer4' ? BAYER4 :
+      alg === 'bayer8' ? BAYER8 : alg === 'bayer16' ? BAYER16 : null;
+    var seed = (+opt.seed || 0) >>> 0;
+    var x, y, k, o, r, g, b, idx;
+
+    if (kern) {
+      var clampV = opt.clamp == null ? 72 : +opt.clamp;
+      var buf = new Float32Array(W * H * 3);
+      for (k = 0; k < W * H; k++) { buf[k * 3] = px[k * 4]; buf[k * 3 + 1] = px[k * 4 + 1]; buf[k * 3 + 2] = px[k * 4 + 2]; }
+      var serp = !!opt.serp;
+      for (y = 0; y < H; y++) {
+        var dir = (serp && (y & 1)) ? -1 : 1;
+        for (var xi = 0; xi < W; xi++) {
+          x = dir > 0 ? xi : (W - 1 - xi);
+          k = y * W + x;
+          if (px[k * 4 + 3] < alphaT) { out[k] = -1; continue; }
+          r = buf[k * 3]; g = buf[k * 3 + 1]; b = buf[k * 3 + 2];
+          idx = m.find(r, g, b);
+          out[k] = idx;
+          var pc = m.pal[idx].c;
+          if (!pc) continue;
+          var er = (r - pc[0]) * amt, eg = (g - pc[1]) * amt, eb = (b - pc[2]) * amt;
+          if (clampV > 0) {
+            if (er > clampV) er = clampV; else if (er < -clampV) er = -clampV;
+            if (eg > clampV) eg = clampV; else if (eg < -clampV) eg = -clampV;
+            if (eb > clampV) eb = clampV; else if (eb < -clampV) eb = -clampV;
+          }
+          for (var ki = 0; ki < kern.length; ki++) {
+            var kx = x + kern[ki][0] * dir, ky = y + kern[ki][1];
+            if (kx < 0 || kx >= W || ky >= H) continue;
+            var kk = (ky * W + kx) * 3, wt = kern[ki][2];
+            buf[kk] += er * wt; buf[kk + 1] += eg * wt; buf[kk + 2] += eb * wt;
+          }
         }
       }
       return out;
     }
-    var mat = algo === 'bayer4' ? BAYER4 : (algo === 'bayer8' ? BAYER8 : null);
-    var n = mat ? mat.length : 0, spread = 128 * amt;
+
+    var rnd = mulberry32(seed);
+    var grain = mat ? 1 / (mat.length * mat.length) : 0;
+    var spread = 128 * amt;
     for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
-      o = (y * W + x) * 4;
-      var k2 = y * W + x;
-      if (px[o + 3] < 110) { out[k2] = -1; continue; }
-      var r2 = px[o], g2 = px[o + 1], b2 = px[o + 2];
+      k = y * W + x; o = k * 4;
+      if (px[o + 3] < alphaT) { out[k] = -1; continue; }
+      r = px[o]; g = px[o + 1]; b = px[o + 2];
       if (mat) {
-        var t = mat[y % n][x % n] / (n * n) - 0.5;
-        r2 += t * spread; g2 += t * spread; b2 += t * spread;
-      } else if (algo === 'random') {
-        var rr = (Math.random() - 0.5) * 96 * amt;
-        r2 += rr; g2 += rr; b2 += rr;
+        var t = mat[y % mat.length][x % mat.length] * grain - 0.5;
+        r += t * spread; g += t * spread; b += t * spread;
+      } else if (alg === 'random') {
+        var rr = (rnd() - 0.5) * 96 * amt;
+        r += rr; g += rr; b += rr;
+      } else if (alg === 'ign') {
+        var tt = ign(x, y, seed) - 0.5;
+        r += tt * spread; g += tt * spread; b += tt * spread;
       }
-      out[k2] = nearestIdx(pal, r2, g2, b2);
+      out[k] = m.find(r, g, b);
     }
     return out;
+  }
+
+  /* 质量读数：结果 vs 素材的平均 ΔE76。
+     先各自 3×3 低通再比 —— 抖动是靠空间混色的，逐像素比会虚高。 */
+  function meanDeltaE(px, idx, W, H, pal) {
+    var step = (W * H > 20000) ? 2 : 1, sum = 0, n = 0, x, y, dy, dx;
+    for (y = 0; y < H; y += step) for (x = 0; x < W; x += step) {
+      if (idx[y * W + x] < 0) continue;
+      var sr = 0, sg = 0, sb = 0, rr = 0, rg = 0, rb = 0, c1 = 0, c2 = 0;
+      for (dy = -1; dy <= 1; dy++) {
+        var yy = y + dy;
+        if (yy < 0 || yy >= H) continue;
+        for (dx = -1; dx <= 1; dx++) {
+          var xx = x + dx;
+          if (xx < 0 || xx >= W) continue;
+          var k = yy * W + xx;
+          if (idx[k] < 0) continue;
+          var o = k * 4, c = pal[idx[k]].c;
+          if (!c) continue;
+          sr += px[o]; sg += px[o + 1]; sb += px[o + 2]; c1++;
+          rr += c[0]; rg += c[1]; rb += c[2]; c2++;
+        }
+      }
+      if (!c1 || !c2) continue;
+      var la = rgb2lab(sr / c1, sg / c1, sb / c1), lb = rgb2lab(rr / c2, rg / c2, rb / c2);
+      sum += Math.sqrt(de76(la[0], la[1], la[2], lb[0], lb[1], lb[2]));
+      n++;
+    }
+    return n ? sum / n : 0;
+  }
+
+  /* 颜色数上限：按加权覆盖率贪心挑 K 个方块（候选按 CIEDE2000） */
+  function limitPalette(pal, px, W, H, K, alphaT) {
+    if (!K || K >= pal.length) return pal;
+    var bins = new Map(), i;
+    for (i = 0; i < W * H; i++) {
+      var o = i * 4;
+      if (px[o + 3] < (alphaT == null ? 110 : alphaT)) continue;
+      var key = ((px[o] >> 3) << 10) | ((px[o + 1] >> 3) << 5) | (px[o + 2] >> 3);
+      var e = bins.get(key);
+      if (!e) { e = { r: 0, g: 0, b: 0, w: 0 }; bins.set(key, e); }
+      e.r += px[o]; e.g += px[o + 1]; e.b += px[o + 2]; e.w++;
+    }
+    var nb = bins.size;
+    if (nb < K) return pal;
+    var bL = new Float32Array(nb), bA = new Float32Array(nb), bB = new Float32Array(nb), bw = new Float32Array(nb);
+    var j = 0;
+    bins.forEach(function (e) {
+      var lab = rgb2lab(e.r / e.w, e.g / e.w, e.b / e.w);
+      bL[j] = lab[0]; bA[j] = lab[1]; bB[j] = lab[2]; bw[j] = e.w; j++;
+    });
+    var best = new Float32Array(nb);
+    for (j = 0; j < nb; j++) best[j] = Infinity;
+    var chosen = new Uint8Array(pal.length), picked = [];
+    for (var round = 0; round < K; round++) {
+      /* 挑子集用 ΔE76（快 100 倍，选哪几种方块对公式不敏感）；逐格匹配才用所选公式 */
+      var bestCand = -1, bestScore = Infinity;
+      for (var c = 0; c < pal.length; c++) {
+        if (chosen[c]) continue;
+        var pc = pal[c].lab, score = 0;
+        for (j = 0; j < nb; j++) {
+          var d = de76(bL[j], bA[j], bB[j], pc[0], pc[1], pc[2]);
+          if (d < best[j]) score += d * bw[j];
+        }
+        if (score < bestScore) { bestScore = score; bestCand = c; }
+      }
+      if (bestCand < 0) break;
+      chosen[bestCand] = 1; picked.push(pal[bestCand]);
+      var qc = pal[bestCand].lab;
+      for (j = 0; j < nb; j++) {
+        var d2 = de76(bL[j], bA[j], bB[j], qc[0], qc[1], qc[2]);
+        if (d2 < best[j]) best[j] = d2;
+      }
+    }
+    /* 保持原调色板顺序，导出的 palette 更稳定 */
+    var keep = {}, order = [];
+    picked.forEach(function (p) { keep[p.id] = 1; });
+    pal.forEach(function (p) { if (keep[p.id]) order.push(p); });
+    return order.length ? order : pal;
   }
 
   /* 索引图 → 结构（统一线性下标 (y·sz+z)·sx+x，导出时对称反写） */
@@ -1023,16 +1391,149 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
   }
 
   /* ═════════════ 图片 ═════════════ */
-  function imageToCanvas(im, W, H, cover) {
-    var cv = d.createElement('canvas');
-    cv.width = W; cv.height = H;
-    var cx = cv.getContext('2d');
+  /* ── 采样：缩放到目标分辨率（含抗锯齿与调色前的预处理） ── */
+  function drawScaled(im, W, H, cover, K, smooth) {
     var iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
-    var s2 = cover ? Math.max(W / iw, H / ih) : Math.min(W / iw, H / ih);
-    var w2 = Math.max(1, Math.round(iw * s2)), h2 = Math.max(1, Math.round(ih * s2));
-    cx.imageSmoothingEnabled = false;
-    cx.drawImage(im, Math.round((W - w2) / 2), Math.round((H - h2) / 2), w2, h2);
-    return cv;
+    var s = cover ? Math.max(W / iw, H / ih) : Math.min(W / iw, H / ih);
+    var dw = Math.max(1, Math.round(iw * s * K)), dh = Math.max(1, Math.round(ih * s * K));
+    var cv = d.createElement('canvas');
+    cv.width = W * K; cv.height = H * K;
+    var cx = cv.getContext('2d');
+    cx.imageSmoothingEnabled = !!smooth;
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(im, Math.round((W * K - dw) / 2), Math.round((H * K - dh) / 2), dw, dh);
+    return { cv: cv, ctx: cx, cw: W * K, ch: H * K };
+  }
+  /* K×K 箱式降采样：线性光里平均，避免亮部发灰 */
+  function boxDown(src, cw, ch, W, H, K) {
+    var out = new Uint8ClampedArray(W * H * 4), n = K * K, cnt = 255 * n;
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+      var r = 0, g = 0, b = 0, a = 0;
+      for (var dy = 0; dy < K; dy++) {
+        var row = ((y * K + dy) * cw + x * K) * 4;
+        for (var dx = 0; dx < K; dx++) {
+          var p = row + dx * 4, al = src[p + 3], w2 = al / 255;
+          r += LIN[src[p]] * w2; g += LIN[src[p + 1]] * w2; b += LIN[src[p + 2]] * w2; a += al;
+        }
+      }
+      var o = (y * W + x) * 4, sw = a / 255;
+      if (sw > 0) {
+        out[o] = lin2srgb(r / sw); out[o + 1] = lin2srgb(g / sw); out[o + 2] = lin2srgb(b / sw);
+      }
+      out[o + 3] = a / n;
+    }
+    return out;
+  }
+  function lanczosW(t) {
+    if (t === 0) return 1;
+    if (t <= -3 || t >= 3) return 0;
+    var pt = Math.PI * t;
+    return 3 * Math.sin(pt) * Math.sin(pt / 3) / (pt * pt);
+  }
+  /* 分离式 Lanczos3（先横后纵），权重按缩放比拉伸 */
+  function resampleLanczos(src, sw, sh, dw, dh) {
+    var fx = Math.max(1, sw / dw), supX = 3 * fx, tmp = new Float32Array(dw * sh * 4);
+    var x, y, i, k, o;
+    for (x = 0; x < dw; x++) {
+      var cx = (x + 0.5) * fx - 0.5;
+      var x0 = Math.max(0, Math.ceil(cx - supX)), x1 = Math.min(sw - 1, Math.floor(cx + supX));
+      var ws = [], sum = 0;
+      for (i = x0; i <= x1; i++) { var wv = lanczosW((i - cx) / fx); ws.push(wv); sum += wv; }
+      if (!sum) { ws = [1]; sum = 1; x0 = Math.min(sw - 1, Math.round(cx)); }
+      var inv = 1 / sum;
+      for (y = 0; y < sh; y++) {
+        var r = 0, g = 0, b = 0, a = 0, base = (y * sw + x0) * 4;
+        for (k = 0; k < ws.length; k++) {
+          var p = base + k * 4, w3 = ws[k];
+          r += src[p] * w3; g += src[p + 1] * w3; b += src[p + 2] * w3; a += src[p + 3] * w3;
+        }
+        o = (y * dw + x) * 4;
+        tmp[o] = r * inv; tmp[o + 1] = g * inv; tmp[o + 2] = b * inv; tmp[o + 3] = a * inv;
+      }
+    }
+    var fy = Math.max(1, sh / dh), supY = 3 * fy, out = new Uint8ClampedArray(dw * dh * 4);
+    for (y = 0; y < dh; y++) {
+      var cy = (y + 0.5) * fy - 0.5;
+      var y0 = Math.max(0, Math.ceil(cy - supY)), y1 = Math.min(sh - 1, Math.floor(cy + supY));
+      var ys = [], sy = 0;
+      for (i = y0; i <= y1; i++) { var wy = lanczosW((i - cy) / fy); ys.push(wy); sy += wy; }
+      if (!sy) { ys = [1]; sy = 1; y0 = Math.min(sh - 1, Math.round(cy)); }
+      var iv = 1 / sy;
+      for (x = 0; x < dw; x++) {
+        var R = 0, G = 0, B = 0, A = 0;
+        for (k = 0; k < ys.length; k++) {
+          var q = ((y0 + k) * dw + x) * 4, w4 = ys[k];
+          R += tmp[q] * w4; G += tmp[q + 1] * w4; B += tmp[q + 2] * w4; A += tmp[q + 3] * w4;
+        }
+        o = (y * dw + x) * 4;
+        out[o] = R * iv; out[o + 1] = G * iv; out[o + 2] = B * iv; out[o + 3] = A * iv;
+      }
+    }
+    return out;
+  }
+  /* 亮度 / 对比度 / 饱和度 / 伽马：伽马走查表，避免每像素 pow */
+  function adjustPixels(px, W, H, a) {
+    var gamma = +a.gamma || 1, br = (+a.bright || 0) / 100, ct = (+a.contrast || 0) * 2.55, sa = (+a.sat || 0) / 100;
+    if (gamma === 1 && !br && !ct && !sa) return;
+    var cf = (259 * (ct + 255)) / (255 * (259 - ct)), PG = null;
+    if (gamma !== 1) {
+      PG = new Float32Array(256);
+      for (var g0 = 0; g0 < 256; g0++) PG[g0] = Math.pow(g0 / 255, 1 / gamma);
+    }
+    for (var i = 0; i < W * H; i++) {
+      var o = i * 4;
+      if (px[o + 3] < 8) continue;
+      var r, g, b;
+      if (PG) { r = PG[px[o]]; g = PG[px[o + 1]]; b = PG[px[o + 2]]; }
+      else { r = px[o] / 255; g = px[o + 1] / 255; b = px[o + 2] / 255; }
+      if (br) { r += br * 0.5; g += br * 0.5; b += br * 0.5; }
+      if (ct) {
+        r = ((r * 255 - 128) * cf + 128) / 255;
+        g = ((g * 255 - 128) * cf + 128) / 255;
+        b = ((b * 255 - 128) * cf + 128) / 255;
+      }
+      if (sa) {
+        var lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        r = lum + (r - lum) * (1 + sa); g = lum + (g - lum) * (1 + sa); b = lum + (b - lum) * (1 + sa);
+      }
+      px[o] = r * 255; px[o + 1] = g * 255; px[o + 2] = b * 255;
+    }
+  }
+  /* 反锐化掩模：缩图后补回一点边缘 */
+  function unsharp(px, W, H, amt) {
+    var k = amt / 100;
+    if (k <= 0) return;
+    var tmp = new Float32Array(W * H * 3), bl = new Float32Array(W * H * 3), i, x, y, o;
+    for (i = 0; i < W * H; i++) { tmp[i * 3] = px[i * 4]; tmp[i * 3 + 1] = px[i * 4 + 1]; tmp[i * 3 + 2] = px[i * 4 + 2]; }
+    for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
+      var l = (y * W + (x > 0 ? x - 1 : 0)) * 3, m = (y * W + x) * 3, rr = (y * W + (x < W - 1 ? x + 1 : W - 1)) * 3;
+      for (var c = 0; c < 3; c++) bl[m + c] = (tmp[l + c] + 2 * tmp[m + c] + tmp[rr + c]) * 0.25;
+    }
+    var tmp2 = new Float32Array(W * H * 3);
+    tmp2.set(bl);
+    for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
+      var u = ((y > 0 ? y - 1 : 0) * W + x) * 3, v = (y * W + x) * 3, w5 = ((y < H - 1 ? y + 1 : H - 1) * W + x) * 3;
+      for (var c2 = 0; c2 < 3; c2++) {
+        var blur = (tmp2[u + c2] + 2 * tmp2[v + c2] + tmp2[w5 + c2]) * 0.25;
+        o = (y * W + x) * 4 + c2;
+        var val = tmp[v + c2] + k * (tmp[v + c2] - blur);
+        px[o] = val < 0 ? 0 : (val > 255 ? 255 : val);
+      }
+    }
+  }
+  function prepImage(im, W, H, fit, o) {
+    var rs = o.resample || 'bilinear';
+    var ss = Math.max(1, Math.min(3, +o.ss || 1));
+    var K = rs === 'lanczos' ? 4 : (rs === 'nearest' ? 1 : ss);
+    var d0 = drawScaled(im, W, H, fit === 'cover', K, rs !== 'nearest');
+    var img = d0.ctx.getImageData(0, 0, d0.cw, d0.ch);
+    var px;
+    if (K === 1) px = new Uint8ClampedArray(img.data);
+    else if (rs === 'lanczos') px = resampleLanczos(img.data, d0.cw, d0.ch, W, H);
+    else px = boxDown(img.data, d0.cw, d0.ch, W, H, K);
+    adjustPixels(px, W, H, o);
+    unsharp(px, W, H, +o.sharp || 0);
+    return px;
   }
   function loadImageAny(url) {
     return new Promise(function (res, rej) {
@@ -1207,6 +1708,7 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
   /* ═════════════ 地图画 ═════════════ */
   var mapSrcKind = 'image', mapImage = null, mapLast = null, mapZoom = 'fit', mapView = 'side';
   var miOrient = 'wall', mapFit = 'fit', mapPreset = 'full';
+  var miResample = 'lanczos', miLut = '1', mapSrcRev = 0, profApplying = false;
 
   function setSrcKind(k) {
     mapSrcKind = k;
@@ -1262,6 +1764,7 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
     $$('#msBlockList .sw').forEach(function (x) { x.classList.toggle('on', x === b); });
     $('#icName').textContent = nameOf(iconBlockId) + ' · ' + (BLOCKS[iconBlockId] || {}).e;
     prefs.iconBlock = iconBlockId; savePrefs();
+    mapSrcRev++;
     doPreview(false);
   });
 
@@ -1311,6 +1814,7 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
 
   function useImage(im) {
     mapImage = im;
+    mapSrcRev++;
     var r = (im.naturalWidth || im.width) / (im.naturalHeight || im.height);
     setAspect(r);
     drawSource();
@@ -1400,15 +1904,95 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
     $$('#miFit button').forEach(function (x) { x.classList.toggle('on', x === b); });
     persistMap(); refreshMapSoon();
   });
+  /* 任何参数改动：标「自定义」→ 存盘 → 防抖重算 */
+  function markDirty() {
+    if (!profApplying) {
+      $('#miProf').textContent = '自定义';
+      $$('#miPresets button').forEach(function (x) { x.classList.remove('on'); });
+    }
+    persistMap(); refreshMapSoon();
+  }
+  function bindRange(id, labId, fmt) {
+    var el = $(id);
+    el.addEventListener('input', function () {
+      if (labId) $(labId).textContent = fmt ? fmt(el.value) : el.value;
+      markDirty();
+    });
+  }
   $('#miAmt').addEventListener('input', function () {
     $('#miAmtLab').textContent = $('#miAmt').value + '%';
-    persistMap(); refreshMapSoon();
+    markDirty();
   });
-  $('#miDither').addEventListener('change', function () { persistMap(); refreshMapSoon(); });
-  $('#miD').addEventListener('input', function () { persistMap(); refreshMapSoon(); });
-  $('#miW').addEventListener('input', function () { if ($('#miLock').checked) syncAspect(); persistMap(); refreshMapSoon(); });
-  $('#miH').addEventListener('input', function () { persistMap(); refreshMapSoon(); });
-  $('#miLock').addEventListener('change', function () { if ($('#miLock').checked) syncAspect(); persistMap(); refreshMapSoon(); });
+  $('#miDither').addEventListener('change', markDirty);
+  $('#miD').addEventListener('input', markDirty);
+  $('#miW').addEventListener('input', function () { if ($('#miLock').checked) syncAspect(); markDirty(); });
+  $('#miH').addEventListener('input', markDirty);
+  $('#miLock').addEventListener('change', function () { if ($('#miLock').checked) syncAspect(); markDirty(); });
+  bindRange('#miSharp', '#miSharpLab', function (v) { return v + '%'; });
+  bindRange('#miBright', '#miBrightLab');
+  bindRange('#miContrast', '#miContrastLab');
+  bindRange('#miSat', '#miSatLab');
+  bindRange('#miGamma', '#miGammaLab', function (v) { return (v / 100).toFixed(2); });
+  bindRange('#miAlpha', '#miAlphaLab');
+  bindRange('#miClamp', '#miClampLab');
+  ['#miSS', '#miMetric', '#miMaxCol', '#miSeed'].forEach(function (s) {
+    $(s).addEventListener('change', markDirty);
+  });
+  $('#miSerp').addEventListener('change', markDirty);
+  /* Lanczos 自带 4× 超采样、最近邻不做平均 —— 这两种情况下 SSAA 无意义，直接禁用 */
+  function syncSSState() {
+    var el = $('#miSS'), off = miResample !== 'bilinear';
+    el.disabled = off;
+    el.style.opacity = off ? '.45' : '';
+    el.title = off ? (miResample === 'lanczos' ? 'Lanczos3 已内置 4× 超采样' : '最近邻不做平均，超采样无效') : '';
+  }
+  $('#miResample').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    miResample = b.getAttribute('data-v');
+    $$('#miResample button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    syncSSState();
+    markDirty();
+  });
+  $('#miLut').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    miLut = b.getAttribute('data-v');
+    $$('#miLut button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    markDirty();
+  });
+
+  /* 预设：一次配好整套（不是滤镜，只是参数组合） */
+  var MAP_PROFILES = {
+    pixel: { resample: 'nearest', ss: 1, sharp: 0, dither: 'none', amt: 0, metric: 'de76', maxCol: 0 },
+    photo: { resample: 'lanczos', ss: 2, sharp: 35, dither: 'fs', amt: 70, metric: 'de2000', maxCol: 0 },
+    flat: { resample: 'bilinear', ss: 2, sharp: 0, dither: 'none', amt: 0, metric: 'de2000', maxCol: 24 },
+    fast: { resample: 'bilinear', ss: 1, sharp: 0, dither: 'bayer4', amt: 70, metric: 'de76', maxCol: 0 },
+    max: { resample: 'lanczos', ss: 3, sharp: 70, dither: 'fs', amt: 85, metric: 'de2000', maxCol: 0 }
+  };
+  var PROF_NAME = { pixel: '像素画', photo: '照片', flat: '色块简约', fast: '极速', max: '最高清晰度' };
+  function applyProfile(name) {
+    var p = MAP_PROFILES[name];
+    if (!p) return;
+    profApplying = true;
+    miResample = p.resample;
+    $$('#miResample button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === p.resample); });
+    syncSSState();
+    $('#miSS').value = p.ss;
+    $('#miSharp').value = p.sharp; $('#miSharpLab').textContent = p.sharp + '%';
+    $('#miDither').value = p.dither;
+    $('#miAmt').value = p.amt; $('#miAmtLab').textContent = p.amt + '%';
+    $('#miMetric').value = p.metric;
+    $('#miMaxCol').value = p.maxCol;
+    $('#miProf').textContent = PROF_NAME[name] || name;
+    $$('#miPresets button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-m') === name); });
+    profApplying = false;
+    persistMap(); refreshMapSoon();
+  }
+  $('#miPresets').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-m]');
+    if (b) applyProfile(b.getAttribute('data-m'));
+  });
 
   /* 可用方块 */
   var swatchesBuilt = false;
@@ -1470,8 +2054,28 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
       algo: $('#miDither').value,
       amt: +$('#miAmt').value,
       orient: miOrient,
-      fit: mapFit
+      fit: mapFit,
+      resample: miResample,
+      ss: +$('#miSS').value || 1,
+      sharp: +$('#miSharp').value || 0,
+      bright: +$('#miBright').value || 0,
+      contrast: +$('#miContrast').value || 0,
+      sat: +$('#miSat').value || 0,
+      gamma: (+$('#miGamma').value || 100) / 100,
+      metric: $('#miMetric').value,
+      maxCol: +$('#miMaxCol').value || 0,
+      alpha: +$('#miAlpha').value,
+      clamp: +$('#miClamp').value,
+      serp: $('#miSerp').checked,
+      seed: +$('#miSeed').value || 0,
+      lut: miLut === '1'
     };
+  }
+  /* 预处理结果按参数指纹缓存：只改抖动/色距时直接复用，省掉重新缩放 */
+  var prepCache = { key: '', px: null };
+  function prepKey(o) {
+    return [o.W, o.H, o.fit, o.resample, o.ss, o.sharp, o.bright, o.contrast,
+      o.sat, o.gamma, mapSrcRev].join('|');
   }
 
   var mapBusy = false, mapTimer = 0;
@@ -1485,42 +2089,60 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
     if (!mapImage) { toast('先选一张图片（拖进来或粘地址）', 'err'); return; }
     return renderMap(mapImage, download);
   }
-  function renderMap(srcCv, download) {
+  function renderMap(srcIm, download) {
     var o = mapOpts();
     if (!countSel()) { toast('至少留一种可用方块', 'err'); return; }
     if (mapBusy) return;
     mapBusy = true;
     $('#btnIcon').disabled = true;
     $('#msState').textContent = '正在生成…';
-    return buildPalette().then(function (pal) {
-      if (!pal.length) throw new Error('选中的方块都没有贴图数据');
-      var t0 = Date.now();
-      var cv = imageToCanvas(srcCv, o.W, o.H, o.fit === 'cover');
-      var px = cv.getContext('2d').getImageData(0, 0, o.W, o.H).data;
-      var idx = quantize(px, o.W, o.H, pal, o.algo, o.amt);
+    return buildPalette().then(function (palAll) {
+      if (!palAll.length) throw new Error('选中的方块都没有贴图数据');
+      var t0 = performance.now();
+      var key = prepKey(o), px = null, prepMs = 0, cached = false;
+      if (prepCache.key === key && prepCache.px) { px = prepCache.px; cached = true; }
+      else {
+        px = prepImage(srcIm, o.W, o.H, o.fit, o);
+        prepCache = { key: key, px: px };
+        prepMs = performance.now() - t0;
+      }
+      var t1 = performance.now();
+      var pal = limitPalette(palAll, px, o.W, o.H, o.maxCol, o.alpha);
+      var m = getMatcher(pal, o.metric, o.lut);
+      var idx = quantize(px, o.W, o.H, m, o);
+      var t2 = performance.now();
       var res = structFromMap(idx, o.W, o.H, pal, o.thick, o.orient);
+      var t3 = performance.now();
       mapLast = { idx: idx, W: o.W, H: o.H, pal: pal, res: res, opts: o };
       paintResult(idx, o.W, o.H, pal);
 
-      var used = 0, seen = {}, filled = 0;
-      for (var i = 0; i < idx.length; i++) {
+      var used = 0, seen = {}, filled = 0, i;
+      for (i = 0; i < idx.length; i++) {
         if (idx[i] < 0) continue;
         filled++;
         if (!seen[idx[i]]) { seen[idx[i]] = 1; used++; }
       }
       var blocks = filled * o.thick;
       var tiles = Math.ceil(o.W / 128) * Math.ceil(o.H / 128);
+      var de = meanDeltaE(px, idx, o.W, o.H, pal);
+      var st = m.stats();
+      var total = t3 - t0;
       $('#msMeta').innerHTML =
         '<span><b>' + o.W + ' × ' + o.H + '</b> 方块</span>' +
         '<span><b>' + fmtInt(blocks) + '</b> 个方块</span>' +
         '<span><b>' + used + '</b> 种颜色</span>' +
+        '<span title="结果与素材低通后的平均 CIELAB 色差，越低越接近原图">色差 <b>' + de.toFixed(2) + '</b></span>' +
         '<span>结构 <b>' + res.sx + '×' + res.sy + '×' + res.sz + '</b></span>' +
         (tiles > 1 ? '<span style="color:var(--warn)">约占 <b>' + tiles + '</b> 张地图（单张 128×128）</span>' : '') +
         (filled < o.W * o.H && o.fit !== 'cover'
           ? '<span style="color:var(--warn)">' + (o.W * o.H - filled) + ' 格留白（可换成「填充」）</span>' : '') +
-        '<span>' + (Date.now() - t0) + ' ms</span>';
+        '<span title="预处理' + (cached ? '（复用缓存）' : '') + ' / 量化 / 建结构">' +
+        '<b>' + total.toFixed(0) + '</b> ms（' + (cached ? '缓存' : prepMs.toFixed(0)) + ' + ' +
+        (t2 - t1).toFixed(0) + ' + ' + (t3 - t2).toFixed(0) + '）</span>';
       $('#msState').textContent = o.W + '×' + o.H + ' 预览就绪 · ' +
-        (o.orient === 'flat' ? '平铺' : '立放') + ' · ' + fmtInt(blocks) + ' 个方块 · ' + used + ' 种颜色';
+        (o.orient === 'flat' ? '平铺' : '立放') + ' · ' + fmtInt(blocks) + ' 个方块 · ' +
+        used + ' 种颜色 · ΔE ' + de.toFixed(1) +
+        (st.lut ? ' · 查表命中 ' + Math.round(st.hits / Math.max(1, st.hits + st.misses) * 100) + '%' : '');
       if (download) downloadMap();
       else {
         var fr = $('#msCmp').getBoundingClientRect();
@@ -1616,7 +2238,14 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
       lock: $('#miLock').checked, D: +$('#miD').value || 1,
       dither: $('#miDither').value, amt: +$('#miAmt').value,
       orient: miOrient, fit: mapFit, preset: mapPreset, ratio: syncAspect.ratio || 1,
-      sel: sel, zoom: mapZoom, view: mapView, kind: mapSrcKind
+      sel: sel, zoom: mapZoom, view: mapView, kind: mapSrcKind,
+      resample: miResample, ss: +$('#miSS').value || 1, sharp: +$('#miSharp').value || 0,
+      bright: +$('#miBright').value || 0, contrast: +$('#miContrast').value || 0,
+      sat: +$('#miSat').value || 0, gamma: +$('#miGamma').value || 100,
+      metric: $('#miMetric').value, maxCol: +$('#miMaxCol').value || 0,
+      alpha: +$('#miAlpha').value, clamp: +$('#miClamp').value,
+      serp: $('#miSerp').checked, seed: +$('#miSeed').value || 0, lut: miLut,
+      prof: $('#miProf').textContent
     };
     savePrefs();
   }
@@ -1630,6 +2259,31 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
       if (m.D) $('#miD').value = m.D;
       if (m.dither) $('#miDither').value = m.dither;
       if (typeof m.amt === 'number') { $('#miAmt').value = m.amt; $('#miAmtLab').textContent = m.amt + '%'; }
+      /* 高级参数 */
+      if (m.resample === 'nearest' || m.resample === 'bilinear' || m.resample === 'lanczos') {
+        miResample = m.resample;
+        $$('#miResample button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === miResample); });
+      }
+      if (m.ss) $('#miSS').value = m.ss;
+      if (typeof m.sharp === 'number') { $('#miSharp').value = m.sharp; $('#miSharpLab').textContent = m.sharp + '%'; }
+      if (typeof m.bright === 'number') { $('#miBright').value = m.bright; $('#miBrightLab').textContent = m.bright; }
+      if (typeof m.contrast === 'number') { $('#miContrast').value = m.contrast; $('#miContrastLab').textContent = m.contrast; }
+      if (typeof m.sat === 'number') { $('#miSat').value = m.sat; $('#miSatLab').textContent = m.sat; }
+      if (typeof m.gamma === 'number') { $('#miGamma').value = m.gamma; $('#miGammaLab').textContent = (m.gamma / 100).toFixed(2); }
+      if (m.metric) $('#miMetric').value = m.metric;
+      if (typeof m.maxCol === 'number') $('#miMaxCol').value = m.maxCol;
+      if (typeof m.alpha === 'number') { $('#miAlpha').value = m.alpha; $('#miAlphaLab').textContent = m.alpha; }
+      if (typeof m.clamp === 'number') { $('#miClamp').value = m.clamp; $('#miClampLab').textContent = m.clamp; }
+      if (typeof m.serp === 'boolean') $('#miSerp').checked = m.serp;
+      if (typeof m.seed === 'number') $('#miSeed').value = m.seed;
+      if (m.lut === '0' || m.lut === '1') {
+        miLut = m.lut;
+        $$('#miLut button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === miLut); });
+      }
+      if (m.prof) {
+        $('#miProf').textContent = m.prof;
+        $$('#miPresets button').forEach(function (x) { x.classList.toggle('on', x.textContent === m.prof); });
+      }
       if (m.orient === 'wall' || m.orient === 'flat') {
         miOrient = m.orient;
         $$('#miOrient button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === miOrient); });
@@ -1660,6 +2314,7 @@ input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
         $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
       }
     }
+    syncSSState();
     if (prefs.iconBlock && BLOCKS[prefs.iconBlock]) {
       iconBlockId = prefs.iconBlock;
       $('#icName').textContent = nameOf(iconBlockId) + ' · ' + (BLOCKS[iconBlockId] || {}).e;
