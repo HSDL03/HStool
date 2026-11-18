@@ -1047,5 +1047,18 @@
     "disabled": false,
     "hidden": true,
     "group": "换算"
+  },
+  {
+    "id": "tool-mcgen",
+    "icon": "🧱",
+    "name": "我的世界结构生成",
+    "desc": "图片 / 方块图标 / MIDI → 地图画与红石音乐，作品存本机",
+    "tag": "工具",
+    "url": "./tools/mcgen.html",
+    "category": "noDB",
+    "deprecated": false,
+    "disabled": false,
+    "hidden": false,
+    "group": "结构生成"
   }
 ]

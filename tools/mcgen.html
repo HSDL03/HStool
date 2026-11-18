@@ -1,0 +1,2372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我的世界结构生成 · 红石的小站</title>
+<meta name="description" content="图片 / 方块图标 / MIDI 一键生成 Minecraft 结构：地图画与红石音乐，原版贴图配色，浏览器本地生成，作品存在本机。">
+<meta name="theme-color" content="#0f120c">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='14' y='14' width='34' height='34' rx='7' fill='%23a8dd4f'/><rect x='52' y='14' width='34' height='34' rx='7' fill='%2382bb31'/><rect x='14' y='52' width='34' height='34' rx='7' fill='%233a4231'/><rect x='52' y='52' width='34' height='34' rx='7' fill='%23e3b33e'/></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#0f120c;--panel:#161a12;--panel2:#1d2218;--sunk:#12160f;
+  --ink:#e9edde;--dim:#98a188;--faint:#6b7360;
+  --line:#272d1f;--line-hi:#3a4231;
+  --ac:#a8dd4f;--ac-d:#82bb31;--ac-s:rgba(168,221,79,.13);
+  --warn:#e3b33e;--dgr:#e26350;
+  --top:46px;--tab:42px;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,monospace;
+  --ui:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+html,body{height:100%}
+body{
+  margin:0;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);color:var(--ink);font:13px/1.55 var(--ui);
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+::selection{background:rgba(168,221,79,.28)}
+:focus-visible{outline:1.5px solid var(--ac);outline-offset:2px;border-radius:4px}
+img{image-rendering:pixelated}
+
+/* ── 顶栏 ── */
+.top{
+  flex:none;height:var(--top);display:flex;align-items:center;gap:10px;padding:0 10px 0 12px;
+  background:var(--panel);border-bottom:1px solid var(--line);z-index:20;
+}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);flex:none}
+.brand i{
+  width:16px;height:16px;flex:none;border-radius:3px;
+  background:
+    linear-gradient(90deg,var(--ac) 0 6px,transparent 6px 10px,#5d8f2a 10px 16px),
+    linear-gradient(0deg,#2f3f1c 0 6px,transparent 6px);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.35);
+}
+.brand b{font-size:13px;font-weight:700;letter-spacing:.02em}
+.brand span{font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+.top .sp{flex:1}
+.acct{
+  display:flex;align-items:center;gap:8px;height:30px;padding:0 10px 0 5px;border-radius:15px;
+  border:1px solid var(--line);background:var(--sunk);font-size:11.5px;color:var(--dim);
+}
+.acct:hover{border-color:var(--line-hi);color:var(--ink)}
+.acct .av{
+  width:22px;height:22px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font-size:11px;font-weight:700;color:#12160c;background:var(--ac);
+}
+.acct .nm{max-width:12ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── 主标签 ── */
+.tabsbar{
+  flex:none;height:var(--tab);display:flex;align-items:stretch;gap:2px;padding:0 10px;
+  background:var(--panel);border-bottom:1px solid var(--line);
+}
+.tabsbar button{
+  display:flex;align-items:center;gap:7px;height:100%;padding:0 16px;font-size:12.5px;font-weight:600;
+  color:var(--dim);border-bottom:2px solid transparent;transition:color .14s var(--ease);
+}
+.tabsbar button:hover{color:var(--ink)}
+.tabsbar button.on{color:var(--ac);border-bottom-color:var(--ac)}
+.tabsbar .badge{
+  font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:9px;
+  background:var(--panel2);border:1px solid var(--line);color:var(--faint);
+}
+.tabsbar .sp{flex:1}
+.tabsbar .kbd-tip{font-size:11px;color:var(--faint);display:flex;align-items:center;gap:6px}
+
+/* ── 面板容器 ── */
+main{flex:1;min-height:0;display:flex;flex-direction:column}
+.pane{display:none;flex:1;min-height:0;overflow:auto;width:100%;max-width:1180px;margin:0 auto;padding:16px;flex-direction:column;gap:12px}
+.pane.on{display:flex}
+.pane::-webkit-scrollbar{width:9px}
+.pane::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px}
+
+/* ── 通用控件 ── */
+.bt{
+  display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:5px;
+  font-size:12px;font-weight:600;color:var(--dim);border:1px solid var(--line);background:var(--panel2);
+  transition:background .14s var(--ease),color .14s var(--ease),border-color .14s var(--ease);
+  white-space:nowrap;
+}
+.bt:hover{color:var(--ink);background:#252b1e;border-color:var(--line-hi)}
+.bt.pri{color:#12160c;background:var(--ac);border-color:var(--ac);font-weight:700}
+.bt.pri:hover{background:#b9e866;border-color:#b9e866;color:#12160c}
+.bt.ghost{background:transparent}
+.bt.dgr{color:var(--dgr);border-color:rgba(226,99,80,.35)}
+.bt.dgr:hover{background:rgba(226,99,80,.12);border-color:var(--dgr);color:var(--dgr)}
+.bt:disabled{opacity:.4;cursor:not-allowed}
+.bt svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+input[type=text],input[type=number],input[type=search],select{
+  width:100%;height:30px;padding:0 9px;border-radius:5px;border:1px solid var(--line);
+  background:var(--sunk);outline:0;font-size:12px;color:var(--ink);
+  transition:border-color .14s var(--ease),background .14s var(--ease);
+}
+input:focus,select:focus{border-color:var(--ac);background:#0d1008}
+input::placeholder{color:var(--faint)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--faint) 50%),linear-gradient(135deg,var(--faint) 50%,transparent 50%);
+  background-position:calc(100% - 13px) 12px,calc(100% - 8px) 12px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+input[type=checkbox]{accent-color:var(--ac)}
+input[type=range]{accent-color:var(--ac);background:transparent;width:100%}
+
+.fld{display:block;margin-bottom:10px}
+.fld>span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.fld>span b{color:var(--dim);font-weight:700;letter-spacing:0;text-transform:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.seg{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--sunk)}
+.seg button{flex:1;height:28px;border:0;background:transparent;color:var(--dim);font-size:11.5px;transition:background .14s var(--ease),color .14s var(--ease)}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--ac-s);color:var(--ac)}
+.hintline{font-size:11px;color:var(--faint);line-height:1.7;margin:-4px 0 0}
+.hidden{display:none!important}
+
+/* ── 卡片 ── */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.card>header{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.card h3{margin:0;font-size:12px;font-weight:700;letter-spacing:.04em}
+.cnt{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+
+/* 上传区 */
+.drop{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:150px;
+  border:1px dashed var(--line-hi);border-radius:7px;background:var(--sunk);cursor:pointer;
+  text-align:center;transition:border-color .14s var(--ease),background .14s var(--ease);
+}
+.drop:hover,.drop.over{border-color:var(--ac);background:var(--ac-s)}
+.drop svg{width:22px;height:22px;stroke:var(--faint);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.drop.over svg{stroke:var(--ac)}
+.drop b{font-size:12.5px;font-weight:600;color:var(--ink)}
+.drop span{font-size:11px;color:var(--faint)}
+
+.tabs2{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tabs2 button{height:30px;padding:0 12px;font-size:12px;font-weight:600;color:var(--dim);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs2 button:hover{color:var(--ink)}
+.tabs2 button.on{color:var(--ac);border-bottom-color:var(--ac)}
+
+.row{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:6px;background:var(--sunk);border:1px solid var(--line);flex-wrap:wrap}
+#msBlockList{flex:1 1 100%}
+.row .sp{flex:1}
+.url{display:flex;gap:6px;margin-top:10px}
+.url input{flex:1;min-width:0}
+
+.tools{display:flex;align-items:center;gap:8px}
+.tools .sp{flex:1}
+.tools .seg button{flex:none;height:28px;padding:0 11px;white-space:nowrap}
+
+/* 对照预览 */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fig{
+  position:relative;margin:0;display:flex;align-items:center;justify-content:center;
+  min-height:330px;padding:28px 12px 12px;border:1px solid var(--line);border-radius:8px;overflow:auto;
+  background:repeating-conic-gradient(#151a10 0 25%,#10140c 0 50%) 0 0/18px 18px;
+}
+.fig figcaption{position:absolute;left:10px;top:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--faint);pointer-events:none}
+.fig canvas{display:block;image-rendering:pixelated;border-radius:2px;box-shadow:0 0 0 1px rgba(168,221,79,.18),0 10px 26px rgba(0,0,0,.55)}
+.ph{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:11.5px;color:var(--faint);padding:0 16px;line-height:1.8}
+.meta{display:flex;flex-wrap:wrap;gap:0 14px;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+.meta b{color:var(--dim);font-weight:600}
+.meta span:not(:last-child)::after{content:"·";padding-left:13px;color:var(--line-hi)}
+
+.check{display:flex;align-items:center;gap:7px;margin:-4px 0 10px;font-size:11.5px;color:var(--dim);cursor:pointer}
+.check input{width:14px;height:14px}
+
+.presets{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.presets button{height:24px;padding:0 9px;border-radius:12px;font-size:11px;font-weight:600;color:var(--dim);border:1px solid var(--line);background:var(--panel2)}
+.presets button:hover{color:var(--ink);border-color:var(--line-hi)}
+.presets button.on{color:var(--ac);border-color:var(--ac);background:var(--ac-s)}
+
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:4px;max-height:300px;overflow:auto;padding-right:2px}
+.swatches::-webkit-scrollbar{width:8px}
+.swatches::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:4px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px 4px;border-radius:5px;border:1px solid transparent;background:var(--sunk);opacity:.32;transition:opacity .12s,border-color .12s}
+.sw:hover{border-color:var(--line-hi)}
+.sw.on{opacity:1;border-color:var(--line);background:var(--panel2)}
+.sw img{width:22px;height:22px;object-fit:contain}
+.sw span{font-size:9px;line-height:1.25;color:var(--faint);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw.on span{color:var(--dim)}
+
+/* 操作条 */
+.actionbar{
+  flex:none;display:flex;align-items:center;gap:8px;padding:9px 14px;
+  background:var(--panel);border-top:1px solid var(--line-hi);
+}
+.actionbar .sp{flex:1}
+.actionbar .st{font-family:var(--mono);font-size:10.5px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actionbar .bt{height:32px;padding:0 14px}
+
+/* 卷帘 */
+.roll{width:100%;height:260px;display:block;border-radius:6px;background:var(--sunk);border:1px solid var(--line)}
+.pianoroll-wrap{position:relative}
+.roll-empty{position:absolute;inset:0;display:grid;place-items:center;font-size:11.5px;color:var(--faint);pointer-events:none}
+
+/* 作品库 */
+.works-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.works-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:10px}
+.work{
+  display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  overflow:hidden;text-align:left;transition:border-color .14s var(--ease),transform .14s var(--ease);
+}
+.work:hover{border-color:var(--line-hi);transform:translateY(-1px)}
+.work .thumb{
+  height:132px;display:grid;place-items:center;background:var(--sunk);
+  background-image:repeating-conic-gradient(#151a10 0 25%,#10140c 0 50%);background-size:16px 16px;
+}
+.work .thumb img{max-width:100%;max-height:132px;image-rendering:pixelated}
+.work .info{padding:8px 10px 10px;display:flex;flex-direction:column;gap:3px}
+.work .info b{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.work .info span{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.work .kindtag{
+  align-self:flex-start;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:8px;
+  color:var(--ac);background:var(--ac-s);border:1px solid rgba(168,221,79,.28);
+}
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:46px 10px;color:var(--faint);font-size:12px}
+.empty b{color:var(--dim);font-size:13px}
+
+/* 弹层 */
+.sheet{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(8,10,6,.72);backdrop-filter:blur(3px)}
+.sheet.on{display:flex}
+.sheet .box{
+  width:100%;max-width:520px;max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--line-hi);
+  border-radius:10px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.6);
+}
+.sheet .box.wide{max-width:760px}
+.sheet h3{margin:0 0 12px;font-size:14px}
+.sheet .foot{display:flex;gap:8px;margin-top:16px}
+.sheet .foot .sp{flex:1}
+.sheet .prev{display:grid;place-items:center;padding:10px;border-radius:7px;background:var(--sunk);border:1px solid var(--line);
+  background-image:repeating-conic-gradient(#151a10 0 25%,#10140c 0 50%);background-size:16px 16px}
+.sheet .prev img{max-width:100%;max-height:280px;image-rendering:pixelated}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:11.5px;margin-top:10px}
+.kv dt{color:var(--faint)}
+.kv dd{margin:0;color:var(--dim);font-family:var(--mono);font-size:11px}
+
+#toast{
+  position:fixed;left:50%;bottom:24px;transform:translate(-50%,14px);z-index:120;pointer-events:none;
+  padding:9px 15px;border-radius:6px;font-size:12.5px;color:var(--ink);
+  background:rgba(29,34,24,.97);border:1px solid var(--line-hi);box-shadow:0 12px 30px rgba(0,0,0,.5);
+  opacity:0;transition:opacity .18s var(--ease),transform .18s var(--ease);max-width:82vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.ok{border-color:rgba(168,221,79,.5)}
+#toast.err{border-color:rgba(226,99,80,.55);color:#ffd9d3}
+
+@media (max-width:820px){
+  .pane{padding:10px}
+  .cmp{grid-template-columns:1fr}
+  .cols{grid-template-columns:1fr}
+  .fig{min-height:230px}
+  .actionbar .st{display:none}
+  .tools .seg button{padding:0 8px}
+  .tabsbar .kbd-tip{display:none}
+  .tabsbar button{padding:0 12px;font-size:12px}
+  .brand span{display:none}
+  .acct .nm{max-width:8ch}
+  .sheet .box{padding:14px}
+  .works-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .work .thumb{height:108px}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="../index.html" title="返回首页">
+    <i aria-hidden="true"></i><b>我的世界结构生成</b><span>GEN</span>
+  </a>
+  <span class="sp"></span>
+  <button class="acct" id="acctBtn" title="本地账号">
+    <span class="av" id="acctAv">访</span>
+    <span class="nm" id="acctNm">本地用户</span>
+  </button>
+</header>
+
+<nav class="tabsbar" id="mainTabs">
+  <button data-tab="map" class="on">地图画</button>
+  <button data-tab="midi">红石音乐 <span class="badge">MIDI</span></button>
+  <button data-tab="works">我的作品 <span class="badge" id="workCount">0</span></button>
+  <span class="sp"></span>
+  <span class="kbd-tip">作品只存这台设备</span>
+</nav>
+
+<main>
+  <!-- ═════════ 地图画 ═════════ -->
+  <section class="pane on" data-pane="map">
+    <section class="card">
+      <header><h3>素材</h3></header>
+      <div class="tabs2" id="msTabs">
+        <button data-k="image" class="on">上传图片</button>
+        <button data-k="block">方块图标</button>
+      </div>
+      <div class="drop" id="msDrop" tabindex="0" role="button" aria-label="选择或拖拽图片">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        <b id="msDropTxt">选择或拖拽图片到此处</b>
+        <span>PNG / JPG / WebP，动图取第一帧</span>
+        <input type="file" id="icFileIn" accept="image/*" class="hidden">
+      </div>
+      <div class="row hidden" id="msBlockBox">
+        <span style="font-size:11.5px;color:var(--dim)">当前方块：<b id="icName" style="color:var(--ink)">未选方块</b></span>
+        <span class="sp"></span>
+        <input type="search" id="icSearch" placeholder="搜方块 / stone" style="max-width:180px">
+      </div>
+      <div class="url" id="msUrlRow">
+        <input type="text" id="icUrl" placeholder="或粘贴图片地址（右键图标 → 复制图片地址）">
+        <button class="bt" id="btnImgUrl">用地址</button>
+      </div>
+    </section>
+
+    <div class="tools">
+      <div class="seg" id="msView" role="group" aria-label="对照方式">
+        <button data-v="side" class="on">并排</button>
+        <button data-v="res">只看结果</button>
+      </div>
+      <span class="sp"></span>
+      <div class="seg" id="msZoom" role="group" aria-label="缩放">
+        <button data-z="fit" class="on">适应</button>
+        <button data-z="1">1×</button>
+        <button data-z="2">2×</button>
+        <button data-z="4">4×</button>
+      </div>
+    </div>
+
+    <div class="cmp" id="msCmp">
+      <figure class="fig" id="msFigSrc">
+        <canvas id="msSrc"></canvas>
+        <figcaption>原图</figcaption>
+      </figure>
+      <figure class="fig" id="msFigRes">
+        <canvas id="msRes"></canvas>
+        <figcaption>生成预览</figcaption>
+        <div class="ph" id="msPh">先选素材，再点「生成预览」</div>
+      </figure>
+    </div>
+    <div class="meta" id="msMeta"></div>
+
+    <div class="cols">
+      <section class="card">
+        <header><h3>生成参数</h3></header>
+        <div class="grid2">
+          <label class="fld"><span>宽（方块）</span><input type="number" id="miW" value="64" min="4" max="256"></label>
+          <label class="fld"><span>高（方块）</span><input type="number" id="miH" value="64" min="4" max="256"></label>
+        </div>
+        <label class="check"><input type="checkbox" id="miLock" checked> 锁定比例（按素材比例算高）</label>
+        <label class="fld"><span>朝向</span>
+          <div class="seg" id="miOrient">
+            <button data-v="wall" class="on">立放（墙）</button>
+            <button data-v="flat">平铺（地）</button>
+          </div>
+        </label>
+        <label class="fld"><span>素材怎么放进画框</span>
+          <div class="seg" id="miFit">
+            <button data-v="fit" class="on">适应（留白）</button>
+            <button data-v="cover">填充（裁切）</button>
+          </div>
+        </label>
+        <div class="grid2">
+          <label class="fld"><span>厚度（层）</span><input type="number" id="miD" value="1" min="1" max="8"></label>
+          <label class="fld"><span>抖动强度 <b id="miAmtLab">70%</b></span>
+            <input type="range" id="miAmt" min="0" max="100" value="70">
+          </label>
+        </div>
+        <label class="fld"><span>抖动算法</span>
+          <select id="miDither">
+            <option value="none">不抖动（色块最干净）</option>
+            <option value="bayer4" selected>有序 4×4（Bayer）</option>
+            <option value="bayer8">有序 8×8（Bayer）</option>
+            <option value="fs">误差扩散（Floyd–Steinberg）</option>
+            <option value="atkinson">误差扩散（Atkinson，网点感）</option>
+            <option value="sierra">误差扩散（Sierra Lite）</option>
+            <option value="random">随机噪点</option>
+          </select>
+        </label>
+        <p class="hintline">立放 = 一面墙（XY 平面）；平铺 = 铺在地上（XZ 平面）。</p>
+      </section>
+
+      <section class="card">
+        <header><h3>可用方块</h3><span class="cnt" id="msPalCnt">已选 0 种</span></header>
+        <p class="hintline" style="margin:0 0 10px">点方块可开关。能用的越少，颜色越统一、越好凑材料。</p>
+        <div class="presets" id="msPresets">
+          <button data-p="concrete">混凝土</button>
+          <button data-p="wool">羊毛</button>
+          <button data-p="stone">石材</button>
+          <button data-p="wood">木头</button>
+          <button data-p="metal">金属矿物</button>
+          <button data-p="full" class="on">综合</button>
+          <button data-p="none">全不选</button>
+          <button data-p="all">全选</button>
+        </div>
+        <div class="swatches" id="msSwatches"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ═════════ 红石音乐 ═════════ -->
+  <section class="pane" data-pane="midi">
+    <section class="card">
+      <header><h3>MIDI 文件</h3><span class="cnt" id="midName">未加载</span></header>
+      <div class="drop" id="midDrop" tabindex="0" role="button" aria-label="选择或拖拽 MIDI">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>
+        <b id="midDropTxt">选择或拖拽 .mid 文件</b>
+        <span>取所有音轨的音符（note on / off），自动读速度</span>
+        <input type="file" id="midFile" accept=".mid,.midi,audio/midi,audio/x-midi" class="hidden">
+      </div>
+      <div class="meta" id="midMeta" style="margin-top:10px"></div>
+    </section>
+
+    <div class="cols">
+      <section class="card">
+        <header><h3>生成参数</h3></header>
+        <div class="grid2">
+          <label class="fld"><span>每格时长</span>
+            <select id="midStep">
+              <option value="0.05">0.05 s（1 红石刻）</option>
+              <option value="0.1" selected>0.10 s（2 刻）</option>
+              <option value="0.15">0.15 s（3 刻）</option>
+              <option value="0.25">0.25 s（5 刻）</option>
+            </select>
+          </label>
+          <label class="fld"><span>超出音域</span>
+            <select id="midRange">
+              <option value="fold">八度折叠（推荐）</option>
+              <option value="clip">直接丢掉</option>
+            </select>
+          </label>
+        </div>
+        <label class="fld"><span>音符盒音色</span>
+          <select id="midInst">
+            <option value="harp" selected>钢琴（harp）</option>
+            <option value="bass">贝斯（bass）</option>
+            <option value="bell">钟（bell）</option>
+            <option value="chime">风铃（chime）</option>
+            <option value="flute">长笛（flute）</option>
+            <option value="guitar">吉他（guitar）</option>
+            <option value="xylophone">木琴（xylophone）</option>
+          </select>
+        </label>
+        <label class="fld"><span>最多同时发声（Z 方向层数）</span><input type="number" id="midLanes" value="6" min="1" max="32"></label>
+        <label class="check"><input type="checkbox" id="midSkip" checked> 跳过同格重复音（和弦只留最高音）</label>
+        <p class="hintline">生成的是「音符盒乐谱墙」：时间沿 X 轴，同一刻的音符在 Z 轴排开。红石线要自己接，或直接用导出的指令播放。</p>
+      </section>
+
+      <section class="card">
+        <header><h3>音符分布</h3><span class="cnt" id="midCnt">未加载</span></header>
+        <div class="pianoroll-wrap">
+          <canvas class="roll" id="midRoll"></canvas>
+          <div class="roll-empty" id="midRollEmpty">加载 MIDI 后显示</div>
+        </div>
+        <p class="hintline" style="margin-top:10px">横轴时间、纵轴音高（上高下低），亮块越宽代表音越长。</p>
+      </section>
+    </div>
+  </section>
+
+  <!-- ═════════ 我的作品 ═════════ -->
+  <section class="pane" data-pane="works">
+    <div class="works-head">
+      <button class="bt" id="wkRefresh">刷新</button>
+      <span class="cnt" id="wkUsage" style="margin-left:0"></span>
+      <span class="sp" style="flex:1"></span>
+      <button class="bt" id="wkImport">导入结构文件…</button>
+      <input type="file" id="wkImportIn" accept=".mcstructure,.json" class="hidden">
+    </div>
+    <div class="works-grid" id="wkGrid"></div>
+    <div class="empty" id="wkEmpty">
+      <b>还没有作品</b>
+      <span>去「地图画」或「红石音乐」生成一个，点「保存作品」就会出现在这里。</span>
+    </div>
+  </section>
+</main>
+
+<footer class="actionbar" id="mapFoot">
+  <span class="st" id="msState">还没生成</span>
+  <span class="sp"></span>
+  <button class="bt" id="btnIcon">生成预览</button>
+  <button class="bt" id="btnSave">保存作品</button>
+  <button class="bt" id="btnIconDl">下载 .mcstructure</button>
+</footer>
+
+<footer class="actionbar hidden" id="midiFoot">
+  <span class="st" id="midState">先加载 MIDI</span>
+  <span class="sp"></span>
+  <button class="bt" id="btnMidi">生成预览</button>
+  <button class="bt" id="btnMidiSave">保存作品</button>
+  <button class="bt" id="btnMidiMc">下载 .mcstructure</button>
+  <button class="bt pri" id="btnMidiFn">下载 .mcfunction</button>
+</footer>
+
+<footer class="actionbar hidden" id="worksFoot">
+  <span class="st">作品存在这台设备的浏览器里，清缓存会一起没</span>
+  <span class="sp"></span>
+  <button class="bt dgr" id="btnWipe">清空全部</button>
+</footer>
+
+<!-- 本地账号 -->
+<div class="sheet" id="acctSheet">
+  <div class="box">
+    <h3>本地账号</h3>
+    <p class="hintline" style="margin:0 0 14px">不联网、不注册。只是给作品署个名，方便自己认。</p>
+    <label class="fld"><span>昵称</span><input type="text" id="acctInput" maxlength="16" placeholder="起个名字"></label>
+    <dl class="kv">
+      <dt>作品</dt><dd id="acctWorks">0 个</dd>
+      <dt>占用</dt><dd id="acctSize">0 KB</dd>
+      <dt>创建于</dt><dd id="acctSince">—</dd>
+    </dl>
+    <div class="foot">
+      <button class="bt dgr" id="acctClear">删除账号（连带作品）</button>
+      <span class="sp"></span>
+      <button class="bt" id="acctCancel">取消</button>
+      <button class="bt pri" id="acctSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 保存作品 -->
+<div class="sheet" id="saveSheet">
+  <div class="box">
+    <h3>保存到我的作品</h3>
+    <label class="fld"><span>作品名</span><input type="text" id="saveName" maxlength="40"></label>
+    <label class="fld"><span>备注（可空）</span><input type="text" id="saveNote" maxlength="80" placeholder="参数、出处…"></label>
+    <div class="prev" id="savePrev"></div>
+    <div class="foot">
+      <span class="sp"></span>
+      <button class="bt" id="saveCancel">取消</button>
+      <button class="bt pri" id="saveOk">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 作品详情 -->
+<div class="sheet" id="workSheet">
+  <div class="box wide">
+    <h3 id="workTitle">作品</h3>
+    <div class="prev" id="workPrev"></div>
+    <dl class="kv" id="workKv"></dl>
+    <div class="foot">
+      <button class="bt dgr" id="workDel">删除</button>
+      <button class="bt" id="workRename">重命名</button>
+      <span class="sp"></span>
+      <button class="bt" id="workDl">下载 .mcstructure</button>
+      <button class="bt pri" id="workClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script src="../assets/vendor/three.min.js"></script>
+<script src="../assets/mc-items-data.js"></script>
+<script src="../assets/mc-models-data.js"></script>
+<script src="../assets/mc-inline-textures.js"></script>
+<script>
+(function () {
+  'use strict';
+  var d = document, w = window;
+  var $ = function (s, r) { return (r || d).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || d).querySelectorAll(s)); };
+
+  /* ═════════════ 通用 ═════════════ */
+  var toastT = 0;
+  function toast(msg, kind) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.className = 'show' + (kind ? ' ' + kind : '');
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { t.className = ''; }, kind === 'err' ? 4200 : 2600);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmtInt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function saveBlob(bytes, name, mime) {
+    var blob = new Blob([bytes], { type: mime || 'application/octet-stream' });
+    var a = d.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    d.body.appendChild(a); a.click(); d.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  function fmtSize(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1048576).toFixed(2) + ' MB';
+  }
+
+  /* ═════════════ 方块数据 ═════════════ */
+  var BLOCKS = w.MC_BLOCKS || {}, TEX = w.MC_TEX || {}, B64 = w.MC_TEX_B64 || {}, MODELS = w.MC_MODELS || {};
+  var BY_NAME = {};
+  Object.keys(BLOCKS).forEach(function (id) {
+    var e = BLOCKS[id].e;
+    if (!e) return;
+    if (BY_NAME[e] === undefined || +id < +BY_NAME[e]) BY_NAME[e] = +id;
+  });
+  var NO_SHAPE = { air: 1, cave_air: 1, void_air: 1, light: 1, barrier: 1, structure_void: 1,
+    moving_piston: 1, water: 1, lava: 1, bubble_column: 1, structure_air: 1 };
+  var CROSS = { grass: 1, fern: 1, short_grass: 1, tall_grass: 1, large_fern: 1, dandelion: 1,
+    poppy: 1, blue_orchid: 1, allium: 1, azure_bluet: 1, oxeye_daisy: 1, cornflower: 1,
+    lily_of_the_valley: 1, wither_rose: 1, sunflower: 1, lilac: 1, rose_bush: 1, peony: 1,
+    brown_mushroom: 1, red_mushroom: 1, dead_bush: 1, wheat: 1, carrots: 1, potatoes: 1,
+    beetroots: 1, sweet_berry_bush: 1, cobweb: 1, torch: 1, redstone_torch: 1, soul_torch: 1,
+    oak_sapling: 1, spruce_sapling: 1, birch_sapling: 1, jungle_sapling: 1, acacia_sapling: 1,
+    dark_oak_sapling: 1, cherry_sapling: 1, bamboo: 1, kelp: 1, seagrass: 1 };
+  function kindOf(id) {
+    var b = BLOCKS[id];
+    if (!b) return 'none';
+    var e = b.e;
+    if (NO_SHAPE[e]) return 'none';
+    if (CROSS[e]) return 'cross';
+    if (MODELS[id]) return 'model';
+    return 'full';
+  }
+  function tileURL(tile) {
+    var n = TEX[tile];
+    return (n && B64[n]) || null;
+  }
+  function nameOf(id) {
+    var b = BLOCKS[id];
+    return b ? (b.n || b.e) : '';
+  }
+
+  /* ═════════════ 图集 ═════════════
+     每格 16px，col = tile % 8，row = tile / 8；动画贴图只裁第一帧。 */
+  var ATLAS_COLS = 8;
+  var ATLAS_ROWS = (w.MC_ATLAS_ROWS && w.MC_ATLAS_ROWS > 4) ? w.MC_ATLAS_ROWS : 4;
+  var TILE_PX = 16;
+  var atlasCanvas = d.createElement('canvas');
+  atlasCanvas.width = ATLAS_COLS * TILE_PX;
+  atlasCanvas.height = ATLAS_ROWS * TILE_PX;
+  var atlasCtx = atlasCanvas.getContext('2d');
+  var atlasTexture = null;
+  var tileDrawn = {}, tileLoading = {};
+  var TINTS = {
+    grass_block_top: [145, 189, 89],
+    grass_block_side_overlay: [145, 189, 89],
+    short_grass: [145, 189, 89], tall_grass: [145, 189, 89], fern: [145, 189, 89],
+    oak_leaves: [119, 171, 47], spruce_leaves: [97, 153, 97], birch_leaves: [128, 167, 85],
+    jungle_leaves: [89, 174, 48], acacia_leaves: [186, 163, 74], dark_oak_leaves: [58, 104, 32],
+    mangrove_leaves: [141, 177, 39], cherry_leaves: [245, 195, 214],
+    vine: [72, 181, 24], lily_pad: [32, 128, 48], sugar_cane: [120, 192, 93],
+    water_still: [63, 118, 228], water_flow: [63, 118, 228]
+  };
+  function tintSlot(c, r, rgb) {
+    var img = atlasCtx.getImageData(c, r, TILE_PX, TILE_PX), dd = img.data;
+    for (var i = 0; i < dd.length; i += 4) {
+      if (!dd[i + 3]) continue;
+      dd[i] = dd[i] * rgb[0] / 255;
+      dd[i + 1] = dd[i + 1] * rgb[1] / 255;
+      dd[i + 2] = dd[i + 2] * rgb[2] / 255;
+    }
+    atlasCtx.putImageData(img, c, r);
+  }
+  function loadTile(tile) {
+    tile = +tile;
+    if (tileDrawn[tile]) return Promise.resolve(true);
+    if (tileLoading[tile]) return tileLoading[tile];
+    var url = tileURL(tile);
+    if (!url) { tileDrawn[tile] = true; return Promise.resolve(false); }
+    tileLoading[tile] = new Promise(function (res) {
+      var im = new Image();
+      im.onload = function () {
+        var c = (tile % ATLAS_COLS) * TILE_PX, r = Math.floor(tile / ATLAS_COLS) * TILE_PX;
+        atlasCtx.save();
+        atlasCtx.beginPath(); atlasCtx.rect(c, r, TILE_PX, TILE_PX); atlasCtx.clip();
+        atlasCtx.drawImage(im, c, r);
+        atlasCtx.restore();
+        var tn = TEX[tile], tint = tn && TINTS[tn];
+        if (tint) tintSlot(c, r, tint);
+        tileDrawn[tile] = true;
+        if (atlasTexture) atlasTexture.needsUpdate = true;
+        res(true);
+      };
+      im.onerror = function () { tileDrawn[tile] = true; res(false); };
+      im.src = url;
+    });
+    return tileLoading[tile];
+  }
+
+  /* ═════════════ 几何 ═════════════ */
+  var FACES = [
+    { dir: [1, 0, 0], corners: [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] },
+    { dir: [-1, 0, 0], corners: [[0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, 0]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] },
+    { dir: [0, 1, 0], corners: [[0, 1, 1], [1, 1, 1], [1, 1, 0], [0, 1, 0]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+    { dir: [0, -1, 0], corners: [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+    { dir: [0, 0, 1], corners: [[1, 0, 1], [1, 1, 1], [0, 1, 1], [0, 0, 1]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] },
+    { dir: [0, 0, -1], corners: [[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] }
+  ];
+  var FACE_LIT = [1, 1, 1, 1, 1, 1];
+  var NO_CULL = false;
+  function isOcc() { return NO_CULL ? false : false; }
+  function pushQuad(g, pts, tile, uv, lit, ds) {
+    tile = +tile;
+    var key = (ds ? 'd' : '') + tile;
+    var b = g[key] || (g[key] = { tile: tile, ds: !!ds, pos: [], nor: [], uvs: [], col: [], idx: [], vc: 0 });
+    var vs = b.vc;
+    var cc = tile % ATLAS_COLS, cr = Math.floor(tile / ATLAS_COLS);
+    var u0 = cc * (1 / ATLAS_COLS), v0 = (ATLAS_ROWS - 1 - cr) * (1 / ATLAS_ROWS);
+    for (var i = 0; i < 4; i++) {
+      b.pos.push(pts[i][0], pts[i][1], pts[i][2]);
+      b.nor.push(pts[i][3], pts[i][4], pts[i][5]);
+      b.uvs.push(u0 + (0.002 + uv[i][0] * 0.996) / ATLAS_COLS,
+        v0 + (0.002 + uv[i][1] * 0.996) / ATLAS_ROWS);
+      b.col.push(lit, lit, lit);
+    }
+    b.idx.push(vs, vs + 1, vs + 2, vs, vs + 2, vs + 3);
+    b.vc += 4;
+  }
+  function pushModel(g, els, id, wx, wy, wz) {
+    for (var i = 0; i < els.length; i++) {
+      var e = els[i];
+      var X0 = wx + e[0] / 16, Y0 = wy + e[1] / 16, Z0 = wz + e[2] / 16;
+      var X1 = wx + e[3] / 16, Y1 = wy + e[4] / 16, Z1 = wz + e[5] / 16;
+      var fl = e[6];
+      for (var fj = 0; fj < fl.length; fj++) {
+        var fc = fl[fj], fi = fc[0];
+        var F = FACES[fi], tile = fc[5];
+        var b = BLOCKS[id];
+        if (typeof tile !== 'number') tile = b ? b.s : 0;
+        var u1 = fc[1], v1 = fc[2], u2 = fc[3], v2 = fc[4];
+        var pts = [], uvs = [];
+        for (var k = 0; k < 4; k++) {
+          var c = F.corners[k], a = F.uvs[k][0], bb = F.uvs[k][1];
+          pts.push([c[0] ? X1 : X0, c[1] ? Y1 : Y0, c[2] ? Z1 : Z0, F.dir[0], F.dir[1], F.dir[2]]);
+          uvs.push([(u1 + a * (u2 - u1)) / 16, 1 - ((v2 - bb * (v2 - v1)) / 16)]);
+        }
+        pushQuad(g, pts, tile, uvs, FACE_LIT[fi]);
+      }
+    }
+  }
+  function pushFull(g, id, wx, wy, wz) {
+    var b = BLOCKS[id], t = b ? b.t : 0, sm = b ? b.s : 0, bo = b ? b.b : 0;
+    var pts, uvS = [[0, 0], [0, 1], [1, 1], [1, 0]], uvY = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    for (var fi = 0; fi < 6; fi++) {
+      var F = FACES[fi], n = F.dir;
+      pts = [];
+      for (var k = 0; k < 4; k++) {
+        var c = F.corners[k];
+        pts.push([wx + c[0], wy + c[1], wz + c[2], n[0], n[1], n[2]]);
+      }
+      pushQuad(g, pts, fi === 2 ? t : fi === 3 ? bo : sm, fi === 2 || fi === 3 ? uvY : uvS, FACE_LIT[fi]);
+    }
+  }
+  function pushCross(g, id, wx, wy, wz) {
+    var b = BLOCKS[id], s = b ? (b.f || b.s || b.t) : 0;
+    var a = 0.146, c = 0.854, uv = [[0, 0], [0, 1], [1, 1], [1, 0]];
+    var q1 = [[wx + a, wy, wz + a, 0, 0, 1], [wx + c, wy, wz + c, 0, 0, 1], [wx + c, wy + 1, wz + c, 0, 0, 1], [wx + a, wy + 1, wz + a, 0, 0, 1]];
+    var q2 = [[wx + a, wy, wz + c, 0, 0, 1], [wx + c, wy, wz + a, 0, 0, 1], [wx + c, wy + 1, wz + a, 0, 0, 1], [wx + a, wy + 1, wz + c, 0, 0, 1]];
+    pushQuad(g, q1, s, uv, 1, true);
+    pushQuad(g, q2, s, uv, 1, true);
+  }
+
+  /* ═════════════ 方块图标（原版物品栏角度）═════════════
+     yaw 225° / pitch 30°，正交投影；不按邻居剔面。 */
+  var IR = null, IS = null, IC = null, IT = null, IM = null;
+  function iconSetup() {
+    if (IR) return;
+    IR = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    IR.setPixelRatio(1);
+    IR.setClearColor(0x000000, 0);
+    IS = new THREE.Scene();
+    IS.add(new THREE.AmbientLight(0xffffff, 0.62));
+    var l1 = new THREE.DirectionalLight(0xffffff, 0.55); l1.position.set(0.7, 1, 0.55); IS.add(l1);
+    var l2 = new THREE.DirectionalLight(0xffffff, 0.20); l2.position.set(-0.8, 0.25, -0.7); IS.add(l2);
+    IC = new THREE.OrthographicCamera(-0.8, 0.8, 0.8, -0.8, 0.01, 20);
+    IT = new THREE.CanvasTexture(atlasCanvas);
+    IT.magFilter = THREE.NearestFilter;
+    IT.minFilter = THREE.LinearFilter;
+    IT.generateMipmaps = false;
+    IT.wrapS = IT.wrapT = THREE.ClampToEdgeWrapping;
+    IM = new THREE.MeshLambertMaterial({ map: IT, vertexColors: true, alphaTest: 0.5, side: THREE.DoubleSide });
+    atlasTexture = IT;
+  }
+  function iconGeo(id) {
+    var g = {};
+    NO_CULL = true;
+    var kind = kindOf(id);
+    if (kind === 'model') pushModel(g, MODELS[id], id, 0, 0, 0);
+    else if (kind === 'cross') pushCross(g, id, 0, 0, 0);
+    else pushFull(g, id, 0, 0, 0);
+    NO_CULL = false;
+    var pos = [], nor = [], uvs = [], col = [], idx = [], base = 0;
+    Object.keys(g).forEach(function (k) {
+      var b = g[k];
+      if (!b.vc) return;
+      Array.prototype.push.apply(pos, b.pos);
+      Array.prototype.push.apply(nor, b.nor);
+      Array.prototype.push.apply(uvs, b.uvs);
+      Array.prototype.push.apply(col, b.col);
+      for (var i2 = 0; i2 < b.idx.length; i2++) idx.push(b.idx[i2] + base);
+      base += b.vc;
+    });
+    if (!idx.length) return null;
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    geo.setIndex(idx);
+    return geo;
+  }
+  function iconCanvas(id, px) {
+    iconSetup();
+    IR.setSize(px, px, false);
+    var d0 = 3.4, yaw = Math.PI * 1.25, pitch = 0.52;
+    IC.position.set(
+      0.5 + Math.cos(pitch) * Math.sin(yaw) * d0,
+      0.5 + Math.sin(pitch) * d0,
+      0.5 + Math.cos(pitch) * Math.cos(yaw) * d0);
+    IC.lookAt(0.5, 0.5, 0.5);
+    IC.updateProjectionMatrix();
+    var out = d.createElement('canvas'); out.width = out.height = px;
+    var geo = iconGeo(id);
+    if (!geo) return out;
+    var mesh = new THREE.Mesh(geo, IM);
+    IS.add(mesh);
+    IT.needsUpdate = true;
+    IR.render(IS, IC);
+    out.getContext('2d').drawImage(IR.domElement, 0, 0);
+    IS.remove(mesh);
+    geo.dispose();
+    return out;
+  }
+
+  /* ═════════════ 调色板 / 抖动 / 量化 ═════════════ */
+  var tileAvgCache = {};
+  function tileAvg(tile) {
+    if (tileAvgCache[tile] !== undefined) return tileAvgCache[tile];
+    var c = tile % ATLAS_COLS, r = Math.floor(tile / ATLAS_COLS);
+    if (r >= ATLAS_ROWS) { tileAvgCache[tile] = null; return null; }
+    var d0 = atlasCtx.getImageData(c * TILE_PX, r * TILE_PX, TILE_PX, TILE_PX).data;
+    var R = 0, G = 0, B = 0, n = 0;
+    for (var i = 0; i < d0.length; i += 4) {
+      if (d0[i + 3] > 170) { R += d0[i]; G += d0[i + 1]; B += d0[i + 2]; n++; }
+    }
+    var v = n ? [R / n, G / n, B / n] : null;
+    tileAvgCache[tile] = v;
+    return v;
+  }
+  var DYE = ['white', 'light_gray', 'gray', 'black', 'brown', 'red', 'orange', 'yellow',
+    'lime', 'green', 'cyan', 'light_blue', 'blue', 'purple', 'magenta', 'pink'];
+  var PAL_GROUPS = {
+    concrete: DYE.map(function (c) { return c + '_concrete'; }),
+    wool: DYE.map(function (c) { return c + '_wool'; }),
+    stone: ['stone', 'smooth_stone', 'stone_bricks', 'mossy_stone_bricks', 'cobblestone',
+      'mossy_cobblestone', 'deepslate', 'polished_deepslate', 'deepslate_bricks', 'tuff',
+      'andesite', 'diorite', 'granite', 'blackstone', 'basalt', 'calcite',
+      'dripstone_block', 'bricks', 'nether_bricks', 'end_stone', 'obsidian', 'bedrock',
+      'prismarine', 'prismarine_bricks', 'dark_prismarine', 'sandstone', 'smooth_sandstone',
+      'red_sandstone', 'soul_sand', 'soul_soil', 'gravel', 'clay', 'dirt', 'coarse_dirt',
+      'moss_block', 'snow_block', 'ice', 'packed_ice', 'blue_ice'],
+    wood: ['oak_planks', 'spruce_planks', 'birch_planks', 'jungle_planks', 'acacia_planks',
+      'dark_oak_planks', 'mangrove_planks', 'cherry_planks', 'bamboo_planks',
+      'crimson_planks', 'warped_planks', 'oak_log', 'spruce_log', 'birch_log',
+      'dark_oak_log', 'stripped_oak_log', 'stripped_spruce_log', 'stripped_birch_log',
+      'stripped_dark_oak_log'],
+    metal: ['gold_block', 'iron_block', 'copper_block', 'exposed_copper', 'weathered_copper',
+      'oxidized_copper', 'emerald_block', 'diamond_block', 'netherite_block', 'lapis_block',
+      'redstone_block', 'coal_block', 'quartz_block', 'smooth_quartz', 'amethyst_block',
+      'glowstone', 'sea_lantern', 'shroomlight', 'raw_iron_block', 'raw_copper_block',
+      'raw_gold_block']
+  };
+  PAL_GROUPS.full = PAL_GROUPS.concrete.concat(PAL_GROUPS.wool, PAL_GROUPS.stone,
+    PAL_GROUPS.wood, PAL_GROUPS.metal);
+  function paletteIds(setName) {
+    var names = PAL_GROUPS[setName] || PAL_GROUPS.full;
+    var ids = [], seen = {};
+    names.forEach(function (n) {
+      var id = BY_NAME[n];
+      if (id === undefined || seen[id]) return;
+      if (kindOf(id) === 'none') return;
+      seen[id] = 1; ids.push(id);
+    });
+    return ids;
+  }
+  var ALL_PAL = paletteIds('full');
+  var mapSel = {};
+  ALL_PAL.forEach(function (id) { mapSel[id] = 1; });
+
+  function buildPalette() {
+    var ids = ALL_PAL.filter(function (id) { return mapSel[id]; });
+    if (!ids.length) return Promise.resolve([]);
+    var load = [];
+    ids.forEach(function (id) {
+      var bb = BLOCKS[id];
+      load.push(loadTile(bb.t));
+      load.push(loadTile(bb.s || bb.t));
+      load.push(loadTile(bb.b || bb.s || bb.t));
+    });
+    return Promise.all(load).then(function () {
+      var out = [];
+      ids.forEach(function (id) {
+        var bb = BLOCKS[id];
+        var col = tileAvg(bb.s || bb.t) || tileAvg(bb.t) || tileAvg(bb.b || bb.s || bb.t);
+        if (col) out.push({ id: id, c: col, lab: rgb2lab(col[0], col[1], col[2]) });
+      });
+      return out;
+    });
+  }
+
+  function bayer(n) {
+    var m = [[0]];
+    while (m.length < n) {
+      var s = m.length, nm = [], y, x;
+      for (y = 0; y < s * 2; y++) nm.push(new Array(s * 2));
+      for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
+        var v = m[y][x] * 4;
+        nm[y][x] = v; nm[y][x + s] = v + 2; nm[y + s][x] = v + 3; nm[y + s][x + s] = v + 1;
+      }
+      m = nm;
+    }
+    return m;
+  }
+  var BAYER4 = bayer(4), BAYER8 = bayer(8);
+  var KERNELS = {
+    fs: [[1, 0, 7 / 16], [-1, 1, 3 / 16], [0, 1, 5 / 16], [1, 1, 1 / 16]],
+    atkinson: [[1, 0, 1 / 8], [2, 0, 1 / 8], [-1, 1, 1 / 8], [0, 1, 1 / 8], [1, 1, 1 / 8], [0, 2, 1 / 8]],
+    sierra: [[1, 0, 2 / 4], [-1, 1, 1 / 4], [0, 1, 1 / 4]]
+  };
+  function srgb2lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  function rgb2lab(r, g, b) {
+    var R = srgb2lin(r), G = srgb2lin(g), B = srgb2lin(b);
+    var x = (R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047;
+    var y = (R * 0.2126 + G * 0.7152 + B * 0.0722);
+    var z = (R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883;
+    function f(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
+    var fx = f(x), fy = f(y), fz = f(z);
+    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+  }
+  function nearestIdx(pal, r, g, b) {
+    var lab = rgb2lab(r, g, b);
+    var L = lab[0], A = lab[1], B2 = lab[2];
+    var best = 0, bd = Infinity;
+    for (var i = 0; i < pal.length; i++) {
+      var c = pal[i].c;
+      if (!c) return 0;
+      var pl = pal[i].lab;
+      var dl = L - pl[0], da = A - pl[1], db2 = B2 - pl[2];
+      var d2 = dl * dl + da * da + db2 * db2;
+      if (d2 < bd) { bd = d2; best = i; }
+    }
+    return best;
+  }
+  function quantize(px, W, H, pal, algo, amount) {
+    var out = new Int16Array(W * H);
+    var amt = Math.max(0, Math.min(100, amount)) / 100;
+    var i, x, y, o;
+    if (algo === 'fs' || algo === 'atkinson' || algo === 'sierra') {
+      var buf = new Float32Array(W * H * 3);
+      for (i = 0; i < W * H; i++) {
+        buf[i * 3] = px[i * 4]; buf[i * 3 + 1] = px[i * 4 + 1]; buf[i * 3 + 2] = px[i * 4 + 2];
+      }
+      var kern = KERNELS[algo];
+      function cl(v) { return v < -72 ? -72 : (v > 72 ? 72 : v); }
+      for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
+        var k = y * W + x;
+        if (px[k * 4 + 3] < 110) { out[k] = -1; continue; }
+        var r = buf[k * 3], g = buf[k * 3 + 1], b = buf[k * 3 + 2];
+        var idx = nearestIdx(pal, r, g, b);
+        out[k] = idx;
+        var pc = pal[idx].c;
+        if (!pc) continue;
+        var er = cl((r - pc[0]) * amt), eg = cl((g - pc[1]) * amt), eb = cl((b - pc[2]) * amt);
+        for (var ki = 0; ki < kern.length; ki++) {
+          var kx = x + kern[ki][0], ky = y + kern[ki][1];
+          if (kx < 0 || kx >= W || ky < 0 || ky >= H) continue;
+          var kk = (ky * W + kx) * 3, wt = kern[ki][2];
+          buf[kk] += er * wt; buf[kk + 1] += eg * wt; buf[kk + 2] += eb * wt;
+        }
+      }
+      return out;
+    }
+    var mat = algo === 'bayer4' ? BAYER4 : (algo === 'bayer8' ? BAYER8 : null);
+    var n = mat ? mat.length : 0, spread = 128 * amt;
+    for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
+      o = (y * W + x) * 4;
+      var k2 = y * W + x;
+      if (px[o + 3] < 110) { out[k2] = -1; continue; }
+      var r2 = px[o], g2 = px[o + 1], b2 = px[o + 2];
+      if (mat) {
+        var t = mat[y % n][x % n] / (n * n) - 0.5;
+        r2 += t * spread; g2 += t * spread; b2 += t * spread;
+      } else if (algo === 'random') {
+        var rr = (Math.random() - 0.5) * 96 * amt;
+        r2 += rr; g2 += rr; b2 += rr;
+      }
+      out[k2] = nearestIdx(pal, r2, g2, b2);
+    }
+    return out;
+  }
+
+  /* 索引图 → 结构（统一线性下标 (y·sz+z)·sx+x，导出时对称反写） */
+  function structFromMap(idx, W, H, pal, thick, orient) {
+    var flat = orient === 'flat';
+    var sx = W, sy = flat ? thick : H, sz = flat ? H : thick;
+    var data = new Uint16Array(sx * sy * sz);
+    var sidx = new Uint16Array(sx * sy * sz).fill(65535);
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+      var k = idx[y * W + x];
+      if (k < 0) continue;
+      var id = pal[k].id;
+      if (!id) continue;
+      if (flat) {
+        for (var t2 = 0; t2 < thick; t2++) data[(t2 * sz + y) * sx + x] = id;
+      } else {
+        var vy = H - 1 - y;
+        for (var z = 0; z < thick; z++) data[(vy * sz + z) * sx + x] = id;
+      }
+    }
+    return { sx: sx, sy: sy, sz: sz, data: data, sidx: sidx, pal: [{ name: 'air', states: {} }], pdata: {} };
+  }
+
+  /* ═════════════ 图片 ═════════════ */
+  function imageToCanvas(im, W, H, cover) {
+    var cv = d.createElement('canvas');
+    cv.width = W; cv.height = H;
+    var cx = cv.getContext('2d');
+    var iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+    var s2 = cover ? Math.max(W / iw, H / ih) : Math.min(W / iw, H / ih);
+    var w2 = Math.max(1, Math.round(iw * s2)), h2 = Math.max(1, Math.round(ih * s2));
+    cx.imageSmoothingEnabled = false;
+    cx.drawImage(im, Math.round((W - w2) / 2), Math.round((H - h2) / 2), w2, h2);
+    return cv;
+  }
+  function loadImageAny(url) {
+    return new Promise(function (res, rej) {
+      function once(u, next) {
+        var im = new Image();
+        im.crossOrigin = 'anonymous';
+        im.onload = function () { res(im); };
+        im.onerror = function () { next && next(); };
+        im.src = u;
+      }
+      once(url, function () {
+        once('https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//i, '')), function () {
+          rej(new Error('图片加载失败（可能被防盗链拦了，换个地址或存到本地再选）'));
+        });
+      });
+    });
+  }
+
+  /* ═════════════ NBT 写出（基岩 .mcstructure）═════════════ */
+  function NBTW() { this.a = []; }
+  NBTW.prototype.u8v = function (v) { this.a.push(v & 255); };
+  NBTW.prototype.i8 = function (v) { this.a.push(v & 255); };
+  NBTW.prototype.i16 = function (v) { v &= 0xffff; this.a.push(v & 255, (v >> 8) & 255); };
+  NBTW.prototype.i32 = function (v) { v |= 0; this.a.push(v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255); };
+  NBTW.prototype.i64 = function (v) {
+    var dv = new DataView(new ArrayBuffer(8));
+    dv.setBigInt64(0, BigInt(Math.trunc(Number(v) || 0)), true);
+    for (var i = 0; i < 8; i++) this.a.push(dv.getUint8(i));
+  };
+  NBTW.prototype.f32 = function (v) {
+    var dv = new DataView(new ArrayBuffer(4)); dv.setFloat32(0, +v, true);
+    for (var i = 0; i < 4; i++) this.a.push(dv.getUint8(i));
+  };
+  NBTW.prototype.f64 = function (v) {
+    var dv = new DataView(new ArrayBuffer(8)); dv.setFloat64(0, +v, true);
+    for (var i = 0; i < 8; i++) this.a.push(dv.getUint8(i));
+  };
+  NBTW.prototype.str = function (s) {
+    var b = new TextEncoder().encode(String(s));
+    this.i16(b.length);
+    for (var i = 0; i < b.length; i++) this.a.push(b[i]);
+  };
+  NBTW.prototype.head = function (t, name) { this.u8v(t); this.str(name); };
+
+  function typeOf(v) {
+    if (v === null || v === undefined) return 8;
+    if (typeof v === 'boolean') return 1;
+    if (typeof v === 'number') return (v % 1 === 0 && v >= -2147483648 && v <= 2147483647) ? 3 : 6;
+    if (typeof v === 'string') return 8;
+    if (Array.isArray(v)) return 9;
+    return 10;
+  }
+  function listElemType(v) {
+    if (!v.length) return 8;
+    var t = typeOf(v[0]);
+    for (var i = 1; i < v.length; i++) if (typeOf(v[i]) !== t) return 10;
+    return t;
+  }
+  function wPayload(wr, t, v) {
+    switch (t) {
+      case 1: wr.i8(v ? 1 : 0); break;
+      case 2: wr.i16(v); break;
+      case 3: wr.i32(v); break;
+      case 4: wr.i64(v); break;
+      case 5: wr.f32(v); break;
+      case 6: wr.f64(v); break;
+      case 8: wr.str(v == null ? '' : v); break;
+      case 9: {
+        var et = listElemType(v);
+        wr.u8v(et); wr.i32(v.length);
+        for (var i = 0; i < v.length; i++) wPayload(wr, et, v[i]);
+        break;
+      }
+      case 10: {
+        for (var k in v) {
+          if (!Object.prototype.hasOwnProperty.call(v, k)) continue;
+          var t2 = typeOf(v[k]);
+          wr.head(t2, k);
+          wPayload(wr, t2, v[k]);
+        }
+        wr.u8v(0);
+        break;
+      }
+      default: throw new Error('无法写出的 NBT 类型 ' + t);
+    }
+  }
+  function buildMc(S) {
+    if (!S) throw new Error('还没有内容');
+    var palKey = function (name, states) {
+      var o = {};
+      Object.keys(states || {}).sort().forEach(function (k) { o[k] = states[k]; });
+      return name + '|' + JSON.stringify(o);
+    };
+    var palList = [{ name: 'minecraft:air', states: {}, version: 18153472 }];
+    var palIdx = {};
+    palIdx[palKey('air', {})] = 0;
+    function palOfCell(k) {
+      var si = S.sidx ? S.sidx[k] : 65535;
+      if (si !== 65535 && S.pal && S.pal[si] && S.pal[si].name) {
+        var p0 = S.pal[si];
+        var k0 = palKey(p0.name, p0.states);
+        if (palIdx[k0] === undefined) {
+          palIdx[k0] = palList.length;
+          palList.push({ name: /^minecraft:/.test(p0.name) ? p0.name : 'minecraft:' + p0.name, states: p0.states || {}, version: p0.version || 18153472 });
+        }
+        return palIdx[k0];
+      }
+      var e = BLOCKS[S.data[k]] ? BLOCKS[S.data[k]].e : 'stone';
+      var k1 = palKey(e, {});
+      if (palIdx[k1] === undefined) {
+        palIdx[k1] = palList.length;
+        palList.push({ name: 'minecraft:' + e, states: {}, version: 18153472 });
+      }
+      return palIdx[k1];
+    }
+    var L0 = [], L1 = [], bpd = {};
+    for (var ex = 0; ex < S.sx; ex++) for (var ey = 0; ey < S.sy; ey++) for (var ez = 0; ez < S.sz; ez++) {
+      var k = (ey * S.sz + ez) * S.sx + ex;
+      var i = L0.length;
+      if (S.data[k]) {
+        L0.push(palOfCell(k));
+        if (S.pdata && S.pdata[k]) bpd[String(i)] = S.pdata[k];
+      } else L0.push(-1);
+      L1.push(-1);
+    }
+    var struct = {
+      format_version: [1, 21, 0],
+      size: [S.sx, S.sy, S.sz],
+      structure: {
+        block_indices: [L0, L1],
+        entities: [],
+        palette: { default: { block_palette: palList, block_position_data: bpd } }
+      },
+      structure_world_origin: [0, 0, 0]
+    };
+    var wr = new NBTW();
+    wr.u8v(10); wr.str('');
+    wPayload(wr, 10, struct);
+    return { bytes: new Uint8Array(wr.a), palCount: palList.length };
+  }
+
+  /* ═════════════ 本地设置 ═════════════ */
+  var PREF_KEY = 'hs-mcgen', prefs = {};
+  try { prefs = JSON.parse(w.localStorage.getItem(PREF_KEY) || '{}') || {}; } catch (err) { prefs = {}; }
+  var prefT = 0;
+  function savePrefs() {
+    clearTimeout(prefT);
+    prefT = setTimeout(function () {
+      try { w.localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (err) { }
+    }, 300);
+  }
+
+  /* ═════════════ 分区切换 ═════════════ */
+  var curTab = 'map';
+  function setTab(t) {
+    curTab = t;
+    $$('#mainTabs button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === t); });
+    $$('.pane').forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-pane') === t); });
+    $('#mapFoot').classList.toggle('hidden', t !== 'map');
+    $('#midiFoot').classList.toggle('hidden', t !== 'midi');
+    $('#worksFoot').classList.toggle('hidden', t !== 'works');
+    if (t === 'map') { renderSwatches(); paintZoom(); }
+    if (t === 'works') renderWorks();
+    if (t === 'midi') drawRoll();
+    prefs.tab = t; savePrefs();
+  }
+  $('#mainTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-tab]');
+    if (b) setTab(b.getAttribute('data-tab'));
+  });
+
+  /* ═════════════ 地图画 ═════════════ */
+  var mapSrcKind = 'image', mapImage = null, mapLast = null, mapZoom = 'fit', mapView = 'side';
+  var miOrient = 'wall', mapFit = 'fit', mapPreset = 'full';
+
+  function setSrcKind(k) {
+    mapSrcKind = k;
+    $$('#msTabs button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-k') === k); });
+    $('#msBlockBox').classList.toggle('hidden', k !== 'block');
+    $('#msDrop').classList.toggle('hidden', k !== 'image');
+    $('#msUrlRow').classList.toggle('hidden', k !== 'image');
+    $('#msPh').textContent = k === 'block' ? '点「生成预览」把当前方块渲染成地图画' : '先选素材，再点「生成预览」';
+    if (k === 'block') {
+      if (!iconBlockId) {
+        iconBlockId = BY_NAME.stone || BY_NAME.white_concrete || ALL_PAL[0];
+        if (iconBlockId) $('#icName').textContent = nameOf(iconBlockId) + ' · ' + (BLOCKS[iconBlockId] || {}).e;
+      }
+      renderBlockPick($('#icSearch').value);
+    }
+  }
+  $('#msTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-k]');
+    if (b) { setSrcKind(b.getAttribute('data-k')); persistMap(); }
+  });
+
+  /* 「方块图标」来源：一个可搜索的方块列表，选中就出预览 */
+  var iconBlockId = null;
+  function renderBlockPick(kw) {
+    kw = (kw || '').trim().toLowerCase();
+    var box = $('#msBlockBox');
+    var old = $('#msBlockList');
+    if (old) old.remove();
+    var list = d.createElement('div');
+    list.id = 'msBlockList';
+    list.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;max-height:170px;overflow:auto;margin-top:8px;width:100%';
+    var html = '', n = 0;
+    var ids = Object.keys(BLOCKS).sort(function (a, b) { return +a - +b; });
+    for (var i = 0; i < ids.length; i++) {
+      var id = ids[i], b = BLOCKS[id];
+      if (kindOf(+id) === 'none') continue;
+      if (kw && (b.n || '').toLowerCase().indexOf(kw) < 0 && (b.e || '').indexOf(kw) < 0) continue;
+      if (n >= 240) break;
+      var u = tileURL(b.t) || '';
+      html += '<button class="sw' + (iconBlockId == id ? ' on' : '') + '" data-id="' + id + '" title="' + esc(b.n) + ' · ' + esc(b.e) + '">' +
+        (u ? '<img alt="" src="' + u + '" loading="lazy">' : '') +
+        '<span>' + esc(b.n) + '</span></button>';
+      n++;
+    }
+    list.innerHTML = html || '<div style="color:var(--faint);font-size:11.5px;padding:8px">没找到</div>';
+    box.appendChild(list);
+  }
+  $('#icSearch').addEventListener('input', function () { renderBlockPick($('#icSearch').value); });
+  d.addEventListener('click', function (e) {
+    var b = e.target.closest('#msBlockList .sw');
+    if (!b) return;
+    iconBlockId = +b.getAttribute('data-id');
+    $$('#msBlockList .sw').forEach(function (x) { x.classList.toggle('on', x === b); });
+    $('#icName').textContent = nameOf(iconBlockId) + ' · ' + (BLOCKS[iconBlockId] || {}).e;
+    prefs.iconBlock = iconBlockId; savePrefs();
+    doPreview(false);
+  });
+
+  /* 素材：点击 / 拖拽 / 地址 */
+  var dropEl = $('#msDrop');
+  dropEl.addEventListener('click', function () { $('#icFileIn').click(); });
+  dropEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#icFileIn').click(); }
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dropEl.addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); dropEl.classList.add('over'); });
+  });
+  ['dragleave', 'dragend'].forEach(function (ev) {
+    dropEl.addEventListener(ev, function () { dropEl.classList.remove('over'); });
+  });
+  dropEl.addEventListener('drop', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    dropEl.classList.remove('over');
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadMapFile(f);
+  });
+  function loadMapFile(f) {
+    if (!/^image\//.test(f.type) && !/\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name)) {
+      toast('这不是图片文件', 'err'); return;
+    }
+    var url = URL.createObjectURL(f);
+    toast('正在读图…');
+    loadImageAny(url).then(function (im) {
+      setSrcKind('image');
+      useImage(im);
+      $('#msDropTxt').textContent = f.name.length > 28 ? f.name.slice(0, 26) + '…' : f.name;
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    }).catch(function (er) { toast(er.message, 'err'); });
+  }
+  $('#icFileIn').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (f) loadMapFile(f);
+    e.target.value = '';
+  });
+  $('#btnImgUrl').addEventListener('click', function () {
+    var u = $('#icUrl').value.trim();
+    if (!u) return toast('先粘一个图片地址', 'err');
+    toast('正在取图…');
+    loadImageAny(u).then(function (im) { setSrcKind('image'); useImage(im); })
+      .catch(function (e) { toast(e.message, 'err'); });
+  });
+
+  function useImage(im) {
+    mapImage = im;
+    var r = (im.naturalWidth || im.width) / (im.naturalHeight || im.height);
+    setAspect(r);
+    drawSource();
+    doPreview(false);
+  }
+  function drawSource() {
+    var cv = $('#msSrc');
+    if (!mapImage) { cv.width = cv.height = 0; return; }
+    var iw = mapImage.naturalWidth || mapImage.width;
+    var ih = mapImage.naturalHeight || mapImage.height;
+    var cap = 512, s = Math.min(1, cap / Math.max(iw, ih));
+    cv.width = Math.max(1, Math.round(iw * s));
+    cv.height = Math.max(1, Math.round(ih * s));
+    if (iw * ih < 0) return;
+    var cx = cv.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    cx.clearRect(0, 0, cv.width, cv.height);
+    cx.drawImage(mapImage, 0, 0, cv.width, cv.height);
+    paintZoom();
+  }
+  function drawIconSource(id) {
+    var cv = $('#msSrc');
+    var ic = iconCanvas(id, 256);
+    cv.width = cv.height = 256;
+    var cx = cv.getContext('2d');
+    cx.clearRect(0, 0, 256, 256);
+    cx.drawImage(ic, 0, 0);
+    paintZoom();
+  }
+
+  /* 缩放只改 CSS 尺寸，位图不重绘 */
+  function paintZoom() {
+    $$('.fig canvas').forEach(function (cv) {
+      if (!cv.width) { cv.style.width = ''; cv.style.height = ''; return; }
+      if (mapZoom === 'fit') {
+        var boxW = Math.max(40, cv.parentNode.clientWidth - 28);
+        var sc = Math.min(boxW / cv.width, (cv.parentNode.clientHeight - 44) / cv.height, 12);
+        sc = Math.max(sc, 0.4);
+        cv.style.width = Math.round(cv.width * sc) + 'px';
+        cv.style.height = Math.round(cv.height * sc) + 'px';
+      } else {
+        var z = +mapZoom;
+        cv.style.width = cv.width * z + 'px';
+        cv.style.height = cv.height * z + 'px';
+      }
+    });
+  }
+  $('#msView').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    mapView = b.getAttribute('data-v');
+    $$('#msView button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    $('#msFigSrc').classList.toggle('hidden', mapView === 'res');
+    $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
+    paintZoom();
+    persistMap();
+  });
+  $('#msZoom').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-z]');
+    if (!b) return;
+    mapZoom = b.getAttribute('data-z');
+    $$('#msZoom button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    paintZoom();
+    persistMap();
+  });
+  w.addEventListener('resize', function () { if (mapZoom === 'fit') paintZoom(); });
+
+  /* 参数 */
+  function setAspect(ratio) { syncAspect.ratio = ratio || 1; syncAspect(); }
+  function syncAspect() {
+    if (!$('#miLock').checked) return;
+    var W = Math.max(4, Math.min(256, +$('#miW').value || 64));
+    var st = syncAspect.ratio || 1;
+    $('#miH').value = Math.max(4, Math.min(256, Math.round(W / st)));
+  }
+  $('#miOrient').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    miOrient = b.getAttribute('data-v');
+    $$('#miOrient button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    persistMap(); refreshMapSoon();
+  });
+  $('#miFit').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    mapFit = b.getAttribute('data-v');
+    $$('#miFit button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    persistMap(); refreshMapSoon();
+  });
+  $('#miAmt').addEventListener('input', function () {
+    $('#miAmtLab').textContent = $('#miAmt').value + '%';
+    persistMap(); refreshMapSoon();
+  });
+  $('#miDither').addEventListener('change', function () { persistMap(); refreshMapSoon(); });
+  $('#miD').addEventListener('input', function () { persistMap(); refreshMapSoon(); });
+  $('#miW').addEventListener('input', function () { if ($('#miLock').checked) syncAspect(); persistMap(); refreshMapSoon(); });
+  $('#miH').addEventListener('input', function () { persistMap(); refreshMapSoon(); });
+  $('#miLock').addEventListener('change', function () { if ($('#miLock').checked) syncAspect(); persistMap(); refreshMapSoon(); });
+
+  /* 可用方块 */
+  var swatchesBuilt = false;
+  function renderSwatches() {
+    if (swatchesBuilt) { syncSwatchState(); return; }
+    var box = $('#msSwatches'), html = '';
+    ALL_PAL.forEach(function (id) {
+      var b = BLOCKS[id];
+      if (!b) return;
+      var u = tileURL(b.s || b.t) || tileURL(b.t);
+      html += '<button class="sw' + (mapSel[id] ? ' on' : '') + '" data-id="' + id + '" title="' + esc(b.n + ' · ' + b.e) + '">' +
+        (u ? '<img alt="" src="' + u + '" loading="lazy">' : '') +
+        '<span>' + esc(b.n) + '</span></button>';
+    });
+    box.innerHTML = html;
+    swatchesBuilt = true;
+    countSel();
+  }
+  function syncSwatchState() {
+    $$('#msSwatches .sw').forEach(function (el) {
+      el.classList.toggle('on', !!mapSel[+el.getAttribute('data-id')]);
+    });
+    countSel();
+  }
+  function countSel() {
+    var n = ALL_PAL.filter(function (id) { return mapSel[id]; }).length;
+    $('#msPalCnt').textContent = '已选 ' + n + ' 种';
+    $('#msPalCnt').style.color = n ? '' : 'var(--dgr)';
+    return n;
+  }
+  $('#msSwatches').addEventListener('click', function (e) {
+    var el = e.target.closest('.sw');
+    if (!el) return;
+    var id = +el.getAttribute('data-id');
+    if (mapSel[id]) delete mapSel[id]; else mapSel[id] = 1;
+    el.classList.toggle('on');
+    mapPreset = '';
+    $$('#msPresets button').forEach(function (x) { x.classList.remove('on'); });
+    countSel(); persistMap(); refreshMapSoon();
+  });
+  $('#msPresets').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-p]');
+    if (!b) return;
+    var p = b.getAttribute('data-p');
+    mapPreset = (p === 'all' || p === 'none') ? '' : p;
+    if (p === 'none') mapSel = {};
+    else if (p === 'all') paletteIds('full').forEach(function (id) { mapSel[id] = 1; });
+    else { mapSel = {}; paletteIds(p).forEach(function (id) { mapSel[id] = 1; }); }
+    $$('#msPresets button').forEach(function (x) { x.classList.toggle('on', x === b && p !== 'none' && p !== 'all'); });
+    syncSwatchState(); persistMap(); refreshMapSoon();
+  });
+
+  function mapOpts() {
+    var W = Math.max(4, Math.min(256, +$('#miW').value || 64));
+    var H = Math.max(4, Math.min(256, +$('#miH').value || 64));
+    return {
+      W: W, H: H,
+      thick: Math.max(1, Math.min(8, +$('#miD').value || 1)),
+      algo: $('#miDither').value,
+      amt: +$('#miAmt').value,
+      orient: miOrient,
+      fit: mapFit
+    };
+  }
+
+  var mapBusy = false, mapTimer = 0;
+  function refreshMapSoon() { clearTimeout(mapTimer); mapTimer = setTimeout(refreshMap, 180); }
+  function refreshMap() {
+    if (mapSrcKind === 'block' && !iconBlockId) return;
+    if (mapLast || mapSrcKind === 'block') doPreview(false);
+  }
+  function doPreview(download) {
+    if (mapSrcKind === 'block') return genFromBlock(download);
+    if (!mapImage) { toast('先选一张图片（拖进来或粘地址）', 'err'); return; }
+    return renderMap(mapImage, download);
+  }
+  function renderMap(srcCv, download) {
+    var o = mapOpts();
+    if (!countSel()) { toast('至少留一种可用方块', 'err'); return; }
+    if (mapBusy) return;
+    mapBusy = true;
+    $('#btnIcon').disabled = true;
+    $('#msState').textContent = '正在生成…';
+    return buildPalette().then(function (pal) {
+      if (!pal.length) throw new Error('选中的方块都没有贴图数据');
+      var t0 = Date.now();
+      var cv = imageToCanvas(srcCv, o.W, o.H, o.fit === 'cover');
+      var px = cv.getContext('2d').getImageData(0, 0, o.W, o.H).data;
+      var idx = quantize(px, o.W, o.H, pal, o.algo, o.amt);
+      var res = structFromMap(idx, o.W, o.H, pal, o.thick, o.orient);
+      mapLast = { idx: idx, W: o.W, H: o.H, pal: pal, res: res, opts: o };
+      paintResult(idx, o.W, o.H, pal);
+
+      var used = 0, seen = {}, filled = 0;
+      for (var i = 0; i < idx.length; i++) {
+        if (idx[i] < 0) continue;
+        filled++;
+        if (!seen[idx[i]]) { seen[idx[i]] = 1; used++; }
+      }
+      var blocks = filled * o.thick;
+      var tiles = Math.ceil(o.W / 128) * Math.ceil(o.H / 128);
+      $('#msMeta').innerHTML =
+        '<span><b>' + o.W + ' × ' + o.H + '</b> 方块</span>' +
+        '<span><b>' + fmtInt(blocks) + '</b> 个方块</span>' +
+        '<span><b>' + used + '</b> 种颜色</span>' +
+        '<span>结构 <b>' + res.sx + '×' + res.sy + '×' + res.sz + '</b></span>' +
+        (tiles > 1 ? '<span style="color:var(--warn)">约占 <b>' + tiles + '</b> 张地图（单张 128×128）</span>' : '') +
+        (filled < o.W * o.H && o.fit !== 'cover'
+          ? '<span style="color:var(--warn)">' + (o.W * o.H - filled) + ' 格留白（可换成「填充」）</span>' : '') +
+        '<span>' + (Date.now() - t0) + ' ms</span>';
+      $('#msState').textContent = o.W + '×' + o.H + ' 预览就绪 · ' +
+        (o.orient === 'flat' ? '平铺' : '立放') + ' · ' + fmtInt(blocks) + ' 个方块 · ' + used + ' 种颜色';
+      if (download) downloadMap();
+      else {
+        var fr = $('#msCmp').getBoundingClientRect();
+        if (fr.top < 60 || fr.bottom > w.innerHeight) $('#msCmp').scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+      return mapLast;
+    }).catch(function (err) {
+      $('#msState').textContent = '生成失败';
+      toast('生成失败：' + (err && err.message || err), 'err');
+    }).then(function (r) {
+      mapBusy = false;
+      $('#btnIcon').disabled = false;
+      return r;
+    });
+  }
+  function paintResult(idx, W, H, pal) {
+    var cv = $('#msRes');
+    cv.width = W; cv.height = H;
+    var cx = cv.getContext('2d');
+    var img = cx.createImageData(W, H), p = img.data;
+    for (var i = 0; i < W * H; i++) {
+      var k = idx[i];
+      if (k < 0 || !pal[k] || !pal[k].c) { p[i * 4 + 3] = 0; continue; }
+      var c = pal[k].c;
+      p[i * 4] = c[0]; p[i * 4 + 1] = c[1]; p[i * 4 + 2] = c[2]; p[i * 4 + 3] = 255;
+    }
+    cx.putImageData(img, 0, 0);
+    $('#msPh').classList.add('hidden');
+    paintZoom();
+  }
+  function genFromBlock(download) {
+    if (!iconBlockId) { toast('先在下面选一个方块', 'err'); return; }
+    if (kindOf(iconBlockId) === 'none') { toast('这个方块没有实体，换一个', 'err'); return; }
+    var bb = BLOCKS[iconBlockId];
+    if (!bb) return toast('这个方块没有贴图数据', 'err');
+    var o = mapOpts();
+    $('#msState').textContent = '正在渲染方块图标…';
+    Promise.all([loadTile(bb.t), loadTile(bb.s || bb.t), loadTile(bb.b || bb.s || bb.t)]).then(function () {
+      drawIconSource(iconBlockId);
+      var side = Math.max(o.W, o.H);
+      return renderMap(iconCanvas(iconBlockId, Math.max(128, Math.min(512, side * 4))), download);
+    });
+  }
+  function downloadMap() {
+    if (!mapLast) { toast('先点「生成预览」', 'err'); return; }
+    var o = mapLast.opts;
+    try {
+      var out = buildMc(mapLast.res);
+      saveBlob(out.bytes, 'mapart-' + o.W + 'x' + o.H + '.mcstructure');
+      toast('已下载 .mcstructure（' + out.palCount + ' 种方块状态）', 'ok');
+    } catch (err) { toast('导出失败：' + err.message, 'err'); }
+  }
+  $('#btnIcon').addEventListener('click', function () { doPreview(false); });
+  $('#btnIconDl').addEventListener('click', function () { doPreview(true); });
+  $('#btnSave').addEventListener('click', function () {
+    if (!mapLast) { toast('先点「生成预览」', 'err'); return; }
+    var o = mapLast.opts;
+    var thumb = thumbFromCanvas($('#msRes'));
+    askSave({
+      kind: 'mapart',
+      name: '地图画 ' + o.W + '×' + o.H,
+      thumb: thumb,
+      struct: mapLast.res,
+      size: [mapLast.res.sx, mapLast.res.sy, mapLast.res.sz],
+      blocks: countStruct(mapLast.res),
+      meta: { 尺寸: o.W + '×' + o.H, 朝向: o.orient === 'flat' ? '平铺' : '立放', 厚度: o.thick, 抖动: o.algo, 强度: o.amt + '%', 适配: o.fit === 'cover' ? '填充' : '适应', 配色: countSel() + ' 种方块' }
+    });
+  });
+
+  function thumbFromCanvas(cv, maxW) {
+    maxW = maxW || 360;
+    var s = Math.min(1, maxW / Math.max(1, cv.width));
+    var t = d.createElement('canvas');
+    t.width = Math.max(1, Math.round(cv.width * s));
+    t.height = Math.max(1, Math.round(cv.height * s));
+    var cx = t.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    cx.drawImage(cv, 0, 0, t.width, t.height);
+    try { return t.toDataURL('image/webp', 0.82); } catch (e) { return t.toDataURL('image/png'); }
+  }
+  function countStruct(S) {
+    var n = 0;
+    for (var i = 0; i < S.data.length; i++) if (S.data[i]) n++;
+    return n;
+  }
+
+  /* 设置存取 */
+  function persistMap() {
+    var sel = {};
+    ALL_PAL.forEach(function (id) { if (mapSel[id]) sel[id] = 1; });
+    prefs.map = {
+      W: +$('#miW').value || 64, H: +$('#miH').value || 64,
+      lock: $('#miLock').checked, D: +$('#miD').value || 1,
+      dither: $('#miDither').value, amt: +$('#miAmt').value,
+      orient: miOrient, fit: mapFit, preset: mapPreset, ratio: syncAspect.ratio || 1,
+      sel: sel, zoom: mapZoom, view: mapView, kind: mapSrcKind
+    };
+    savePrefs();
+  }
+  function applyPrefs() {
+    var m = prefs.map;
+    if (m) {
+      if (m.kind === 'block') setSrcKind('block');
+      if (m.W) $('#miW').value = m.W;
+      if (m.H) $('#miH').value = m.H;
+      if (typeof m.lock === 'boolean') $('#miLock').checked = m.lock;
+      if (m.D) $('#miD').value = m.D;
+      if (m.dither) $('#miDither').value = m.dither;
+      if (typeof m.amt === 'number') { $('#miAmt').value = m.amt; $('#miAmtLab').textContent = m.amt + '%'; }
+      if (m.orient === 'wall' || m.orient === 'flat') {
+        miOrient = m.orient;
+        $$('#miOrient button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === miOrient); });
+      }
+      if (m.fit === 'cover' || m.fit === 'fit') {
+        mapFit = m.fit;
+        $$('#miFit button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === mapFit); });
+      }
+      if (m.preset) {
+        mapPreset = m.preset;
+        $$('#msPresets button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-p') === mapPreset); });
+      }
+      if (m.ratio) syncAspect.ratio = m.ratio;
+      if (m.sel) {
+        var any = false, o = {};
+        ALL_PAL.forEach(function (id) { if (m.sel[id]) { o[id] = 1; any = true; } });
+        if (any) mapSel = o;
+      }
+      countSel();
+      if (m.zoom) {
+        mapZoom = m.zoom;
+        $$('#msZoom button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-z') === mapZoom); });
+      }
+      if (m.view) {
+        mapView = m.view;
+        $$('#msView button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === mapView); });
+        $('#msFigSrc').classList.toggle('hidden', mapView === 'res');
+        $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
+      }
+    }
+    if (prefs.iconBlock && BLOCKS[prefs.iconBlock]) {
+      iconBlockId = prefs.iconBlock;
+      $('#icName').textContent = nameOf(iconBlockId) + ' · ' + (BLOCKS[iconBlockId] || {}).e;
+    }
+  }
+
+  /* ═════════════ MIDI → 红石音乐 ═════════════
+     自己解析 SMF：MThd + 多个 MTrk，只取 note on/off 与首速。
+     音符盒 0~24 对应 F#3 起算的两个八度，音色决定基准八度。 */
+  var midiData = null, midiStruct = null;
+  var INST_BASE = { harp: 54, bass: 30, bell: 78, chime: 78, flute: 66, guitar: 42, xylophone: 78 };
+  var INST_SOUND = { harp: 'harp', bass: 'bass', bell: 'bell', chime: 'chime', flute: 'flute', guitar: 'guitar', xylophone: 'xylophone' };
+
+  function readVarLen(a, p) {
+    var v = 0, b;
+    do { b = a[p.i++]; v = (v << 7) | (b & 0x7f); } while (b & 0x80);
+    return v;
+  }
+  function parseMidi(buf) {
+    var a = new Uint8Array(buf), p = { i: 0 };
+    function u32() { var v = (a[p.i] << 24 | a[p.i + 1] << 16 | a[p.i + 2] << 8 | a[p.i + 3]) >>> 0; p.i += 4; return v; }
+    function u16() { var v = (a[p.i] << 8) | a[p.i + 1]; p.i += 2; return v; }
+    if (String.fromCharCode(a[0], a[1], a[2], a[3]) !== 'MThd') throw new Error('不是标准 MIDI（缺 MThd 头）');
+    p.i = 4;
+    var hlen = u32(), fmt = u16(), ntrks = u16(), div = u16();
+    p.i = 8 + hlen;
+    if (div & 0x8000) throw new Error('这是 SMPTE 时间格式的 MIDI，暂不支持');
+    var tempoUs = 500000, tempoFound = false;
+    var notes = [], tracks = 0, titles = [], tmin = 0, tmax = 0;
+    var dec = new TextDecoder('utf-8');
+    while (p.i < a.length - 4) {
+      if (String.fromCharCode(a[p.i], a[p.i + 1], a[p.i + 2], a[p.i + 3]) !== 'MTrk') { p.i++; continue; }
+      p.i += 4;
+      var tlen = u32(), end = p.i + tlen;
+      var tick = 0, status = 0, tname = '';
+      while (p.i < end) {
+        tick += readVarLen(a, p);
+        var b = a[p.i];
+        var hi;
+        if (b & 0x80) { status = b; p.i++; }
+        hi = status & 0xF0;
+        if (status === 0xFF) {
+          var type = a[p.i++];
+          var ln = readVarLen(a, p);
+          if (type === 0x03) { try { tname = dec.decode(a.subarray(p.i, p.i + ln)); } catch (e) { } }
+          if (type === 0x51 && ln === 3) {
+            var tp = (a[p.i] << 16) | (a[p.i + 1] << 8) | a[p.i + 2];
+            if (!tempoFound) { tempoUs = tp; tempoFound = true; }
+          }
+          p.i += ln;
+        } else if (status === 0xF0 || status === 0xF7) {
+          var ln2 = readVarLen(a, p); p.i += ln2;
+        } else if (hi === 0x90) {
+          var n = a[p.i++], v = a[p.i++];
+          if (v > 0) notes.push({ tick: tick, note: n, vel: v });
+        } else if (hi === 0x80) {
+          p.i += 2;
+        } else if (hi === 0xA0 || hi === 0xB0 || hi === 0xE0) {
+          p.i += 2;
+        } else if (hi === 0xC0 || hi === 0xD0) {
+          p.i += 1;
+        } else {
+          p.i += 1;
+        }
+      }
+      p.i = end;
+      if (tname) titles.push(tname);
+      tracks++;
+      if (tracks > 64) break;
+    }
+    if (!notes.length) throw new Error('这个 MIDI 里没有音符');
+    var secPerTick = (tempoUs / 1e6) / div;
+    notes.forEach(function (n) { n.t = n.tick * secPerTick; });
+    notes.sort(function (x, y) { return x.t - y.t; });
+    tmax = notes[notes.length - 1].t;
+    return {
+      notes: notes, tracks: tracks, div: div, tempoUs: tempoUs,
+      bpm: Math.round(60000000 / tempoUs),
+      duration: tmax,
+      name: (titles[0] || '未命名').replace(/[\r\n]+/g, ' ').trim().slice(0, 40)
+    };
+  }
+
+  function mapPitch(midi, base, mode) {
+    var n = midi - base, guard = 0;
+    while (n < 0 && guard++ < 12) n += 12;
+    while (n > 24 && guard++ < 12) n -= 12;
+    if (n < 0 || n > 24) return -1;
+    return n;
+  }
+
+  function buildMidiStruct() {
+    if (!midiData) { toast('先加载一个 MIDI', 'err'); return null; }
+    var step = +$('#midStep').value || 0.1;
+    var inst = $('#midInst').value;
+    var lanes = Math.max(1, Math.min(32, +$('#midLanes').value || 6));
+    var skip = $('#midSkip').checked;
+    var mode = $('#midRange').value;
+    var base = INST_BASE[inst] || 54;
+    var nbid = BY_NAME['note_block'];
+    if (!nbid) { toast('方块数据里没有音符盒', 'err'); return null; }
+
+    var byCell = {}, maxCell = 0, dropped = 0, maxLane = 0;
+    midiData.notes.forEach(function (nt) {
+      var cell = Math.round(nt.t / step);
+      if (cell < 0) cell = 0;
+      var n = mapPitch(nt.note, base, mode);
+      if (n < 0) { dropped++; return; }
+      (byCell[cell] || (byCell[cell] = [])).push(n);
+    });
+    Object.keys(byCell).forEach(function (c) {
+      var arr = byCell[c].sort(function (a, b) { return b - a; });
+      if (skip) arr = [arr[0]];
+      if (arr.length > lanes) { dropped += arr.length - lanes; arr = arr.slice(0, lanes); }
+      byCell[c] = arr;
+      if (+c > maxCell) maxCell = +c;
+      if (arr.length > maxLane) maxLane = arr.length;
+    });
+
+    var sx = maxCell + 1;
+    if (sx > 256) {
+      toast('曲子太长（' + sx + ' 格，上限 256）。把「每格时长」调大，或先裁短 MIDI。', 'err');
+      return null;
+    }
+    var sz = Math.max(1, maxLane);
+    var data = new Uint16Array(sx * 1 * sz);
+    var sidx = new Uint16Array(sx * 1 * sz).fill(65535);
+    var pal = [{ name: 'air', states: {} }];
+    for (var n2 = 0; n2 <= 24; n2++) {
+      pal.push({ name: 'note_block', states: { note: n2, instrument: inst } });
+    }
+    var cellNotes = {};
+    Object.keys(byCell).forEach(function (c) {
+      var arr = byCell[c];
+      cellNotes[c] = arr.slice();
+      for (var l = 0; l < arr.length; l++) {
+        var k = (0 * sz + l) * sx + (+c);
+        data[k] = nbid;
+        sidx[k] = arr[l] + 1;                 // pal 下标 = 音高 + 1
+      }
+    });
+
+    midiStruct = {
+      sx: sx, sy: 1, sz: sz, data: data, sidx: sidx, pal: pal, pdata: {},
+      cellNotes: cellNotes, step: step, inst: inst, dropped: dropped,
+      total: midiData.notes.length, duration: sx * step
+    };
+    return midiStruct;
+  }
+
+  function drawRoll() {
+    var cv = $('#midRoll');
+    var wrap = cv.parentNode;
+    var W = Math.max(200, wrap.clientWidth), H = 260;
+    var dpr = Math.min(2, w.devicePixelRatio || 1);
+    cv.width = W * dpr; cv.height = H * dpr;
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    var cx = cv.getContext('2d');
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx.clearRect(0, 0, W, H);
+    if (!midiData) { $('#midRollEmpty').classList.remove('hidden'); return; }
+    $('#midRollEmpty').classList.add('hidden');
+    var base = INST_BASE[$('#midInst').value] || 54;
+    var mode = $('#midRange').value;
+    // 背景：25 个音高行
+    var top = 14, bot = H - 18;
+    var rowH = (bot - top) / 25;
+    cx.fillStyle = '#12160f';
+    cx.fillRect(0, top, W, bot - top);
+    for (var r = 0; r <= 24; r++) {
+      var isC = ((base + r) % 12 + 12) % 12 === 0;
+      cx.fillStyle = isC ? 'rgba(168,221,79,.22)' : 'rgba(58,66,49,.4)';
+      cx.fillRect(0, top + r * rowH, W, 1);
+    }
+    var dur = midiData.duration || 1;
+    var padL = 0;
+    var plotted = 0;
+    for (var i = 0; i < midiData.notes.length; i++) {
+      var nt = midiData.notes[i];
+      var n = mapPitch(nt.note, base, mode);
+      if (n < 0) continue;
+      var x = padL + (nt.t / dur) * (W - padL - 1);
+      var y = bot - (n + 1) * rowH;
+      var alpha = 0.45 + (nt.vel / 127) * 0.55;
+      cx.fillStyle = 'rgba(190,240,110,' + alpha.toFixed(2) + ')';
+      cx.fillRect(x, y, 3, Math.max(2, rowH - 0.5));
+      plotted++;
+    }
+    cx.fillStyle = '#6b7360';
+    cx.font = '10px ui-monospace,Consolas,monospace';
+    cx.fillText('0.0s', 2, H - 5);
+    cx.fillText(dur.toFixed(1) + 's', Math.max(2, W - 42), H - 5);
+    $('#midCnt').textContent = plotted + ' 个音符 · ' + (buildMidiGuessCells()) + ' 格';
+  }
+  function buildMidiGuessCells() {
+    var step = +$('#midStep').value || 0.1;
+    return Math.round((midiData ? midiData.duration : 0) / step) + 1;
+  }
+
+  function midiOpts() {
+    return {
+      step: +$('#midStep').value || 0.1,
+      inst: $('#midInst').value,
+      lanes: +$('#midLanes').value || 6,
+      skip: $('#midSkip').checked,
+      range: $('#midRange').value
+    };
+  }
+  var midBusy = false;
+  function runMidi() {
+    if (!midiData) { toast('先加载一个 MIDI', 'err'); return; }
+    if (midBusy) return;
+    midBusy = true;
+    $('#btnMidi').disabled = true;
+    $('#midState').textContent = '正在生成…';
+    try {
+      var res = buildMidiStruct();
+      if (!res) { midBusy = false; $('#btnMidi').disabled = false; $('#midState').textContent = '没生成'; return; }
+      var inst = res.inst;
+      $('#midState').textContent = '音符合成 ' + res.sx + '×' + res.sy + '×' + res.sz +
+        ' · ' + fmtInt(countStruct(res)) + ' 个音符盒 · 长约 ' + res.duration.toFixed(1) + ' s' +
+        (res.dropped ? ' · 丢 ' + res.dropped + ' 个超范围音' : '');
+      drawRoll();
+      toast('已生成音符盒结构', 'ok');
+    } catch (err) {
+      $('#midState').textContent = '生成失败';
+      toast('生成失败：' + err.message, 'err');
+    }
+    midBusy = false;
+    $('#btnMidi').disabled = false;
+  }
+
+  function downloadMidiMc() {
+    if (!midiStruct) { toast('先点「生成预览」', 'err'); return; }
+    try {
+      var out = buildMc(midiStruct);
+      saveBlob(out.bytes, 'redstone-' + midiStruct.sx + 'x' + midiStruct.sz + '.mcstructure');
+      toast('已下载 .mcstructure（' + out.palCount + ' 种方块状态）', 'ok');
+    } catch (err) { toast('导出失败：' + err.message, 'err'); }
+  }
+  function downloadMidiFn() {
+    if (!midiStruct) { toast('先点「生成预览」', 'err'); return; }
+    var inst = midiStruct.inst;
+    var sound = 'block.note_block.' + (INST_SOUND[inst] || 'harp');
+    var stepTicks = Math.max(1, Math.round(midiStruct.step / 0.05));
+    var lines = [];
+    lines.push('# ' + (midiData.name || '未命名') + ' · 由「我的世界结构生成」导出');
+    lines.push('# ' + midiData.notes.length + ' 个音符 · 约 ' + midiStruct.duration.toFixed(1) + ' 秒 · 每格 ' + stepTicks + ' tick');
+    lines.push('# 用法：');
+    lines.push('#   1) 存为 数据包/data/<命名空间>/functions/hs_music.mcfunction');
+    lines.push('#   2) 在 数据包/data/minecraft/tags/functions/tick.json 里写 {"values":["<命名空间>:hs_music"]}');
+    lines.push('#   3) 进游戏执行 /reload，之后每 tick 自动跑，循环播放');
+    lines.push('#   4) 想停就 /scoreboard players set #hsgen t -1');
+    lines.push('scoreboard objectives add hsgen dummy');
+    lines.push('scoreboard players add #hsgen t 1');
+    var cells = Object.keys(midiStruct.cellNotes).map(Number).sort(function (a, b) { return a - b; });
+    var lastTick = 0;
+    cells.forEach(function (c) {
+      var tick = c * stepTicks;
+      lastTick = tick;
+      midiStruct.cellNotes[c].forEach(function (n) {
+        var pitch = Math.pow(2, (n - 12) / 12);
+        lines.push('execute if score #hsgen t matches ' + tick +
+          ' run playsound ' + sound + ' master @a ~ ~ ~ 1 ' + pitch.toFixed(3));
+      });
+    });
+    lines.push('execute if score #hsgen t matches ' + (lastTick + stepTicks) + ' run scoreboard players set #hsgen t 0');
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    saveBlob(blob, 'hs_music.mcfunction', 'text/plain');
+    toast('已下载 .mcfunction（' + lines.length + ' 行）', 'ok');
+  }
+
+  $('#midDrop').addEventListener('click', function () { $('#midFile').click(); });
+  $('#midDrop').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#midFile').click(); }
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    $('#midDrop').addEventListener(ev, function (e) { e.preventDefault(); e.stopPropagation(); $('#midDrop').classList.add('over'); });
+  });
+  ['dragleave', 'dragend'].forEach(function (ev) {
+    $('#midDrop').addEventListener(ev, function () { $('#midDrop').classList.remove('over'); });
+  });
+  $('#midDrop').addEventListener('drop', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    $('#midDrop').classList.remove('over');
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadMidiFile(f);
+  });
+  $('#midFile').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (f) loadMidiFile(f);
+    e.target.value = '';
+  });
+  function loadMidiFile(f) {
+    if (!/\.(mid|midi)$/i.test(f.name)) { toast('要 .mid / .midi 文件', 'err'); return; }
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        midiData = parseMidi(rd.result);
+        midiStruct = null;
+        $('#midName').textContent = midiData.name;
+        $('#midDropTxt').textContent = f.name.length > 30 ? f.name.slice(0, 28) + '…' : f.name;
+        $('#midMeta').innerHTML =
+          '<span><b>' + fmtInt(midiData.notes.length) + '</b> 个音符</span>' +
+          '<span><b>' + midiData.tracks + '</b> 条音轨</span>' +
+          '<span><b>' + midiData.bpm + '</b> BPM</span>' +
+          '<span>时长 <b>' + midiData.duration.toFixed(1) + ' s</b></span>' +
+          '<span>音域 <b>' + Math.min.apply(null, midiData.notes.map(function (n) { return n.note; })) +
+          ' – ' + Math.max.apply(null, midiData.notes.map(function (n) { return n.note; })) + '</b></span>';
+        drawRoll();
+        $('#midState').textContent = '已读取 · 点「生成预览」出结构';
+      } catch (err) {
+        midiData = null;
+        toast('解析失败：' + err.message, 'err');
+        $('#midState').textContent = '解析失败';
+      }
+    };
+    rd.readAsArrayBuffer(f);
+  }
+  $('#btnMidi').addEventListener('click', runMidi);
+  $('#btnMidiMc').addEventListener('click', downloadMidiMc);
+  $('#btnMidiFn').addEventListener('click', downloadMidiFn);
+  $('#btnMidiSave').addEventListener('click', function () {
+    if (!midiStruct) { toast('先点「生成预览」', 'err'); return; }
+    askSave({
+      kind: 'midi',
+      name: midiData.name,
+      thumb: thumbFromCanvas($('#midRoll')),
+      struct: { sx: midiStruct.sx, sy: midiStruct.sy, sz: midiStruct.sz, data: midiStruct.data, sidx: midiStruct.sidx, pal: midiStruct.pal, pdata: {} },
+      size: [midiStruct.sx, midiStruct.sy, midiStruct.sz],
+      blocks: countStruct(midiStruct),
+      meta: { 音符: fmtInt(midiData.notes.length), 音色: midiStruct.inst, 时长: midiStruct.duration.toFixed(1) + ' s', 格数: midiStruct.sx, BPM: midiData.bpm }
+    });
+  });
+  ['midStep', 'midInst', 'midRange', 'midLanes', 'midSkip'].forEach(function (id) {
+    $('#' + id).addEventListener('change', function () { drawRoll(); });
+  });
+
+  /* ═════════════ 本地作品库（IndexedDB）═════════════ */
+  var DB_NAME = 'hs-mcgen', DB_VER = 1, dbP = null;
+  function idb() {
+    if (dbP) return dbP;
+    dbP = new Promise(function (res, rej) {
+      var r = indexedDB.open(DB_NAME, DB_VER);
+      r.onupgradeneeded = function () {
+        var db = r.result;
+        if (!db.objectStoreNames.contains('works')) {
+          var s = db.createObjectStore('works', { keyPath: 'id' });
+          s.createIndex('created', 'created');
+        }
+      };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+    return dbP;
+  }
+  function idbAll() {
+    return idb().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('works', 'readonly');
+        var rq = tx.objectStore('works').getAll();
+        rq.onsuccess = function () { res(rq.result || []); };
+        rq.onerror = function () { rej(rq.error); };
+      });
+    });
+  }
+  function idbPut(rec) {
+    return idb().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('works', 'readwrite');
+        tx.objectStore('works').put(rec);
+        tx.oncomplete = function () { res(rec); };
+        tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+  function idbDel(id) {
+    return idb().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('works', 'readwrite');
+        tx.objectStore('works').delete(id);
+        tx.oncomplete = function () { res(true); };
+        tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+  function idbClear() {
+    return idb().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('works', 'readwrite');
+        tx.objectStore('works').clear();
+        tx.oncomplete = function () { res(true); };
+        tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+
+  /* ── 本地账号 ── */
+  var USER_KEY = 'hs-mcgen-user';
+  var user = { name: '本地用户', since: Date.now() };
+  try {
+    var u0 = JSON.parse(w.localStorage.getItem(USER_KEY) || 'null');
+    if (u0 && u0.name) user = u0;
+  } catch (e) { }
+  function paintUser() {
+    $('#acctNm').textContent = user.name;
+    $('#acctAv').textContent = user.name.slice(0, 1);
+  }
+  function saveUser() {
+    try { w.localStorage.setItem(USER_KEY, JSON.stringify(user)); } catch (e) { }
+    paintUser();
+  }
+
+  /* ── 作品列表 ── */
+  var worksCache = [];
+  function renderWorks() {
+    idbAll().then(function (list) {
+      worksCache = list.sort(function (a, b) { return b.created - a.created; });
+      var grid = $('#wkGrid');
+      if (!worksCache.length) {
+        grid.innerHTML = '';
+        $('#wkEmpty').classList.remove('hidden');
+        $('#workCount').textContent = '0';
+        $('#wkUsage').textContent = '';
+        return;
+      }
+      $('#wkEmpty').classList.add('hidden');
+      var html = '';
+      worksCache.forEach(function (wk) {
+        var sizeTxt = wk.size ? wk.size.join('×') : '';
+        html += '<button class="work" data-id="' + esc(wk.id) + '">' +
+          '<span class="thumb">' + (wk.thumb ? '<img alt="" src="' + wk.thumb + '">' : '') + '</span>' +
+          '<span class="info">' +
+          '<span class="kindtag">' + (wk.kind === 'midi' ? '红石音乐' : '地图画') + '</span>' +
+          '<b>' + esc(wk.name) + '</b>' +
+          '<span>' + sizeTxt + ' · ' + fmtInt(wk.blocks || 0) + ' 方块</span>' +
+          '<span>' + new Date(wk.created).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' · ' + esc(wk.owner || '') + '</span>' +
+          '</span></button>';
+      });
+      grid.innerHTML = html;
+      $('#workCount').textContent = String(worksCache.length);
+      var bytes = 0;
+      worksCache.forEach(function (wk) { bytes += (wk.bytes || 0); });
+      $('#wkUsage').textContent = worksCache.length + ' 个作品 · 约 ' + fmtSize(bytes);
+    }).catch(function (e) {
+      console.warn(e);
+      toast('读取作品失败：' + (e && e.message || e), 'err');
+    });
+  }
+  $('#wkGrid').addEventListener('click', function (e) {
+    var b = e.target.closest('.work');
+    if (b) openWork(b.getAttribute('data-id'));
+  });
+  $('#wkRefresh').addEventListener('click', renderWorks);
+  $('#btnWipe').addEventListener('click', function () {
+    if (!w.confirm('清空这台设备上的全部作品？不可恢复。')) return;
+    idbClear().then(function () { renderWorks(); toast('已清空'); });
+  });
+
+  /* ── 保存 ── */
+  var pendingSave = null;
+  function askSave(p) {
+    pendingSave = p;
+    $('#saveName').value = p.name || '未命名';
+    $('#saveNote').value = '';
+    $('#savePrev').innerHTML = p.thumb ? '<img alt="" src="' + p.thumb + '">' : '';
+    $('#saveSheet').classList.add('on');
+    setTimeout(function () { $('#saveName').focus(); $('#saveName').select(); }, 30);
+  }
+  $('#saveCancel').addEventListener('click', function () {
+    $('#saveSheet').classList.remove('on');
+    pendingSave = null;
+  });
+  $('#saveOk').addEventListener('click', function () {
+    if (!pendingSave) return;
+    var name = ($('#saveName').value || '').trim() || pendingSave.name || '未命名';
+    var rec = {
+      id: 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      kind: pendingSave.kind,
+      name: name.slice(0, 40),
+      note: ($('#saveNote').value || '').trim().slice(0, 80),
+      owner: user.name,
+      created: Date.now(),
+      size: pendingSave.size,
+      blocks: pendingSave.blocks,
+      thumb: pendingSave.thumb,
+      meta: pendingSave.meta || {},
+      struct: pendingSave.struct,
+      bytes: 0
+    };
+    try {
+      rec.bytes = rec.struct.data.length * 2 + (pendingSave.thumb ? pendingSave.thumb.length * 0.75 : 0) | 0;
+      idbPut(rec).then(function () {
+        $('#saveSheet').classList.remove('on');
+        pendingSave = null;
+        toast('已保存到「我的作品」', 'ok');
+        renderWorks();
+        $('#workCount').textContent = String(worksCache.length + 1);
+      }).catch(function (err) { toast('保存失败：' + (err && err.message || err), 'err'); });
+    } catch (err) {
+      toast('保存失败：' + err.message, 'err');
+    }
+  });
+
+  /* ── 作品详情 ── */
+  var openId = null;
+  function openWork(id) {
+    var wk = worksCache.filter(function (x) { return x.id === id; })[0];
+    if (!wk) return;
+    openId = id;
+    $('#workTitle').textContent = wk.name;
+    $('#workPrev').innerHTML = wk.thumb ? '<img alt="" src="' + wk.thumb + '">' : '';
+    var rows = [
+      ['类型', wk.kind === 'midi' ? '红石音乐' : '地图画'],
+      ['结构', (wk.size || []).join(' × ')],
+      ['方块', fmtInt(wk.blocks || 0)],
+      ['保存', new Date(wk.created).toLocaleString('zh-CN')],
+      ['署名', wk.owner || '—']
+    ];
+    if (wk.note) rows.push(['备注', wk.note]);
+    Object.keys(wk.meta || {}).forEach(function (k) { rows.push([k, String(wk.meta[k])]); });
+    $('#workKv').innerHTML = rows.map(function (r) {
+      return '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>';
+    }).join('');
+    $('#workSheet').classList.add('on');
+  }
+  $('#workClose').addEventListener('click', function () {
+    $('#workSheet').classList.remove('on');
+    openId = null;
+  });
+  $('#workDl').addEventListener('click', function () {
+    var wk = worksCache.filter(function (x) { return x.id === openId; })[0];
+    if (!wk) return;
+    try {
+      var out = buildMc(wk.struct);
+      saveBlob(out.bytes, (wk.name || 'work') + '.mcstructure');
+      toast('已下载 .mcstructure', 'ok');
+    } catch (err) { toast('导出失败：' + err.message, 'err'); }
+  });
+  $('#workRename').addEventListener('click', function () {
+    var wk = worksCache.filter(function (x) { return x.id === openId; })[0];
+    if (!wk) return;
+    var nm = w.prompt('新的作品名', wk.name);
+    if (!nm) return;
+    wk.name = nm.slice(0, 40);
+    idbPut(wk).then(function () { openWork(wk.id); renderWorks(); toast('已重命名', 'ok'); });
+  });
+  $('#workDel').addEventListener('click', function () {
+    var wk = worksCache.filter(function (x) { return x.id === openId; })[0];
+    if (!wk) return;
+    if (!w.confirm('删除「' + wk.name + '」？')) return;
+    idbDel(wk.id).then(function () {
+      $('#workSheet').classList.remove('on');
+      openId = null;
+      renderWorks();
+      toast('已删除');
+    });
+  });
+
+  /* ── 导入外部结构文件（.mcstructure / 本站 JSON）── */
+  $('#wkImport').addEventListener('click', function () { $('#wkImportIn').click(); });
+  $('#wkImportIn').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var buf = new Uint8Array(rd.result);
+        var S;
+        if (/\.json$/i.test(f.name)) {
+          var o = JSON.parse(new TextDecoder().decode(buf));
+          S = { sx: o.sx, sy: o.sy, sz: o.sz, data: new Uint16Array(o.data), sidx: new Uint16Array(o.sidx || []), pal: o.pal || [], pdata: {} };
+        } else {
+          S = parseMcStructure(buf);
+        }
+        if (!S) throw new Error('读不出结构');
+        askSave({
+          kind: 'import', name: f.name.replace(/\.[^.]+$/, ''),
+          thumb: '', struct: S, size: [S.sx, S.sy, S.sz], blocks: countStruct(S),
+          meta: { 来源: f.name }
+        });
+        pendingSave.name = f.name.replace(/\.[^.]+$/, '');
+      } catch (err) { toast('导入失败：' + err.message, 'err'); }
+    };
+    rd.readAsArrayBuffer(f);
+  });
+
+  function parseMcStructure(buf) {
+    if (buf[0] === 0x1f && buf[1] === 0x8b) throw new Error('这是 gzip 压缩的结构，请先解压');
+    var p = { i: 0 };
+    function u8() { return buf[p.i++]; }
+    function i16() { var v = buf[p.i] | (buf[p.i + 1] << 8); p.i += 2; return (v << 16) >> 16; }
+    function i32() { var v = buf[p.i] | (buf[p.i + 1] << 8) | (buf[p.i + 2] << 16) | (buf[p.i + 3] << 24); p.i += 4; return v; }
+    function u32() { var v = (buf[p.i] | (buf[p.i + 1] << 8) | (buf[p.i + 2] << 16) | (buf[p.i + 3] << 24)) >>> 0; p.i += 4; return v; }
+    function str() { var n = (buf[p.i] | (buf[p.i + 1] << 8)) & 0xffff; p.i += 2; var s = new TextDecoder().decode(buf.subarray(p.i, p.i + n)); p.i += n; return s; }
+    function readPayload(t) {
+      switch (t) {
+        case 1: return u8();
+        case 2: return i16();
+        case 3: return i32();
+        case 4: p.i += 8; return 0;
+        case 5: { var dv = new DataView(buf.buffer, p.i, 4); var f = dv.getFloat32(0, true); p.i += 4; return f; }
+        case 6: { var dv2 = new DataView(buf.buffer, p.i, 8); var f2 = dv2.getFloat64(0, true); p.i += 8; return f2; }
+        case 8: return str();
+        case 9: {
+          var et = u8(), n = i32(), arr = [];
+          for (var i = 0; i < n; i++) arr.push(readPayload(et));
+          return arr;
+        }
+        case 10: {
+          var o = {};
+          for (;;) {
+            var tt = u8();
+            if (!tt) break;
+            var nm = str();
+            o[nm] = readPayload(tt);
+          }
+          return o;
+        }
+        default: throw new Error('未知 NBT 类型 ' + t);
+      }
+    }
+    if (u8() !== 10) throw new Error('不是基岩结构文件');
+    str();
+    var root = readPayload(10);
+    if (!root || !root.size) throw new Error('缺少 size');
+    var sz = root.size, sx = sz[0], sy = sz[1], sz2 = sz[2];
+    var palIn = root.structure && root.structure.palette && root.structure.palette.default;
+    var palList = (palIn && palIn.block_palette) || [];
+    var ids = palList.map(function (b) {
+      var nm = String(b.name || '').replace(/^minecraft:/, '');
+      return BY_NAME[nm] === undefined ? 0 : BY_NAME[nm];
+    });
+    var L0 = (root.structure && root.structure.block_indices && root.structure.block_indices[0]) || [];
+    var data = new Uint16Array(sx * sy * sz2);
+    var sidx = new Uint16Array(sx * sy * sz2).fill(65535);
+    for (var i2 = 0; i2 < data.length; i2++) {
+      var pi = L0[i2];
+      if (pi === undefined || pi < 0) continue;
+      data[i2] = ids[pi] || 0;
+    }
+    return { sx: sx, sy: sy, sz: sz2, data: data, sidx: sidx, pal: palList.map(function (b) {
+      return { name: String(b.name || '').replace(/^minecraft:/, ''), states: b.states || {} };
+    }), pdata: {} };
+  }
+
+  /* ── 账号面板 ── */
+  $('#acctBtn').addEventListener('click', function () {
+    $('#acctInput').value = user.name;
+    $('#acctSince').textContent = new Date(user.since).toLocaleDateString('zh-CN');
+    idbAll().then(function (list) {
+      var bytes = 0;
+      list.forEach(function (wk) { bytes += (wk.bytes || 0); });
+      $('#acctWorks').textContent = list.length + ' 个';
+      $('#acctSize').textContent = fmtSize(bytes);
+    });
+    $('#acctSheet').classList.add('on');
+  });
+  $('#acctCancel').addEventListener('click', function () { $('#acctSheet').classList.remove('on'); });
+  $('#acctSave').addEventListener('click', function () {
+    var nm = ($('#acctInput').value || '').trim().slice(0, 16);
+    if (!nm) { toast('名字不能空', 'err'); return; }
+    user.name = nm;
+    saveUser();
+    $('#acctSheet').classList.remove('on');
+    toast('已保存昵称', 'ok');
+    renderWorks();
+  });
+  $('#acctClear').addEventListener('click', function () {
+    if (!w.confirm('删除本地账号并清空全部作品？不可恢复。')) return;
+    idbClear().then(function () {
+      try { w.localStorage.removeItem(USER_KEY); } catch (e) { }
+      user = { name: '本地用户', since: Date.now() };
+      saveUser();
+      $('#acctSheet').classList.remove('on');
+      renderWorks();
+      toast('已删除');
+    });
+  });
+  $$('.sheet').forEach(function (s) {
+    s.addEventListener('click', function (e) { if (e.target === s) s.classList.remove('on'); });
+  });
+  d.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    $$('.sheet.on').forEach(function (s) { s.classList.remove('on'); });
+  });
+
+  /* ═════════════ 启动 ═════════════ */
+  try {
+    paintUser();
+    applyPrefs();
+    if (prefs.iconBlock && BLOCKS[prefs.iconBlock]) {
+      $('#icName').textContent = nameOf(prefs.iconBlock) + ' · ' + (BLOCKS[prefs.iconBlock] || {}).e;
+    }
+    setTab(prefs.tab === 'midi' || prefs.tab === 'works' ? prefs.tab : 'map');
+    // 首次进入 works 才读库；这里先取一次用于角标
+    idbAll().then(function (list) {
+      $('#workCount').textContent = String(list.length);
+    }).catch(function () { });
+  } catch (err) {
+    toast('启动失败：' + (err && err.message || err), 'err');
+  }
+
+
+})();
+
+</script>
+</body>
+</html>
