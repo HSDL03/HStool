@@ -1,1136 +1,505 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="mc-wiki">
+<html lang="zh-CN" data-theme="mc-night">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>红石的小站 · 工具与资源集散地</title>
-<meta name="description" content="红石的小站 —— 一堆轻量、无依赖、点开即用的小工具，外加资源下载与个人 Wiki。">
-<meta name="theme-color" content="#3d521f">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
-<script>try{var t=localStorage.getItem('hs-theme')||localStorage.getItem('wiki-theme');if(t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'mc-night':'mc-wiki';if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
-<link rel="stylesheet" href="./assets/css/core.css">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>红石的小站 · Minecraft 工具站</title>
+<meta name="description" content="红石的小站 —— Minecraft 小工具、资源与笔记。点开就用，不装任何东西。">
+<meta name="theme-color" content="#07080b">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='18' y='18' width='30' height='30' rx='6' fill='%235eead4'/><rect x='52' y='18' width='30' height='30' rx='6' fill='%23a78bfa'/><rect x='18' y='52' width='30' height='30' rx='6' fill='%23a78bfa'/><rect x='52' y='52' width='30' height='30' rx='6' fill='%23f472b6'/></svg>">
 <style>
-/* ── 首页专属 ─────────────────────────────────────────────── */
-.hero{position:relative;padding:20px 0 22px;text-align:center}
-/* 顶部一层极淡的主题色光晕，让首屏不至于是一块死平的米色 */
-.hero::before{
-  content:"";position:absolute;left:-40px;right:-40px;top:-30px;height:360px;pointer-events:none;
-  background:radial-gradient(62% 100% at 50% 0,rgba(var(--p1),.16) 0,rgba(var(--p1),.05) 44%,transparent 72%);
-}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:8px;padding:4px 13px;margin-bottom:13px;
-  font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ac);
-  background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
-  box-shadow:var(--bevel);
-}
-[data-theme^="github-"] .hero-badge{border-width:1px;border-radius:999px;box-shadow:none;letter-spacing:.02em}
-.hero-badge .dot{position:relative;width:7px;height:7px;background:var(--ac);flex:none}
-[data-theme^="github-"] .hero-badge .dot{border-radius:50%}
-.hero-badge .dot::after{content:"";position:absolute;inset:0;background:var(--ac);animation:badgePulse 2s ease-out infinite}
-[data-theme^="github-"] .hero-badge .dot::after{border-radius:50%}
-@keyframes badgePulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(3.2);opacity:0}}
+*,*::before,*::after{box-sizing:border-box}
+a{color:inherit}
+img,canvas{max-width:100%}
+::selection{background:var(--nx-c1);color:#04120f}
+:focus-visible{outline:2px solid var(--nx-c1);outline-offset:2px;border-radius:6px}
 
-.hero h1{
-  margin:0 0 9px;font-size:clamp(1.72rem,3.6vw,2.5rem);font-weight:900;
-  line-height:1.08;letter-spacing:-.035em;
+/* ══════════════════════════════════════════════════════════════════
+   新首页 —— 深空 + 荧光。刻意不复用旧版的方块纸风，
+   只用一套自己的 token，旧样式只在账号/聊天面板里出现。
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  --nx-bg:#07080b;
+  --nx-ink:#eaedf6;
+  --nx-dim:#8d93a6;
+  --nx-faint:#5b6072;
+  --nx-line:rgba(255,255,255,.085);
+  --nx-line-hi:rgba(255,255,255,.16);
+  --nx-c1:#5eead4;
+  --nx-c2:#a78bfa;
+  --nx-c3:#f472b6;
+  --nx-glass:rgba(18,20,28,.62);
+  --nx-maxw:1120px;
 }
-/* 逐字动画：每个字的渐变位置由 JS 计算，拼起来是一条连续的渐变 */
-.hero h1 .ch{
-  display:inline-block;opacity:0;transform:translateY(26px) rotate(-10deg) scale(.9);
-  animation:chIn .6s cubic-bezier(.34,1.56,.64,1) forwards;
-  background-image:var(--hero-grad);-webkit-background-clip:text;background-clip:text;
+
+/* 盖掉 core 的纸底与旧装饰背景 */
+html,html[data-theme]{background:var(--nx-bg)!important;scroll-behavior:smooth}
+body{
+  background:var(--nx-bg)!important;color:var(--nx-ink)!important;
+  padding-top:64px!important;
+  font-family:"Segoe UI","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  overflow-x:hidden;
+}
+/* ── 背景：极光 + 网格 + 粒子 canvas ───────────────────────────── */
+#nxFx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.nx-aura{position:fixed;pointer-events:none;z-index:0;filter:blur(70px);opacity:.55}
+.nx-aura.a1{left:-8vw;top:-14vh;width:52vw;height:52vw;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,rgba(94,234,212,.28),transparent 62%)}
+.nx-aura.a2{right:-12vw;top:-6vh;width:48vw;height:48vw;border-radius:50%;
+  background:radial-gradient(circle at 60% 40%,rgba(167,139,250,.26),transparent 62%)}
+.nx-aura.a3{left:32vw;bottom:-30vh;width:60vw;height:46vw;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,rgba(244,114,182,.14),transparent 66%)}
+.nx-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(circle at 50% 22%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
+  mask-image:radial-gradient(circle at 50% 22%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
+}
+.nx-wrap{position:relative;z-index:2}
+
+/* ── 顶栏 ─────────────────────────────────────────────────────── */
+.topbar{
+  height:64px!important;padding:0 22px!important;
+  background:rgba(7,8,11,.55)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  border-bottom:1px solid transparent!important;box-shadow:none!important;
+  transition:background .3s,border-color .3s;
+  display:flex;align-items:center;gap:18px;
+}
+.topbar.scrolled{background:rgba(7,8,11,.86)!important;border-bottom-color:var(--nx-line)!important;box-shadow:0 10px 40px rgba(0,0,0,.5)!important}
+.nx-brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:15.5px;
+  color:var(--nx-ink)!important;letter-spacing:-.01em;text-decoration:none;flex:none}
+.nx-logo{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:22px;height:22px;transform:rotate(8deg)}
+.nx-logo i{display:block;border-radius:2px;background:var(--nx-c1);opacity:.9}
+.nx-logo i:nth-child(2){background:var(--nx-c2)}
+.nx-logo i:nth-child(3){background:var(--nx-c2)}
+.nx-logo i:nth-child(4){background:var(--nx-c3)}
+.nx-links{display:flex;align-items:center;gap:2px;margin-left:8px;flex:1;min-width:0}
+.nx-links a{
+  position:relative;padding:7px 12px;border-radius:9px;font-size:13.5px;font-weight:600;
+  color:var(--nx-dim)!important;text-decoration:none;transition:color .18s,background .18s;white-space:nowrap;
+}
+.nx-links a:hover{color:var(--nx-ink)!important;background:rgba(255,255,255,.055)}
+.nx-nav-right{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
+.nx-ghost-sm{font-size:12.5px;font-weight:600;color:var(--nx-faint)!important;text-decoration:none;padding:7px 10px;border-radius:9px;transition:color .18s,background .18s}
+.nx-ghost-sm:hover{color:var(--nx-ink)!important;background:rgba(255,255,255,.055)}
+
+/* ── 主体 ─────────────────────────────────────────────────────── */
+.nx-main{max-width:var(--nx-maxw);margin:0 auto;padding:0 22px 80px}
+
+/* Hero */
+.nx-hero{padding:76px 0 34px;text-align:center;position:relative}
+.nx-badge{
+  display:inline-flex;align-items:center;gap:9px;padding:6px 14px;margin-bottom:24px;
+  font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--nx-c1);
+  border:1px solid rgba(94,234,212,.28);border-radius:999px;background:rgba(94,234,212,.07);
+  box-shadow:0 0 30px rgba(94,234,212,.12) inset;
+}
+.nx-badge .sep{color:var(--nx-faint)}
+.nx-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--nx-c1);animation:nxPulse 2.2s infinite}
+@keyframes nxPulse{0%{box-shadow:0 0 0 0 rgba(94,234,212,.5)}70%{box-shadow:0 0 0 7px rgba(94,234,212,0)}100%{box-shadow:0 0 0 0 rgba(94,234,212,0)}}
+
+.nx-title{
+  margin:0 0 22px;font-size:clamp(3rem,9vw,6.4rem);line-height:1.04;font-weight:900;
+  letter-spacing:0;
+}
+.nx-title .ln{display:block;overflow:hidden}
+.nx-title .ch{
+  display:inline-block;transform:translateY(105%) rotate(4deg);opacity:0;
+  animation:nxChIn .85s cubic-bezier(.19,1,.22,1) forwards;
+  /* 每个字各自裁一遍渐变，用 --i 往左推 1em —— 拼起来就是一条连续的色带 */
+  background-image:linear-gradient(96deg,#ffffff 0%,#dcfdf5 22%,#5eead4 48%,#c4b5fd 76%,#f472b6 100%);
+  background-size:5em 100%;
+  background-position:calc(var(--i,0) * -1em) 0;
+  -webkit-background-clip:text;background-clip:text;
   -webkit-text-fill-color:transparent;color:transparent;
 }
-@keyframes chIn{60%{opacity:1}to{opacity:1;transform:none}}
-.hero .sub{margin:0 auto;max-width:560px;font-size:13.5px;color:var(--muted);line-height:1.7}
+.nx-title .grad{filter:drop-shadow(0 10px 46px rgba(94,234,212,.22))}
+@keyframes nxChIn{to{transform:none;opacity:1}}
+
+.nx-sub{margin:0 auto;max-width:560px;text-wrap:balance;font-size:clamp(13px,1.5vw,15px);line-height:1.85;color:var(--nx-dim)}
+.nx-sub b{color:var(--nx-ink);font-weight:700}
+
+/* 两个入口按钮 */
+.nx-cta{display:flex;justify-content:center;gap:11px;flex-wrap:wrap;margin:34px 0 0}
+.nx-btn{
+  display:inline-flex;align-items:center;gap:9px;height:46px;padding:0 22px;border-radius:13px;
+  font-size:14px;font-weight:700;text-decoration:none;transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;
+  border:1px solid transparent;
+}
+.nx-btn.primary{
+  color:#04120f;background:linear-gradient(120deg,#5eead4,#a7f3e4 55%,#c4b5fd);
+  box-shadow:0 14px 40px rgba(94,234,212,.22);
+}
+.nx-btn.primary:hover{transform:translateY(-2px);box-shadow:0 20px 50px rgba(94,234,212,.3)}
+.nx-btn.ghost{
+  color:var(--nx-ink);border-color:var(--nx-line);background:rgba(255,255,255,.035);
+}
+.nx-btn.ghost:hover{transform:translateY(-2px);border-color:var(--nx-line-hi);background:rgba(255,255,255,.07)}
+.nx-btn .ar{font-size:13px;opacity:.75}
+
+/* KPI */
+.nx-kpis{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:44px 0 0}
+.nx-kpi{
+  min-width:112px;padding:14px 20px;border-radius:15px;text-align:left;
+  border:1px solid var(--nx-line);background:rgba(255,255,255,.025);
+}
+.nx-kpi b{display:block;font-size:24px;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(180deg,#fff,#9fe8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.nx-kpi span{font-size:11px;color:var(--nx-faint);letter-spacing:.08em;text-transform:uppercase;font-family:ui-monospace,Consolas,monospace}
+
+/* ── 入口卡 ───────────────────────────────────────────────────── */
+.nx-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:56px}
+.nx-card{
+  position:relative;display:block;padding:22px;border-radius:18px;overflow:hidden;
+  border:1px solid var(--nx-line);background:var(--nx-glass);text-decoration:none;color:inherit;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  transition:transform .28s cubic-bezier(.2,.9,.3,1),border-color .28s,box-shadow .28s;
+}
+.nx-card::before{
+  content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;pointer-events:none;
+  background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(94,234,212,.15),transparent 62%);
+}
+.nx-card:hover{transform:translateY(-4px);border-color:rgba(94,234,212,.34);
+  box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(94,234,212,.12)}
+.nx-card:hover::before{opacity:1}
+.nx-card .ico{
+  width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:21px;
+  background:linear-gradient(145deg,rgba(94,234,212,.16),rgba(167,139,250,.14));
+  border:1px solid rgba(255,255,255,.09);margin-bottom:16px;
+}
+.nx-card h3{margin:0 0 7px;font-size:16px;font-weight:800;display:flex;align-items:center;gap:7px}
+.nx-card p{margin:0;font-size:12.8px;line-height:1.75;color:var(--nx-dim)}
+.nx-card .go{
+  position:absolute;right:20px;top:22px;font-size:15px;color:var(--nx-faint);
+  transition:transform .28s,color .28s;
+}
+.nx-card:hover .go{transform:translate(3px,-3px);color:var(--nx-c1)}
 
 /* 公告 */
-.ann{max-width:780px;margin:0 auto 20px;display:flex;flex-direction:column;gap:8px}
-.ann[hidden]{display:none}
-.ann-item{
-  position:relative;background:var(--bg2);border:2px solid var(--bd2);border-radius:var(--r);
-  box-shadow:var(--bevel);overflow:hidden;transition:border-color .2s;
+.nx-ann{display:flex;flex-direction:column;gap:9px;margin-top:34px}
+.nx-ann[hidden]{display:none}
+.nx-ann-item{
+  display:flex;align-items:flex-start;gap:11px;padding:13px 15px;border-radius:13px;
+  border:1px solid var(--nx-line);background:rgba(255,255,255,.03);font-size:12.8px;line-height:1.75;color:var(--nx-dim);
 }
-[data-theme^="github-"] .ann-item{border-width:1px;box-shadow:var(--sh-1)}
-.ann-item[data-type="info"]{border-left:4px solid var(--ac)}
-.ann-item[data-type="success"]{border-left:4px solid var(--ok)}
-.ann-item[data-type="warn"]{border-left:4px solid var(--warn)}
-.ann-item[data-type="danger"]{border-left:4px solid var(--dgr)}
-.ann-head{display:flex;align-items:center;gap:9px;padding:10px 13px;cursor:pointer;user-select:none;transition:background .15s}
-.ann-head:hover{background:var(--bg3)}
-.ann-ico{flex:none;font-size:17px;line-height:1}
-.ann-title{flex:1;min-width:0;font-size:13.5px;font-weight:800;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ann-cat{flex:none;padding:0 7px;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ac);background:var(--acs);border:1px solid var(--ac);border-radius:var(--r)}
-.ann-arrow{flex:none;font-size:10px;color:var(--muted);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-.ann-item.collapsed .ann-arrow{transform:rotate(-90deg)}
-.ann-close{flex:none;width:22px;height:22px;display:grid;place-items:center;font-size:11px;color:var(--faint);background:transparent;border:none;border-radius:var(--r);cursor:pointer;transition:all .15s}
-.ann-close:hover{background:var(--bg);color:var(--dgr)}
-.ann-wrap{overflow:hidden;max-height:900px;opacity:1;transition:max-height .35s cubic-bezier(.34,1.56,.64,1),opacity .25s}
-.ann-item.collapsed .ann-wrap{max-height:0;opacity:0}
-.ann-body{padding:0 13px 11px 39px;font-size:12.5px;color:var(--muted);line-height:1.75;white-space:pre-wrap;word-break:break-word}
-.ann-link{display:inline-flex;align-items:center;gap:4px;margin-top:5px;font-size:12px;font-weight:800;color:var(--ac);border-bottom:1px dashed var(--ac)}
-.ann-link:hover{border-bottom-style:solid}
+.nx-ann-item .t{font-weight:800;color:var(--nx-ink);margin-right:6px}
+.nx-ann-item.warn{border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.06)}
+.nx-ann-item.danger{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06)}
+.nx-ann-item.success{border-color:rgba(94,234,212,.3);background:rgba(94,234,212,.06)}
 
-/* 最近打开 */
-.recent{max-width:1180px;margin:0 auto 18px}
-.recent[hidden]{display:none}
-.recent-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px}
-.recent-item{
-  display:inline-flex;align-items:center;gap:6px;flex:none;
-  height:30px;padding:0 11px;font-size:12.5px;font-weight:700;color:var(--text);
-  background:var(--bg2);border:2px solid var(--bd);border-radius:var(--r);
-  box-shadow:var(--bevel);cursor:pointer;transition:all .16s;text-decoration:none;
+/* 页脚 */
+.nx-foot{
+  position:relative;z-index:2;max-width:var(--nx-maxw);margin:0 auto;
+  padding:26px 22px 46px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  border-top:1px solid var(--nx-line);font-size:12px;color:var(--nx-faint);
 }
-[data-theme^="github-"] .recent-item{border-width:1px;box-shadow:none;border-radius:999px}
-.recent-item:hover{border-color:var(--ac);color:var(--ac);transform:translateY(-1px)}
-.recent-item .ri{font-size:13px}
-.recent-item .ri img{width:18px;height:18px;object-fit:contain;display:block;pointer-events:none}
+.nx-foot a{color:var(--nx-dim);text-decoration:none}
+.nx-foot a:hover{color:var(--nx-c1)}
+.nx-foot .sp{flex:1}
+/* 「存档」：故意压得很淡，知道的人点得到，不知道的看不见 */
+.nx-archive{color:rgba(255,255,255,.2)!important;font-size:10.5px;letter-spacing:.06em;transition:color .25s}
+.nx-archive:hover{color:rgba(94,234,212,.7)!important}
 
-/* 工具栏：第一行纯分类，第二行「运行筛选 + 视图控件」，比原来省一行 */
-.filters{display:flex;flex-direction:column;gap:7px;margin:0 0 26px}
-.f-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.f-row .toolbar{margin:0}
-/* 分类多起来时横着滚，不占第二行 */
-.f-cats #tagChips{flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:1px 1px 3px;scrollbar-width:thin}
-.f-cats #tagChips::-webkit-scrollbar{height:5px}
-.f-cats #tagChips::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
-.f-tools #dbChips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
-.f-tools #dbChips::-webkit-scrollbar{display:none}
-.f-count{font-size:11.5px;white-space:nowrap;margin-left:12px;color:var(--faint);font-weight:600}
+/* 入场 */
+.nx-reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1)}
+.nx-reveal.in{opacity:1;transform:none}
 
-@media(max-width:620px){
-  .f-count{display:none}
-  .f-tools{gap:6px}
-  .f-cats #tagChips,.f-tools #dbChips{padding-bottom:2px}
-  /* 手机单列时网格/列表没有区别，把这组控件省下来给排序和收藏 */
-  .f-tools #viewSwitch{display:none}
-  /* 小屏第一屏本来就窄，hero 再收一档，别让工具区被推下去 */
-  .hero{padding:12px 0 16px}
-  .hero h1{font-size:1.62rem}
-  .hero .sub{font-size:12.5px;line-height:1.6}
-  /* 单列时卡片之间不需要靠固定两行描述来对齐，去掉这块空白 */
-  .card .cdesc{min-height:0}
-  .card-body{padding:12px 13px;gap:11px}
-  .card .cico{width:44px;height:44px;font-size:21px}
+/* ── 响应式 ───────────────────────────────────────────────────── */
+@media (max-width:900px){
+  .nx-cards{grid-template-columns:1fr}
 }
-.filters .label{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-right:2px;flex:none;white-space:nowrap}
-
-/* 废弃区 */
-.dep-wrap{margin-top:34px}
-.dep-head{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;margin-bottom:12px}
-.dep-head .toggle{
-  width:20px;height:20px;display:grid;place-items:center;flex:none;
-  font-size:9px;color:var(--muted);background:var(--bg2);
-  border:1px solid var(--bd);border-radius:var(--r);transition:transform .25s;
-}
-.dep-wrap.closed .dep-head .toggle{transform:rotate(-90deg)}
-.dep-body{overflow:hidden;transition:max-height .35s ease,opacity .25s;max-height:3000px;opacity:1}
-.dep-wrap.closed .dep-body{max-height:0;opacity:0}
-.dep-wrap.closed{margin-top:22px}
-@media(max-width:640px){
-  .hero{padding:14px 0 18px}
+@media (max-width:720px){
+  body{padding-top:58px!important}
+  .topbar{height:58px!important;padding:0 14px!important;gap:10px}
+  .nx-links{display:none}
+  .nx-nav-right{margin-left:auto}
+  .nx-main{padding:0 14px 64px}
+  .nx-hero{padding:46px 0 24px}
+  .nx-badge{font-size:10px;padding:5px 11px;margin-bottom:20px}
+  .nx-cta{margin-top:28px}
+  .nx-btn{height:44px;padding:0 16px;font-size:13.5px;flex:1 1 0;justify-content:center;max-width:200px}
+  .nx-kpis{gap:8px;margin-top:36px}
+  .nx-kpi{min-width:0;flex:1 1 calc(33.3% - 8px);padding:11px 12px;border-radius:12px}
+  .nx-kpi b{font-size:19px}
+  .nx-kpi span{font-size:9.5px;letter-spacing:.02em}
+  .nx-cards{margin-top:38px;gap:11px}
+  .nx-card{padding:18px}
 }
 
-/* ── 卡片右键菜单（样式沿用聊天室那套：浮起、描边、danger 项） ── */
-.ctx-menu{
-  position:fixed;z-index:520;min-width:158px;padding:5px;display:flex;flex-direction:column;gap:2px;
-  background:var(--bg);border:2px solid var(--bd2);border-radius:var(--r);
-  box-shadow:3px 3px 0 rgba(0,0,0,.28);
-  opacity:0;visibility:hidden;transform:translateY(-4px) scale(.97);
-  transition:opacity .14s ease-out,visibility .14s,transform .14s cubic-bezier(.34,1.56,.64,1);
-  user-select:none;
+@media (prefers-reduced-motion:reduce){
+  .nx-title .ch{animation:none;transform:none;opacity:1}
+  .nx-reveal{opacity:1;transform:none;transition:none}
+  #nxFx,.nx-aura{display:none}
+  .nx-badge .dot{animation:none}
 }
-.ctx-menu.show{opacity:1;visibility:visible;transform:none}
-.ctx-menu button{
-  display:flex;align-items:center;gap:10px;padding:7px 12px;font-size:13px;font-family:inherit;font-weight:600;
-  text-align:left;color:var(--text);background:transparent;border:none;border-radius:calc(var(--r) - 1px);
-  cursor:pointer;transition:background .12s,color .12s;
-}
-.ctx-menu button:hover{background:var(--acs);color:var(--ac)}
-.ctx-menu button .ctx-ic{flex:none;width:16px;text-align:center;font-size:14px;line-height:1}
-.ctx-menu button .ctx-tx{flex:1}
-.ctx-menu button.danger:hover{background:rgba(160,32,32,.14);color:var(--dgr)}
-.ctx-menu .ctx-sep{height:1px;margin:3px 6px;background:var(--bd);flex:none}
-[data-theme^="github-"] .ctx-menu{border-width:1px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
-[data-theme^="github-"] .ctx-menu button{border-radius:6px}
-
-/* 卡片上的置顶 / 收藏标记 */
-.card .badge.pin{color:var(--ac);border-color:var(--ac)}
-.card .badge.star{color:var(--ac2);border-color:var(--ac2)}
-
-/* ── 设置抽屉 ── */
-.iconbtn.has-dot{position:relative}
-.iconbtn.has-dot::after{
-  content:attr(data-n);position:absolute;top:-2px;right:-3px;min-width:14px;height:14px;padding:0 3px;
-  display:grid;place-items:center;font-size:9.5px;font-weight:800;line-height:1;
-  color:#fff;background:var(--dgr);border-radius:999px;border:1px solid var(--topbar-bg,var(--bg));
-}
-.set-mask{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.34);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
-.set-mask.show{opacity:1;visibility:visible}
-.set-panel{
-  position:fixed;top:0;right:0;bottom:0;z-index:501;width:360px;max-width:92vw;
-  display:flex;flex-direction:column;background:var(--bg);border-left:2px solid var(--bd2);
-  box-shadow:-6px 0 26px rgba(0,0,0,.2);
-  transform:translateX(100%);visibility:hidden;transition:transform .24s cubic-bezier(.34,1.24,.64,1),visibility .24s;
-}
-.set-panel.show{transform:none;visibility:visible}
-.set-head{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:2px solid var(--bd);font-size:14px;font-weight:800}
-.set-head .sp{flex:1}
-.set-body{flex:1;overflow:auto;padding:2px 14px 26px}
-.set-sec{margin-top:16px}
-.set-sec>h3{margin:0 0 8px;font-size:11px;letter-spacing:.08em;color:var(--muted);font-weight:800;text-transform:uppercase}
-.set-list{display:flex;flex-direction:column;gap:6px}
-.set-sub{display:flex;align-items:center;gap:5px;margin:11px 0 5px;font-size:11.5px;font-weight:800;color:var(--muted)}
-.set-sub span{font-weight:700;color:var(--faint)}
-.set-list:first-of-type{margin-top:0}
-.set-row{
-  display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:12.5px;
-  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);
-}
-.set-row .ri{width:18px;height:18px;flex:none;display:grid;place-items:center;font-size:13px;line-height:1}
-.set-row .ri img{width:18px;height:18px;object-fit:contain;display:block}
-.set-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
-.set-row .mini{
-  flex:none;padding:3px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;
-  color:var(--muted);background:var(--bg);border:1px solid var(--bd);border-radius:calc(var(--r) - 1px);
-  transition:color .12s,border-color .12s;
-}
-.set-row .mini:hover{color:var(--ac);border-color:var(--ac)}
-.set-row .mini.danger:hover{color:var(--dgr);border-color:var(--dgr)}
-.set-empty{font-size:12px;color:var(--faint);padding:2px 1px 4px}
-.set-tip{font-size:11.5px;line-height:1.55;color:var(--faint);margin:8px 0 0}
-.theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.theme-grid button{
-  display:flex;align-items:center;gap:7px;padding:6px 8px;font-size:12px;font-weight:700;font-family:inherit;
-  color:var(--text);background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;
-  transition:border-color .12s,color .12s;
-}
-.theme-grid button:hover{border-color:var(--ac)}
-.theme-grid button[aria-pressed="true"]{border-color:var(--ac);color:var(--ac);background:var(--acs)}
-.theme-grid .sw{width:14px;height:14px;border-radius:3px;flex:none;border:1px solid var(--bd2)}
-@media print{.ctx-menu,.set-mask,.set-panel{display:none}}
 </style>
-<script src="./assets/js/boot.js"></script>
 </head>
 <body>
-<a class="skip" href="#main">跳到主要内容</a>
 
-<header class="topbar" id="topbar">
-  <a class="brand" href="./index.html" aria-label="红石的小站 首页">
-    <span class="ico">🧰</span><span class="txt">红石的小站</span>
+<canvas id="nxFx" aria-hidden="true"></canvas>
+<div class="nx-aura a1" aria-hidden="true"></div>
+<div class="nx-aura a2" aria-hidden="true"></div>
+<div class="nx-aura a3" aria-hidden="true"></div>
+<div class="nx-grid" aria-hidden="true"></div>
+
+<header class="topbar nx-nav" id="topbar">
+  <a class="nx-brand" href="./index.html" aria-label="红石的小站 首页">
+    <span class="nx-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    红石的小站
   </a>
-  <span class="spacer"></span>
-  <div class="searchbox">
-    <span class="sico">⌕</span>
-    <input id="q" type="search" placeholder="搜索工具…" title="搜索工具（按 / 聚焦）" autocomplete="off" aria-label="搜索工具">
-    <span class="kbd-hint"><span class="kbd">Ctrl</span><span class="kbd">K</span></span>
-  </div>
-  <button class="iconbtn" id="btnPalette" data-sm-hide title="打开命令面板 (Ctrl+K)" aria-label="命令面板">⌘</button>
-  <button class="iconbtn" id="btnReload" data-sm-hide title="重新拉取数据" aria-label="刷新">🔄</button>
-  <button class="iconbtn" id="btnSet" title="设置（含已隐藏的卡片）" aria-label="设置">⚙️</button>
-  <button class="iconbtn" data-act="theme" title="切换风格" aria-label="切换风格">🎨</button>
-</header>
-
-<div class="decor" aria-hidden="true"></div>
-
-<main class="wrap" id="main">
-
-  <section class="hero">
-    <div class="hero-badge"><span class="dot"></span>STATION · 在线 · <span id="stamp">2026</span></div>
-    <h1 id="heroTitle">红石的小站</h1>
-    <p class="sub">一堆轻量、无依赖、点开即用的小工具 —— 顺手再放点资源和笔记。</p>
-  </section>
-
-  <div class="ann" id="annWrap" hidden></div>
-
-  <div class="recent" id="recentWrap" hidden>
-    <div class="sec-title">最近打开</div>
-    <div class="recent-row" id="recentRow"></div>
-  </div>
-
-  <section id="tools">
-    <div class="filters">
-      <div class="f-row f-cats">
-        <div class="toolbar" id="tagChips"></div>
-      </div>
-      <div class="f-row f-tools">
-        <div class="toolbar" id="dbChips"></div>
-        <span class="spacer"></span>
-        <div class="segmented" id="viewSwitch" role="group" aria-label="视图切换">
-          <button type="button" data-view="grid" aria-pressed="true" title="网格视图">▦</button>
-          <button type="button" data-view="list" aria-pressed="false" title="列表视图">☰</button>
-        </div>
-        <select class="select" id="sortSel" aria-label="排序方式">
-          <option value="default">默认排序</option>
-          <option value="name">按名称</option>
-          <option value="tag">按分类</option>
-        </select>
-        <button type="button" class="btn sm" id="btnFav" aria-pressed="false" title="只看收藏（右键卡片可收藏）">⭐ 收藏</button>
-        <span class="faint f-count" id="resultInfo"></span>
-      </div>
-    </div>
-
-    <!-- 分区容器：第一个分区固定是「工具」，其余按分类依次往下排 -->
-    <div class="secs" id="sections"></div>
-
-    <div class="empty" id="emptyBox" hidden>
-      <span class="ic">🔍</span>
-      <div class="t">没有匹配的工具</div>
-      <div class="s">试试换个关键词，或点下面的按钮清空筛选</div>
-      <button class="btn sm" id="btnReset" style="margin-top:12px">清空筛选</button>
-    </div>
-
-    <div class="dep-wrap" id="depWrap" hidden>
-      <div class="sec-title dep-head" id="depHead">
-        <span class="toggle">▾</span>
-        已废弃 / 测试中
-        <span class="count" id="cntDep">0</span>
-        <span class="right faint" style="font-size:11px;font-weight:600">点击折叠</span>
-      </div>
-      <div class="dep-body"><div class="grid" id="gridDep"></div></div>
-    </div>
-  </section>
-</main>
-
-<footer class="foot">
-  <div class="fl">
-    <span>🧰 红石的小站</span>
+  <nav class="nx-links" aria-label="主导航">
+    <a href="./games/index.html">游戏厅</a>
     <a href="./pages/wiki.html">Wiki</a>
     <a href="./pages/download.html">下载站</a>
-    <a href="./pages/admin.html">数据管理</a>
-    <a href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GitHub 仓库</a>
+  </nav>
+  <div class="nx-nav-right"><a class="nx-ghost-sm" href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GitHub</a></div>
+</header>
+
+<main class="nx-wrap nx-main">
+
+  <section class="nx-hero">
+    <div class="nx-badge"><span class="dot"></span>STATION <span class="sep">/</span> ONLINE <span class="sep">/</span> <span id="nxStamp">2026</span></div>
+    <h1 class="nx-title" id="nxTitle" aria-label="红石的小站"></h1>
+    <p class="nx-sub">Minecraft 的小玩具、资源与笔记。<b>点开就用</b>，不装任何东西。</p>
+
+    <div class="nx-cta">
+      <a class="nx-btn primary" href="./games/index.html">进游戏厅 <span class="ar">↗</span></a>
+      <a class="nx-btn ghost" href="./pages/wiki.html">翻 Wiki <span class="ar">↗</span></a>
+    </div>
+
+    <div class="nx-kpis">
+      <div class="nx-kpi"><b data-kpi="games">—</b><span>GAMES</span></div>
+      <div class="nx-kpi"><b data-kpi="wiki">—</b><span>WIKI</span></div>
+      <div class="nx-kpi"><b data-kpi="files">—</b><span>FILES</span></div>
+    </div>
+  </section>
+
+  <div class="nx-cards">
+    <a class="nx-card nx-reveal" href="./games/index.html">
+      <span class="ico">🎮</span><span class="go">↗</span>
+      <h3>游戏厅</h3>
+      <p>五子棋、麻将、斗地主、Uno、自走棋，还有能真的挖方块搭房子的 Minecraft 模拟器。</p>
+    </a>
+    <a class="nx-card nx-reveal" href="./games/mc.html">
+      <span class="ico">🟩</span><span class="go">↗</span>
+      <h3>Minecraft 模拟器</h3>
+      <p>浏览器里的方块世界：挖掘、放置、合成、红石与水流，进度存在本地。</p>
+    </a>
+    <a class="nx-card nx-reveal" href="./pages/wiki.html">
+      <span class="ico">📚</span><span class="go">↗</span>
+      <h3>红石答辩 Wiki</h3>
+      <p>条目式笔记：机制、数据、踩过的坑，写给自己也写给别人。</p>
+    </a>
+    <a class="nx-card nx-reveal" href="./pages/download.html">
+      <span class="ico">📥</span><span class="go">↗</span>
+      <h3>下载站</h3>
+      <p>结构文件、资源包、存档。直链下载，不跳广告，不装客户端。</p>
+    </a>
   </div>
-  <div class="fr">
-    <span>数据 <span id="dataState">加载中</span></span>
-    <span>© <span data-year>2026</span></span>
-  </div>
+
+  <div class="nx-ann" id="nxAnn" hidden></div>
+</main>
+
+<footer class="nx-foot">
+  <span>© <span data-year>2026</span> 红石的小站</span>
+  <span class="sp"></span>
+  <a href="./pages/wiki.html">Wiki</a>
+  <a href="./pages/download.html">下载</a>
+  <a href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GitHub</a>
+  <a class="nx-archive" href="./pages/legacy-home.html" title="旧版首页存档">存档</a>
 </footer>
 
-<!-- 卡片右键菜单 -->
-<div class="ctx-menu" id="ctxMenu" role="menu" aria-label="卡片操作">
-  <button type="button" data-ctx="open" role="menuitem"><span class="ctx-ic">↗</span><span class="ctx-tx">打开</span></button>
-  <div class="ctx-sep"></div>
-  <button type="button" data-ctx="pin" role="menuitem"><span class="ctx-ic">📌</span><span class="ctx-tx">置顶</span></button>
-  <button type="button" data-ctx="fav" role="menuitem"><span class="ctx-ic">⭐</span><span class="ctx-tx">收藏</span></button>
-  <button type="button" data-ctx="hide" class="danger" role="menuitem"><span class="ctx-ic">🙈</span><span class="ctx-tx">隐藏</span></button>
-</div>
-
-<!-- 设置抽屉：隐藏的卡片都收在这里 -->
-<div class="set-mask" id="setMask" hidden></div>
-<aside class="set-panel" id="setPanel" aria-label="设置" aria-hidden="true">
-  <div class="set-head">
-    <span>⚙️ 设置</span><span class="sp"></span>
-    <button type="button" class="iconbtn" id="setClose" title="关闭" aria-label="关闭">✕</button>
-  </div>
-  <div class="set-body">
-    <section class="set-sec">
-      <h3>外观</h3>
-      <div class="theme-grid" id="setThemes"></div>
-    </section>
-
-    <section class="set-sec">
-      <h3>我的卡片</h3>
-      <div class="set-sub">📌 置顶 <span id="setPinN">0</span></div>
-      <div class="set-list" id="setPinList"></div>
-      <div class="set-sub">⭐ 收藏 <span id="setFavN">0</span></div>
-      <div class="set-list" id="setFavList"></div>
-      <div class="set-sub">🙈 已隐藏 <span id="setHideN">0</span></div>
-      <div class="set-list" id="setHideList"></div>
-      <p class="set-tip">在任意卡片上点右键（手机长按）就能置顶、收藏或隐藏；隐藏只是不在首页显示，随时能在这里恢复。</p>
-    </section>
-
-    <section class="set-sec">
-      <h3>数据</h3>
-      <div class="set-list">
-        <div class="set-row"><span class="ri">🔄</span><span class="nm">重新拉取工具列表</span><button type="button" class="mini" data-set="reload">刷新</button></div>
-        <div class="set-row"><span class="ri">🕘</span><span class="nm">最近打开记录</span><button type="button" class="mini danger" data-set="clear-recent">清空</button></div>
-        <div class="set-row"><span class="ri">🧹</span><span class="nm">本地缓存（数据 + 卡片偏好）</span><button type="button" class="mini danger" data-set="clear-all">清除</button></div>
-      </div>
-    </section>
-  </div>
-</aside>
-
-<script src="./assets/js/core.js"></script>
 <script>
 (function () {
   'use strict';
-  /* 远程数据缺项时的兜底，保证核心入口永远在 */
-  var FALLBACK = [
-    { id: 'wiki', icon: '📚', name: '红石答辩wiki', desc: '个人知识库 · 条目式整理', tag: '知识', url: './pages/wiki.html', category: 'noDB' },
-    { id: 'download', icon: '📥', name: '下载站', desc: '资源文件 · 便捷下载', tag: '资源', url: './pages/download.html', category: 'noDB' }
-  ];
+  var d = document, w = window;
+  var $ = function (s, r) { return (r || d).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || d).querySelectorAll(s)); };
+  var reduced = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var TOOLS = [];
-  var K_RECENT = 'hs-recent';
-  /* 卡片偏好：置顶 / 收藏 / 隐藏，只存在本机 */
-  var K_PIN = 'hs-card-pin', K_FAV = 'hs-card-fav', K_HIDE = 'hs-card-hide';
-  var PREF = {
-    pin: HS.store.json(K_PIN, []),
-    fav: HS.store.json(K_FAV, []),
-    hide: HS.store.json(K_HIDE, [])
-  };
-  function savePref(key) {
-    var map = { pin: K_PIN, fav: K_FAV, hide: K_HIDE };
-    HS.store.setJson(map[key], PREF[key]);
-  }
-  function has(list, id) { return list.indexOf(id) !== -1; }
-  function inPref(key, id) { return has(PREF[key], id); }
-  function togglePref(key, id) {
-    if (inPref(key, id)) PREF[key] = PREF[key].filter(function (x) { return x !== id; });
-    else PREF[key] = [id].concat(PREF[key]);
-    savePref(key);
-  }
-  function toolById(id) {
-    for (var i = 0; i < TOOLS.length; i++) if (TOOLS[i].id === id) return TOOLS[i];
-    return null;
-  }
-  var state = {
-    q: '', tag: '__all__', db: '__all__', sort: 'default', favOnly: false,
-    view: HS.store.get('hs-view', 'grid')
-  };
+  /* 首页固定深色，不让用户主题把它染成浅色 */
+  function lockTheme() { d.documentElement.setAttribute('data-theme', 'mc-night'); }
+  lockTheme(); d.addEventListener('DOMContentLoaded', lockTheme);
+  setTimeout(lockTheme, 0); setTimeout(lockTheme, 120);
 
-  function norm(t, i) {
-    if (!t || typeof t !== 'object') return null;
-    var name = (typeof t.name === 'string' && t.name.trim()) ? t.name.trim() : ('未命名 ' + (i + 1));
-    var cat = '';
-    if (t.category === 'needDB' || t.category === 'noDB') cat = t.category;
-    else if (typeof t.requiresDb === 'boolean') cat = t.requiresDb ? 'needDB' : 'noDB';
-    return {
-      id: (typeof t.id === 'string' && t.id.trim()) ? t.id.trim() : ('tool-' + (i + 1)),
-      icon: (typeof t.icon === 'string' && t.icon.trim()) ? t.icon.trim() : '🧰',
-      name: name,
-      desc: typeof t.desc === 'string' ? t.desc : '',
-      tag: (typeof t.tag === 'string' && t.tag.trim()) ? t.tag.trim() : '工具',
-      url: typeof t.url === 'string' ? t.url : '',
-      category: cat,
-      deprecated: !!t.deprecated,
-      disabled: !!t.disabled,
-      hidden: !!t.hidden,
-      /* 被收进文件夹的工具带 folder 标记；文件夹本身带 isFolder */
-      folder: typeof t.folder === 'string' ? t.folder : '',
-      isFolder: !!t.isFolder,
-      peek: Array.isArray(t.peek) ? t.peek.slice(0, 6) : null,
-      count: typeof t.count === 'number' ? t.count : 0,
-      group: typeof t.group === 'string' ? t.group : ''
-    };
+  /* ── 标题逐字入场 ─────────────────────────────────────────────── */
+  var TEXT = '红石的小站';
+  var title = $('#nxTitle');
+  if (title) {
+    title.innerHTML = '<span class="ln"><span class="grad">' +
+      TEXT.split('').map(function (c, i) {
+        return '<span class="ch" style="--i:' + i + ';animation-delay:' + (0.06 * i + 0.12).toFixed(2) + 's">' + c + '</span>';
+      }).join('') + '</span></span>';
   }
-  function normAll(arr) {
-    var out = [], seen = {};
-    (arr || []).forEach(function (t, i) {
-      var n = norm(t, i);
-      if (n && !seen[n.id]) { seen[n.id] = 1; out.push(n); }
+
+  /* ── 背景：漂浮的等距方块 ─────────────────────────────────────── */
+  (function fx() {
+    var cv = $('#nxFx');
+    if (!cv || !cv.getContext || reduced) return;
+    var ctx = cv.getContext('2d'), W = 0, H = 0, dpr = 1;
+    var cubes = [], mx = 0.5, my = 0.5, px = 0, py = 0, raf = 0, last = 0;
+    var COLORS = [[94, 234, 212], [167, 139, 250], [244, 114, 182], [255, 255, 255]];
+
+    function size() {
+      dpr = Math.min(w.devicePixelRatio || 1, 2);
+      W = cv.clientWidth; H = cv.clientHeight;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function make() {
+      var n = W < 720 ? 13 : 24;
+      cubes = [];
+      for (var i = 0; i < n; i++) {
+        cubes.push({
+          x: Math.random() * W, y: Math.random() * H,
+          s: 9 + Math.random() * 20,
+          a: Math.random() * Math.PI * 2,
+          va: (Math.random() - 0.5) * 0.006,
+          vx: (Math.random() - 0.5) * 0.16,
+          vy: (Math.random() - 0.5) * 0.22,
+          z: 0.25 + Math.random() * 0.75,
+          c: COLORS[(Math.random() * COLORS.length) | 0]
+        });
+      }
+    }
+    function iso(x, y, s, a) {
+      var ca = Math.cos(a), sa = Math.sin(a);
+      var P = function (u, v) { return [x + (u * ca - v * sa) * s, y + (u * sa + v * ca) * s * 0.5]; };
+      return { t: P(0, -1), r: P(1, 0), b: P(0, 1), l: P(-1, 0), c: P(0, 0) };
+    }
+    function frame(ts) {
+      if (!last) last = ts;
+      var dt = Math.min(48, ts - last); last = ts;
+      px += ((mx - 0.5) * 26 - px) * 0.06;
+      py += ((my - 0.5) * 18 - py) * 0.06;
+
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < cubes.length; i++) {
+        var q = cubes[i];
+        q.a += q.va * dt * 0.06;
+        q.x += q.vx * dt * 0.06;
+        q.y += q.vy * dt * 0.06;
+        if (q.x < -60) q.x = W + 60; if (q.x > W + 60) q.x = -60;
+        if (q.y < -60) q.y = H + 60; if (q.y > H + 60) q.y = -60;
+
+        var s = q.s * (0.6 + q.z * 0.6);
+        var cx = q.x + px * q.z, cy = q.y + py * q.z;
+        var g = iso(cx, cy, s, q.a);
+        var al = 0.05 + q.z * 0.13;
+        var col = 'rgba(' + q.c[0] + ',' + q.c[1] + ',' + q.c[2] + ',';
+
+        ctx.beginPath();
+        ctx.moveTo(g.t[0], g.t[1]); ctx.lineTo(g.r[0], g.r[1]);
+        ctx.lineTo(g.c[0], g.c[1]); ctx.lineTo(g.l[0], g.l[1]); ctx.closePath();
+        ctx.fillStyle = col + (al * 1.5).toFixed(3) + ')'; ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(g.l[0], g.l[1]); ctx.lineTo(g.c[0], g.c[1]);
+        ctx.lineTo(g.b[0], g.b[1]); ctx.closePath();
+        ctx.fillStyle = col + (al * 0.7).toFixed(3) + ')'; ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(g.c[0], g.c[1]); ctx.lineTo(g.r[0], g.r[1]);
+        ctx.lineTo(g.b[0], g.b[1]); ctx.closePath();
+        ctx.fillStyle = col + (al * 1.0).toFixed(3) + ')'; ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(g.t[0], g.t[1]); ctx.lineTo(g.r[0], g.r[1]);
+        ctx.lineTo(g.b[0], g.b[1]); ctx.lineTo(g.l[0], g.l[1]); ctx.closePath();
+        ctx.strokeStyle = col + (0.12 + q.z * 0.14).toFixed(3) + ')';
+        ctx.lineWidth = 1; ctx.stroke();
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    size(); make();
+    raf = requestAnimationFrame(frame);
+    w.addEventListener('resize', function () { size(); make(); });
+    w.addEventListener('pointermove', function (e) {
+      mx = e.clientX / Math.max(1, w.innerWidth);
+      my = e.clientY / Math.max(1, w.innerHeight);
+    }, { passive: true });
+    d.addEventListener('visibilitychange', function () {
+      if (d.hidden) { cancelAnimationFrame(raf); raf = 0; }
+      else if (!raf) { last = 0; raf = requestAnimationFrame(frame); }
     });
-    return out;
-  }
-  function merge(remote, fallback) {
-    var seenId = {}, seenUrl = {}, out = [];
-    function add(t) {
-      if (!t) return;
-      var u = String(t.url || '').replace(/^\.\//, '').replace(/\/$/, '');
-      if (seenId[t.id]) return;
-      if (u && seenUrl[u]) return;
-      seenId[t.id] = 1;
-      if (u) seenUrl[u] = 1;
-      out.push(t);
-    }
-    remote.forEach(add);
-    fallback.forEach(add);
-    return out;
-  }
-  /* 通用工具统一由 core.js 提供 */
-  var absUrl = HS.absUrl, isExternal = HS.isExternal;
-
-  /* 标题逐字入场（渐变按字数切片，视觉上仍是连续的一条） */
-  (function heroIn() {
-    var h = document.getElementById('heroTitle');
-    if (!h) return;
-    var txt = h.textContent;
-    var n = txt.length;
-    h.textContent = '';
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < n; i++) {
-      var s = document.createElement('span');
-      s.className = 'ch';
-      s.textContent = txt[i] === ' ' ? '\u00a0' : txt[i];
-      s.style.animationDelay = (i * 55 + 80) + 'ms';
-      s.style.backgroundSize = (n * 100) + '% 100%';
-      s.style.backgroundPosition = (n > 1 ? (i / (n - 1)) * 100 : 0) + '% 50%';
-      frag.appendChild(s);
-    }
-    h.appendChild(frag);
-    document.getElementById('stamp').textContent = new Date().getFullYear();
   })();
 
-  /* ── 公告 ── */
-  var dismissed = HS.store.json('hs-ann-dismissed', []);
-  var collapseMap = HS.store.json('hs-ann-collapse', {});
-  var annWrap = document.getElementById('annWrap');
-
-  function loadAnnounce() {
-    HS.data('announcement')
-      .then(function (data) {
-        var list = (Array.isArray(data) ? data : []).filter(function (it) {
-          return it && it.enabled !== false && dismissed.indexOf(it.id) === -1;
-        });
-        renderAnnounce(list);
-      })
-      .catch(function () { annWrap.hidden = true; });
-  }
-  function renderAnnounce(list) {
-    if (!list.length) { annWrap.hidden = true; annWrap.innerHTML = ''; return; }
-    var html = '';
-    list.forEach(function (it, i) {
-      var type = it.type || 'info';
-      var icon = it.icon || ({ warn: '⚠️', danger: '🚫', success: '✅' }[type] || '📢');
-      var collapsed = collapseMap.hasOwnProperty(it.id) ? !!collapseMap[it.id] : it.collapsed === true;
-      html += '<div class="ann-item' + (collapsed ? ' collapsed' : '') + '" data-type="' + HS.esc(type) + '"' +
-        ' data-id="' + HS.esc(it.id || '') + '">' +
-        '<div class="ann-head" data-toggle="' + HS.esc(it.id || '') + '">' +
-        '<span class="ann-ico">' + HS.esc(icon) + '</span>' +
-        '<span class="ann-title">' + HS.esc(it.title || '公告') + '</span>' +
-        (it.category ? '<span class="ann-cat">' + HS.esc(it.category) + '</span>' : '') +
-        '<span class="ann-arrow">▾</span>' +
-        '<button class="ann-close" data-close="' + HS.esc(it.id || '') + '" title="关闭这条公告" aria-label="关闭公告">✕</button>' +
-        '</div>' +
-        '<div class="ann-wrap"><div class="ann-body">' + HS.esc(it.content || '') +
-        (it.link ? '<div><a class="ann-link" href="' + HS.esc(absUrl(it.link)) + '" target="_blank" rel="noopener">' +
-          HS.esc(it.linkText || '查看详情') + ' →</a></div>' : '') +
-        '</div></div></div>';
+  /* ── 卡片光斑跟随 ─────────────────────────────────────────────── */
+  $$('.nx-card').forEach(function (c) {
+    c.addEventListener('pointermove', function (e) {
+      var r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+      c.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
     });
-    annWrap.innerHTML = html;
-    annWrap.hidden = false;
-  }
-  annWrap.addEventListener('click', function (e) {
-    var closeBtn = e.target.closest('[data-close]');
-    if (closeBtn) {
-      e.stopPropagation();
-      var id = closeBtn.getAttribute('data-close');
-      if (id && dismissed.indexOf(id) === -1) {
-        dismissed.push(id);
-        /* 纠正：关闭记录只留最近 60 条，防止 localStorage 无限增长 */
-        if (dismissed.length > 60) dismissed = dismissed.slice(-60);
-      }
-      HS.store.setJson('hs-ann-dismissed', dismissed);
-      var card = closeBtn.closest('.ann-item');
-      if (card) {
-        card.style.transition = 'opacity .25s,transform .25s';
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(-6px)';
-      }
-      setTimeout(loadAnnounce, 240);
-      HS.toast('已关闭这条公告', { icon: '✓' });
-      return;
-    }
-    var head = e.target.closest('[data-toggle]');
-    if (head) {
-      var item = head.closest('.ann-item');
-      if (!item) return;
-      var wasClosed = item.classList.contains('collapsed');
-      item.classList.toggle('collapsed');
-      var id2 = head.getAttribute('data-toggle');
-      if (id2) { collapseMap[id2] = !wasClosed; HS.store.setJson('hs-ann-collapse', collapseMap); }
-    }
   });
 
-  /* ── 卡片 ── */
-  /* 卡片图标：emoji 直接当文字画；写成图片路径（如 ./assets/mc-icons/x.png）就渲成 <img> */
-  function iconHTML(icon) {
-    var s = String(icon || '');
-    if (/\.(png|jpe?g|webp|gif|svg)$/i.test(s)) {
-      return '<img src="' + HS.esc(absUrl(s)) + '" alt="" loading="lazy" decoding="async">';
-    }
-    return HS.esc(s);
+  /* ── 入场 ─────────────────────────────────────────────────────── */
+  var items = $$('.nx-reveal');
+  if (reduced || !('IntersectionObserver' in w)) {
+    items.forEach(function (n) { n.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var i = items.indexOf(en.target);
+        en.target.style.transitionDelay = Math.min(i, 6) * 60 + 'ms';
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      });
+    }, { threshold: 0.12 });
+    items.forEach(function (n) { io.observe(n); });
+    /* 兜底：任何情况下都不该有内容永久隐形 */
+    setTimeout(function () { items.forEach(function (n) { n.classList.add('in'); }); }, 1400);
   }
-  /* 文件夹卡片：占 1 列 × 2 行（grid-row:span 2），像桌面上的一个文件夹 */
-  function folderHTML(t, delay, opts) {
-    var hideTag = opts && opts.hideTag;
-    var peek = (t.peek || []).slice(0, 6).map(function (ic) {
-      return '<span class="peek-i">' + HS.esc(ic) + '</span>';
+
+  /* ── 数字 ─────────────────────────────────────────────────────── */
+  function countUp(el, to) {
+    if (!el) return;
+    if (reduced) { el.textContent = to; return; }
+    var t0 = 0;
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min(1, (ts - t0) / 700);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(to * e);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function grab(name) {
+    return fetch('./data/' + name + '.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
+  function renderAnn(list) {
+    var box = $('#nxAnn');
+    if (!box || !list) return;
+    var on = list.filter(function (a) { return a && a.enabled !== false && a.title; });
+    if (!on.length) { box.hidden = true; return; }
+    box.innerHTML = on.slice(0, 3).map(function (a) {
+      return '<div class="nx-ann-item ' + (a.type || 'info') + '">' +
+        '<span>' + (a.icon || '📢') + '</span><div><span class="t">' + (a.title || '') + '</span>' +
+        String(a.content || '').replace(/\n/g, '<br>') + '</div></div>';
     }).join('');
-    return '<a class="card folder reveal" href="' + HS.esc(absUrl(t.url)) + '"' +
-      ' data-id="' + HS.esc(t.id) + '" style="transition-delay:' + Math.min(delay, 280) + 'ms">' +
-      '<span class="glow"></span>' +
-      '<div class="card-body fold">' +
-      '<div class="fold-top">' +
-      '<div class="cico fold-ico">' + iconHTML(t.icon) + '</div>' +
-      '<div class="cinfo">' +
-      '<div class="cname">' + HS.esc(t.name) + '</div>' +
-      '<div class="cdesc">' + HS.esc(t.desc || '') + '</div>' +
-      '</div>' +
-      '</div>' +
-      '<div class="fold-peek">' + peek + '</div>' +
-      '<div class="cmeta">' +
-      (hideTag ? '' : '<span class="badge">' + HS.esc(t.tag) + '</span>') +
-      '<span class="badge ok">' + (t.count || (t.peek || []).length || 0) + ' 个工具</span>' +
-      '<span class="carrow">→</span>' +
-      '</div>' +
-      '</div></a>';
+    box.hidden = false;
   }
 
-  function cardHTML(t, delay, opts) {
-    if (t.isFolder) return folderHTML(t, delay, opts);
-    /* 分区标题已经说明了分类，卡片再挂一枚同样的徽章纯属重复 */
-    var hideTag = opts && opts.hideTag;
-    var external = isExternal(t.url);
-    var dbBadge = t.category === 'needDB'
-      ? '<span class="badge muted" title="需要后端或账号">☁ 需后端</span>'
-      : t.category === 'noDB' ? '<span class="badge ok" title="纯前端即可使用">⚡ 纯前端</span>' : '';
-    return '<a class="card reveal" href="' + HS.esc(absUrl(t.url)) + '"' +
-      (external ? ' target="_blank" rel="noopener"' : '') +
-      ' data-id="' + HS.esc(t.id) + '" style="transition-delay:' + Math.min(delay, 280) + 'ms">' +
-      '<span class="glow"></span>' +
-      '<div class="card-body">' +
-      '<div class="cico">' + iconHTML(t.icon) + '</div>' +
-      '<div class="cinfo">' +
-      '<div class="cname">' + HS.esc(t.name) + '</div>' +
-      (t.desc ? '<div class="cdesc">' + HS.esc(t.desc) + '</div>' : '') +
-      '<div class="cmeta">' +
-      (inPref('pin', t.id) ? '<span class="badge pin" title="已置顶">📌 置顶</span>' : '') +
-      (inPref('fav', t.id) ? '<span class="badge star" title="已收藏">⭐ 收藏</span>' : '') +
-      (hideTag ? '' : '<span class="badge">' + HS.esc(t.tag) + '</span>') + dbBadge +
-      (t.disabled ? '<span class="badge dgr">停用</span>' : '') +
-      (external ? '<span class="badge muted">↗ 站外</span>' : '') +
-      '</div></div>' +
-      '<span class="carrow">→</span>' +
-      '</div></a>';
-  }
-  function bindCardFx(root) {
-    root.querySelectorAll('.card').forEach(function (c) {
-      var glow = c.querySelector('.glow');
-      if (glow) {
-        c.addEventListener('mousemove', function (e) {
-          var r = c.getBoundingClientRect();
-          glow.style.left = (e.clientX - r.left) + 'px';
-          glow.style.top = (e.clientY - r.top) + 'px';
-        });
-      }
-      c.addEventListener('click', function (e) {
-        if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
-        pushRecent(c.getAttribute('data-id'));
-      });
-    });
-  }
-
-  /* ── 最近打开 ── */
-  function pushRecent(id) {
-    if (!id) return;
-    var arr = HS.store.json(K_RECENT, []);
-    arr = arr.filter(function (x) { return x !== id; });
-    arr.unshift(id);
-    HS.store.setJson(K_RECENT, arr.slice(0, 8));
-  }
-  function renderRecent() {
-    var ids = HS.store.json(K_RECENT, []);
-    var wrap = document.getElementById('recentWrap');
-    var row = document.getElementById('recentRow');
-    var items = ids.map(function (id) {
-      return TOOLS.filter(function (t) { return t.id === id && !inPref('hide', id); })[0];
-    }).filter(Boolean);
-    if (!items.length) { wrap.hidden = true; return; }
-    row.innerHTML = items.map(function (t) {
-      return '<a class="recent-item" href="' + HS.esc(absUrl(t.url)) + '"' +
-        (isExternal(t.url) ? ' target="_blank" rel="noopener"' : '') + '>' +
-        '<span class="ri">' + iconHTML(t.icon) + '</span>' + HS.esc(t.name) + '</a>';
-    }).join('');
-    wrap.hidden = false;
-  }
-
-  /* ── 筛选与渲染 ── */
-  /* hidden=true 是数据层面下架；hide 是用户本机收起来的，两类都不在首页显示 */
-  /* folder 字段 = 被收进「未优化工具」文件夹，不在主列表单独出现 */
-  function visible() {
-    return TOOLS.filter(function (t) { return !t.hidden && !t.folder && !inPref('hide', t.id); });
-  }
-
-  function passed(t) {
-    if (state.favOnly && !inPref('fav', t.id)) return false;
-    if (state.tag !== '__all__' && (t.tag || '工具') !== state.tag) return false;
-    if (state.db === '__db__' && t.category !== 'needDB') return false;
-    if (state.db === '__nodb__' && t.category !== 'noDB') return false;
-    if (state.db === '__unset__' && t.category) return false;
-    if (state.q) {
-      var hay = (t.name + ' ' + (t.desc || '') + ' ' + (t.tag || '')).toLowerCase();
-      if (hay.indexOf(state.q.toLowerCase()) === -1) return false;
-    }
-    return true;
-  }
-  function sortList(list) {
-    var arr = list.slice();
-    if (state.sort === 'name') arr.sort(function (a, b) { return a.name.localeCompare(b.name, 'zh'); });
-    else if (state.sort === 'tag') arr.sort(function (a, b) {
-      var c = (a.tag || '').localeCompare(b.tag || '', 'zh');
-      return c !== 0 ? c : a.name.localeCompare(b.name, 'zh');
-    });
-    else {
-      /* 默认排序里，置顶的按置顶顺序排在最前 */
-      arr = arr.map(function (t, i) {
-        var k = PREF.pin.indexOf(t.id);
-        return { t: t, k: k < 0 ? 1e9 : k, i: i };
-      }).sort(function (a, b) { return (a.k - b.k) || (a.i - b.i); })
-        .map(function (x) { return x.t; });
-    }
-    return arr;
-  }
-
-  function renderChips() {
-    var list = visible();
-    var tagCount = {}, dbYes = 0, dbNo = 0, dbUn = 0;
-    list.forEach(function (t) {
-      var g = t.tag || '工具';
-      tagCount[g] = (tagCount[g] || 0) + 1;
-      if (t.category === 'needDB') dbYes++;
-      else if (t.category === 'noDB') dbNo++;
-      else dbUn++;
-    });
-    var tags = Object.keys(tagCount).sort(function (a, b) { return a.localeCompare(b, 'zh'); });
-    var h = '<span class="label">分类</span>' +
-      '<button class="chip' + (state.tag === '__all__' ? ' active' : '') + '" data-tag="__all__">全部 <span class="n">' + list.length + '</span></button>';
-    tags.forEach(function (g) {
-      h += '<button class="chip' + (state.tag === g ? ' active' : '') + '" data-tag="' + HS.esc(g) + '">' +
-        HS.esc(g) + ' <span class="n">' + tagCount[g] + '</span></button>';
-    });
-    document.getElementById('tagChips').innerHTML = h;
-
-    var d = '<span class="label">运行</span>' +
-      '<button class="chip' + (state.db === '__all__' ? ' active' : '') + '" data-db="__all__">全部</button>' +
-      '<button class="chip' + (state.db === '__nodb__' ? ' active' : '') + '" data-db="__nodb__"><span class="dot" style="color:var(--ok)"></span>纯前端 <span class="n">' + dbNo + '</span></button>' +
-      '<button class="chip' + (state.db === '__db__' ? ' active' : '') + '" data-db="__db__"><span class="dot" style="color:var(--ac)"></span>需后端 <span class="n">' + dbYes + '</span></button>';
-    if (dbUn) d += '<button class="chip' + (state.db === '__unset__' ? ' active' : '') + '" data-db="__unset__">未标注 <span class="n">' + dbUn + '</span></button>';
-    document.getElementById('dbChips').innerHTML = d;
-  }
-
-  /* ── 分区 ── */
-  /* 顺序即展示顺序，第一个固定是「工具」——进站第一眼要看到的就是工具本身。
-     匹配不到的 tag 自动落进「其他」，所以以后新增分类不会漏卡片。 */
-  var SECTIONS = [
-    {
-      key: 'tool', name: '工具', hint: '点开即用，不依赖账号',
-      match: function (t) { return (t.tag || '工具') === '工具'; }
-    },
-    {
-      key: 'game', name: '游戏', hint: '闲的时候玩两把',
-      match: function (t) { return t.tag === '游戏' || t.tag === '饿啊'; }
-    },
-    {
-      key: 'site', name: '资源与站点', hint: '下载、资料、后台',
-      match: function (t) { return t.tag === '资源' || t.tag === '管理'; }
-    }
-  ];
-  var SEC_OTHER = { key: 'other', name: '其他', hint: '', match: function () { return true; } };
-
-  function sectionOf(t) {
-    for (var i = 0; i < SECTIONS.length; i++) if (SECTIONS[i].match(t)) return SECTIONS[i];
-    return SEC_OTHER;
-  }
-
-  function sectionHTML(g) {
-    return '<section class="sec" id="sec-' + g.key + '">' +
-      '<header class="sec-head">' +
-      '<h2 class="sec-h">' + HS.esc(g.name) + '</h2>' +
-      '<span class="sec-n">' + g.items.length + '</span>' +
-      (g.hint ? '<span class="sec-hint">' + HS.esc(g.hint) + '</span>' : '') +
-      '</header>' +
-      '<div class="grid' + (state.view === 'list' ? ' list' : '') + '">' +
-      g.items.map(function (t, i) {
-        return cardHTML(t, i * 20, { hideTag: (t.tag || '工具') === g.name });
-      }).join('') +
-      '</div></section>';
-  }
-
-  function render() {
-    var list = visible();
-    var active = list.filter(function (t) { return !t.deprecated; });
-    var dep = list.filter(function (t) { return t.deprecated; });
-    var shown = sortList(active.filter(passed));
-    var filtering = !!(state.q || state.tag !== '__all__' || state.db !== '__all__' || state.favOnly);
-
-    var groups = [];
-    if (filtering) {
-      /* 筛选时合并成一个结果区：这时候再按分区拆，结果会碎得七零八落 */
-      if (shown.length) groups.push({ key: 'result', name: '筛选结果', hint: '', items: shown });
-    } else {
-      var bucket = {};
-      SECTIONS.concat([SEC_OTHER]).forEach(function (x) { bucket[x.key] = []; });
-      shown.forEach(function (t) { bucket[sectionOf(t).key].push(t); });
-      SECTIONS.concat([SEC_OTHER]).forEach(function (x) {
-        if (bucket[x.key].length) {
-          groups.push({ key: x.key, name: x.name, hint: x.hint, items: bucket[x.key] });
-        }
-      });
-    }
-
-    var host = document.getElementById('sections');
-    host.innerHTML = groups.map(function (g) { return sectionHTML(g); }).join('');
-    Array.prototype.forEach.call(host.querySelectorAll('.grid'), bindCardFx);
-
-    document.getElementById('resultInfo').textContent = filtering
-      ? shown.length + ' / ' + active.length + ' 个匹配'
-      : '共 ' + active.length + ' 个' + (PREF.hide.length ? ' · 隐藏 ' + PREF.hide.length : '');
-    document.getElementById('emptyBox').hidden = shown.length > 0;
-
-    var depWrap = document.getElementById('depWrap');
-    var depShown = sortList(dep.filter(passed));
-    if (depShown.length) {
-      depWrap.hidden = false;
-      document.getElementById('cntDep').textContent = depShown.length;
-      var gd = document.getElementById('gridDep');
-      gd.className = 'grid' + (state.view === 'list' ? ' list' : '');
-      gd.innerHTML = depShown.map(function (t, i) { return cardHTML(t, i * 20); }).join('');
-      bindCardFx(gd);
-      gd.querySelectorAll('.card').forEach(function (c) { c.classList.add('dim'); });
-    } else {
-      depWrap.hidden = true;
-    }
-
-    renderChips();
-    renderRecent();
-    renderPrefsUI();
-    HS.reveal();
-  }
-
-  /* ── 事件 ── */
-  document.getElementById('tagChips').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-tag]');
-    if (!b) return;
-    state.tag = b.getAttribute('data-tag');
-    render();
-  });
-  document.getElementById('dbChips').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-db]');
-    if (!b) return;
-    state.db = b.getAttribute('data-db');
-    render();
-  });
-  document.getElementById('viewSwitch').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-view]');
-    if (!b) return;
-    state.view = b.getAttribute('data-view');
-    HS.store.set('hs-view', state.view);
-    Array.prototype.forEach.call(document.querySelectorAll('#viewSwitch button'), function (x) {
-      x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
-    });
-    render();
-  });
-  document.getElementById('sortSel').addEventListener('change', function (e) {
-    state.sort = e.target.value;
-    render();
-  });
-  document.getElementById('btnFav').addEventListener('click', function () {
-    state.favOnly = !state.favOnly;
-    render();
-    HS.toast(state.favOnly ? '只看收藏的卡片' : '显示全部卡片', { icon: '⭐' });
-  });
-  document.getElementById('btnReset').addEventListener('click', function () {
-    state.q = ''; state.tag = '__all__'; state.db = '__all__'; state.favOnly = false;
-    document.getElementById('q').value = '';
-    render();
-  });
-  document.getElementById('depHead').addEventListener('click', function () {
-    document.getElementById('depWrap').classList.toggle('closed');
-  });
-  document.getElementById('btnReload').addEventListener('click', function () {
-    loadTools(true);
-  });
-  document.getElementById('btnPalette').addEventListener('click', function () { HS.palette.open(); });
-
-  var qEl = document.getElementById('q');
-  qEl.addEventListener('input', function () {
-    state.q = this.value.trim();
-    render();
-  });
-  document.addEventListener('keydown', function (e) {
-    var tag = document.activeElement.tagName;
-    if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) {
-      e.preventDefault(); qEl.focus(); qEl.select();
-    }
-    if (e.key === 'Escape' && document.activeElement === qEl) {
-      qEl.value = ''; state.q = ''; qEl.blur(); render();
-    }
+  Promise.all([grab('announcement'), grab('wiki-data'), grab('download-data')]).then(function (r) {
+    countUp($('[data-kpi="games"]'), 13);
+    countUp($('[data-kpi="wiki"]'), Array.isArray(r[1]) ? r[1].length : 0);
+    countUp($('[data-kpi="files"]'), Array.isArray(r[2]) ? r[2].length : 0);
+    renderAnn(r[0]);
   });
 
-  /* ── 数据 ── */
-  /* 纠正：localStorage 缓存只存远程数据（以前把 FALLBACK 混着存，
-     后台新增同名工具时浏览器端 5 分钟内会被旧缓存挡住）。换 v2 键避开旧格式 */
-  function cacheKey() { return 'hs-tools-cache-v2'; }
-
-  function loadTools(force) {
-    var cache = HS.store.json(cacheKey(), null);
-    if (!force && cache && (Date.now() - cache.t) < 5 * 60 * 1000 && Array.isArray(cache.data) && cache.data.length) {
-      TOOLS = merge(normAll(cache.data), normAll(FALLBACK));
-      render();
-      document.getElementById('dataState').textContent = '本地缓存';
-      return;
-    }
-    /* 刷新中禁用按钮，完成后由回调恢复（以前是固定 900ms 假动画） */
-    var btn = document.getElementById('btnReload');
-    btn.disabled = true;
-    var done = function () { btn.disabled = false; };
-    HS.data('tools-data')
-      .then(function (data) {
-        var remote = normAll(data);
-        if (!remote.length) throw new Error('空数据');
-        TOOLS = merge(remote, normAll(FALLBACK));
-        HS.store.setJson(cacheKey(), { t: Date.now(), data: remote });
-        document.getElementById('dataState').textContent = '已同步';
-        render();
-        if (force) HS.toast('工具列表已刷新', { icon: '✓' });
-      })
-      .catch(function () {
-        /* 纠正：强刷失败时保留已加载的列表，不再退回 3 条兜底 */
-        if (TOOLS.length) {
-          document.getElementById('dataState').textContent = '保留当前列表';
-          if (force) HS.toast('刷新失败，保留了当前列表', { icon: '⚠️' });
-        } else {
-          TOOLS = normAll(FALLBACK);
-          document.getElementById('dataState').textContent = '离线模式';
-          render();
-          if (force) HS.toast('刷新失败，已使用内置列表', { icon: '⚠️' });
-        }
-      })
-      .finally(done);
-  }
-
-  /* ── 卡片右键：置顶 / 收藏 / 隐藏 ── */
-  var ctxMenu = document.getElementById('ctxMenu');
-  var ctxId = null, suppressClick = false;
-
-  function openCtxMenu(x, y, id) {
-    var t = toolById(id);
-    if (!t) return;
-    ctxId = id;
-    var pinned = inPref('pin', id), faved = inPref('fav', id);
-    var pinBtn = ctxMenu.querySelector('[data-ctx="pin"]');
-    var favBtn = ctxMenu.querySelector('[data-ctx="fav"]');
-    pinBtn.querySelector('.ctx-ic').textContent = pinned ? '📍' : '📌';
-    pinBtn.querySelector('.ctx-tx').textContent = pinned ? '取消置顶' : '置顶到最前';
-    favBtn.querySelector('.ctx-ic').textContent = faved ? '☆' : '⭐';
-    favBtn.querySelector('.ctx-tx').textContent = faved ? '取消收藏' : '收藏';
-    ctxMenu.querySelector('[data-ctx="open"] .ctx-tx').textContent = isExternal(t.url) ? '打开（站外）' : '打开';
-    ctxMenu.classList.add('show');
-    var w = ctxMenu.offsetWidth || 168, h = ctxMenu.offsetHeight || 170;
-    var left = Math.min(x, window.innerWidth - w - 8);
-    var top = Math.min(y, window.innerHeight - h - 8);
-    ctxMenu.style.left = Math.max(8, left) + 'px';
-    ctxMenu.style.top = Math.max(8, top) + 'px';
-  }
-  function closeCtxMenu() {
-    ctxMenu.classList.remove('show');
-    ctxId = null;
-  }
-
-  ctxMenu.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-ctx]');
-    if (!b || !ctxId) return;
-    var id = ctxId, t = toolById(id), act = b.getAttribute('data-ctx');
-    closeCtxMenu();
-    if (!t) return;
-    if (act === 'open') {
-      if (isExternal(t.url)) window.open(absUrl(t.url), '_blank', 'noopener');
-      else location.href = absUrl(t.url);
-      return;
-    }
-    if (act === 'pin') {
-      togglePref('pin', id);
-      HS.toast(inPref('pin', id) ? '已置顶：' + t.name : '已取消置顶：' + t.name, { icon: '📌' });
-    } else if (act === 'fav') {
-      togglePref('fav', id);
-      HS.toast(inPref('fav', id) ? '已收藏：' + t.name : '已取消收藏：' + t.name, { icon: '⭐' });
-    } else if (act === 'hide') {
-      if (inPref('pin', id)) { PREF.pin = PREF.pin.filter(function (x) { return x !== id; }); savePref('pin'); }
-      if (!inPref('hide', id)) { PREF.hide = [id].concat(PREF.hide); savePref('hide'); }
-      HS.toast('已隐藏：' + t.name + '（设置里可恢复）', { icon: '🙈' });
-    }
-    render();
-  });
-
-  document.addEventListener('contextmenu', function (e) {
-    var card = e.target.closest('a.card');
-    if (!card) { if (ctxMenu.classList.contains('show')) closeCtxMenu(); return; }
-    var id = card.getAttribute('data-id');
-    if (!id) return;
-    e.preventDefault();
-    openCtxMenu(e.clientX, e.clientY, id);
-  });
-  document.addEventListener('click', function (e) {
-    if (!ctxMenu.classList.contains('show')) return;
-    if (ctxMenu.contains(e.target)) return;
-    closeCtxMenu();
-  });
-  window.addEventListener('resize', closeCtxMenu);
-  window.addEventListener('scroll', closeCtxMenu, { passive: true });
-
-  /* 手机上长按 = 右键 */
-  var lpTimer = null, lpStart = null, lpCard = null;
-  document.addEventListener('touchstart', function (e) {
-    var card = e.target.closest('a.card');
-    if (!card || e.touches.length !== 1) return;
-    var tp = e.touches[0];
-    lpStart = { x: tp.clientX, y: tp.clientY };
-    lpCard = card.getAttribute('data-id');
-    clearTimeout(lpTimer);
-    lpTimer = setTimeout(function () {
-      lpTimer = null;
-      if (!lpCard) return;
-      if (navigator.vibrate) { try { navigator.vibrate(18); } catch (err) {} }
-      suppressClick = true;
-      openCtxMenu(lpStart.x, lpStart.y, lpCard);
-      lpStart = null; lpCard = null;
-    }, 520);
-  }, { passive: true });
-  document.addEventListener('touchmove', function (e) {
-    if (!lpTimer || !lpStart) return;
-    var tp = e.touches[0];
-    if (Math.abs(tp.clientX - lpStart.x) > 10 || Math.abs(tp.clientY - lpStart.y) > 10) {
-      clearTimeout(lpTimer); lpTimer = null;
-    }
-  }, { passive: true });
-  ['touchend', 'touchcancel'].forEach(function (ev) {
-    document.addEventListener(ev, function () {
-      if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
-      lpStart = null; lpCard = null;
-    }, { passive: true });
-  });
-
-  /* ── 设置抽屉 ── */
-  var setPanel = document.getElementById('setPanel');
-  var setMask = document.getElementById('setMask');
-  var setOpen = false;
-
-  function prefRow(t, kind) {
-    var btn = kind === 'hide'
-      ? '<button type="button" class="mini" data-unhide="' + HS.esc(t.id) + '">恢复</button>'
-      : '<button type="button" class="mini danger" data-un' + kind + '="' + HS.esc(t.id) + '">取消</button>';
-    return '<div class="set-row"><span class="ri">' + iconHTML(t.icon) + '</span>' +
-      '<span class="nm">' + HS.esc(t.name) + '</span>' + btn + '</div>';
-  }
-  function prefList(kind) {
-    var rows = PREF[kind].map(toolById).filter(Boolean).map(function (t) { return prefRow(t, kind); });
-    var empty = kind === 'pin' ? '没有置顶的卡片' : kind === 'fav' ? '没有收藏的卡片' : '没有隐藏的卡片';
-    return rows.length ? rows.join('') : '<div class="set-empty">' + empty + '</div>';
-  }
-  function themeButtons() {
-    var cur = HS.theme.pref();
-    var h = '<button type="button" data-theme-val="auto" aria-pressed="' + (cur === 'auto' ? 'true' : 'false') + '">' +
-      '<span class="sw" style="background:linear-gradient(135deg,var(--bg),var(--ac2))"></span>跟随系统</button>';
-    HS.theme.list().forEach(function (th) {
-      var label = String(th.name || th.id).replace(/^[^A-Za-z\u4e00-\u9fa5]+/, '');
-      h += '<button type="button" data-theme-val="' + HS.esc(th.id) + '" aria-pressed="' + (cur === th.id ? 'true' : 'false') + '">' +
-        '<span class="sw" style="background:' + HS.esc(th.colors[0]) + '"></span>' + HS.esc(label) + '</button>';
-    });
-    return h;
-  }
-  function renderSettings() {
-    document.getElementById('setThemes').innerHTML = themeButtons();
-    document.getElementById('setPinList').innerHTML = prefList('pin');
-    document.getElementById('setFavList').innerHTML = prefList('fav');
-    document.getElementById('setHideList').innerHTML = prefList('hide');
-    document.getElementById('setPinN').textContent = PREF.pin.length;
-    document.getElementById('setFavN').textContent = PREF.fav.length;
-    document.getElementById('setHideN').textContent = PREF.hide.length;
-  }
-  /* 顶部按钮上的数量点 + 收藏筛选按钮文案 */
-  function renderPrefsUI() {
-    var btn = document.getElementById('btnSet');
-    var n = PREF.hide.length;
-    btn.classList.toggle('has-dot', n > 0);
-    if (n > 0) btn.setAttribute('data-n', n > 99 ? '99+' : String(n));
-    else btn.removeAttribute('data-n');
-    btn.title = n > 0 ? ('设置 · 已隐藏 ' + n + ' 张卡片') : '设置（含已隐藏的卡片）';
-    var fb = document.getElementById('btnFav');
-    fb.setAttribute('aria-pressed', state.favOnly ? 'true' : 'false');
-    fb.textContent = PREF.fav.length ? ('⭐ 收藏 ' + PREF.fav.length) : '⭐ 收藏';
-    fb.title = PREF.fav.length ? ('只看收藏（已收藏 ' + PREF.fav.length + ' 张）') : '只看收藏（右键卡片可收藏）';
-    if (setOpen) renderSettings();
-  }
-  function openSettings() {
-    renderSettings();
-    setMask.hidden = false;
-    setPanel.classList.add('show');
-    setMask.classList.add('show');
-    setPanel.setAttribute('aria-hidden', 'false');
-    setOpen = true;
-    document.body.style.overflow = 'hidden';
-  }
-  function closeSettings() {
-    setOpen = false;
-    setPanel.classList.remove('show');
-    setMask.classList.remove('show');
-    setPanel.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-    setTimeout(function () { if (!setOpen) setMask.hidden = true; }, 240);
-  }
-
-  document.getElementById('btnSet').addEventListener('click', openSettings);
-  document.getElementById('setClose').addEventListener('click', closeSettings);
-  setMask.addEventListener('click', closeSettings);
-
-  setPanel.addEventListener('click', function (e) {
-    var th = e.target.closest('[data-theme-val]');
-    if (th) {
-      HS.theme.set(th.getAttribute('data-theme-val'));
-      renderSettings();
-      HS.toast('已切换风格', { icon: '🎨' });
-      return;
-    }
-    var un = e.target.closest('[data-unpin],[data-unfav],[data-unhide]');
-    if (un) {
-      var key = un.hasAttribute('data-unpin') ? 'pin' : un.hasAttribute('data-unfav') ? 'fav' : 'hide';
-      var id = un.getAttribute('data-un' + key);
-      PREF[key] = PREF[key].filter(function (x) { return x !== id; });
-      savePref(key);
-      render();
-      return;
-    }
-    var act = e.target.closest('[data-set]');
-    if (!act) return;
-    var k = act.getAttribute('data-set');
-    if (k === 'reload') { closeSettings(); loadTools(true); return; }
-    if (k === 'clear-recent') {
-      HS.store.setJson(K_RECENT, []);
-      renderRecent();
-      HS.toast('已清空最近打开', { icon: '🕘' });
-      return;
-    }
-    if (k === 'clear-all') {
-      [cacheKey(), K_PIN, K_FAV, K_HIDE, K_RECENT].forEach(function (key) { HS.store.del(key); });
-      HS.toast('已清除本地数据，正在重载…', { icon: '🧹' });
-      setTimeout(function () { location.reload(); }, 500);
-    }
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && setOpen) closeSettings();
-  });
-
-  /* ── 命令面板 ── */
-  HS.palette.init({
-    actions: [
-      { icon: '🔄', title: '刷新工具列表', desc: '重新从仓库拉取数据', run: function () { loadTools(true); } },
-      { icon: '📚', title: '打开 Wiki', desc: '个人知识库', run: function () { location.href = HS.site.url('pages/wiki.html'); } },
-      { icon: '📥', title: '打开下载站', desc: '资源文件列表', run: function () { location.href = HS.site.url('pages/download.html'); } },
-      { icon: '🗂️', title: '数据管理', desc: '编辑站点 JSON 数据', run: function () { location.href = HS.site.url('pages/admin.html'); } }
-    ],
-    source: function () {
-      return TOOLS.filter(function (t) { return !t.hidden && !t.folder && !inPref('hide', t.id); }).map(function (t) {
-        return {
-          icon: t.icon, title: t.name, desc: (t.desc || t.tag), group: '工具',
-          keywords: t.tag + ' ' + (t.desc || ''), href: absUrl(t.url)
-        };
-      });
-    }
-  });
-
-  document.addEventListener('keydown', function (e) {
-    if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
-    if (e.key === 't' || e.key === 'T') HS.theme.open();
-  });
-
-  /* ── 启动 ── */
-  Array.prototype.forEach.call(document.querySelectorAll('#viewSwitch button'), function (b) {
-    b.setAttribute('aria-pressed', b.getAttribute('data-view') === state.view ? 'true' : 'false');
-  });
-  loadTools(false);
-  loadAnnounce();
-  HS.status.mount(HS.dataURL('tools-data'));
+  var yr = new Date().getFullYear();
+  var stamp = $('#nxStamp');
+  if (stamp) stamp.textContent = yr;
+  $$('[data-year]').forEach(function (n) { n.textContent = yr; });
 })();
 </script>
 </body>
