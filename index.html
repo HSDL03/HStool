@@ -13,17 +13,18 @@
    ══════════════════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box}
 :root{
-  --nx-bg:#07080b;
-  --nx-ink:#eaedf6;
-  --nx-dim:#8d93a6;
-  --nx-faint:#5b6072;
-  --nx-line:rgba(255,255,255,.085);
-  --nx-line-hi:rgba(255,255,255,.16);
-  --nx-c1:#5eead4;
-  --nx-c2:#a78bfa;
-  --nx-c3:#f472b6;
+  --nx-bg:#f6f8fb;
+  --nx-panel:rgba(255,255,255,.82);
+  --nx-ink:#0b1220;
+  --nx-dim:#5b6b82;
+  --nx-faint:#94a3b4;
+  --nx-line:#e4e9f1;
+  --nx-line-hi:#cdd7e3;
+  --nx-c1:#0ea5e9;
+  --nx-c2:#6366f1;
+  --nx-c3:#14b8a6;
 }
-html{background:var(--nx-bg);scroll-behavior:smooth}
+html{background:var(--nx-bg);scroll-behavior:smooth;color-scheme:light}
 body{
   margin:0;min-height:100vh;display:flex;flex-direction:column;
   background:var(--nx-bg);color:var(--nx-ink);
@@ -39,27 +40,27 @@ img,canvas{max-width:100%}
 #nxFx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 .nx-aura{position:fixed;pointer-events:none;z-index:0;filter:blur(70px);opacity:.55}
 .nx-aura.a1{left:-8vw;top:-14vh;width:52vw;height:52vw;border-radius:50%;
-  background:radial-gradient(circle at 40% 40%,rgba(94,234,212,.28),transparent 62%)}
+  background:radial-gradient(circle at 40% 40%,rgba(14,165,233,.14),transparent 62%)}
 .nx-aura.a2{right:-12vw;top:-6vh;width:48vw;height:48vw;border-radius:50%;
-  background:radial-gradient(circle at 60% 40%,rgba(167,139,250,.26),transparent 62%)}
+  background:radial-gradient(circle at 60% 40%,rgba(99,102,241,.12),transparent 62%)}
 .nx-aura.a3{left:32vw;bottom:-30vh;width:60vw;height:46vw;border-radius:50%;
-  background:radial-gradient(circle at 50% 50%,rgba(244,114,182,.14),transparent 66%)}
+  background:radial-gradient(circle at 50% 50%,rgba(20,184,166,.08),transparent 66%)}
 .nx-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-image:linear-gradient(rgba(15,23,42,.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(15,23,42,.04) 1px,transparent 1px);
   background-size:64px 64px;
   -webkit-mask-image:radial-gradient(circle at 50% 30%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
   mask-image:radial-gradient(circle at 50% 30%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
 }
 .nx-main{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;
-  justify-content:center;align-items:center;padding:0 22px}
+  justify-content:center;align-items:center;padding:24px 22px}
 
 /* ── 顶栏 ─────────────────────────────────────────────────────── */
 .topbar{
   position:relative;z-index:2;height:64px;padding:0 22px;
   display:flex;align-items:center;gap:18px;
   border-bottom:1px solid var(--nx-line);
-  background:rgba(7,8,11,.4);
+  background:var(--nx-panel);
   -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
 }
 .nx-brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:15.5px;
@@ -79,12 +80,11 @@ img,canvas{max-width:100%}
   display:inline-flex;align-items:center;gap:9px;padding:6px 14px;margin-bottom:26px;
   font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:700;letter-spacing:.14em;
   text-transform:uppercase;color:var(--nx-c1);
-  border:1px solid rgba(94,234,212,.28);border-radius:999px;background:rgba(94,234,212,.07);
-  box-shadow:0 0 30px rgba(94,234,212,.12) inset;
+  border:1px solid rgba(14,165,233,.3);border-radius:999px;background:rgba(14,165,233,.07);
 }
 .nx-badge .sep{color:var(--nx-faint)}
 .nx-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--nx-c1);animation:nxPulse 2.2s infinite}
-@keyframes nxPulse{0%{box-shadow:0 0 0 0 rgba(94,234,212,.5)}70%{box-shadow:0 0 0 7px rgba(94,234,212,0)}100%{box-shadow:0 0 0 0 rgba(94,234,212,0)}}
+@keyframes nxPulse{0%{box-shadow:0 0 0 0 rgba(14,165,233,.4)}70%{box-shadow:0 0 0 7px rgba(14,165,233,0)}100%{box-shadow:0 0 0 0 rgba(14,165,233,0)}}
 
 .nx-title{
   margin:0 0 22px;font-size:clamp(3rem,9vw,6.4rem);line-height:1.04;font-weight:900;
@@ -95,29 +95,55 @@ img,canvas{max-width:100%}
   display:inline-block;transform:translateY(105%) rotate(4deg);opacity:0;
   animation:nxChIn .85s cubic-bezier(.19,1,.22,1) forwards;
   /* 每个字各自裁一遍渐变，用 --i 往左推 1em —— 拼起来就是一条连续的色带 */
-  background-image:linear-gradient(96deg,#ffffff 0%,#dcfdf5 22%,#5eead4 48%,#c4b5fd 76%,#f472b6 100%);
+  background-image:linear-gradient(96deg,#0f172a 0%,#155e75 30%,#0ea5e9 55%,#6366f1 82%,#14b8a6 100%);
   background-size:5em 100%;
   background-position:calc(var(--i,0) * -1em) 0;
   -webkit-background-clip:text;background-clip:text;
   -webkit-text-fill-color:transparent;color:transparent;
 }
-.nx-title .grad{filter:drop-shadow(0 10px 46px rgba(94,234,212,.22))}
+.nx-title .grad{filter:none}
 @keyframes nxChIn{to{transform:none;opacity:1}}
 
 .nx-sub{margin:0 auto;max-width:560px;text-align:center;text-wrap:balance;
   font-size:clamp(13px,1.5vw,15px);line-height:1.85;color:var(--nx-dim)}
-.nx-sub b{color:var(--nx-ink);font-weight:700}
+.nx-sub b{color:var(--nx-c1);font-weight:700}
+
+/* ── 工具入口卡 ───────────────────────────────────────────────── */
+.nx-card{
+  display:flex;align-items:center;gap:16px;width:min(560px,100%);
+  margin-top:44px;padding:18px 20px;border-radius:16px;text-decoration:none;
+  background:var(--nx-panel);border:1px solid var(--nx-line);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 32px rgba(15,23,42,.06);
+  transition:transform .22s cubic-bezier(.2,.9,.3,1),border-color .22s,box-shadow .22s;
+}
+.nx-card:hover{
+  transform:translateY(-3px);border-color:rgba(14,165,233,.4);
+  box-shadow:0 4px 10px rgba(15,23,42,.06),0 24px 60px rgba(14,165,233,.14);
+}
+.nx-card .ic{
+  flex:none;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+  background:linear-gradient(140deg,rgba(14,165,233,.12),rgba(99,102,241,.12));
+  border:1px solid var(--nx-line);
+}
+.nx-card .ic img{width:26px;height:26px;object-fit:contain;image-rendering:auto}
+.nx-card .tx{flex:1;min-width:0}
+.nx-card .tx b{display:block;font-size:14.5px;font-weight:800;color:var(--nx-ink)}
+.nx-card .tx span{display:block;font-size:12px;color:var(--nx-dim);line-height:1.65;margin-top:2px}
+.nx-card .go{flex:none;color:var(--nx-faint);font-size:15px;transition:transform .22s,color .22s}
+.nx-card:hover .go{transform:translate(2px,-2px);color:var(--nx-c1)}
 
 /* ── 页脚 ─────────────────────────────────────────────────────── */
 .nx-foot{
-  position:relative;z-index:2;padding:24px 22px 40px;
+  position:relative;z-index:2;padding:22px 22px 38px;
   display:flex;align-items:center;gap:14px;
   border-top:1px solid var(--nx-line);font-size:12px;color:var(--nx-faint);
+  background:var(--nx-panel);
 }
 .nx-foot .sp{flex:1}
 /* 「存档」：故意压得很淡，知道的人点得到，不知道的看不见 */
-.nx-archive{color:rgba(255,255,255,.2);font-size:10.5px;letter-spacing:.06em;text-decoration:none;transition:color .25s}
-.nx-archive:hover{color:rgba(94,234,212,.7)}
+.nx-archive{color:#c3ccd9;font-size:10.5px;letter-spacing:.06em;text-decoration:none;transition:color .25s}
+.nx-archive:hover{color:var(--nx-c1)}
 
 /* ── 响应式 ───────────────────────────────────────────────────── */
 @media (max-width:720px){
@@ -159,6 +185,15 @@ img,canvas{max-width:100%}
     </div>
     <h1 class="nx-title" id="nxTitle" aria-label="红石的小站"></h1>
     <p class="nx-sub">Minecraft 的小玩具、资源与笔记。<b>点开就用</b>，不装任何东西。</p>
+
+    <a class="nx-card" href="./tools/structure.html">
+      <span class="ic"><img src="./assets/mc-textures/structure_block.png" alt="" onerror="this.style.display='none'"></span>
+      <span class="tx">
+        <b>结构处理器</b>
+        <span>上传 .mcstructure / .schem / .nbt，或直接在 3D 视口里搭——原版贴图渲染所有方块，全程本地。</span>
+      </span>
+      <span class="go">↗</span>
+    </a>
   </section>
 </main>
 
@@ -191,7 +226,7 @@ img,canvas{max-width:100%}
     if (!cv || !cv.getContext || reduced) return;
     var ctx = cv.getContext('2d'), W = 0, H = 0, dpr = 1;
     var cubes = [], mx = 0.5, my = 0.5, px = 0, py = 0, raf = 0, last = 0;
-    var COLORS = [[94, 234, 212], [167, 139, 250], [244, 114, 182], [255, 255, 255]];
+    var COLORS = [[14, 165, 233], [99, 102, 241], [20, 184, 166], [148, 163, 184]];
 
     function size() {
       dpr = Math.min(w.devicePixelRatio || 1, 2);

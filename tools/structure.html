@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>结构处理器 · 红石的小站</title>
+<meta name="description" content="上传 / 编辑 / 渲染 Minecraft 结构文件：.mcstructure、.schem、.nbt。原版贴图，浏览器本地运行。">
+<meta name="theme-color" content="#f5f7fb">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='14' y='14' width='34' height='34' rx='7' fill='%230ea5e9'/><rect x='52' y='14' width='34' height='34' rx='7' fill='%238b5cf6'/><rect x='14' y='52' width='34' height='34' rx='7' fill='%2310b981'/><rect x='52' y='52' width='34' height='34' rx='7' fill='%23f59e0b'/></svg>">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   结构处理器 —— 科技 · 简约 · 清爽
+   浅色工作台：细边框、轻阴影、蓝紫点缀，全部本地运行
+   ══════════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#f5f7fb;--panel:#ffffff;--ink:#0f172a;--dim:#64748b;--faint:#94a3b8;
+  --line:#e4e9f1;--line-hi:#cbd5e1;
+  --ac:#0ea5e9;--ac-d:#0369a1;--ac-s:#e0f2fe;
+  --violet:#8b5cf6;--ok:#10b981;--warn:#f59e0b;--dgr:#ef4444;
+  --r:10px;--mono:ui-monospace,"SFMono-Regular",Consolas,"Courier New",monospace;
+  --sh:0 1px 2px rgba(15,23,42,.05),0 8px 24px rgba(15,23,42,.06);
+}
+html{height:100%}
+body{
+  margin:0;height:100%;display:flex;flex-direction:column;
+  background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  font-size:13.5px;line-height:1.6;overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+::selection{background:var(--ac-s)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px;border-radius:6px}
+img{image-rendering:pixelated}
+
+/* ── 顶栏 ─────────────────────────────────────────────────────── */
+.top{
+  flex:none;height:52px;display:flex;align-items:center;gap:14px;padding:0 16px;
+  background:var(--panel);border-bottom:1px solid var(--line);
+}
+.top .logo{display:flex;align-items:center;gap:10px;font-weight:800;text-decoration:none;color:var(--ink);font-size:14.5px}
+.top .logo svg{width:20px;height:20px;flex:none}
+.top .title{display:flex;align-items:baseline;gap:8px;min-width:0}
+.top .title b{font-size:14.5px;font-weight:800}
+.top .title span{font-size:11.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sp{flex:1}
+.tb{
+  display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 13px;border-radius:9px;
+  font-size:12.5px;font-weight:700;color:var(--dim);border:1px solid var(--line);background:var(--panel);
+  transition:all .16s;white-space:nowrap;
+}
+.tb:hover{color:var(--ink);border-color:var(--line-hi);background:#f8fafc}
+.tb.primary{color:#fff;background:var(--ac);border-color:var(--ac)}
+.tb.primary:hover{background:var(--ac-d);border-color:var(--ac-d)}
+.tb:disabled{opacity:.45;cursor:not-allowed}
+.tb .sm{display:none}
+
+/* ── 主体 ─────────────────────────────────────────────────────── */
+.work{flex:1;display:flex;min-height:0}
+
+/* 侧栏 */
+.side{
+  flex:none;width:318px;display:flex;flex-direction:column;min-height:0;
+  background:var(--panel);border-right:1px solid var(--line);
+}
+.side section{padding:13px 14px;border-bottom:1px solid var(--line)}
+.side h3{
+  margin:0 0 10px;font-size:10.5px;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);
+  display:flex;align-items:center;gap:7px;
+}
+.side h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.row{display:flex;gap:7px;align-items:center}
+.row+.row{margin-top:7px}
+input[type=text],input[type=number],input[type=search]{
+  flex:1;min-width:0;height:32px;padding:0 11px;border-radius:9px;
+  border:1px solid var(--line);background:#f8fafc;outline:0;transition:border-color .16s,background .16s;
+}
+input:focus{border-color:var(--ac);background:#fff}
+label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
+.seg{display:flex;gap:3px;padding:3px;border-radius:10px;background:#eef2f7;border:1px solid var(--line)}
+.seg button{
+  flex:1;height:30px;border-radius:7px;font-size:12.5px;font-weight:700;color:var(--dim);
+  transition:all .16s;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:#fff;color:var(--ac-d);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+
+/* 方块列表 */
+.picker{flex:1;display:flex;flex-direction:column;min-height:0}
+.plist{flex:1;overflow-y:auto;margin:0 -6px;padding:0 6px;scrollbar-width:thin}
+.plist::-webkit-scrollbar{width:8px}
+.plist::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:4px}
+.pitem{
+  display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border-radius:8px;
+  text-align:left;transition:background .14s;border:1px solid transparent;
+}
+.pitem:hover{background:#f1f5f9}
+.pitem.on{background:var(--ac-s);border-color:rgba(14,165,233,.35)}
+.pitem img{width:20px;height:20px;flex:none;background:#eef2f7;border-radius:4px;padding:1px}
+.pitem .nm{flex:1;min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pitem .en{font-size:10.5px;color:var(--faint);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
+.pcount{font-size:10.5px;color:var(--faint);margin-top:6px;padding-left:2px;font-family:var(--mono)}
+
+/* 视口 */
+.stage{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:#eef1f6}
+#view{flex:1;min-height:0;position:relative;cursor:crosshair}
+#view canvas{display:block;outline:none}
+#view.orbit{cursor:grab}
+#view.orbit:active{cursor:grabbing}
+.tip{
+  position:absolute;left:12px;top:12px;z-index:5;pointer-events:none;
+  padding:8px 12px;border-radius:9px;font-size:11.5px;color:var(--dim);
+  background:rgba(255,255,255,.92);border:1px solid var(--line);box-shadow:var(--sh);
+  font-family:var(--mono);white-space:pre-line;line-height:1.7;
+}
+.tip b{color:var(--ink)}
+.banner{
+  position:absolute;inset:auto 12px 12px 12px;z-index:6;display:none;
+  padding:9px 13px;border-radius:9px;font-size:12px;line-height:1.7;
+  background:rgba(255,255,255,.95);border:1px solid var(--line);box-shadow:var(--sh);color:var(--dim);
+}
+.banner.show{display:block}
+.banner b{color:var(--ink)}
+.banner .x{float:right;color:var(--faint);font-weight:800;margin-left:10px;cursor:pointer}
+.banner .x:hover{color:var(--dgr)}
+.statusbar{
+  flex:none;height:34px;display:flex;align-items:center;gap:16px;padding:0 14px;
+  background:var(--panel);border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap;overflow-x:auto;
+}
+.statusbar b{color:var(--ink);font-weight:700}
+.statusbar .sep{color:var(--line-hi)}
+
+/* toast */
+#toast{
+  position:fixed;left:50%;bottom:56px;transform:translate(-50%,16px);z-index:60;
+  padding:10px 18px;border-radius:11px;font-size:13px;font-weight:600;
+  background:#0f172a;color:#f8fafc;opacity:0;pointer-events:none;
+  transition:all .3s cubic-bezier(.2,.9,.3,1);box-shadow:0 16px 40px rgba(15,23,42,.35);
+  max-width:80vw;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.err{background:#7f1d1d}
+#toast.ok{background:#065f46}
+
+/* 首次引导 */
+.guide{
+  position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;
+  background:rgba(238,241,246,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+.guide .box{max-width:430px;padding:26px 28px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh)}
+.guide h2{margin:0 0 10px;font-size:17px;font-weight:800}
+.guide p{margin:0 0 8px;font-size:12.8px;color:var(--dim);line-height:1.8}
+.guide .k{display:inline-block;padding:1px 6px;border-radius:5px;background:#eef2f7;border:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--ink)}
+.guide .acts{display:flex;gap:9px;margin-top:16px}
+
+.hidden{display:none!important}
+@media (max-width:820px){
+  .side{width:272px}
+  .top .title span{display:none}
+}
+@media (max-width:560px){
+  body{overflow:auto}
+  .tb .lg{display:none}
+  .tb .sm{display:inline}
+  .top .logo-name{display:none}
+
+  .work{flex-direction:column}
+  .side{width:100%;order:2;border-right:0;border-top:1px solid var(--line)}
+  .picker .plist{max-height:260px}
+  .stage{order:1;height:58vh;flex:none}
+  .top{gap:8px;padding:0 10px}
+  .top .title b{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="logo" href="../index.html" title="返回首页">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="14" width="34" height="34" rx="7" fill="#0ea5e9"/><rect x="52" y="14" width="34" height="34" rx="7" fill="#8b5cf6"/><rect x="14" y="52" width="34" height="34" rx="7" fill="#10b981"/><rect x="52" y="52" width="34" height="34" rx="7" fill="#f59e0b"/></svg>
+    <span class="logo-name">红石的小站</span>
+  </a>
+  <div class="title"><b class="logo-name">结构处理器</b><span>.mcstructure · .schem · .nbt · 本地运行</span></div>
+  <span class="sp"></span>
+  <button class="tb" id="btnPng" title="把当前视图保存成 PNG"><span class="lg">截图 PNG</span><span class="sm">PNG</span></button>
+  <button class="tb" id="btnJson" title="保存为站点内部格式（.json，无损可再编辑）"><span class="lg">保存 JSON</span><span class="sm">JSON</span></button>
+  <button class="tb" id="btnMc" title="导出基岩版 .mcstructure（实验性）"><span class="lg">导出 MCSTRUCTURE</span><span class="sm">导出</span></button>
+</header>
+
+<div class="work">
+  <aside class="side">
+    <section>
+      <h3>文件</h3>
+      <div class="row">
+        <button class="tb primary" id="btnOpen" style="flex:1;justify-content:center">打开结构文件…</button>
+        <input type="file" id="fileIn" class="hidden" accept=".mcstructure,.schem,.nbt,.json,.litematic">
+      </div>
+      <div class="row">
+        <div style="flex:1">
+          <label class="f">新建尺寸（宽 × 高 × 深，≤ 64）</label>
+          <div class="row" style="margin:0">
+            <input type="number" id="inW" value="16" min="1" max="64">
+            <input type="number" id="inH" value="16" min="1" max="64">
+            <input type="number" id="inL" value="16" min="1" max="64">
+            <button class="tb" id="btnNew" style="flex:none">新建</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h3>工具</h3>
+      <div class="seg" id="modeSeg" role="group" aria-label="工具模式">
+        <button data-m="orbit" class="on" title="旋转 / 缩放视角">👁 查看</button>
+        <button data-m="place" title="在指针处放置方块">⬛ 放置</button>
+        <button data-m="erase" title="擦掉指针处的方块">⬜ 删除</button>
+      </div>
+      <div class="row" style="margin-top:9px">
+        <label class="f" style="margin:0 6px 0 0">基岩索引顺序</label>
+        <select id="orderSel" style="flex:1;height:30px;border:1px solid var(--line);border-radius:8px;background:#f8fafc;padding:0 8px;outline:0">
+          <option value="xzy">x → z → y（默认）</option>
+          <option value="yzx">y → z → x</option>
+        </select>
+        <button class="tb" id="btnReapply" style="flex:none" title="导入的基岩结构若显示错乱，换一种顺序重排">重排</button>
+      </div>
+    </section>
+
+    <section class="picker">
+      <h3>方块 <span id="pbCount" style="text-transform:none;letter-spacing:0"></span></h3>
+      <input type="search" id="pbQ" placeholder="搜索：石头 / stone / 玻璃…" style="width:100%">
+      <div class="plist" id="pbList" style="margin-top:9px"></div>
+      <div class="pcount" id="pbInfo">未选中</div>
+    </section>
+  </aside>
+
+  <div class="stage">
+    <div id="view">
+      <div class="tip" id="tip">加载原版贴图…</div>
+      <div class="banner" id="banner"></div>
+      <div class="guide" id="guide">
+        <div class="box">
+          <h2>结构处理器</h2>
+          <p>打开或新建一个结构，然后在右侧的 3D 视口里编辑：</p>
+          <p><span class="k">右键拖动</span> 旋转视角 · <span class="k">滚轮</span> 缩放 · <span class="k">中键拖动</span> 平移<br>
+             <span class="k">放置</span> 模式下左键放方块 · <span class="k">删除</span> 模式下左键擦方块<br>
+             <span class="k">数字键 1/2/3</span> 快速切模式 · <span class="k">Esc</span> 回到查看</p>
+          <p style="color:var(--faint)">支持基岩版 .mcstructure、Java .schem / .nbt（gzip 自动解压）。贴图取自 26.3 原版资源，全部在你的浏览器里渲染，不上传任何文件。</p>
+          <div class="acts">
+            <button class="tb primary" id="gdOpen">打开结构文件…</button>
+            <button class="tb" id="gdNew">新建 16×16×16</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span>尺寸 <b id="stSize">—</b></span><span class="sep">│</span>
+      <span>方块 <b id="stCount">0</b></span><span class="sep">│</span>
+      <span>指针 <b id="stPos">—</b></span><span class="sep">│</span>
+      <span id="stBlock">—</span>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script src="../assets/vendor/three.min.js"></script>
+<script src="../assets/mc-items-data.js"></script>
+<script src="../assets/mc-models-data.js"></script>
+<script src="../assets/mc-inline-textures.js"></script>
+<script>
+(function () {
+  'use strict';
+  var d = document, w = window;
+  var $ = function (s, r) { return (r || d).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || d).querySelectorAll(s)); };
+
+  /* ═════════════════ 通用 ═════════════════ */
+  var toastT = 0;
+  function toast(msg, kind) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.className = 'show' + (kind ? ' ' + kind : '');
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { t.className = ''; }, kind === 'err' ? 4200 : 2600);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* ═════════════════ 方块数据索引 ═════════════════
+     MC_BLOCKS：数字 id → {n 中文名, e 英文, t/s/b 顶侧底贴图格号, f 正面}
+     MC_TEX：贴图格号 → 贴图名；MC_TEX_B64：贴图名 → data URL
+     MC_MODELS：数字 id → 原版模型 elements                        */
+  var BLOCKS = w.MC_BLOCKS || {}, TEX = w.MC_TEX || {}, B64 = w.MC_TEX_B64 || {}, MODELS = w.MC_MODELS || {};
+
+  var BY_NAME = {};                 // 英文名 → 数字 id（取最小 id 作为默认状态）
+  Object.keys(BLOCKS).forEach(function (id) {
+    var e = BLOCKS[id].e;
+    if (!e) return;
+    if (BY_NAME[e] === undefined || +id < +BY_NAME[e]) BY_NAME[e] = +id;
+  });
+
+  var NO_SHAPE = { air: 1, cave_air: 1, void_air: 1, light: 1, barrier: 1, structure_void: 1,
+    moving_piston: 1, water: 1, lava: 1, bubble_column: 1, structure_air: 1 };
+  var CROSS = { grass: 1, fern: 1, short_grass: 1, tall_grass: 1, large_fern: 1, dandelion: 1,
+    poppy: 1, blue_orchid: 1, allium: 1, azure_bluet: 1, oxeye_daisy: 1, cornflower: 1,
+    lily_of_the_valley: 1, wither_rose: 1, sunflower: 1, lilac: 1, rose_bush: 1, peony: 1,
+    brown_mushroom: 1, red_mushroom: 1, dead_bush: 1, wheat: 1, carrots: 1, potatoes: 1,
+    beetroots: 1, sweet_berry_bush: 1, cobweb: 1, torch: 1, redstone_torch: 1, soul_torch: 1,
+    oak_sapling: 1, spruce_sapling: 1, birch_sapling: 1, jungle_sapling: 1, acacia_sapling: 1,
+    dark_oak_sapling: 1, cherry_sapling: 1, bamboo: 1, kelp: 1, seagrass: 1 };
+  function kindOf(id) {
+    var b = BLOCKS[id];
+    if (!b) return 'none';
+    var e = b.e;
+    if (NO_SHAPE[e]) return 'none';
+    if (CROSS[e]) return 'cross';
+    if (MODELS[id]) return 'model';
+    return 'full';
+  }
+  function tileURL(tile) {
+    var n = TEX[tile];
+    return (n && B64[n]) || null;
+  }
+
+  /* ═════════════════ 贴图：每个 tile 独立纹理，按需加载 ═════════════════ */
+  var texCache = {}, texLoading = {}, tileMats = {};
+  function loadTile(tile) {
+    tile = +tile;
+    if (texCache[tile] !== undefined) return Promise.resolve(texCache[tile]);
+    if (texLoading[tile]) return texLoading[tile];
+    var url = tileURL(tile);
+    texLoading[tile] = new Promise(function (res) {
+      if (!url) { texCache[tile] = null; return res(null); }
+      var im = new Image();
+      im.onload = function () {
+        // 先画到 canvas 再 CanvasTexture —— 与 games/mc.html 的成熟路径完全一致
+        var cv = d.createElement('canvas');
+        cv.width = im.width || 16; cv.height = im.height || 16;
+        cv.getContext('2d').drawImage(im, 0, 0);
+        var t = new THREE.CanvasTexture(cv);
+        t.magFilter = THREE.NearestFilter;
+        t.minFilter = THREE.NearestFilter;
+        t.generateMipmaps = false;
+        texCache[tile] = t;
+        res(t);
+      };
+      im.onerror = function () { texCache[tile] = null; res(null); };
+      im.src = url;
+    });
+    return texLoading[tile];
+  }
+  function tileMat(tile) {
+    var m = tileMats[tile];
+    if (!m) {
+      m = new THREE.MeshBasicMaterial({ vertexColors: true, alphaTest: 0.45, side: THREE.FrontSide });
+      tileMats[tile] = m;
+    }
+    var t = texCache[tile];
+    if (t && m.map !== t) { m.map = t; m.needsUpdate = true; }
+    return m;
+  }
+
+  /* ═════════════════ 场景 ═════════════════ */
+  var renderer, scene, camera, chunkGroup, selBox;
+  var VIEW = $('#view');
+  var chunks = {};                  // "cx,cy,cz" → [mesh…]
+
+  function initGL() {
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setPixelRatio(Math.min(w.devicePixelRatio || 1, 2));
+    renderer.setSize(VIEW.clientWidth, VIEW.clientHeight);
+    VIEW.appendChild(renderer.domElement);
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xeef1f6);
+
+    camera = new THREE.PerspectiveCamera(55, VIEW.clientWidth / VIEW.clientHeight, 0.1, 1000);
+
+    chunkGroup = new THREE.Group();
+    scene.add(chunkGroup);
+    selBox = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002)),
+      new THREE.LineBasicMaterial({ color: 0x0ea5e9 }));
+    selBox.visible = false;
+    scene.add(selBox);
+
+    w.addEventListener('resize', onResize);
+    VIEW.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    bindPointer();
+    animate();
+  }
+  function onResize() {
+    if (!renderer) return;
+    camera.aspect = VIEW.clientWidth / VIEW.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(VIEW.clientWidth, VIEW.clientHeight);
+  }
+  function animate() { requestAnimationFrame(animate); if (renderer) renderer.render(scene, camera); }
+
+  /* ── 相机轨道（右键旋转 / 中键平移 / 滚轮缩放；查看模式左键也可旋转）── */
+  var cam = { yaw: 0.7, pitch: 0.5, dist: 26, target: null };
+  function camUpdate() {
+    if (!camera || !S) return;
+    if (!cam.target) cam.target = [S.sx / 2, S.sy / 2, S.sz / 2];
+    var t = cam.target, r = cam.dist;
+    camera.position.set(
+      t[0] + r * Math.cos(cam.pitch) * Math.sin(cam.yaw),
+      t[1] + r * Math.sin(cam.pitch),
+      t[2] + r * Math.cos(cam.pitch) * Math.cos(cam.yaw));
+    camera.lookAt(t[0], t[1], t[2]);
+  }
+  function bindPointer() {
+    var btn = -1, lx = 0, ly = 0, moved = 0;
+    VIEW.addEventListener('pointerdown', function (e) {
+      btn = e.button; lx = e.clientX; ly = e.clientY; moved = 0;
+      try { VIEW.setPointerCapture(e.pointerId); } catch (err) { }
+      if (btn === 0 && mode !== 'orbit') { e.preventDefault(); editAt(e); }
+    });
+    VIEW.addEventListener('pointermove', function (e) {
+      var dx = e.clientX - lx, dy = e.clientY - ly;
+      lx = e.clientX; ly = e.clientY;
+      if (btn === -1) { if (S) hoverAt(e); return; }
+      moved += Math.abs(dx) + Math.abs(dy);
+      var rot = (btn === 2) || (btn === 0 && mode === 'orbit');
+      if (rot) {
+        cam.yaw += dx * 0.008;
+        cam.pitch = Math.max(-1.35, Math.min(1.45, cam.pitch + dy * 0.008));
+      } else if (btn === 1) {
+        panCam(dx, dy);
+      } else if (btn === 0 && mode !== 'orbit' && moved > 16) {
+        editAt(e, true);                              // 按住拖 = 连续画
+      }
+      camUpdate();
+    });
+    VIEW.addEventListener('pointerup', function (e) {
+      btn = -1;
+      try { VIEW.releasePointerCapture(e.pointerId); } catch (err) { }
+    });
+    VIEW.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      cam.dist = Math.max(3, Math.min(180, cam.dist * (e.deltaY > 0 ? 1.13 : 0.885)));
+      camUpdate();
+    }, { passive: false });
+  }
+  function panCam(dx, dy) {
+    if (!cam.target) return;
+    var s = cam.dist * 0.0016;
+    var fx = Math.sin(cam.yaw), fz = Math.cos(cam.yaw);
+    cam.target[0] -= (fz * dx - fx * dy) * s;
+    cam.target[2] -= (-fx * dx - fz * dy) * s;
+    cam.target[1] = Math.max(0, cam.target[1] + dy * s);
+  }
+
+  /* ═════════════════ 结构数据 ═════════════════ */
+  var S = null;
+  function idx(x, y, z) { return (y * S.sz + z) * S.sx + x; }
+  function inB(x, y, z) { return x >= 0 && y >= 0 && z >= 0 && x < S.sx && y < S.sy && z < S.sz; }
+  function getB(x, y, z) { return inB(x, y, z) ? S.data[idx(x, y, z)] : 0; }
+  function setB(x, y, z, v) {
+    if (!inB(x, y, z)) return;
+    S.data[idx(x, y, z)] = v;
+    touchChunk(x, y, z);
+    var nb = [[x - 1, y, z], [x + 1, y, z], [x, y, z - 1], [x, y, z + 1], [x, y - 1, z], [x, y + 1, z]];
+    for (var i = 0; i < nb.length; i++) {
+      if (inB(nb[i][0], nb[i][1], nb[i][2])) touchChunk(nb[i][0], nb[i][1], nb[i][2]);
+    }
+  }
+  var CH = 16;
+  function touchChunk(x, y, z) {
+    var ck = ((x / CH) | 0) + ',' + ((y / CH) | 0) + ',' + ((z / CH) | 0);
+    S.dirty[ck] = true;
+    scheduleRebuild();
+  }
+
+  function newStruct(sx, sy, sz) {
+    sx = Math.max(1, Math.min(64, sx | 0));
+    sy = Math.max(1, Math.min(64, sy | 0));
+    sz = Math.max(1, Math.min(64, sz | 0));
+    S = { sx: sx, sy: sy, sz: sz, data: new Uint16Array(sx * sy * sz), dirty: {} };
+    clearMeshes();
+    rebuildAll();
+    cam.target = [sx / 2, sy / 2, sz / 2];
+    cam.dist = Math.max(sx, sy, sz) * 2.4;
+    camUpdate();
+    updateStatus();
+    $('#guide').classList.add('hidden');
+  }
+  function clearMeshes() {
+    chunkGroup.children.slice().forEach(function (m) {
+      if (m.geometry) m.geometry.dispose();
+      chunkGroup.remove(m);
+    });
+    chunks = {};
+  }
+  function countBlocks() {
+    var n = 0;
+    for (var i = 0; i < S.data.length; i++) if (S.data[i]) n++;
+    return n;
+  }
+  function updateStatus() {
+    $('#stSize').textContent = S ? S.sx + '×' + S.sy + '×' + S.sz : '—';
+    $('#stCount').textContent = S ? countBlocks() : 0;
+  }
+
+  /* ═════════════════ 几何构建 ═════════════════ */
+  var FACES = [
+    { dir: [1, 0, 0], corners: [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] },
+    { dir: [-1, 0, 0], corners: [[0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, 0]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] },
+    { dir: [0, 1, 0], corners: [[0, 1, 1], [1, 1, 1], [1, 1, 0], [0, 1, 0]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+    { dir: [0, -1, 0], corners: [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]], uvs: [[0, 0], [1, 0], [1, 1], [0, 1]] },
+    { dir: [0, 0, 1], corners: [[1, 0, 1], [1, 1, 1], [0, 1, 1], [0, 0, 1]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] },
+    { dir: [0, 0, -1], corners: [[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] }
+  ];
+  var FACE_LIT = [0.82, 0.82, 1.0, 0.55, 0.9, 0.7];   // +X -X 顶 底 +Z -Z
+
+  function isOcc(id) { return id !== 0 && kindOf(id) === 'full'; }
+
+  function pushQuad(g, pts, tile, uv, lit) {
+    var b = g[tile] || (g[tile] = { pos: [], nor: [], uvs: [], col: [], idx: [], vc: 0 });
+    var vs = b.vc;
+    for (var i = 0; i < 4; i++) {
+      b.pos.push(pts[i][0], pts[i][1], pts[i][2]);
+      b.nor.push(pts[i][3], pts[i][4], pts[i][5]);
+      b.uvs.push(uv[i][0], uv[i][1]);
+      b.col.push(lit, lit, lit);
+    }
+    b.idx.push(vs, vs + 1, vs + 2, vs, vs + 2, vs + 3);
+    b.vc += 4;
+  }
+  function pushModel(g, els, id, wx, wy, wz) {
+    for (var i = 0; i < els.length; i++) {
+      var e = els[i];
+      var X0 = wx + e[0] / 16, Y0 = wy + e[1] / 16, Z0 = wz + e[2] / 16;
+      var X1 = wx + e[3] / 16, Y1 = wy + e[4] / 16, Z1 = wz + e[5] / 16;
+      var fl = e[6];
+      for (var fj = 0; fj < fl.length; fj++) {
+        var fc = fl[fj], fi = fc[0];
+        if (fc[6]) {                                  // cullface：贴着实心邻居就省掉
+          var n = FACES[fi].dir;
+          if (isOcc(getB(wx + n[0], wy + n[1], wz + n[2]))) continue;
+        }
+        var F = FACES[fi], tile = fc[5];
+        var b = BLOCKS[id];
+        if (typeof tile !== 'number') tile = b ? b.s : 0;
+        var u1 = fc[1], v1 = fc[2], u2 = fc[3], v2 = fc[4];
+        var pts = [], uvs = [];
+        for (var k = 0; k < 4; k++) {
+          var c = F.corners[k], a = F.uvs[k][0], bb = F.uvs[k][1];
+          pts.push([c[0] ? X1 : X0, c[1] ? Y1 : Y0, c[2] ? Z1 : Z0, F.dir[0], F.dir[1], F.dir[2]]);
+          uvs.push([(u1 + a * (u2 - u1)) / 16, 1 - ((v2 - bb * (v2 - v1)) / 16)]);
+        }
+        pushQuad(g, pts, tile, uvs, FACE_LIT[fi]);
+      }
+    }
+  }
+  function pushFull(g, id, wx, wy, wz) {
+    var b = BLOCKS[id], t = b ? b.t : 0, sm = b ? b.s : 0, bo = b ? b.b : 0;
+    var pts, uvS = [[0, 0], [0, 1], [1, 1], [1, 0]], uvY = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    for (var fi = 0; fi < 6; fi++) {
+      var F = FACES[fi], n = F.dir;
+      if (isOcc(getB(wx + n[0], wy + n[1], wz + n[2]))) continue;
+      pts = [];
+      for (var k = 0; k < 4; k++) {
+        var c = F.corners[k];
+        pts.push([wx + c[0], wy + c[1], wz + c[2], n[0], n[1], n[2]]);
+      }
+      pushQuad(g, pts, fi === 2 ? t : fi === 3 ? bo : sm, fi === 2 || fi === 3 ? uvY : uvS, FACE_LIT[fi]);
+    }
+  }
+  function pushCross(g, id, wx, wy, wz) {
+    var b = BLOCKS[id], s = b ? (b.f || b.s || b.t) : 0;
+    var a = 0.146, c = 0.854, uv = [[0, 0], [0, 1], [1, 1], [1, 0]];
+    var q1 = [[wx + a, wy, wz + a, 0, 0, 1], [wx + c, wy, wz + c, 0, 0, 1], [wx + c, wy + 1, wz + c, 0, 0, 1], [wx + a, wy + 1, wz + a, 0, 0, 1]];
+    var q2 = [[wx + a, wy, wz + c, 0, 0, 1], [wx + c, wy, wz + a, 0, 0, 1], [wx + c, wy + 1, wz + a, 0, 0, 1], [wx + a, wy + 1, wz + c, 0, 0, 1]];
+    pushQuad(g, q1, s, uv, 0.95); pushQuad(g, q1, s, uv, 0.7);
+    pushQuad(g, q2, s, uv, 0.95); pushQuad(g, q2, s, uv, 0.7);
+  }
+
+  function buildChunk(cx, cy, cz) {
+    var key = cx + ',' + cy + ',' + cz;
+    if (chunks[key]) {
+      chunks[key].forEach(function (m) {
+        chunkGroup.remove(m);
+        m.geometry.dispose();
+      });
+    }
+    var g = {};
+    var x0 = cx * CH, y0 = cy * CH, z0 = cz * CH;
+    var x1 = Math.min(S.sx, x0 + CH), y1 = Math.min(S.sy, y0 + CH), z1 = Math.min(S.sz, z0 + CH);
+    for (var y = y0; y < y1; y++) for (var z = z0; z < z1; z++) for (var x = x0; x < x1; x++) {
+      var id = S.data[idx(x, y, z)];
+      if (!id) continue;
+      var kind = kindOf(id);
+      if (kind === 'model') pushModel(g, MODELS[id], id, x, y, z);
+      else if (kind === 'cross') pushCross(g, id, x, y, z);
+      else if (kind === 'full') pushFull(g, id, x, y, z);
+    }
+    var meshes = [];
+    Object.keys(g).forEach(function (tile) {
+      var b = g[tile];
+      if (!b.vc) return;
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(b.pos, 3));
+      geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.nor, 3));
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.uvs, 2));
+      geo.setAttribute('color', new THREE.Float32BufferAttribute(b.col, 3));
+      geo.setIndex(b.idx);
+      var mesh = new THREE.Mesh(geo, tileMat(+tile));
+      meshes.push(mesh);
+      chunkGroup.add(mesh);
+    });
+    chunks[key] = meshes;
+  }
+  function collectTiles() {
+    var tiles = {};
+    for (var i = 0; i < S.data.length; i++) {
+      var id = S.data[i];
+      if (!id) continue;
+      var b = BLOCKS[id];
+      if (b) { tiles[b.t] = 1; tiles[b.s] = 1; tiles[b.b] = 1; if (b.f) tiles[b.f] = 1; }
+    }
+    return Object.keys(tiles).map(Number);
+  }
+  function frameHelpers() {
+    if (chunks._frame) chunkGroup.remove(chunks._frame);
+    var box = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(S.sx, S.sy, S.sz)),
+      new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.5 }));
+    box.position.set(S.sx / 2, S.sy / 2, S.sz / 2);
+    chunks._frame = box;
+    chunkGroup.add(box);
+    if (chunks._grid) chunkGroup.remove(chunks._grid);
+    var grid = new THREE.GridHelper(Math.max(S.sx, S.sz), Math.max(S.sx, S.sz), 0xc7d0dd, 0xdde4ec);
+    grid.position.set(S.sx / 2, -0.005, S.sz / 2);
+    chunks._grid = grid;
+    chunkGroup.add(grid);
+  }
+  function rebuildAllSync() {
+    clearMeshes();
+    var ncx = Math.ceil(S.sx / CH), ncy = Math.ceil(S.sy / CH), ncz = Math.ceil(S.sz / CH);
+    for (var cy = 0; cy < ncy; cy++) for (var cz = 0; cz < ncz; cz++) for (var cx = 0; cx < ncx; cx++)
+      buildChunk(cx, cy, cz);
+    S.dirty = {};
+    frameHelpers();
+    updateStatus();
+  }
+  function rebuildAll() {
+    if (!S) return Promise.resolve();
+    return Promise.all(collectTiles().map(loadTile)).then(rebuildAllSync);
+  }
+  var rebuildT = 0;
+  function scheduleRebuild() {
+    if (rebuildT) return;
+    rebuildT = setTimeout(function () {
+      rebuildT = 0;
+      if (!S) return;
+      // 分区里用到的贴图必须先加载完 —— 否则材质拿不到图，整块渲染成白色
+      var tiles = {};
+      Object.keys(S.dirty).forEach(function (k) {
+        var p = k.split(',').map(Number);
+        var x0 = p[0] * CH, y0 = p[1] * CH, z0 = p[2] * CH;
+        for (var y = y0; y < Math.min(S.sy, y0 + CH); y++)
+          for (var z = z0; z < Math.min(S.sz, z0 + CH); z++)
+            for (var x = x0; x < Math.min(S.sx, x0 + CH); x++) {
+              var b = BLOCKS[S.data[idx(x, y, z)]];
+              if (b) { tiles[b.t] = 1; tiles[b.s] = 1; tiles[b.b] = 1; if (b.f) tiles[b.f] = 1; }
+            }
+      });
+      Promise.all(Object.keys(tiles).map(loadTile)).then(function () {
+        Object.keys(S.dirty).forEach(function (k) {
+          var p = k.split(',');
+          buildChunk(+p[0], +p[1], +p[2]);
+        });
+        S.dirty = {};
+        updateStatus();
+      });
+    }, 30);
+  }
+
+  /* ═════════════════ DDA 拾取 ═════════════════ */
+  var pointer = new THREE.Vector2(), ray = new THREE.Raycaster();
+  function pick(e) {
+    var r = VIEW.getBoundingClientRect();
+    pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    ray.setFromCamera(pointer, camera);
+    var o = ray.ray.origin, dir = ray.ray.direction;
+    var x = Math.floor(o.x), y = Math.floor(o.y), z = Math.floor(o.z);
+    var stepX = dir.x > 0 ? 1 : -1, stepY = dir.y > 0 ? 1 : -1, stepZ = dir.z > 0 ? 1 : -1;
+    var tDX = Math.abs(1 / (dir.x || 1e-9)), tDY = Math.abs(1 / (dir.y || 1e-9)), tDZ = Math.abs(1 / (dir.z || 1e-9));
+    var tMX = ((stepX > 0 ? x + 1 - o.x : o.x - x)) * tDX;
+    var tMY = ((stepY > 0 ? y + 1 - o.y : o.y - y)) * tDY;
+    var tMZ = ((stepZ > 0 ? z + 1 - o.z : o.z - z)) * tDZ;
+    var nx = 0, ny = 0, nz = 0, t = 0;
+    for (var i = 0; i < 512 && t < 200; i++) {
+      if (inB(x, y, z) && getB(x, y, z)) return { x: x, y: y, z: z, nx: nx, ny: ny, nz: nz };
+      if (tMX < tMY && tMX < tMZ) { x += stepX; t = tMX; tMX += tDX; nx = -stepX; ny = 0; nz = 0; }
+      else if (tMY < tMZ) { y += stepY; t = tMY; tMY += tDY; nx = 0; ny = -stepY; nz = 0; }
+      else { z += stepZ; t = tMZ; tMZ += tDZ; nx = 0; ny = 0; nz = -stepZ; }
+    }
+    return null;
+  }
+  function hoverAt(e) {
+    var hit = pick(e);
+    if (hit) {
+      selBox.visible = true;
+      selBox.position.set(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5);
+      var b = BLOCKS[getB(hit.x, hit.y, hit.z)];
+      $('#stPos').textContent = hit.x + ',' + hit.y + ',' + hit.z;
+      $('#stBlock').innerHTML = b ? '<b>' + esc(b.n) + '</b> · ' + esc(b.e) : '—';
+    } else {
+      selBox.visible = false;
+      $('#stPos').textContent = '—';
+      $('#stBlock').textContent = '—';
+    }
+  }
+  var curBlock = null;
+  function editAt(e) {
+    if (!S) return;
+    var hit = pick(e);
+    if (!hit) return;
+    if (mode === 'erase') {
+      setB(hit.x, hit.y, hit.z, 0);
+    } else if (mode === 'place' && curBlock) {
+      var px = hit.x + hit.nx, py = hit.y + hit.ny, pz = hit.z + hit.nz;
+      if (!inB(px, py, pz)) return;
+      if (getB(px, py, pz)) return;
+      setB(px, py, pz, curBlock);
+    }
+  }
+
+  /* ═════════════════ 模式 ═════════════════ */
+  var mode = 'orbit';
+  function setMode(m) {
+    mode = m;
+    $$('#modeSeg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === m); });
+    VIEW.className = m === 'orbit' ? 'orbit' : '';
+  }
+  $$('#modeSeg button').forEach(function (b) {
+    b.addEventListener('click', function () { setMode(b.getAttribute('data-m')); });
+  });
+  d.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === '1') setMode('orbit');
+    else if (e.key === '2') setMode('place');
+    else if (e.key === '3') setMode('erase');
+    else if (e.key === 'Escape') setMode('orbit');
+  });
+
+  /* ═════════════════ 方块选择面板 ═════════════════ */
+  var pbList = $('#pbList'), pbQ = $('#pbQ');
+  var BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+  function renderPicker(kw) {
+    kw = (kw || '').trim().toLowerCase();
+    var html = [], n = 0;
+    var ids = Object.keys(BLOCKS).sort(function (a, b) { return +a - +b; });
+    for (var i = 0; i < ids.length; i++) {
+      var id = ids[i], b = BLOCKS[id];
+      if (kindOf(+id) === 'none') continue;
+      if (kw && (b.n || '').toLowerCase().indexOf(kw) < 0 && (b.e || '').indexOf(kw) < 0) continue;
+      if (n >= 400) break;
+      var url = tileURL(b.t) || BLANK;
+      html.push('<button class="pitem" data-id="' + id + '">' +
+        '<img src="' + url + '" alt="" loading="lazy">' +
+        '<span class="nm">' + esc(b.n) + '</span>' +
+        '<span class="en">' + esc(b.e) + '</span></button>');
+      n++;
+    }
+    pbList.innerHTML = html.join('') || '<div class="pcount" style="margin:10px">没找到</div>';
+    $('#pbCount').textContent = kw ? n + ' 项' : '';
+  }
+  pbQ.addEventListener('input', function () { renderPicker(pbQ.value); });
+  pbList.addEventListener('click', function (e) {
+    var it = e.target.closest('.pitem');
+    if (!it) return;
+    curBlock = +it.getAttribute('data-id');
+    $$('.pitem.on', pbList).forEach(function (n) { n.classList.remove('on'); });
+    it.classList.add('on');
+    var b = BLOCKS[curBlock];
+    $('#pbInfo').innerHTML = '画笔：<b>' + esc(b.n) + '</b> · ' + esc(b.e);
+    if (mode === 'orbit') setMode('place');
+  });
+
+  /* ═════════════════ NBT 读取 ═════════════════ */
+  // le: true = 基岩小端（字符串 UTF-16LE）；false = Java 大端（UTF-8）
+  function NBT(ab, le) {
+    var dv = new DataView(ab), u8 = new Uint8Array(ab), p = 1;
+    var td = new TextDecoder('utf-8'), td16 = new TextDecoder('utf-16le');
+    function str() {
+      var n = dv.getUint16(p, le); p += 2;
+      var b = u8.subarray(p, p + n * (le ? 2 : 1));
+      p += n * (le ? 2 : 1);
+      return le ? td16.decode(b) : td.decode(b);
+    }
+    function payload(t) {
+      switch (t) {
+        case 1: { var v = dv.getInt8(p); p += 1; return v; }
+        case 2: { var v2 = dv.getInt16(p, le); p += 2; return v2; }
+        case 3: { var v3 = dv.getInt32(p, le); p += 4; return v3; }
+        case 4: { var v4 = dv.getBigInt64(p, le); p += 8; return Number(v4); }
+        case 5: { var v5 = dv.getFloat32(p, le); p += 4; return v5; }
+        case 6: { var v6 = dv.getFloat64(p, le); p += 8; return v6; }
+        case 7: { var n7 = dv.getUint32(p, le); p += 4; var a = u8.slice(p, p + n7); p += n7; return a; }
+        case 8: return str();
+        case 9: {
+          var it = u8[p]; p += 1;
+          var n9 = dv.getUint32(p, le); p += 4;
+          var out = [];
+          for (var i = 0; i < n9; i++) out.push(payload(it));
+          return out;
+        }
+        case 10: {
+          var o = {};
+          for (; ;) {
+            var tt = u8[p]; p += 1;
+            if (tt === 0) break;
+            var name = str();
+            o[name] = payload(tt);
+          }
+          return o;
+        }
+        case 11: {
+          var n11 = dv.getUint32(p, le); p += 4;
+          var arr = new Array(n11);
+          for (var j = 0; j < n11; j++) { arr[j] = dv.getInt32(p, le); p += 4; }
+          return arr;
+        }
+        case 12: {
+          var n12 = dv.getUint32(p, le); p += 4;
+          var a12 = new Array(n12);
+          for (var k = 0; k < n12; k++) { a12[k] = Number(dv.getBigInt64(p, le)); p += 8; }
+          return a12;
+        }
+        default: throw new Error('未知 NBT 类型 ' + t);
+      }
+    }
+    var t0 = u8[0];
+    var rootName = str();
+    return payload(t0);
+  }
+
+  /* ── NBT 写出（基岩小端 / UTF-16LE 字符串）── */
+  function NBTW() { this.a = []; }
+  NBTW.prototype.u8v = function (v) { this.a.push(v & 255); };
+  NBTW.prototype.i8 = function (v) { this.a.push(v & 255); };
+  NBTW.prototype.i16 = function (v) { this.a.push((v >> 8) & 255, v & 255); };
+  NBTW.prototype.i32 = function (v) { v = v | 0; this.a.push((v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255); };
+  NBTW.prototype.str = function (s) {
+    s = String(s);
+    for (var i = 0; i < s.length; i++) {
+      var code = s.charCodeAt(i);
+      this.a.push(code & 255, (code >> 8) & 255);
+    }
+  };
+  NBTW.prototype.head = function (t, name) { this.u8v(t); this.str(name); };
+  function wPayload(w, t, v) {
+    switch (t) {
+      case 1: w.i8(v); break;
+      case 2: w.i16(v); break;
+      case 3: w.i32(v); break;
+      case 8: w.str(v); break;
+      case 9: {
+        var allInt = v.length && v.every(function (x) { return typeof x === 'number'; });
+        w.u8v(allInt ? 3 : 10); w.i32(v.length);
+        if (allInt) v.forEach(function (x) { w.i32(x); });
+        else v.forEach(function (o) { wPayload(w, 10, o); });
+        break;
+      }
+      case 10: {
+        for (var k in v) {
+          var val = v[k];
+          if (typeof val === 'number') { w.head(3, k); wPayload(w, 3, val); }
+          else if (typeof val === 'string') { w.head(8, k); wPayload(w, 8, val); }
+          else { w.head(10, k); wPayload(w, 10, val); }
+        }
+        w.u8v(0);
+        break;
+      }
+    }
+  }
+  function writeBedrock(struct) {
+    var w = new NBTW();
+    w.u8v(10); w.str('');
+    wPayload(w, 10, struct);
+    return new Uint8Array(w.a);
+  }
+
+  /* ── gzip 解压 ── */
+  async function gunzip(u8) {
+    if (u8[0] === 0x1f && u8[1] === 0x8b) {
+      if (typeof DecompressionStream === 'undefined')
+        throw new Error('浏览器不支持 gzip 解压，请用较新的 Edge / Chrome');
+      var ds = new DecompressionStream('gzip');
+      var stream = new Blob([u8]).stream().pipeThrough(ds);
+      var buf = await new Response(stream).arrayBuffer();
+      return new Uint8Array(buf);
+    }
+    return u8;
+  }
+
+  /* ═════════════════ 各种格式解析 ═════════════════ */
+  var unknownNames = 0, lastBedrock = null;
+  function idOfState(name) {
+    var base = String(name).replace(/^minecraft:/, '').split('[')[0];
+    var id = BY_NAME[base];
+    if (id === undefined) { unknownNames++; return 0; }
+    return id;
+  }
+
+  function fromBedrock(nbt, order) {
+    var sx = nbt.size[0], sy = nbt.size[1], sz = nbt.size[2];
+    var pal = nbt.structure.palette.default.block_palette;
+    var ids = [];
+    for (var i = 0; i < pal.length; i++) ids.push(idOfState(pal[i].name));
+    var L0 = nbt.structure.block_indices[0];
+    var data = new Uint16Array(sx * sy * sz);
+    var p = 0;
+    if (order === 'yzx') {
+      for (var y = 0; y < sy; y++) for (var z = 0; z < sz; z++) for (var x = 0; x < sx; x++) {
+        var v = L0[p++]; data[(x * sz + z) * sy + y] = (v >= 0 && v < ids.length) ? ids[v] : 0;
+      }
+    } else {
+      for (var x2 = 0; x2 < sx; x2++) for (var z2 = 0; z2 < sz; z2++) for (var y2 = 0; y2 < sy; y2++) {
+        var v2 = L0[p++]; data[(y2 * sz + z2) * sx + x2] = (v2 >= 0 && v2 < ids.length) ? ids[v2] : 0;
+      }
+    }
+    return { sx: sx, sy: sy, sz: sz, data: data };
+  }
+
+  function fromSchem(nbt) {
+    var sx = nbt.Width, sy = nbt.Height, sz = nbt.Length;
+    var palMap = nbt.Palette || (nbt.Blocks && nbt.Blocks.Palette);
+    var bd = nbt.BlockData || (nbt.Blocks && nbt.Blocks.Data);
+    if (!palMap || !bd) throw new Error('不是 Sponge v2/v3 格式的 .schem');
+    var ids = new Array(Object.keys(palMap).length).fill(0);
+    Object.keys(palMap).forEach(function (name) { ids[palMap[name]] = idOfState(name); });
+    var data = new Uint16Array(sx * sy * sz);
+    var n = 0, acc = 0, bits = 0;
+    for (var i = 0; i < bd.length && n < data.length; i++) {
+      acc |= (bd[i] & 0x7f) << bits; bits += 7;
+      if (!(bd[i] & 0x80)) {
+        var v = acc; acc = 0; bits = 0;
+        data[n++] = (v >= 0 && v < ids.length) ? ids[v] : 0;
+      }
+    }
+    return { sx: sx, sy: sy, sz: sz, data: data };
+  }
+
+  function fromJava(nbt) {
+    var sx = nbt.size[0], sy = nbt.size[1], sz = nbt.size[2];
+    var pal = nbt.palette;
+    var ids = [];
+    for (var i = 0; i < pal.length; i++) ids.push(idOfState(pal[i].Name));
+    var data = new Uint16Array(sx * sy * sz);
+    var blocks = nbt.blocks || [];
+    for (var i2 = 0; i2 < blocks.length; i2++) {
+      var bl = blocks[i2], ps = bl.pos;
+      var v = bl.state;
+      data[(ps[1] * sz + ps[2]) * sx + ps[0]] = (v >= 0 && v < ids.length) ? ids[v] : 0;
+    }
+    return { sx: sx, sy: sy, sz: sz, data: data };
+  }
+
+  function fromJSON(obj) {
+    if (!obj || !obj.size || !obj.data) throw new Error('不是本站导出的 JSON');
+    return { sx: obj.size[0], sy: obj.size[1], sz: obj.size[2], data: new Uint16Array(obj.data) };
+  }
+
+  async function openFile(file) {
+    try {
+      var u8 = new Uint8Array(await file.arrayBuffer());
+      u8 = await gunzip(u8);
+      var name = file.name.toLowerCase();
+      if (name.endsWith('.json')) {
+        var txt = new TextDecoder().decode(u8);
+        applyStruct(fromJSON(JSON.parse(txt)));
+        toast('已打开 ' + file.name, 'ok');
+        return;
+      }
+      var le = name.endsWith('.mcstructure');
+      var nbt = NBT(u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength), le);
+      unknownNames = 0;
+      var res;
+      if (le) { lastBedrock = nbt; res = fromBedrock(nbt, $('#orderSel').value); }
+      else if (nbt.Version !== undefined && nbt.BlockData) res = fromSchem(nbt);
+      else if (nbt.blocks && nbt.palette) res = fromJava(nbt);
+      else throw new Error('认不出这个格式（支持 .mcstructure / .schem / .nbt）');
+      applyStruct(res);
+      toast('已打开 ' + file.name + (unknownNames ? '（跳过 ' + unknownNames + ' 个未知方块）' : ''), 'ok');
+    } catch (err) {
+      toast('打开失败：' + err.message, 'err');
+    }
+  }
+  function applyStruct(res) {
+    S = { sx: res.sx, sy: res.sy, sz: res.sz, data: res.data, dirty: {} };
+    cam.target = null;
+    cam.target = [S.sx / 2, S.sy / 2, S.sz / 2];
+    cam.dist = Math.max(S.sx, S.sy, S.sz) * 2.4;
+    rebuildAll();
+    camUpdate();
+    updateStatus();
+    $('#guide').classList.add('hidden');
+    if (Math.max(S.sx, S.sy, S.sz) > 48 || S.data.length > 110000)
+      showBanner('这个结构比较大（' + S.sx + '×' + S.sy + '×' + S.sz + '），渲染可能略卡；编辑时只重建所在分区，一般仍然流畅。');
+  }
+  function showBanner(html) {
+    var b = $('#banner');
+    b.innerHTML = '<button class="x" data-close>✕</button>' + html;
+    b.classList.add('show');
+  }
+  $('#banner').addEventListener('click', function (e) {
+    if (e.target.hasAttribute('data-close')) $('#banner').classList.remove('show');
+  });
+
+  /* ═════════════════ 导出 ═════════════════ */
+  function saveBlob(u8, name) {
+    var blob = new Blob([u8], { type: 'application/octet-stream' });
+    var a = d.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  $('#btnJson').addEventListener('click', function () {
+    if (!S) return toast('先打开或新建一个结构', 'err');
+    var obj = { v: 1, size: [S.sx, S.sy, S.sz], data: Array.from(S.data) };
+    saveBlob(new TextEncoder().encode(JSON.stringify(obj)), 'structure-' + S.sx + 'x' + S.sy + 'x' + S.sz + '.json');
+    toast('已保存 JSON（本站格式，可再次打开编辑）', 'ok');
+  });
+  $('#btnPng').addEventListener('click', function () {
+    if (!S) return toast('先打开或新建一个结构', 'err');
+    renderer.render(scene, camera);
+    renderer.domElement.toBlob(function (blob) {
+      var a = d.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'structure.png';
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      toast('已保存截图', 'ok');
+    });
+  });
+  $('#btnMc').addEventListener('click', function () {
+    if (!S) return toast('先打开或新建一个结构', 'err');
+    try {
+      var used = {}, order = [];
+      for (var i = 0; i < S.data.length; i++) {
+        var id = S.data[i];
+        if (id && used[id] === undefined) { used[id] = order.length; order.push(id); }
+      }
+      var pal = order.map(function (id) {
+        return { name: 'minecraft:' + (BLOCKS[id] ? BLOCKS[id].e : 'stone'), states: {}, version: 18153472 };
+      });
+      var L0 = [], L1 = [];
+      for (var x = 0; x < S.sx; x++) for (var z = 0; z < S.sz; z++) for (var y = 0; y < S.sy; y++) {
+        var v = S.data[idx(x, y, z)];
+        L0.push(v ? used[v] : -1);
+        L1.push(-1);
+      }
+      var struct = {
+        format_version: [1, 21, 0],
+        size: [S.sx, S.sy, S.sz],
+        structure: {
+          block_indices: [L0, L1],
+          entities: [],
+          palette: { default: { block_palette: pal, block_position_data: {} } }
+        }
+      };
+      saveBlob(writeBedrock(struct), 'structure-' + S.sx + 'x' + S.sy + 'x' + S.sz + '.mcstructure');
+      toast('已导出 .mcstructure（实验性：个别方块状态会退化为默认）', 'ok');
+    } catch (err) {
+      toast('导出失败：' + err.message, 'err');
+    }
+  });
+
+  /* ═════════════════ 文件入口 ═════════════════ */
+  var fileIn = $('#fileIn');
+  $('#btnOpen').addEventListener('click', function () { fileIn.click(); });
+  $('#gdOpen').addEventListener('click', function () { fileIn.click(); });
+  $('#gdNew').addEventListener('click', function () { newStruct(16, 16, 16); });
+  fileIn.addEventListener('change', function () {
+    if (fileIn.files && fileIn.files[0]) openFile(fileIn.files[0]);
+    fileIn.value = '';
+  });
+  $('#btnNew').addEventListener('click', function () {
+    newStruct(+$('#inW').value || 16, +$('#inH').value || 16, +$('#inL').value || 16);
+    toast('已新建空白结构，选好方块就能画了', 'ok');
+  });
+  $('#btnReapply').addEventListener('click', function () {
+    if (!S || !lastBedrock) return toast('先打开一个 .mcstructure', 'err');
+    applyStruct(fromBedrock(lastBedrock, $('#orderSel').value));
+    toast('已按 ' + ($('#orderSel').value === 'yzx' ? 'y → z → x' : 'x → z → y') + ' 重排', 'ok');
+  });
+
+  /* ═════════════════ 启动 ═════════════════ */
+  try {
+    $('#tip').innerHTML = '右键拖动 旋转 · 滚轮 缩放 · 中键拖动 平移\n数字键 1/2/3 切模式';
+    renderPicker('');
+    initGL();
+    newStruct(16, 16, 16);
+    // 预放一小块示范平台，让人马上能上手
+    var stone = BY_NAME.stone, glass = BY_NAME.glass, plank = BY_NAME.oak_planks || stone;
+    for (var x = 4; x < 12; x++) for (var z = 4; z < 12; z++) setB(x, 0, z, stone);
+    for (var x2 = 6; x2 < 10; x2++) for (var z2 = 6; z2 < 10; z2++) setB(x2, 1, z2, glass);
+    for (var x3 = 7; x3 < 9; x3++) for (var z3 = 7; z3 < 9; z3++) setB(x3, 2, z3, plank);
+    rebuildAll().then(function () { camUpdate(); });
+  } catch (bootErr) {
+    $('#tip').textContent = '启动失败：' + (bootErr && bootErr.message || bootErr);
+  }
+})();
+</script>
+</body>
+</html>
