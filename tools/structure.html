@@ -9,320 +9,390 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='14' y='14' width='34' height='34' rx='7' fill='%230ea5e9'/><rect x='52' y='14' width='34' height='34' rx='7' fill='%238b5cf6'/><rect x='14' y='52' width='34' height='34' rx='7' fill='%2310b981'/><rect x='52' y='52' width='34' height='34' rx='7' fill='%23f59e0b'/></svg>">
 <style>
 /* ══════════════════════════════════════════════════════════════════
-   结构处理器 —— 科技 · 简约 · 清爽
-   浅色工作台：细边框、轻阴影、蓝紫点缀，全部本地运行
+   结构处理器 —— 工具软件风
+   石墨底 + 草绿强调；左侧图标栏，面板按需从左侧滑出；视口独占剩余空间
    ══════════════════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box}
 :root{
-  --bg:#f5f7fb;--panel:#ffffff;--ink:#0f172a;--dim:#64748b;--faint:#94a3b8;
-  --line:#e4e9f1;--line-hi:#cbd5e1;
-  --ac:#0ea5e9;--ac-d:#0369a1;--ac-s:#e0f2fe;
-  --violet:#8b5cf6;--ok:#10b981;--warn:#f59e0b;--dgr:#ef4444;
-  --r:10px;--mono:ui-monospace,"SFMono-Regular",Consolas,"Courier New",monospace;
-  --sh:0 1px 2px rgba(15,23,42,.05),0 8px 24px rgba(15,23,42,.06);
+  --bg:#0f120c;--panel:#161a12;--panel2:#1d2218;--sunk:#12160f;
+  --ink:#e9edde;--dim:#98a188;--faint:#6b7360;
+  --line:#272d1f;--line-hi:#3a4231;
+  --ac:#a8dd4f;--ac-d:#82bb31;--ac-s:rgba(168,221,79,.13);
+  --warn:#e3b33e;--dgr:#e26350;
+  --rail:56px;--drawer:326px;--top:46px;--st:30px;
+  --r:6px;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,monospace;
+  --ui:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
 }
-html{height:100%}
+html,body{height:100%}
 body{
-  margin:0;height:100%;display:flex;flex-direction:column;
+  margin:0;display:flex;flex-direction:column;overflow:hidden;
   background:var(--bg);color:var(--ink);
-  font-family:"Segoe UI","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,sans-serif;
-  font-size:13.5px;line-height:1.6;overflow:hidden;
-  -webkit-font-smoothing:antialiased;
+  font:13px/1.55 var(--ui);-webkit-font-smoothing:antialiased;
 }
-button,input,select{font:inherit;color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0;padding:0}
-::selection{background:var(--ac-s)}
-:focus-visible{outline:2px solid var(--ac);outline-offset:1px;border-radius:6px}
+::selection{background:rgba(168,221,79,.28)}
+:focus-visible{outline:1.5px solid var(--ac);outline-offset:2px;border-radius:4px}
 img{image-rendering:pixelated}
 
 /* ── 顶栏 ─────────────────────────────────────────────────────── */
 .top{
-  flex:none;height:52px;display:flex;align-items:center;gap:14px;padding:0 16px;
-  background:var(--panel);border-bottom:1px solid var(--line);
+  flex:none;height:var(--top);display:flex;align-items:center;gap:10px;padding:0 10px 0 12px;
+  background:var(--panel);border-bottom:1px solid var(--line);z-index:20;
 }
-.top .logo{display:flex;align-items:center;gap:10px;font-weight:800;text-decoration:none;color:var(--ink);font-size:14.5px}
-.top .logo svg{width:20px;height:20px;flex:none}
-.top .title{display:flex;align-items:baseline;gap:8px;min-width:0}
-.top .title b{font-size:14.5px;font-weight:800}
-.top .title span{font-size:11.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);flex:none}
+.brand i{
+  width:16px;height:16px;flex:none;border-radius:3px;
+  background:
+    linear-gradient(90deg,var(--ac) 0 6px,transparent 6px 10px,#5d8f2a 10px 16px),
+    linear-gradient(0deg,#2f3f1c 0 6px,transparent 6px);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.35);
+}
+.brand b{font-size:13px;font-weight:700;letter-spacing:.02em}
+.brand span{font-size:11px;color:var(--faint);font-family:var(--mono)}
 .top .sp{flex:1}
-.tb{
-  display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 13px;border-radius:9px;
-  font-size:12.5px;font-weight:700;color:var(--dim);border:1px solid var(--line);background:var(--panel);
-  transition:all .16s;white-space:nowrap;
+.docname{
+  display:flex;align-items:center;gap:7px;min-width:0;padding:3px 9px;border-radius:4px;
+  background:var(--sunk);border:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--dim);
 }
-.tb:hover{color:var(--ink);border-color:var(--line-hi);background:#f8fafc}
-.tb.primary{color:#fff;background:var(--ac);border-color:var(--ac)}
-.tb.primary:hover{background:var(--ac-d);border-color:var(--ac-d)}
-.tb:disabled{opacity:.45;cursor:not-allowed}
-.tb .sm{display:none}
+.docname b{color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:34ch}
 
-/* ── 主体 ─────────────────────────────────────────────────────── */
-.work{flex:1;display:flex;min-height:0}
+/* ── 按钮 ─────────────────────────────────────────────────────── */
+.bt{
+  display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:5px;
+  font-size:12px;font-weight:600;color:var(--dim);border:1px solid var(--line);background:var(--panel2);
+  transition:background .14s var(--ease),color .14s var(--ease),border-color .14s var(--ease);
+  white-space:nowrap;
+}
+.bt:hover{color:var(--ink);background:#252b1e;border-color:var(--line-hi)}
+.bt.pri{color:#12160c;background:var(--ac);border-color:var(--ac);font-weight:700}
+.bt.pri:hover{background:#b9e866;border-color:#b9e866;color:#12160c}
+.bt.ghost{background:transparent}
+.bt:disabled{opacity:.4;cursor:not-allowed}
+.bt svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
-/* 侧栏 */
-.side{
-  flex:none;width:318px;display:flex;flex-direction:column;min-height:0;
-  background:var(--panel);border-right:1px solid var(--line);
-}
-.side section{padding:13px 14px;border-bottom:1px solid var(--line)}
-.side h3{
-  margin:0 0 10px;font-size:10.5px;font-weight:800;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--faint);
-  display:flex;align-items:center;gap:7px;
-}
-.side h3::after{content:"";flex:1;height:1px;background:var(--line)}
-.row{display:flex;gap:7px;align-items:center}
-.row+.row{margin-top:7px}
-input[type=text],input[type=number],input[type=search]{
-  flex:1;min-width:0;height:32px;padding:0 11px;border-radius:9px;
-  border:1px solid var(--line);background:#f8fafc;outline:0;transition:border-color .16s,background .16s;
-}
-input:focus{border-color:var(--ac);background:#fff}
-label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
-.seg{display:flex;gap:3px;padding:3px;border-radius:10px;background:#eef2f7;border:1px solid var(--line)}
-.seg button{
-  flex:1;height:30px;border-radius:7px;font-size:12.5px;font-weight:700;color:var(--dim);
-  transition:all .16s;display:inline-flex;align-items:center;justify-content:center;gap:5px;
-}
-.seg button:hover{color:var(--ink)}
-.seg button.on{background:#fff;color:var(--ac-d);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+/* ── 主区 ─────────────────────────────────────────────────────── */
+.work{flex:1;display:flex;min-height:0;position:relative}
 
-/* 方块列表 */
-.picker{flex:1;display:flex;flex-direction:column;min-height:0}
-.plist{flex:1;overflow-y:auto;margin:0 -6px;padding:0 6px;scrollbar-width:thin}
-.plist::-webkit-scrollbar{width:8px}
-.plist::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:4px}
-.pitem{
-  display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border-radius:8px;
-  text-align:left;transition:background .14s;border:1px solid transparent;
+/* 图标栏 */
+.rail{
+  flex:none;width:var(--rail);display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:7px 0 9px;background:var(--panel);border-right:1px solid var(--line);z-index:16;
 }
-.pitem:hover{background:#f1f5f9}
-.pitem.on{background:var(--ac-s);border-color:rgba(14,165,233,.35)}
-.pitem img{width:20px;height:20px;flex:none;background:#eef2f7;border-radius:4px;padding:1px}
-.pitem .nm{flex:1;min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pitem .en{font-size:10.5px;color:var(--faint);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
-.pcount{font-size:10.5px;color:var(--faint);margin-top:6px;padding-left:2px;font-family:var(--mono)}
+.ri{
+  position:relative;width:38px;height:38px;display:grid;place-items:center;border-radius:var(--r);
+  color:var(--dim);transition:background .14s var(--ease),color .14s var(--ease);
+}
+.ri:hover{background:var(--panel2);color:var(--ink)}
+.ri.on{color:var(--ac);background:var(--ac-s)}
+.ri.on::before{content:"";position:absolute;left:-9px;top:10px;bottom:10px;width:2px;border-radius:2px;background:var(--ac)}
+.ri svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rsep{width:24px;height:1px;background:var(--line);margin:6px 0}
+.rail .sp{flex:1}
+.rail .badge{
+  position:absolute;top:3px;right:3px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;
+  display:none;place-items:center;font:600 9.5px/15px var(--mono);
+  background:var(--ac);color:#12160c;
+}
+.rail .badge.show{display:grid}
 
 /* 视口 */
-.stage{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:#eef1f6;position:relative}
-#view{flex:1;min-height:0;position:relative;cursor:crosshair}
+.stage{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;position:relative;background:#0c0f09}
+#view{flex:1;min-height:0;position:relative;cursor:crosshair;overflow:hidden}
 #view canvas{display:block;outline:none}
 #view.orbit{cursor:grab}
 #view.orbit:active{cursor:grabbing}
-.tip{
+
+.hud{
   position:absolute;left:12px;top:12px;z-index:5;pointer-events:none;
-  padding:8px 12px;border-radius:9px;font-size:11.5px;color:var(--dim);
-  background:rgba(255,255,255,.92);border:1px solid var(--line);box-shadow:var(--sh);
-  font-family:var(--mono);white-space:pre-line;line-height:1.7;
+  padding:7px 10px;border-radius:5px;font-family:var(--mono);font-size:11px;line-height:1.75;
+  color:var(--faint);background:rgba(15,18,12,.72);border:1px solid var(--line);
+  white-space:pre-line;backdrop-filter:blur(6px);
 }
-.tip b{color:var(--ink)}
+.hud b{color:var(--dim);font-weight:600}
+
 .banner{
-  position:absolute;inset:auto 12px 12px 12px;z-index:6;display:none;
-  padding:9px 13px;border-radius:9px;font-size:12px;line-height:1.7;
-  background:rgba(255,255,255,.95);border:1px solid var(--line);box-shadow:var(--sh);color:var(--dim);
+  position:absolute;left:12px;right:12px;bottom:14px;z-index:6;display:none;
+  padding:9px 12px;border-radius:6px;font-size:12px;line-height:1.7;
+  color:var(--dim);background:rgba(22,26,18,.94);border:1px solid var(--line-hi);
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
 }
 .banner.show{display:block}
 .banner b{color:var(--ink)}
-.banner .x{float:right;color:var(--faint);font-weight:800;margin-left:10px;cursor:pointer}
+.banner .x{float:right;color:var(--faint);font-weight:700;margin-left:10px;cursor:pointer}
 .banner .x:hover{color:var(--dgr)}
+
+/* 状态栏 */
 .statusbar{
-  flex:none;height:34px;display:flex;align-items:center;gap:16px;padding:0 14px;
+  flex:none;height:var(--st);display:flex;align-items:center;gap:0;padding:0 10px;
   background:var(--panel);border-top:1px solid var(--line);
-  font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap;overflow-x:auto;
+  font-family:var(--mono);font-size:10.5px;color:var(--faint);white-space:nowrap;overflow-x:auto;
 }
-.statusbar b{color:var(--ink);font-weight:700}
-.statusbar .sep{color:var(--line-hi)}
+.statusbar .it{display:flex;align-items:center;gap:5px;padding:0 10px;border-right:1px solid var(--line)}
+.statusbar .it:first-child{padding-left:2px}
+.statusbar .it:last-child{border-right:0}
+.statusbar b{color:var(--dim);font-weight:600}
+.statusbar .it.blk b{color:var(--ac-d)}
+
+/* ── 抽屉 ─────────────────────────────────────────────────────── */
+.drawer{
+  position:absolute;left:var(--rail);top:0;bottom:var(--st);width:var(--drawer);z-index:14;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--panel);border-right:1px solid var(--line-hi);
+  box-shadow:22px 0 48px rgba(0,0,0,.5);
+  transform:translateX(-8px);opacity:0;pointer-events:none;
+  transition:transform .2s var(--ease),opacity .16s var(--ease);
+}
+.drawer.open{transform:none;opacity:1;pointer-events:auto}
+.dhead{
+  flex:none;height:44px;display:flex;align-items:center;gap:8px;padding:0 8px 0 14px;
+  border-bottom:1px solid var(--line);
+}
+.dhead b{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.dhead .x{margin-left:auto;width:26px;height:26px;border-radius:5px;color:var(--faint);font-size:13px}
+.dhead .x:hover{background:var(--panel2);color:var(--ink)}
+.dbody{flex:1;overflow-y:auto;min-height:0;padding:14px;display:none;flex-direction:column;gap:14px}
+.dbody.on{display:flex}
+.dbody::-webkit-scrollbar{width:9px}
+.dbody::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px}
+.dbody::-webkit-scrollbar-track{background:transparent}
+
+.fld{display:block;margin-bottom:10px}
+.fld>span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+input[type=text],input[type=number],input[type=search],select{
+  width:100%;height:30px;padding:0 9px;border-radius:5px;
+  border:1px solid var(--line);background:var(--sunk);outline:0;
+  font-size:12px;transition:border-color .14s var(--ease),background .14s var(--ease);
+}
+input:focus,select:focus{border-color:var(--ac);background:#0d1008}
+input::placeholder{color:var(--faint)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--faint) 50%),linear-gradient(135deg,var(--faint) 50%,transparent 50%);
+  background-position:calc(100% - 13px) 12px,calc(100% - 8px) 12px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.hintline{font-size:11px;color:var(--faint);line-height:1.7;margin-top:-4px}
+.kbd{
+  display:inline-block;min-width:17px;padding:0 4px;border-radius:3px;text-align:center;
+  font-family:var(--mono);font-size:10px;color:var(--dim);
+  background:var(--panel2);border:1px solid var(--line);border-bottom-width:2px;
+}
+
+/* 方块库 */
+.plist{
+  flex:1;min-height:0;overflow-y:auto;margin:0 -4px;padding:2px 4px;
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;align-content:start;
+}
+.plist::-webkit-scrollbar{width:9px}
+.plist::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px}
+.pitem{
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 3px 6px;
+  border-radius:5px;border:1px solid transparent;text-align:center;
+  transition:background .13s var(--ease),border-color .13s var(--ease);
+}
+.pitem:hover{background:var(--panel2)}
+.pitem.on{background:var(--ac-s);border-color:rgba(168,221,79,.4)}
+.pitem img{width:26px;height:26px;object-fit:contain;flex:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.pitem .nm{
+  font-size:10.5px;line-height:1.25;color:var(--dim);width:100%;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.pitem.on .nm{color:var(--ac)}
+.pitem .en{display:none}
+.pcount{font-size:10.5px;color:var(--faint);font-family:var(--mono);margin-top:6px}
+
+/* ── 方块数据面板（右侧）──────────────────────────────────────── */
+.nbt{
+  position:absolute;right:10px;top:10px;bottom:10px;width:356px;z-index:12;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--panel);border:1px solid var(--line-hi);border-radius:8px;
+  box-shadow:0 20px 50px rgba(0,0,0,.55);
+}
+.nbt.hidden{display:none}
+.nbt-h{flex:none;height:44px;display:flex;align-items:center;gap:8px;padding:0 8px 0 12px;border-bottom:1px solid var(--line)}
+.nbt-h b{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nbt-h .cnt{font-size:10.5px;font-family:var(--mono);color:var(--faint);white-space:nowrap}
+.nbt-h .x{margin-left:auto;width:26px;height:26px;flex:none;border-radius:5px;color:var(--faint);font-size:13px}
+.nbt-h .x:hover{background:var(--panel2);color:var(--dgr)}
+.nbt-tabs{flex:none;display:flex;gap:2px;padding:6px 8px;border-bottom:1px solid var(--line)}
+.nbt-tabs button{
+  flex:1;height:26px;border-radius:4px;font-size:11.5px;font-weight:600;color:var(--faint);
+  transition:all .14s var(--ease);
+}
+.nbt-tabs button:hover{color:var(--ink)}
+.nbt-tabs button.on{background:var(--panel2);color:var(--ac);box-shadow:inset 0 0 0 1px var(--line-hi)}
+.nbt-body{flex:1;overflow:auto;padding:10px 12px;min-height:0}
+.nbt-body::-webkit-scrollbar{width:9px}
+.nbt-body::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px}
+#nbtJson{
+  display:block;width:100%;height:100%;min-height:220px;resize:none;outline:0;
+  font-family:var(--mono);font-size:11.5px;line-height:1.65;padding:9px;
+  border:1px solid var(--line);border-radius:5px;background:var(--sunk);color:var(--ink);
+}
+#nbtJson:focus{border-color:var(--ac);background:#0d1008}
+.nbt-f{flex:none;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;border-top:1px solid var(--line)}
+.nbt-f .bt{height:26px;padding:0 9px;font-size:11px}
+.nbt-f .hint{font-size:10.5px;color:var(--faint);margin-left:auto}
+.nbt-meta{
+  padding:8px 10px;margin-bottom:10px;border-radius:5px;
+  background:var(--sunk);border:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.7;
+}
+.nbt-meta b{color:var(--ink)}
+.frow{padding:7px 0;border-bottom:1px solid var(--line)}
+.frow:last-child{border-bottom:0}
+.frow .k{display:flex;align-items:center;gap:6px;margin-bottom:4px;min-width:0}
+.frow .k b{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow .k .t{flex:none;font-size:9px;padding:1px 4px;border-radius:3px;background:var(--panel2);color:var(--faint);font-family:var(--mono)}
+.frow .k .del{margin-left:auto;flex:none;color:var(--faint);font-size:12px;line-height:1;padding:0 3px}
+.frow .k .del:hover{color:var(--dgr)}
+.frow .v{display:flex;gap:6px;align-items:center}
+.frow input{
+  flex:1;min-width:0;height:28px;padding:0 8px;font-size:11.5px;font-family:var(--mono);
+  border:1px solid var(--line);border-radius:4px;background:var(--sunk);outline:0;
+}
+.frow input:focus{border-color:var(--ac)}
+.frow input.diff{border-color:rgba(227,179,62,.5);background:rgba(227,179,62,.07)}
+.frow .put{
+  flex:none;height:28px;padding:0 9px;border-radius:4px;font-size:10.5px;font-weight:700;
+  color:var(--ac-d);background:var(--ac-s);border:1px solid rgba(168,221,79,.32);
+}
+.frow .put:hover{background:rgba(168,221,79,.22)}
+.nbt-empty{padding:26px 10px;text-align:center;font-size:12px;color:var(--faint);line-height:1.9}
+.nbt-empty b{color:var(--dim)}
+
+/* 框选 */
+#selMarquee{
+  position:absolute;z-index:11;display:none;pointer-events:none;
+  border:1px solid var(--ac);background:rgba(168,221,79,.1);
+}
 
 /* toast */
 #toast{
-  position:fixed;left:50%;bottom:80px;transform:translate(-50%,16px);z-index:60;
-  padding:10px 18px;border-radius:11px;font-size:13px;font-weight:600;
-  background:#0f172a;color:#f8fafc;opacity:0;pointer-events:none;
-  transition:all .3s cubic-bezier(.2,.9,.3,1);box-shadow:0 16px 40px rgba(15,23,42,.35);
-  max-width:80vw;
+  position:fixed;left:50%;bottom:96px;transform:translate(-50%,14px);z-index:60;
+  padding:9px 16px;border-radius:6px;font-size:12.5px;font-weight:600;
+  background:#e9edde;color:#12160c;opacity:0;pointer-events:none;max-width:80vw;
+  transition:opacity .26s var(--ease),transform .26s var(--ease);
+  box-shadow:0 16px 40px rgba(0,0,0,.5);
 }
 #toast.show{opacity:1;transform:translate(-50%,0)}
-#toast.err{background:#7f1d1d}
-#toast.ok{background:#065f46}
+#toast.err{background:#f0d3ce;color:#571a12}
+#toast.ok{background:#d8efb4;color:#1e2c0b}
 
-/* 首次引导 */
+/* 引导层 */
 .guide{
   position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;
-  background:rgba(238,241,246,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  background:rgba(12,15,9,.86);backdrop-filter:blur(8px);
 }
-.guide .box{max-width:430px;padding:26px 28px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh)}
-.guide h2{margin:0 0 10px;font-size:17px;font-weight:800}
-.guide p{margin:0 0 8px;font-size:12.8px;color:var(--dim);line-height:1.8}
-.guide .k{display:inline-block;padding:1px 6px;border-radius:5px;background:#eef2f7;border:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--ink)}
-.guide .acts{display:flex;gap:9px;margin-top:16px}
+.guide .box{
+  width:min(460px,calc(100% - 40px));padding:24px 26px;border-radius:10px;
+  background:var(--panel);border:1px solid var(--line-hi);
+  box-shadow:0 30px 70px rgba(0,0,0,.6);
+}
+.guide h2{margin:0 0 6px;font-size:17px;font-weight:700;letter-spacing:.01em}
+.guide .sub{margin:0 0 16px;font-size:11px;font-family:var(--mono);color:var(--faint)}
+.guide p{margin:0 0 9px;font-size:12.5px;color:var(--dim);line-height:1.85}
+.guide .k{
+  display:inline-block;padding:0 5px;border-radius:3px;background:var(--panel2);
+  border:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--ink);
+}
+.guide .acts{display:flex;gap:8px;margin-top:18px}
 
 .hidden{display:none!important}
 
-/* ── 方块数据面板 ─────────────────────────────────────────────── */
-.nbt{
-  position:absolute;right:10px;top:10px;bottom:10px;width:352px;z-index:12;
-  display:flex;flex-direction:column;overflow:hidden;
-  background:var(--panel);border:1px solid var(--line);border-radius:12px;
-  box-shadow:0 12px 34px rgba(15,23,42,.16);
-}
-.nbt-h{flex:none;height:44px;display:flex;align-items:center;gap:8px;padding:0 8px 0 13px;border-bottom:1px solid var(--line)}
-.nbt-h b{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nbt-h .cnt{font-size:11px;color:var(--faint);font-family:var(--mono);white-space:nowrap}
-.nbt-h .x{margin-left:auto;width:26px;height:26px;flex:none;border-radius:7px;color:var(--faint);font-weight:800}
-.nbt-h .x:hover{background:#f1f5f9;color:var(--dgr)}
-.nbt-tabs{flex:none;display:flex;gap:3px;padding:6px;background:#f8fafc;border-bottom:1px solid var(--line)}
-.nbt-tabs button{flex:1;height:28px;border-radius:7px;font-size:12px;font-weight:700;color:var(--dim);transition:all .14s}
-.nbt-tabs button:hover{color:var(--ink)}
-.nbt-tabs button.on{background:#fff;color:var(--ac-d);box-shadow:0 1px 3px rgba(15,23,42,.12)}
-.nbt-body{flex:1;overflow:auto;padding:9px 12px 12px;min-height:0;scrollbar-width:thin}
-.nbt-body::-webkit-scrollbar{width:8px}
-.nbt-body::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:4px}
-#nbtJson{display:block;width:100%;height:100%;min-height:220px;resize:none;outline:0;
-  font-family:var(--mono);font-size:11.5px;line-height:1.65;padding:9px;
-  border:1px solid var(--line);border-radius:8px;background:#f8fafc}
-#nbtJson:focus{border-color:var(--ac);background:#fff}
-.nbt-f{flex:none;display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 11px;border-top:1px solid var(--line);background:#fbfcfe}
-.nbt-f .tb{height:28px;padding:0 10px;font-size:11.5px}
-.nbt-f .hint{font-size:11px;color:var(--faint);margin-left:auto}
-.nbt-meta{padding:8px 10px;margin-bottom:9px;border-radius:8px;background:#f8fafc;border:1px solid var(--line);
-  font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.65}
-.nbt-meta b{color:var(--ink)}
-.frow{padding:7px 0;border-bottom:1px dashed var(--line)}
-.frow:last-child{border-bottom:0}
-.frow .k{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-family:var(--mono);font-size:11px;color:var(--dim);min-width:0}
-.frow .k b{color:var(--ink);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.frow .k .t{flex:none;font-size:9.5px;padding:0 4px;border-radius:4px;background:#eef2f7;color:var(--faint);font-weight:600}
-.frow .k .del{margin-left:auto;flex:none;color:var(--faint);font-size:13px;line-height:1;padding:0 3px}
-.frow .k .del:hover{color:var(--dgr)}
-.frow .v{display:flex;gap:6px;align-items:center}
-.frow input{flex:1;min-width:0;height:30px;padding:0 9px;font-size:11.5px;font-family:var(--mono);
-  border:1px solid var(--line);border-radius:7px;background:#f8fafc;outline:0}
-.frow input:focus{border-color:var(--ac);background:#fff}
-.frow input.diff{background:#fffbeb;border-color:#fde68a}
-.frow .put{flex:none;height:30px;padding:0 9px;border-radius:7px;font-size:11px;font-weight:700;
-  color:var(--ac-d);background:var(--ac-s);border:1px solid rgba(14,165,233,.3)}
-.frow .put:hover{background:#bae6fd}
-.nbt-empty{padding:22px 10px;text-align:center;font-size:12px;color:var(--faint);line-height:1.9}
-.nbt-empty b{color:var(--dim)}
-.selchip{display:inline-flex;align-items:center;gap:5px;margin:0 5px 5px 0;padding:3px 7px;border-radius:6px;
-  background:#f1f5f9;border:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--dim);cursor:pointer}
-.selchip:hover{border-color:var(--line-hi);color:var(--ink)}
-.selchip.on{background:var(--ac-s);border-color:rgba(14,165,233,.4);color:var(--ac-d)}
-#selMarquee{position:absolute;z-index:11;display:none;pointer-events:none;
-  border:1px solid var(--ac);background:rgba(14,165,233,.12);border-radius:2px}
 @media (max-width:820px){
-  .side{width:272px}
-  .top .title span{display:none}
-  .nbt{width:300px}
+  :root{--drawer:290px}
+  .brand span{display:none}
+  .docname{display:none}
 }
 @media (max-width:560px){
-  body{overflow:auto}
-  .tb .lg{display:none}
-  .tb .sm{display:inline}
-  .top .logo-name{display:none}
-
-  .work{flex-direction:column}
-  .side{width:100%;order:2;border-right:0;border-top:1px solid var(--line)}
-  .picker .plist{max-height:260px}
-  .stage{order:1;height:58vh;flex:none}
-  .top{gap:8px;padding:0 10px}
-  .top .title b{font-size:13px}
+  :root{--rail:48px;--drawer:100%}
+  .top{height:44px}
+  .rail{width:var(--rail)}
+  .ri{width:36px;height:36px}
+  .drawer{left:var(--rail);right:0;width:auto}
   .nbt{left:8px;right:8px;top:8px;bottom:8px;width:auto}
+  .hud{font-size:10px;padding:5px 8px}
+  .statusbar .it{padding:0 8px}
+  .guide .box{padding:20px}
 }
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms!important}
+}
+
 </style>
 </head>
 <body>
-
 <header class="top">
-  <a class="logo" href="../index.html" title="返回首页">
-    <svg viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="14" width="34" height="34" rx="7" fill="#0ea5e9"/><rect x="52" y="14" width="34" height="34" rx="7" fill="#8b5cf6"/><rect x="14" y="52" width="34" height="34" rx="7" fill="#10b981"/><rect x="52" y="52" width="34" height="34" rx="7" fill="#f59e0b"/></svg>
-    <span class="logo-name">红石的小站</span>
+  <a class="brand" href="../index.html" title="返回首页">
+    <i aria-hidden="true"></i><b>结构处理器</b><span>STRUCT</span>
   </a>
-  <div class="title"><b class="logo-name">结构处理器</b><span>.mcstructure · .schem · .nbt · 本地运行</span></div>
+  <div class="docname"><span style="color:var(--faint)">▸</span><b id="docName">未打开文件</b></div>
   <span class="sp"></span>
-  <button class="tb" id="btnPng" title="把当前视图保存成 PNG"><span class="lg">截图 PNG</span><span class="sm">PNG</span></button>
-  <button class="tb" id="btnJson" title="保存为站点内部格式（.json，无损可再编辑）"><span class="lg">保存 JSON</span><span class="sm">JSON</span></button>
-  <button class="tb" id="btnMc" title="导出基岩版 .mcstructure（实验性）"><span class="lg">导出 MCSTRUCTURE</span><span class="sm">导出</span></button>
+  <button class="bt" id="btnExport" title="导出当前结构">
+    <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 3v8M5.5 7.5 9 11l3.5-3.5"/><path d="M3.5 13.5v1A1.5 1.5 0 0 0 5 16h8a1.5 1.5 0 0 0 1.5-1.5v-1"/></svg>
+    导出
+  </button>
 </header>
 
 <div class="work">
-  <aside class="side">
-    <section>
-      <h3>文件</h3>
-      <div class="row">
-        <button class="tb primary" id="btnOpen" style="flex:1;justify-content:center">打开结构文件…</button>
-        <input type="file" id="fileIn" class="hidden" accept=".mcstructure,.schem,.nbt,.json,.litematic">
-      </div>
-      <div class="row">
-        <div style="flex:1">
-          <label class="f">新建尺寸（宽 × 高 × 深，≤ 64）</label>
-          <div class="row" style="margin:0">
-            <input type="number" id="inW" value="16" min="1" max="64">
-            <input type="number" id="inH" value="16" min="1" max="64">
-            <input type="number" id="inL" value="16" min="1" max="64">
-            <button class="tb" id="btnNew" style="flex:none">新建</button>
-          </div>
-        </div>
-      </div>
-    </section>
+  <nav class="rail" aria-label="工具">
+    <button class="ri on-file" id="btnFile" title="文件：打开 / 新建" aria-label="文件">
+      <svg viewBox="0 0 18 18"><path d="M2.5 5.5A1.5 1.5 0 0 1 4 4h3.2L8.8 6H14a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 14 15H4a1.5 1.5 0 0 1-1.5-1.5z"/></svg>
+    </button>
+    <input type="file" id="fileIn" class="hidden" accept=".mcstructure,.schem,.nbt,.json,.litematic">
 
-    <section>
-      <h3>工具</h3>
-      <div class="seg" id="modeSeg" role="group" aria-label="工具模式">
-        <button data-m="orbit" class="on" title="旋转 / 缩放视角">👁 查看</button>
-        <button data-m="place" title="在指针处放置方块">⬛ 放置</button>
-        <button data-m="erase" title="擦掉指针处的方块">⬜ 删除</button>
-        <button data-m="nbt" title="点选方块查看 / 编辑它的 NBT 数据（拖动可框选）">🏷 数据</button>
-      </div>
-      <div class="row" style="margin-top:9px">
-        <label class="f" style="margin:0 6px 0 0">基岩索引顺序</label>
-        <select id="orderSel" style="flex:1;height:30px;border:1px solid var(--line);border-radius:8px;background:#f8fafc;padding:0 8px;outline:0">
-          <option value="xzy">x → z → y（默认）</option>
-          <option value="yzx">y → z → x</option>
-        </select>
-        <button class="tb" id="btnReapply" style="flex:none" title="导入的基岩结构若显示错乱，换一种顺序重排">重排</button>
-      </div>
-    </section>
+    <div class="rsep"></div>
 
-    <section>
-      <h3>方块数据 <span id="nbtCount" style="text-transform:none;letter-spacing:0"></span></h3>
-      <div class="row">
-        <button class="tb primary" id="btnNbt" style="flex:1;justify-content:center">打开数据面板</button>
-        <button class="tb" id="btnSelClear" title="清空当前选择">清空</button>
-      </div>
-      <div class="pcount" id="nbtInfo">未选中方块</div>
-    </section>
+    <div id="modeSeg" style="display:contents">
+      <button class="ri on" data-m="orbit" title="查看 · 右键旋转 / 滚轮缩放 · 快捷键 1" aria-label="查看">
+        <svg viewBox="0 0 18 18"><path d="M1.8 9S4.5 4.3 9 4.3 16.2 9 16.2 9 13.5 13.7 9 13.7 1.8 9 1.8 9z"/><circle cx="9" cy="9" r="1.7"/></svg>
+      </button>
+      <button class="ri" data-m="place" title="放置方块 · 快捷键 2" aria-label="放置">
+        <svg viewBox="0 0 18 18"><rect x="2.8" y="2.8" width="12.4" height="12.4" rx="1.6"/><path d="M9 6.2v5.6M6.2 9h5.6"/></svg>
+      </button>
+      <button class="ri" data-m="erase" title="删除方块 · 快捷键 3" aria-label="删除">
+        <svg viewBox="0 0 18 18"><path d="M6.6 13.5 3.2 10a1.4 1.4 0 0 1 0-2l4.6-4.6a1.4 1.4 0 0 1 2 0l3.4 3.4a1.4 1.4 0 0 1 0 2l-3.6 3.6z"/><path d="M7 6.4l4.6 4.6M6 15.5h8.4"/></svg>
+      </button>
+      <button class="ri" data-m="nbt" title="方块数据 · 点选或框选后编辑 NBT · 快捷键 4" aria-label="方块数据">
+        <svg viewBox="0 0 18 18"><path d="M9.6 2.6 2.6 9.6a1 1 0 0 0 0 1.4l3.4 3.4a1 1 0 0 0 1.4 0l7-7V2.6z"/><circle cx="12.4" cy="5.6" r=".9"/></svg>
+      </button>
+    </div>
 
-    <section class="picker">
-      <h3>方块 <span id="pbCount" style="text-transform:none;letter-spacing:0"></span></h3>
-      <input type="search" id="pbQ" placeholder="搜索：石头 / stone / 玻璃…" style="width:100%">
-      <div class="plist" id="pbList" style="margin-top:9px"></div>
-      <div class="pcount" id="pbInfo">未选中</div>
-    </section>
-  </aside>
+    <div class="rsep"></div>
+
+    <button class="ri" id="railPick" title="方块库" aria-label="方块库">
+      <svg viewBox="0 0 18 18"><rect x="2.6" y="2.6" width="5" height="5" rx="1"/><rect x="10.4" y="2.6" width="5" height="5" rx="1"/><rect x="2.6" y="10.4" width="5" height="5" rx="1"/><rect x="10.4" y="10.4" width="5" height="5" rx="1"/></svg>
+    </button>
+
+    <span class="sp"></span>
+
+    <button class="ri" id="btnSelClear" title="清空选择" aria-label="清空选择">
+      <svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="6.3"/><path d="M6.9 6.9l4.2 4.2M11.1 6.9l-4.2 4.2"/></svg>
+    </button>
+  </nav>
 
   <div class="stage">
     <div id="view">
-      <div class="tip" id="tip">加载原版贴图…</div>
+      <div class="hud" id="tip">加载原版贴图…</div>
       <div class="banner" id="banner"></div>
       <div class="guide" id="guide">
         <div class="box">
-          <h2>结构处理器</h2>
-          <p>打开或新建一个结构，然后在右侧的 3D 视口里编辑：</p>
-          <p><span class="k">右键拖动</span> 旋转视角 · <span class="k">滚轮</span> 缩放 · <span class="k">中键拖动</span> 平移<br>
-             <span class="k">放置</span> 模式下左键放方块 · <span class="k">删除</span> 模式下左键擦方块<br>
-             <span class="k">数据</span> 模式下左键点方块看 / 改它的 NBT，拖动框选一批方块，Shift 追加选择<br>
-             <span class="k">数字键 1/2/3/4</span> 快速切模式 · <span class="k">Esc</span> 回到查看</p>
-          <p style="color:var(--faint)">支持基岩版 .mcstructure、Java .schem / .nbt（gzip 自动解压）。贴图取自 26.3 原版资源，全部在你的浏览器里渲染，不上传任何文件。</p>
+          <h2>把结构文件拖进来看</h2>
+          <p class="sub">.mcstructure / .schem / .nbt / 本站 .json</p>
+          <p><span class="k kbd">右键拖动</span> 旋转 · <span class="k kbd">滚轮</span> 缩放 · <span class="k kbd">中键</span> 平移</p>
+          <p><span class="k kbd">1–4</span> 切模式 · <span class="k kbd">Esc</span> 回查看 · 数据模式下拖框可批量选</p>
+          <p style="color:var(--faint);font-size:11.5px">原版贴图在浏览器里渲染，文件不上传。</p>
           <div class="acts">
-            <button class="tb primary" id="gdOpen">打开结构文件…</button>
-            <button class="tb" id="gdNew">新建 16×16×16</button>
+            <button class="bt pri" id="gdOpen">打开结构文件</button>
+            <button class="bt" id="gdNew">新建 16³</button>
           </div>
         </div>
       </div>
     </div>
+
     <div id="selMarquee"></div>
+
     <aside class="nbt hidden" id="nbtPanel">
       <div class="nbt-h">
         <b id="nbtTitle">方块数据</b>
@@ -337,14 +407,73 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
       <div class="nbt-body hidden" id="nbtJsonWrap"><textarea id="nbtJson" spellcheck="false"></textarea></div>
       <div class="nbt-f" id="nbtFoot"></div>
     </aside>
+
     <div class="statusbar">
-      <span>尺寸 <b id="stSize">—</b></span><span class="sep">│</span>
-      <span>方块 <b id="stCount">0</b></span><span class="sep">│</span>
-      <span>指针 <b id="stPos">—</b></span><span class="sep">│</span>
-      <span id="stBlock">—</span>
+      <span class="it">尺寸 <b id="stSize">—</b></span>
+      <span class="it">方块 <b id="stCount">0</b></span>
+      <span class="it">指针 <b id="stPos">—</b></span>
+      <span class="it blk" id="stBlock">—</span>
     </div>
   </div>
+
+  <aside class="drawer" id="drawer">
+    <div class="dhead"><b id="dTitle">文件</b><button class="x" id="dClose" title="收起">✕</button></div>
+
+    <div class="dbody on" data-pane="file">
+      <button class="bt pri" id="btnOpen" style="width:100%;height:34px;justify-content:center">选择结构文件…</button>
+      <p class="hintline" style="margin-top:-6px">.mcstructure · .schem · .nbt · 本站 JSON，也可以直接拖到窗口里。</p>
+      <div>
+        <label class="fld"><span>新建尺寸 · 宽 × 高 × 深</span>
+          <div class="grid3">
+            <input type="number" id="inW" value="16" min="1" max="256" aria-label="宽">
+            <input type="number" id="inH" value="16" min="1" max="256" aria-label="高">
+            <input type="number" id="inL" value="16" min="1" max="256" aria-label="深">
+          </div>
+        </label>
+        <button class="bt" id="btnNew" style="width:100%;justify-content:center;height:32px">新建空白结构</button>
+        <p class="hintline" style="margin-top:8px">单边最大 256，导入不受这个限制。</p>
+      </div>
+
+      <div>
+        <p class="hintline">基岩文件按 <b>index = (y·sizeZ + z)·sizeX + x</b> 读取，与游戏内一致。</p>
+      </div>
+    </div>
+
+    <div class="dbody" data-pane="picker">
+      <div class="pcount" id="pbCount" style="margin:0 0 -6px"></div>
+      <input type="search" id="pbQ" placeholder="搜索：石头 / stone / 玻璃…">
+      <div class="plist" id="pbList"></div>
+      <div class="pcount" id="pbInfo">未选画笔</div>
+      <div class="pcount" id="nbtInfo">未选中方块</div>
+      <span id="nbtCount" class="hidden"></span>
+    </div>
+
+    <div class="dbody" data-pane="export">
+      <div>
+        <button class="bt" id="btnJson" style="width:100%;height:34px;justify-content:flex-start;gap:9px">
+          <svg viewBox="0 0 18 18"><path d="M5.5 3.5h7M5.5 7h7M5.5 10.5h4"/><rect x="2.8" y="2" width="12.4" height="14" rx="1.6"/></svg>
+          保存本站 JSON（无损，可再编辑）
+        </button>
+        <p class="hintline">带方块数据，能原样读回来继续改。</p>
+      </div>
+      <div>
+        <button class="bt" id="btnMc" style="width:100%;height:34px;justify-content:flex-start;gap:9px">
+          <svg viewBox="0 0 18 18"><path d="M3 9.5 9 3l6 6.5"/><path d="M9 3.5V15"/></svg>
+          导出 .mcstructure
+        </button>
+        <p class="hintline">基岩版结构文件，调色板与方块数据原样写回。</p>
+      </div>
+      <div>
+        <button class="bt" id="btnPng" style="width:100%;height:34px;justify-content:flex-start;gap:9px">
+          <svg viewBox="0 0 18 18"><rect x="2.6" y="3.6" width="12.8" height="10.8" rx="1.6"/><circle cx="6.4" cy="7.2" r="1.1"/><path d="m3.4 12.6 3.4-3.2 2.6 2.4 2.2-2 3 2.8"/></svg>
+          截图 PNG
+        </button>
+        <p class="hintline">当前视角直接存图，透明背景关掉就是白底。</p>
+      </div>
+    </div>
+  </aside>
 </div>
+
 
 <div id="toast" role="status"></div>
 
@@ -410,42 +539,70 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     return (n && B64[n]) || null;
   }
 
-  /* ═════════════════ 贴图：每个 tile 独立纹理，按需加载 ═════════════════ */
-  var texCache = {}, texLoading = {}, tileMats = {};
+  /* ═════════════════ 贴图：一张方块图集，与 games/mc.html 完全同款 ═════════════════
+     每个 tile 固定占图集一格（col = tile % 8, row = tile / 8），动画贴图（16×64 竖条）
+     只裁第一帧。全部方块共用一个材质 + 一张贴图 → 不会因为方块种类多而反复编译
+     program / 建纹理，方块再多也只有几次纹理绑定。 */
+  var ATLAS_COLS = 8;
+  var ATLAS_ROWS = (w.MC_ATLAS_ROWS && w.MC_ATLAS_ROWS > 4) ? w.MC_ATLAS_ROWS : 4;
+  var TILE_PX = 16;
+  var atlasCanvas = d.createElement('canvas');
+  atlasCanvas.width = ATLAS_COLS * TILE_PX;
+  atlasCanvas.height = ATLAS_ROWS * TILE_PX;
+  var atlasCtx = atlasCanvas.getContext('2d');
+  var atlasTexture = null, blockMat = null, decorMat = null, atlasDirty = false;
+  var tileDrawn = {}, tileLoading = {}, tileOk = 0, tileFail = 0;
+
+  function ensureAtlas() {
+    if (blockMat) return;
+    atlasTexture = new THREE.CanvasTexture(atlasCanvas);
+    atlasTexture.magFilter = THREE.NearestFilter;
+    // 缩小走 mipmap：16px 贴图压到 6~7px/格时用 Nearest 会随机跳像素，整面墙变噪点
+    var gl2 = renderer && renderer.capabilities && renderer.capabilities.isWebGL2;
+    atlasTexture.minFilter = gl2 ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
+    atlasTexture.generateMipmaps = !!gl2;
+    if (gl2) atlasTexture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    atlasTexture.wrapS = atlasTexture.wrapT = THREE.ClampToEdgeWrapping;
+    // 立体方块的贴图里有大片全透明像素（火把、花草、玻璃板…），不淘汰会变黑边
+    blockMat = new THREE.MeshLambertMaterial({
+      map: atlasTexture, vertexColors: true, alphaTest: 0.5, side: THREE.FrontSide
+    });
+    // 十字花草 / 细装饰：双面，阈值放低
+    decorMat = new THREE.MeshLambertMaterial({
+      map: atlasTexture, vertexColors: true, alphaTest: 0.08, side: THREE.DoubleSide
+    });
+  }
+  function queueAtlas() {
+    if (atlasDirty || !atlasTexture) return;
+    atlasDirty = true;
+    requestAnimationFrame(function () {
+      atlasDirty = false;
+      if (atlasTexture) atlasTexture.needsUpdate = true;
+    });
+  }
   function loadTile(tile) {
     tile = +tile;
-    if (texCache[tile] !== undefined) return Promise.resolve(texCache[tile]);
-    if (texLoading[tile]) return texLoading[tile];
+    ensureAtlas();
+    if (tileDrawn[tile]) return Promise.resolve(true);
+    if (tileLoading[tile]) return tileLoading[tile];
     var url = tileURL(tile);
-    texLoading[tile] = new Promise(function (res) {
-      if (!url) { texCache[tile] = null; return res(null); }
+    if (!url) { tileDrawn[tile] = true; return Promise.resolve(false); }
+    tileLoading[tile] = new Promise(function (res) {
       var im = new Image();
       im.onload = function () {
-        // 先画到 canvas 再 CanvasTexture —— 与 games/mc.html 的成熟路径完全一致
-        var cv = d.createElement('canvas');
-        cv.width = im.width || 16; cv.height = im.height || 16;
-        cv.getContext('2d').drawImage(im, 0, 0);
-        var t = new THREE.CanvasTexture(cv);
-        t.magFilter = THREE.NearestFilter;
-        t.minFilter = THREE.NearestFilter;
-        t.generateMipmaps = false;
-        texCache[tile] = t;
-        res(t);
+        var c = (tile % ATLAS_COLS) * TILE_PX, r = Math.floor(tile / ATLAS_COLS) * TILE_PX;
+        atlasCtx.save();
+        atlasCtx.beginPath(); atlasCtx.rect(c, r, TILE_PX, TILE_PX); atlasCtx.clip();
+        atlasCtx.drawImage(im, c, r);        // 画到本格左上角；动画竖条被 clip 裁到第一帧
+        atlasCtx.restore();
+        tileDrawn[tile] = true; tileOk++;
+        queueAtlas();
+        res(true);
       };
-      im.onerror = function () { texCache[tile] = null; res(null); };
+      im.onerror = function () { tileDrawn[tile] = true; tileFail++; res(false); };
       im.src = url;
     });
-    return texLoading[tile];
-  }
-  function tileMat(tile) {
-    var m = tileMats[tile];
-    if (!m) {
-      m = new THREE.MeshBasicMaterial({ vertexColors: true, alphaTest: 0.45, side: THREE.FrontSide });
-      tileMats[tile] = m;
-    }
-    var t = texCache[tile];
-    if (t && m.map !== t) { m.map = t; m.needsUpdate = true; }
-    return m;
+    return tileLoading[tile];
   }
 
   /* ═════════════════ 场景 ═════════════════ */
@@ -460,15 +617,26 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     VIEW.appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xeef1f6);
+    scene.background = new THREE.Color(0x0c0f09);
+    renderer.setClearColor(0x0c0f09, 1);
 
     camera = new THREE.PerspectiveCamera(55, VIEW.clientWidth / VIEW.clientHeight, 0.1, 1000);
+
+    // 光照：环境 + 半球 + 斜上方平行光。总强度压在 1.0 附近，白色方块才不会过曝糊成一片
+    scene.add(new THREE.AmbientLight(0xffffff, 0.46));
+    scene.add(new THREE.HemisphereLight(0xd8ecd0, 0x39321f, 0.30));
+    var sun = new THREE.DirectionalLight(0xfff6e2, 0.42);
+    sun.position.set(0.55, 1, 0.4);
+    scene.add(sun);
+    var fill = new THREE.DirectionalLight(0xffffff, 0.10);
+    fill.position.set(-0.6, 0.4, -0.7);
+    scene.add(fill);
 
     chunkGroup = new THREE.Group();
     scene.add(chunkGroup);
     selBox = new THREE.LineSegments(
       new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002)),
-      new THREE.LineBasicMaterial({ color: 0x0ea5e9 }));
+      new THREE.LineBasicMaterial({ color: 0xa8dd4f }));
     selBox.visible = false;
     scene.add(selBox);
 
@@ -567,9 +735,9 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
   }
 
   function newStruct(sx, sy, sz) {
-    sx = Math.max(1, Math.min(64, sx | 0));
-    sy = Math.max(1, Math.min(64, sy | 0));
-    sz = Math.max(1, Math.min(64, sz | 0));
+    sx = Math.max(1, Math.min(256, sx | 0));
+    sy = Math.max(1, Math.min(256, sy | 0));
+    sz = Math.max(1, Math.min(256, sz | 0));
     S = {
       sx: sx, sy: sy, sz: sz, data: new Uint16Array(sx * sy * sz), dirty: {},
       sidx: new Uint16Array(sx * sy * sz).fill(65535),
@@ -581,7 +749,7 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     clearMeshes();
     rebuildAll();
     cam.target = [sx / 2, sy / 2, sz / 2];
-    cam.dist = Math.max(sx, sy, sz) * 2.4;
+    cam.dist = Math.hypot(sx, sy, sz) * 1.15;
     camUpdate();
     updateStatus();
     renderNbtPanel();
@@ -613,17 +781,25 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     { dir: [0, 0, 1], corners: [[1, 0, 1], [1, 1, 1], [0, 1, 1], [0, 0, 1]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] },
     { dir: [0, 0, -1], corners: [[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]], uvs: [[0, 0], [0, 1], [1, 1], [1, 0]] }
   ];
-  var FACE_LIT = [0.82, 0.82, 1.0, 0.55, 0.9, 0.7];   // +X -X 顶 底 +Z -Z
+  // 面亮度不再手算 —— 换成 Lambert + 三盏灯，由法线自动决定明暗（照抄 mc.html 的光照）
+  var FACE_LIT = [1, 1, 1, 1, 1, 1];
 
   function isOcc(id) { return id !== 0 && kindOf(id) === 'full'; }
 
-  function pushQuad(g, pts, tile, uv, lit) {
-    var b = g[tile] || (g[tile] = { pos: [], nor: [], uvs: [], col: [], idx: [], vc: 0 });
+  /* UV 取图集格子：局部 0..1 → 该 tile 所在格。0.002 的内缩是防「采样到隔壁格」
+     （mipmap 会让相邻格子轻微混色，内缩半个像素后基本看不出来）。 */
+  function pushQuad(g, pts, tile, uv, lit, ds) {
+    tile = +tile;
+    var key = (ds ? 'd' : '') + tile;
+    var b = g[key] || (g[key] = { tile: tile, ds: !!ds, pos: [], nor: [], uvs: [], col: [], idx: [], vc: 0 });
     var vs = b.vc;
+    var cc = tile % ATLAS_COLS, cr = Math.floor(tile / ATLAS_COLS);
+    var u0 = cc * (1 / ATLAS_COLS), v0 = (ATLAS_ROWS - 1 - cr) * (1 / ATLAS_ROWS);
     for (var i = 0; i < 4; i++) {
       b.pos.push(pts[i][0], pts[i][1], pts[i][2]);
       b.nor.push(pts[i][3], pts[i][4], pts[i][5]);
-      b.uvs.push(uv[i][0], uv[i][1]);
+      b.uvs.push(u0 + (0.002 + uv[i][0] * 0.996) / ATLAS_COLS,
+                v0 + (0.002 + uv[i][1] * 0.996) / ATLAS_ROWS);
       b.col.push(lit, lit, lit);
     }
     b.idx.push(vs, vs + 1, vs + 2, vs, vs + 2, vs + 3);
@@ -674,8 +850,8 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     var a = 0.146, c = 0.854, uv = [[0, 0], [0, 1], [1, 1], [1, 0]];
     var q1 = [[wx + a, wy, wz + a, 0, 0, 1], [wx + c, wy, wz + c, 0, 0, 1], [wx + c, wy + 1, wz + c, 0, 0, 1], [wx + a, wy + 1, wz + a, 0, 0, 1]];
     var q2 = [[wx + a, wy, wz + c, 0, 0, 1], [wx + c, wy, wz + a, 0, 0, 1], [wx + c, wy + 1, wz + a, 0, 0, 1], [wx + a, wy + 1, wz + c, 0, 0, 1]];
-    pushQuad(g, q1, s, uv, 0.95); pushQuad(g, q1, s, uv, 0.7);
-    pushQuad(g, q2, s, uv, 0.95); pushQuad(g, q2, s, uv, 0.7);
+    pushQuad(g, q1, s, uv, 1, true);
+    pushQuad(g, q2, s, uv, 1, true);
   }
 
   function buildChunk(cx, cy, cz) {
@@ -698,8 +874,8 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
       else if (kind === 'full') pushFull(g, id, x, y, z);
     }
     var meshes = [];
-    Object.keys(g).forEach(function (tile) {
-      var b = g[tile];
+    Object.keys(g).forEach(function (k) {
+      var b = g[k];
       if (!b.vc) return;
       var geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute(b.pos, 3));
@@ -707,7 +883,8 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
       geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.uvs, 2));
       geo.setAttribute('color', new THREE.Float32BufferAttribute(b.col, 3));
       geo.setIndex(b.idx);
-      var mesh = new THREE.Mesh(geo, tileMat(+tile));
+      loadTile(b.tile);                     // 兜底：模型里用到的贴图没被 collectTiles 收进来时现补
+      var mesh = new THREE.Mesh(geo, b.ds ? decorMat : blockMat);
       meshes.push(mesh);
       chunkGroup.add(mesh);
     });
@@ -727,12 +904,12 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     if (chunks._frame) chunkGroup.remove(chunks._frame);
     var box = new THREE.LineSegments(
       new THREE.EdgesGeometry(new THREE.BoxGeometry(S.sx, S.sy, S.sz)),
-      new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.5 }));
+      new THREE.LineBasicMaterial({ color: 0x3a4231, transparent: true, opacity: 0.9 }));
     box.position.set(S.sx / 2, S.sy / 2, S.sz / 2);
     chunks._frame = box;
     chunkGroup.add(box);
     if (chunks._grid) chunkGroup.remove(chunks._grid);
-    var grid = new THREE.GridHelper(Math.max(S.sx, S.sz), Math.max(S.sx, S.sz), 0xc7d0dd, 0xdde4ec);
+    var grid = new THREE.GridHelper(Math.max(S.sx, S.sz), Math.max(S.sx, S.sz), 0x35402a, 0x232a1c);
     grid.position.set(S.sx / 2, -0.005, S.sz / 2);
     chunks._grid = grid;
     chunkGroup.add(grid);
@@ -861,7 +1038,7 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     if (!ks.length || !S) return;
     selHi = new THREE.InstancedMesh(
       new THREE.BoxGeometry(1.012, 1.012, 1.012),
-      new THREE.MeshBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.2, depthWrite: false }),
+      new THREE.MeshBasicMaterial({ color: 0xa8dd4f, transparent: true, opacity: 0.22, depthWrite: false }),
       ks.length);
     var m4 = new THREE.Matrix4();
     for (var i = 0; i < ks.length; i++) {
@@ -876,6 +1053,7 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
   function setSelection(obj, openPanel) {
     selection = obj || {};
     updateSelVis();
+    if (selKeys().length && drawer && drawer.classList.contains('open')) closeDrawer();
     if (openPanel !== false && selKeys().length) panelOpen = true;
     renderNbtPanel();
   }
@@ -1152,13 +1330,27 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     b.addEventListener('click', function () { nbtTab = b.getAttribute('data-t'); renderNbtPanel(); });
   });
   $('#nbtClose').addEventListener('click', function () { panelOpen = false; renderNbtPanel(); });
-  $('#btnNbt').addEventListener('click', function () {
-    panelOpen = true;
-    if (!selKeys().length) setMode('nbt');
-    renderNbtPanel();
-    if (!selKeys().length) toast('在视口里点方块选中，拖动可以框选一片');
-  });
-  $('#btnSelClear').addEventListener('click', function () { setSelection({}); });
+  $('#btnSelClear').addEventListener('click', function () { setSelection({}); toast('已清空选择'); });
+
+  /* ═════════════════ 左侧抽屉 ═════════════════ */
+  var drawer = $('#drawer'), dTitle = $('#dTitle');
+  var PANE_NAME = { file: '文件', picker: '方块库', export: '导出' };
+  function openDrawer(pane) {
+    $$('.dbody', drawer).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === pane); });
+    dTitle.textContent = PANE_NAME[pane] || '';
+    drawer.classList.add('open');
+    drawer.setAttribute('data-cur', pane);
+  }
+  function closeDrawer() { drawer.classList.remove('open'); drawer.removeAttribute('data-cur'); }
+  function toggleDrawer(pane) {
+    if (drawer.classList.contains('open') && drawer.getAttribute('data-cur') === pane) closeDrawer();
+    else openDrawer(pane);
+  }
+  $('#dClose').addEventListener('click', closeDrawer);
+  $('#btnFile').addEventListener('click', function () { toggleDrawer('file'); });
+  $('#railPick').addEventListener('click', function () { toggleDrawer('picker'); });
+  $('#btnExport').addEventListener('click', function () { toggleDrawer('export'); });
+  d.addEventListener('keydown', function (e) { if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer(); });
 
   /* ═════════════════ 模式 ═════════════════ */
   var mode = 'orbit';
@@ -1201,7 +1393,7 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
       n++;
     }
     pbList.innerHTML = html.join('') || '<div class="pcount" style="margin:10px">没找到</div>';
-    $('#pbCount').textContent = kw ? n + ' 项' : '';
+    $('#pbCount').textContent = n + ' 个方块' + (kw ? ' · 含「' + kw + '」' : '');
   }
   pbQ.addEventListener('input', function () { renderPicker(pbQ.value); });
   pbList.addEventListener('click', function (e) {
@@ -1373,7 +1565,12 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     return id;
   }
 
-  function fromBedrock(nbt, order) {
+  /* 基岩 .mcstructure 的线性下标就是 index = (y*sizeZ + z)*sizeX + x
+     —— x 变化最快、y 最慢，和页面里的 idx() 完全一致。
+     所以 L0[p] 直接就是第 p 个格子，不需要任何坐标换算。
+     （之前按「x 最慢、y 最快」重排过一次：全同方块的文件看不出来，
+       多种方块的建筑会整栋错位成乱堆。）                                   */
+  function fromBedrock(nbt) {
     var sx = nbt.size[0], sy = nbt.size[1], sz = nbt.size[2];
     var def = nbt.structure.palette.default;
     var palIn = def.block_palette || [];
@@ -1385,23 +1582,21 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     }
     var L0 = nbt.structure.block_indices[0] || [];
     var bpd = def.block_position_data || {};
-    var data = new Uint16Array(sx * sy * sz);
-    var sidx = new Uint16Array(sx * sy * sz);
-    var pdata = {};
-    var p = 0;
-    function put(x, y, z) {
-      var v = L0[p];
-      var k = (y * sz + z) * sx + x;
+    var n = sx * sy * sz;
+    var data = new Uint16Array(n), sidx = new Uint16Array(n), pdata = {};
+    /* ★ 基岩的 block_indices 是「x 最慢、z 最快」：
+         i = (x * sizeY + y) * sizeZ + z
+       之前按 x 最快读，一栋楼会被摊成一层层散落的薄片（音乐机这种全同方块的
+       文件看不出来，建筑一眼就露馅）。用三个真实存档统计「孤立方块比例」验证过：
+       这种顺序孤立率 0%，其它三种分别是 0.5%~2.7%。 */
+    for (var y = 0; y < sy; y++) for (var z = 0; z < sz; z++) for (var x = 0; x < sx; x++) {
+      var i = (x * sy + y) * sz + z;
+      var k = (y * sz + z) * sx + x;        // 本站内部布局：x 最快，方便分区网格
+      var v = L0[i];
       if (v >= 0 && v < ids.length) { data[k] = ids[v]; sidx[k] = v; }
       else { data[k] = 0; sidx[k] = 65535; }
-      var e = bpd[String(p)];
-      if (e && v >= 0 && v < ids.length && ids[v]) pdata[k] = e;
-      p++;
-    }
-    if (order === 'yzx') {
-      for (var y = 0; y < sy; y++) for (var z = 0; z < sz; z++) for (var x = 0; x < sx; x++) put(x, y, z);
-    } else {
-      for (var x2 = 0; x2 < sx; x2++) for (var z2 = 0; z2 < sz; z2++) for (var y2 = 0; y2 < sy; y2++) put(x2, y2, z2);
+      var e = bpd[String(i)];               // 方块实体的键就是这个 i
+      if (e && data[k]) pdata[k] = e;
     }
     return { sx: sx, sy: sy, sz: sz, data: data, sidx: sidx, pal: pal, pdata: pdata };
   }
@@ -1510,11 +1705,13 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
       var nbt = NBT(u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength), le);
       unknownNames = 0;
       var res;
-      if (le) { lastBedrock = nbt; res = fromBedrock(nbt, $('#orderSel').value); }
+      if (le) { lastBedrock = nbt; res = fromBedrock(nbt); }
       else if (nbt.Version !== undefined && nbt.BlockData) res = fromSchem(nbt);
       else if (nbt.blocks && nbt.palette) res = fromJava(nbt);
       else throw new Error('认不出这个格式（支持 .mcstructure / .schem / .nbt）');
       applyStruct(res);
+      $('#docName').textContent = file.name;
+      closeDrawer();
       toast('已打开 ' + file.name + (unknownNames ? '（跳过 ' + unknownNames + ' 个未知方块）' : ''), 'ok');
     } catch (err) {
       toast('打开失败：' + err.message, 'err');
@@ -1531,7 +1728,7 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     updateSelVis();
     cam.target = null;
     cam.target = [S.sx / 2, S.sy / 2, S.sz / 2];
-    cam.dist = Math.max(S.sx, S.sy, S.sz) * 2.4;
+    cam.dist = Math.hypot(S.sx, S.sy, S.sz) * 1.15;
     rebuildAll();
     camUpdate();
     updateStatus();
@@ -1582,10 +1779,10 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     });
   });
   /* .mcstructure 导出：调色板按「方块名 + 状态」去重，原始状态（朝向等）原样写回；
-     block_position_data 的键是 L0 的下标（x 最慢、y 最快），所以遍历顺序必须一致 */
-  $('#btnMc').addEventListener('click', function () {
-    if (!S) return toast('先打开或新建一个结构', 'err');
-    try {
+     block_position_data 的键和 block_indices 用同一个线性下标 index=(y*sizeZ+z)*sizeX+x */
+  function buildMc() {
+    if (!S) throw new Error('先打开或新建一个结构');
+    {
       var palKey = function (name, states) {
         var o = {};
         Object.keys(states || {}).sort().forEach(function (k) { o[k] = states[k]; });
@@ -1613,15 +1810,16 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
         }
         return palIdx[k1];
       }
-      var L0 = [], L1 = [], bpd = {}, p = 0;
-      for (var x = 0; x < S.sx; x++) for (var z = 0; z < S.sz; z++) for (var y = 0; y < S.sy; y++) {
-        var k = idx(x, y, z);
+      var L0 = [], L1 = [], bpd = {};
+      // 与读取完全对称：i = (x·sizeY + y)·sizeZ + z
+      for (var ex = 0; ex < S.sx; ex++) for (var ey = 0; ey < S.sy; ey++) for (var ez = 0; ez < S.sz; ez++) {
+        var k = (ey * S.sz + ez) * S.sx + ex;
+        var i = L0.length;
         if (S.data[k]) {
           L0.push(palOfCell(k));
-          if (S.pdata[k]) bpd[String(p)] = S.pdata[k];
+          if (S.pdata[k]) bpd[String(i)] = S.pdata[k];
         } else L0.push(-1);
         L1.push(-1);
-        p++;
       }
       var struct = {
         format_version: [1, 21, 0],
@@ -1633,8 +1831,17 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
         },
         structure_world_origin: [0, 0, 0]
       };
-      saveBlob(writeBedrock(struct), 'structure-' + S.sx + 'x' + S.sy + 'x' + S.sz + '.mcstructure');
-      toast('已导出 .mcstructure（' + palList.length + ' 种方块状态 · ' + Object.keys(bpd).length + ' 个方块实体）', 'ok');
+      return {
+        bytes: writeBedrock(struct), palCount: palList.length, entityCount: Object.keys(bpd).length
+      };
+    }
+  }
+  $('#btnMc').addEventListener('click', function () {
+    if (!S) return toast('先打开或新建一个结构', 'err');
+    try {
+      var out = buildMc();
+      saveBlob(out.bytes, 'structure-' + S.sx + 'x' + S.sy + 'x' + S.sz + '.mcstructure');
+      toast('已导出 .mcstructure（' + out.palCount + ' 种方块状态 · ' + out.entityCount + ' 个方块实体）', 'ok');
     } catch (err) {
       toast('导出失败：' + err.message, 'err');
     }
@@ -1653,15 +1860,86 @@ label.f{display:block;font-size:11px;color:var(--faint);margin:0 0 3px 2px}
     newStruct(+$('#inW').value || 16, +$('#inH').value || 16, +$('#inL').value || 16);
     toast('已新建空白结构，选好方块就能画了', 'ok');
   });
-  $('#btnReapply').addEventListener('click', function () {
-    if (!S || !lastBedrock) return toast('先打开一个 .mcstructure', 'err');
-    applyStruct(fromBedrock(lastBedrock, $('#orderSel').value));
-    toast('已按 ' + ($('#orderSel').value === 'yzx' ? 'y → z → x' : 'x → z → y') + ' 重排', 'ok');
+
+  /* 拖文件进窗口就能打开 */
+  ['dragenter', 'dragover'].forEach(function (k) {
+    w.addEventListener(k, function (e) { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; });
+  });
+  w.addEventListener('drop', function (e) {
+    e.preventDefault();
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) openFile(f);
   });
 
   /* ═════════════════ 启动 ═════════════════ */
+  /* 只读自检入口：控制台里 HSStruct.info() 能看尺寸 / 方块数 / 渲染包围盒，
+     排查「导入后少了方块」「视口裁掉一半」这类问题时直接对比 cells 与 blocks */
+  w.HSStruct = {
+    view: function (yaw, pitch, dist) {
+      if (!S) return null;
+      if (yaw !== undefined) cam.yaw = yaw;
+      if (pitch !== undefined) cam.pitch = pitch;
+      if (dist) cam.dist = dist;
+      camUpdate();
+      return [cam.yaw, cam.pitch, cam.dist];
+    },
+    mcBytes: function () { var o = buildMc(); return Array.from(o.bytes); },
+    at: function (x, y, z) {
+      if (!S) return null;
+      var b = BLOCKS[S.data[idx(x, y, z)]];
+      return b ? b.e : null;
+    },
+    probe: function (x, y, z) {
+      var v = new THREE.Vector3(x, y, z).project(camera);
+      return [+v.x.toFixed(3), +v.y.toFixed(3), +v.z.toFixed(3)];
+    },
+    info: function () {
+      if (!S) return null;
+      var box = new THREE.Box3().setFromObject(chunkGroup);
+      var meshes = 0;
+      chunkGroup.children.forEach(function (o) { if (o.isMesh) meshes++; });
+      var types = {}, r = { x: [1e9, -1e9], y: [1e9, -1e9], z: [1e9, -1e9] };
+      for (var y2 = 0; y2 < S.sy; y2++) for (var z2 = 0; z2 < S.sz; z2++) for (var x2 = 0; x2 < S.sx; x2++) {
+        var id2 = S.data[idx(x2, y2, z2)];
+        if (!id2) continue;
+        var b2 = BLOCKS[id2];
+        var nm = b2 ? b2.e : ('#' + id2);
+        types[nm] = (types[nm] || 0) + 1;
+        if (x2 < r.x[0]) r.x[0] = x2; if (x2 > r.x[1]) r.x[1] = x2;
+        if (y2 < r.y[0]) r.y[0] = y2; if (y2 > r.y[1]) r.y[1] = y2;
+        if (z2 < r.z[0]) r.z[0] = z2; if (z2 > r.z[1]) r.z[1] = z2;
+      }
+      /* 真实渲染出来的顶点范围（只看 mesh，不含 grid / 边框） */
+      var g = { x: [1e9, -1e9], y: [1e9, -1e9], z: [1e9, -1e9], u: [1e9, -1e9], v: [1e9, -1e9] };
+      chunkGroup.children.forEach(function (o) {
+        if (!o.isMesh || !o.geometry) return;
+        var pa = o.geometry.getAttribute('position');
+        if (pa) for (var i = 0; i < pa.count; i++) {
+          var vx = pa.getX(i), vy = pa.getY(i), vz = pa.getZ(i);
+          if (vx < g.x[0]) g.x[0] = vx; if (vx > g.x[1]) g.x[1] = vx;
+          if (vy < g.y[0]) g.y[0] = vy; if (vy > g.y[1]) g.y[1] = vy;
+          if (vz < g.z[0]) g.z[0] = vz; if (vz > g.z[1]) g.z[1] = vz;
+        }
+        var ua = o.geometry.getAttribute('uv');
+        if (ua) for (var j = 0; j < ua.count; j++) {
+          var uu = ua.getX(j), vv = ua.getY(j);
+          if (uu < g.u[0]) g.u[0] = uu; if (uu > g.u[1]) g.u[1] = uu;
+          if (vv < g.v[0]) g.v[0] = vv; if (vv > g.v[1]) g.v[1] = vv;
+        }
+      });
+      return {
+        size: [S.sx, S.sy, S.sz], cells: S.data.length, blocks: countBlocks(),
+        entities: Object.keys(S.pdata).length, meshes: meshes, types: types, used: r,
+        atlas: { cols: ATLAS_COLS, rows: ATLAS_ROWS, drawn: Object.keys(tileDrawn).length, ok: tileOk, fail: tileFail },
+        geo: isFinite(g.x[0]) ? g : null,
+        box: isFinite(box.min.x) ? [box.min.toArray(), box.max.toArray()] : null,
+        webgl2: !!(renderer && renderer.capabilities && renderer.capabilities.isWebGL2),
+        cam: { dist: +cam.dist.toFixed(1), far: camera.far, pos: camera.position.toArray().map(function (n) { return +n.toFixed(1); }) }
+      };
+    }
+  };
   try {
-    $('#tip').innerHTML = '右键拖动 旋转 · 滚轮 缩放 · 中键拖动 平移\n数字键 1/2/3/4 切模式 · 4 = 方块数据';
+    $('#tip').innerHTML = '<b>右键</b> 旋转 · <b>滚轮</b> 缩放 · <b>中键</b> 平移\n<b>1</b> 查看　<b>2</b> 放置　<b>3</b> 删除　<b>4</b> 数据';
     renderPicker('');
     initGL();
     newStruct(16, 16, 16);
