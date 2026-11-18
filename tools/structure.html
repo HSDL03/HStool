@@ -161,6 +161,11 @@ img{image-rendering:pixelated}
 
 .fld{display:block;margin-bottom:10px}
 .fld>span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+textarea{
+  width:100%;padding:7px 9px;border-radius:5px;resize:vertical;min-height:64px;
+  border:1px solid var(--line);background:var(--sunk);outline:0;color:inherit;
+  font:inherit;font-size:13px;line-height:1.5;
+}
 input[type=text],input[type=number],input[type=search],select{
   width:100%;height:30px;padding:0 9px;border-radius:5px;
   border:1px solid var(--line);background:var(--sunk);outline:0;
@@ -361,6 +366,9 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 
     <div class="rsep"></div>
 
+    <button class="ri" id="railText" title="文字结构：把文字变成方块（中英文都行）" aria-label="文字结构">
+      <svg viewBox="0 0 18 18"><path d="M3.6 4.4h10.8M9 4.4V14M6.4 14h5.2"/></svg>
+    </button>
     <button class="ri" id="railPick" title="方块库" aria-label="方块库">
       <svg viewBox="0 0 18 18"><rect x="2.6" y="2.6" width="5" height="5" rx="1"/><rect x="10.4" y="2.6" width="5" height="5" rx="1"/><rect x="2.6" y="10.4" width="5" height="5" rx="1"/><rect x="10.4" y="10.4" width="5" height="5" rx="1"/></svg>
     </button>
@@ -446,6 +454,38 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
       <div class="pcount" id="pbInfo">未选画笔</div>
       <div class="pcount" id="nbtInfo">未选中方块</div>
       <span id="nbtCount" class="hidden"></span>
+    </div>
+
+    <div class="dbody" data-pane="text">
+      <div>
+        <label class="fld"><span>文字（中文 / 英文 / 数字，可换行）</span>
+          <textarea id="txtIn" rows="3" spellcheck="false" placeholder="红石&#10;HStool">红石</textarea>
+        </label>
+        <div class="grid2">
+          <label class="fld"><span>字高（方块）</span><input type="number" id="txtH" value="20" min="4" max="96"></label>
+          <label class="fld"><span>厚度（层）</span><input type="number" id="txtD" value="1" min="1" max="16"></label>
+        </div>
+        <label class="fld"><span>方块</span>
+          <select id="txtBlock">
+            <option value="white_concrete">白色混凝土</option>
+            <option value="black_concrete">黑色混凝土</option>
+            <option value="red_concrete">红色混凝土</option>
+            <option value="quartz_block">石英块</option>
+            <option value="smooth_quartz">平滑石英</option>
+            <option value="gold_block">金块</option>
+            <option value="glowstone">萤石</option>
+            <option value="sea_lantern">海晶灯</option>
+            <option value="stone">石头</option>
+            <option value="oak_planks">橡木木板</option>
+            <option value="iron_block">铁块</option>
+            <option value="__brush">用方块库里的画笔</option>
+          </select>
+        </label>
+        <button class="bt pri" id="btnText" style="width:100%;height:34px;justify-content:center">生成结构</button>
+        <button class="bt" id="btnTextDl" style="width:100%;height:32px;justify-content:center;margin-top:8px">生成并下载 .mcstructure</button>
+        <p class="hintline" style="margin-top:4px">文字先画到画布、再逐像素转成方块（1 方块 = 1 字体像素）。中文用系统字体渲染，「微软雅黑 / 苹方」的笔画会如实变成方块。</p>
+        <p class="hintline">生成后可以直接在导出面板存成 .mcstructure，也可以接着用放置/删除改。</p>
+      </div>
     </div>
 
     <div class="dbody" data-pane="export">
@@ -1334,7 +1374,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 
   /* ═════════════════ 左侧抽屉 ═════════════════ */
   var drawer = $('#drawer'), dTitle = $('#dTitle');
-  var PANE_NAME = { file: '文件', picker: '方块库', export: '导出' };
+  var PANE_NAME = { file: '文件', picker: '方块库', text: '文字结构', export: '导出' };
   function openDrawer(pane) {
     $$('.dbody', drawer).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === pane); });
     dTitle.textContent = PANE_NAME[pane] || '';
@@ -1350,6 +1390,78 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
   $('#btnFile').addEventListener('click', function () { toggleDrawer('file'); });
   $('#railPick').addEventListener('click', function () { toggleDrawer('picker'); });
   $('#btnExport').addEventListener('click', function () { toggleDrawer('export'); });
+  $('#railText').addEventListener('click', function () { toggleDrawer('text'); });
+
+  /* ═════════════════ 文字 → 方块结构（中英文都支持）═════════════════
+     思路和网页上的「像素字」一样：先把文字画到 canvas，再按 4×4 采样转成方块。
+     中文走系统字体（Windows 微软雅黑 / macOS 苹方 / Linux Noto），笔画该连的连、
+     该断的断；粗体保证小字号下不会细到没像素。 */
+  function textToStruct(text, cap, thick, blockId) {
+    var K = 4;                                     // 每个方块 = 4×4 画布像素（超采样后阈值化）
+    var fontPx = Math.max(4, Math.min(96, cap | 0)) * K;
+    var lines = String(text).replace(/\r/g, '').split('\n');
+    var font = '700 ' + fontPx + 'px "Microsoft YaHei","PingFang SC","Hiragino Sans GB","Noto Sans SC","Source Han Sans SC",sans-serif';
+    var cv = d.createElement('canvas'), cx = cv.getContext('2d');
+    cx.font = font;
+    var wMax = 0;
+    for (var i = 0; i < lines.length; i++) wMax = Math.max(wMax, cx.measureText(lines[i] || '　').width);
+    var lineH = Math.round(fontPx * 1.3);
+    cv.width = Math.ceil(wMax) + fontPx;
+    cv.height = lineH * lines.length + fontPx;
+    cx = cv.getContext('2d');                      // 改尺寸会重置上下文，重新取
+    cx.font = font; cx.textBaseline = 'top'; cx.fillStyle = '#fff';
+    for (var j = 0; j < lines.length; j++) cx.fillText(lines[j], fontPx / 2, fontPx / 2 + lineH * j);
+
+    var img = cx.getImageData(0, 0, cv.width, cv.height).data;
+    var minX = cv.width, maxX = -1, minY = cv.height, maxY = -1;
+    for (var y = 0; y < cv.height; y++) for (var x = 0; x < cv.width; x++) {
+      if (img[(y * cv.width + x) * 4 + 3] > 40) {
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    }
+    if (maxX < 0) return null;
+
+    var bw = Math.ceil((maxX - minX + 1) / K), bh = Math.ceil((maxY - minY + 1) / K);
+    var sx = bw, sy = bh, sz = Math.max(1, Math.min(16, thick | 0));
+    var data = new Uint16Array(sx * sy * sz);
+    for (var by = 0; by < bh; by++) for (var bx = 0; bx < bw; bx++) {
+      var hit = 0;
+      for (var py = 0; py < K; py++) for (var px = 0; px < K; px++) {
+        var qx = minX + bx * K + px, qy = minY + by * K + py;
+        if (qx < cv.width && qy < cv.height && img[(qy * cv.width + qx) * 4 + 3] > 110) hit++;
+      }
+      if (hit * 2 < K * K) continue;                // 覆盖率不到一半就留空，边缘更干净
+      var vy = sy - 1 - by;                         // 画布 y 向下，结构 y 向上
+      for (var z = 0; z < sz; z++) data[(vy * sz + z) * sx + bx] = blockId;
+    }
+    return { sx: sx, sy: sy, sz: sz, data: data };
+  }
+
+  function makeTextStruct() {
+    var txt = $('#txtIn').value;
+    if (!txt.trim()) { toast('先写点文字', 'err'); return null; }
+    var pick = $('#txtBlock').value;
+    var id = pick === '__brush' ? curBlock : BY_NAME[pick];
+    if (!id) id = BY_NAME.stone || 1;
+    if (!id) { toast('没找到这个方块，去方块库选一个吧', 'err'); return null; }
+    var res = textToStruct(txt, +$('#txtH').value || 20, +$('#txtD').value || 1, id);
+    if (!res) { toast('这段文字画不出内容（全是空白？）', 'err'); return null; }
+    applyStruct(res);
+    $('#docName').textContent = '文字：' + txt.split('\n')[0].slice(0, 16);
+    closeDrawer();
+    toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + countBlocks() + ' 个方块', 'ok');
+    return res;
+  }
+  $('#btnText').addEventListener('click', makeTextStruct);
+  $('#btnTextDl').addEventListener('click', function () {
+    if (!makeTextStruct()) return;
+    try {
+      var out = buildMc();
+      saveBlob(out.bytes, 'text-' + S.sx + 'x' + S.sy + 'x' + S.sz + '.mcstructure');
+      toast('已下载 .mcstructure（' + out.palCount + ' 种方块状态）', 'ok');
+    } catch (err) { toast('导出失败：' + err.message, 'err'); }
+  });
   d.addEventListener('keydown', function (e) { if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer(); });
 
   /* ═════════════════ 模式 ═════════════════ */
@@ -1736,7 +1848,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
     $('#guide').classList.add('hidden');
     var nEnt = Object.keys(S.pdata).length;
     if (nEnt) showBanner('这个结构带 <b>' + nEnt + '</b> 个方块实体（命令方块 / 箱子 / 告示牌…），切到 <b>方块数据</b> 模式点选即可查看和修改它们的 NBT。');
-    else if (Math.max(S.sx, S.sy, S.sz) > 48 || S.data.length > 110000)
+    else if (S.data.length > 160000)
       showBanner('这个结构比较大（' + S.sx + '×' + S.sy + '×' + S.sz + '），渲染可能略卡；编辑时只重建所在分区，一般仍然流畅。');
   }
   function showBanner(html) {
