@@ -19,8 +19,8 @@
   --line:#272d1f;--line-hi:#3a4231;
   --ac:#a8dd4f;--ac-d:#82bb31;--ac-s:rgba(168,221,79,.13);
   --warn:#e3b33e;--dgr:#e26350;
-  --rail:56px;--drawer:326px;--top:46px;--st:30px;
-  --r:6px;
+  --top:46px;--st:30px;
+  --r:6px;--dh:236px;
   --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,monospace;
   --ui:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif;
   --ease:cubic-bezier(.22,1,.36,1);
@@ -74,29 +74,7 @@ img{image-rendering:pixelated}
 .bt svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── 主区 ─────────────────────────────────────────────────────── */
-.work{flex:1;display:flex;min-height:0;position:relative}
-
-/* 图标栏 */
-.rail{
-  flex:none;width:var(--rail);display:flex;flex-direction:column;align-items:center;gap:1px;
-  padding:7px 0 9px;background:var(--panel);border-right:1px solid var(--line);z-index:16;
-}
-.ri{
-  position:relative;width:38px;height:38px;display:grid;place-items:center;border-radius:var(--r);
-  color:var(--dim);transition:background .14s var(--ease),color .14s var(--ease);
-}
-.ri:hover{background:var(--panel2);color:var(--ink)}
-.ri.on{color:var(--ac);background:var(--ac-s)}
-.ri.on::before{content:"";position:absolute;left:-9px;top:10px;bottom:10px;width:2px;border-radius:2px;background:var(--ac)}
-.ri svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.rsep{width:24px;height:1px;background:var(--line);margin:6px 0}
-.rail .sp{flex:1}
-.rail .badge{
-  position:absolute;top:3px;right:3px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;
-  display:none;place-items:center;font:600 9.5px/15px var(--mono);
-  background:var(--ac);color:#12160c;
-}
-.rail .badge.show{display:grid}
+.work{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
 
 /* 视口 */
 .stage{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;position:relative;background:#0c0f09}
@@ -136,26 +114,38 @@ img{image-rendering:pixelated}
 .statusbar b{color:var(--dim);font-weight:600}
 .statusbar .it.blk b{color:var(--ac-d)}
 
-/* ── 抽屉 ─────────────────────────────────────────────────────── */
-.drawer{
-  position:absolute;left:var(--rail);top:0;bottom:var(--st);width:var(--drawer);z-index:14;
-  display:flex;flex-direction:column;overflow:hidden;
-  background:var(--panel);border-right:1px solid var(--line-hi);
-  box-shadow:22px 0 48px rgba(0,0,0,.5);
-  transform:translateX(-8px);opacity:0;pointer-events:none;
-  transition:transform .2s var(--ease),opacity .16s var(--ease);
+/* ── 底部常驻面板 ─────────────────────────────────────────────── */
+.dock{
+  flex:none;display:flex;flex-direction:column;height:var(--dh);min-height:0;
+  background:var(--panel);border-top:1px solid var(--line-hi);z-index:16;
+  box-shadow:0 -14px 34px rgba(0,0,0,.45);
+  transition:height .18s var(--ease);
 }
-.drawer.open{transform:none;opacity:1;pointer-events:auto}
-.dhead{
-  flex:none;height:44px;display:flex;align-items:center;gap:8px;padding:0 8px 0 14px;
+body.dock-min .dock{height:42px}
+.dock-bar{
+  flex:none;height:42px;display:flex;align-items:center;gap:10px;padding:0 10px;
   border-bottom:1px solid var(--line);
 }
-.dhead b{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
-.dhead .x{margin-left:auto;width:26px;height:26px;border-radius:5px;color:var(--faint);font-size:13px}
-.dhead .x:hover{background:var(--panel2);color:var(--ink)}
-.dbody{flex:1;overflow-y:auto;min-height:0;padding:14px;display:none;flex-direction:column;gap:14px}
-.dbody.on{display:flex}
-.dbody::-webkit-scrollbar{width:9px}
+.dock-bar .sp{flex:1}
+.dock-bar .bt{height:26px;padding:0 10px;font-size:11.5px}
+.seg-mode{flex:none;overflow:hidden}
+.seg-mode button{flex:none;height:26px;padding:0 9px;font-size:11.5px;white-space:nowrap}
+.tabs{display:flex;gap:2px;background:var(--sunk);border:1px solid var(--line);border-radius:6px;padding:2px}
+.tabs button{
+  height:24px;padding:0 12px;border-radius:4px;color:var(--dim);
+  font:inherit;font-size:11.5px;cursor:pointer;transition:background .14s var(--ease),color .14s var(--ease);
+}
+.tabs button:hover{color:var(--ink)}
+.tabs button.on{background:var(--ac-s);color:var(--ac)}
+
+.dock-body{flex:1;min-height:0;display:none}
+.dock-body.open{display:block}
+.dbody{display:none;height:100%;overflow:auto;padding:13px 14px}
+.dbody.on{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 22px;align-content:start}
+.dbody.on>div:not(.plist){max-width:460px}
+.dbody.on[data-pane=picker]{display:flex;flex-direction:column;gap:8px}
+.dbody.on[data-pane=picker] .plist{min-height:150px}
+.dbody::-webkit-scrollbar{width:9px;height:9px}
 .dbody::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px}
 .dbody::-webkit-scrollbar-track{background:transparent}
 
@@ -196,7 +186,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
 /* 方块库 */
 .plist{
   flex:1;min-height:0;overflow-y:auto;margin:0 -4px;padding:2px 4px;
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;align-content:start;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:5px;align-content:start;
 }
 .plist::-webkit-scrollbar{width:9px}
 .plist::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px}
@@ -284,7 +274,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
 
 /* toast */
 #toast{
-  position:fixed;left:50%;bottom:96px;transform:translate(-50%,14px);z-index:60;
+  position:fixed;left:50%;bottom:calc(var(--dh) + 44px);transform:translate(-50%,14px);z-index:60;
   padding:9px 16px;border-radius:6px;font-size:12.5px;font-weight:600;
   background:#e9edde;color:#12160c;opacity:0;pointer-events:none;max-width:80vw;
   transition:opacity .26s var(--ease),transform .26s var(--ease);
@@ -316,16 +306,23 @@ input[type=range]{accent-color:var(--ac);background:transparent}
 .hidden{display:none!important}
 
 @media (max-width:820px){
-  :root{--drawer:290px}
+  :root{--dh:210px}
   .brand span{display:none}
   .docname{display:none}
 }
 @media (max-width:560px){
-  :root{--rail:48px;--drawer:100%}
+  :root{--dh:190px}
   .top{height:44px}
-  .rail{width:var(--rail)}
-  .ri{width:36px;height:36px}
-  .drawer{left:var(--rail);right:0;width:auto}
+  .dock-bar{flex-wrap:wrap;height:auto;gap:6px;padding:6px 8px}
+  .seg-mode{order:1}
+  .dock-bar .sp{order:2;display:block;flex:1}
+  #dockMin{order:2}
+  #btnSelClear{display:none}
+  .seg-mode button{padding:0 8px;font-size:11px}
+  .tabs{order:3;width:100%}
+  .tabs button{flex:1;padding:0 4px;font-size:11px}
+  body.dock-min .dock{height:auto}
+  .dbody.on{grid-template-columns:1fr}
   .nbt{left:8px;right:8px;top:8px;bottom:8px;width:auto}
   .hud{font-size:10px;padding:5px 8px}
   .statusbar .it{padding:0 8px}
@@ -351,47 +348,6 @@ input[type=range]{accent-color:var(--ac);background:transparent}
 </header>
 
 <div class="work">
-  <nav class="rail" aria-label="工具">
-    <button class="ri on-file" id="btnFile" title="文件：打开 / 新建" aria-label="文件">
-      <svg viewBox="0 0 18 18"><path d="M2.5 5.5A1.5 1.5 0 0 1 4 4h3.2L8.8 6H14a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 14 15H4a1.5 1.5 0 0 1-1.5-1.5z"/></svg>
-    </button>
-    <input type="file" id="fileIn" class="hidden" accept=".mcstructure,.schem,.nbt,.json,.litematic">
-
-    <div class="rsep"></div>
-
-    <div id="modeSeg" style="display:contents">
-      <button class="ri on" data-m="orbit" title="查看 · 右键旋转 / 滚轮缩放 · 快捷键 1" aria-label="查看">
-        <svg viewBox="0 0 18 18"><path d="M1.8 9S4.5 4.3 9 4.3 16.2 9 16.2 9 13.5 13.7 9 13.7 1.8 9 1.8 9z"/><circle cx="9" cy="9" r="1.7"/></svg>
-      </button>
-      <button class="ri" data-m="place" title="放置方块 · 快捷键 2" aria-label="放置">
-        <svg viewBox="0 0 18 18"><rect x="2.8" y="2.8" width="12.4" height="12.4" rx="1.6"/><path d="M9 6.2v5.6M6.2 9h5.6"/></svg>
-      </button>
-      <button class="ri" data-m="erase" title="删除方块 · 快捷键 3" aria-label="删除">
-        <svg viewBox="0 0 18 18"><path d="M6.6 13.5 3.2 10a1.4 1.4 0 0 1 0-2l4.6-4.6a1.4 1.4 0 0 1 2 0l3.4 3.4a1.4 1.4 0 0 1 0 2l-3.6 3.6z"/><path d="M7 6.4l4.6 4.6M6 15.5h8.4"/></svg>
-      </button>
-      <button class="ri" data-m="nbt" title="方块数据 · 点选或框选后编辑 NBT · 快捷键 4" aria-label="方块数据">
-        <svg viewBox="0 0 18 18"><path d="M9.6 2.6 2.6 9.6a1 1 0 0 0 0 1.4l3.4 3.4a1 1 0 0 0 1.4 0l7-7V2.6z"/><circle cx="12.4" cy="5.6" r=".9"/></svg>
-      </button>
-    </div>
-
-    <div class="rsep"></div>
-
-    <button class="ri" id="railIcon" title="地图画：把图标 / 图片转成方块画（方向、配料、抖动都可调）" aria-label="地图画">
-      <svg viewBox="0 0 18 18"><path d="M9 2.8 15 6v6l-6 3.2L3 12V6z"/><path d="M3 6l6 3.2L15 6M9 9.2v6"/></svg>
-    </button>
-    <button class="ri" id="railText" title="文字结构：把文字变成方块（中英文都行）" aria-label="文字结构">
-      <svg viewBox="0 0 18 18"><path d="M3.6 4.4h10.8M9 4.4V14M6.4 14h5.2"/></svg>
-    </button>
-    <button class="ri" id="railPick" title="方块库" aria-label="方块库">
-      <svg viewBox="0 0 18 18"><rect x="2.6" y="2.6" width="5" height="5" rx="1"/><rect x="10.4" y="2.6" width="5" height="5" rx="1"/><rect x="2.6" y="10.4" width="5" height="5" rx="1"/><rect x="10.4" y="10.4" width="5" height="5" rx="1"/></svg>
-    </button>
-
-    <span class="sp"></span>
-
-    <button class="ri" id="btnSelClear" title="清空选择" aria-label="清空选择">
-      <svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="6.3"/><path d="M6.9 6.9l4.2 4.2M11.1 6.9l-4.2 4.2"/></svg>
-    </button>
-  </nav>
 
   <div class="stage">
     <div id="view">
@@ -429,16 +385,29 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       <div class="nbt-f" id="nbtFoot"></div>
     </aside>
 
-    <div class="statusbar">
-      <span class="it">尺寸 <b id="stSize">—</b></span>
-      <span class="it">方块 <b id="stCount">0</b></span>
-      <span class="it">指针 <b id="stPos">—</b></span>
-      <span class="it blk" id="stBlock">—</span>
-    </div>
   </div>
 
-  <aside class="drawer" id="drawer">
-    <div class="dhead"><b id="dTitle">文件</b><button class="x" id="dClose" title="收起">✕</button></div>
+  <section class="dock" id="dock">
+    <div class="dock-bar">
+      <div class="seg seg-mode" id="modeSeg" role="group" aria-label="工具模式">
+        <button data-m="orbit" class="on" title="查看 · 快捷键 1">👁 查看</button>
+        <button data-m="place" title="放置方块 · 快捷键 2">⬛ 放置</button>
+        <button data-m="erase" title="删除方块 · 快捷键 3">⬜ 删除</button>
+        <button data-m="nbt" title="方块数据 · 快捷键 4">🏷 数据</button>
+      </div>
+      <div class="tabs" id="dockTabs" role="tablist">
+        <button data-pane="file" class="on">文件</button>
+        <button data-pane="picker">方块库</button>
+        <button data-pane="icon">地图画</button>
+        <button data-pane="text">文字</button>
+        <button data-pane="export">导出</button>
+      </div>
+      <span class="sp"></span>
+      <button class="bt" id="btnSelClear" title="清空选择">清空选择</button>
+      <button class="bt" id="dockMin" title="收起面板（再点任意标签展开）">收起</button>
+      <input type="file" id="fileIn" class="hidden" accept=".mcstructure,.schem,.nbt,.json,.litematic">
+    </div>
+    <div class="dock-body" id="drawer">
 
     <div class="dbody on" data-pane="file">
       <button class="bt pri" id="btnOpen" style="width:100%;height:34px;justify-content:center">选择结构文件…</button>
@@ -602,7 +571,15 @@ input[type=range]{accent-color:var(--ac);background:transparent}
         <p class="hintline">当前视角直接存图，透明背景关掉就是白底。</p>
       </div>
     </div>
-  </aside>
+    </div>
+  </section>
+
+  <div class="statusbar">
+    <span class="it">尺寸 <b id="stSize">—</b></span>
+    <span class="it">方块 <b id="stCount">0</b></span>
+    <span class="it">指针 <b id="stPos">—</b></span>
+    <span class="it blk" id="stBlock">—</span>
+  </div>
 </div>
 
 
@@ -1210,7 +1187,6 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   function setSelection(obj, openPanel) {
     selection = obj || {};
     updateSelVis();
-    if (selKeys().length && drawer && drawer.classList.contains('open')) closeDrawer();
     if (openPanel !== false && selKeys().length) panelOpen = true;
     renderNbtPanel();
   }
@@ -1489,29 +1465,29 @@ input[type=range]{accent-color:var(--ac);background:transparent}
   $('#nbtClose').addEventListener('click', function () { panelOpen = false; renderNbtPanel(); });
   $('#btnSelClear').addEventListener('click', function () { setSelection({}); toast('已清空选择'); });
 
-  /* ═════════════════ 左侧抽屉 ═════════════════ */
-  var drawer = $('#drawer'), dTitle = $('#dTitle');
-  var PANE_NAME = { file: '文件', picker: '方块库', icon: '地图画', text: '文字结构', export: '导出' };
+  /* ═════════════════ 底部常驻面板 ═════════════════
+     以前是左侧抽屉，点几下就自己关掉、很烦。现在钉在底部：切标签只换内容，
+     不会关；只有点「收起」或 Esc 才折成一条 42px 的标题栏。 */
+  var dock = $('#dock'), dockBody = $('#drawer'), curPane = 'file';
   function openDrawer(pane) {
-    $$('.dbody', drawer).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === pane); });
-    dTitle.textContent = PANE_NAME[pane] || '';
-    drawer.classList.add('open');
-    drawer.setAttribute('data-cur', pane);
+    curPane = pane || curPane;
+    $$('.dbody', dockBody).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === curPane); });
+    $$('#dockTabs button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pane') === curPane); });
+    dockBody.classList.add('open');
+    d.body.classList.remove('dock-min');
   }
-  function closeDrawer() { drawer.classList.remove('open'); drawer.removeAttribute('data-cur'); }
-  function toggleDrawer(pane) {
-    if (drawer.classList.contains('open') && drawer.getAttribute('data-cur') === pane) closeDrawer();
-    else openDrawer(pane);
-  }
-  $('#dClose').addEventListener('click', closeDrawer);
-  $('#btnFile').addEventListener('click', function () { toggleDrawer('file'); });
-  $('#railPick').addEventListener('click', function () { toggleDrawer('picker'); });
-  $('#btnExport').addEventListener('click', function () { toggleDrawer('export'); });
-  $('#railText').addEventListener('click', function () { toggleDrawer('text'); });
-  $('#railIcon').addEventListener('click', function () {
-    updateIconName();
-    toggleDrawer('icon');
+  function closeDrawer() { d.body.classList.add('dock-min'); }
+  function toggleDrawer(pane) { openDrawer(pane); }
+  $('#dockMin').addEventListener('click', function () {
+    if (d.body.classList.contains('dock-min')) openDrawer();
+    else closeDrawer();
   });
+  $('#dockTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-pane]');
+    if (b) openDrawer(b.getAttribute('data-pane'));
+  });
+  $('#btnExport').addEventListener('click', function () { openDrawer('export'); });
+  openDrawer('file');
   function updateIconName() {
     var b = curBlock ? BLOCKS[curBlock] : null;
     $('#icName').textContent = b ? (b.n + ' · ' + b.e) : '未选方块';
@@ -1875,7 +1851,6 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       var used = 0, seen = {};
       for (var i = 0; i < idx.length; i++) if (idx[i] >= 0 && !seen[idx[i]]) { seen[idx[i]] = 1; used++; }
       $('#docName').textContent = '地图画 ' + o.W + '×' + o.H + (o.orient === 'flat' ? ' · 平铺' : ' · 立放');
-      closeDrawer();
       toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + countBlocks() + ' 个方块 · ' + used + ' 种颜色', 'ok');
       if (download) {
         try {
@@ -1975,7 +1950,6 @@ input[type=range]{accent-color:var(--ac);background:transparent}
     if (!res) { toast('这段文字画不出内容（全是空白？）', 'err'); return null; }
     applyStruct(res);
     $('#docName').textContent = '文字：' + txt.split('\n')[0].slice(0, 16);
-    closeDrawer();
     toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + countBlocks() + ' 个方块', 'ok');
     return res;
   }
@@ -1988,7 +1962,7 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       toast('已下载 .mcstructure（' + out.palCount + ' 种方块状态）', 'ok');
     } catch (err) { toast('导出失败：' + err.message, 'err'); }
   });
-  d.addEventListener('keydown', function (e) { if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer(); });
+  d.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
 
   /* ═════════════════ 模式 ═════════════════ */
   var mode = 'orbit';
@@ -2350,7 +2324,6 @@ input[type=range]{accent-color:var(--ac);background:transparent}
       else throw new Error('认不出这个格式（支持 .mcstructure / .schem / .nbt）');
       applyStruct(res);
       $('#docName').textContent = file.name;
-      closeDrawer();
       toast('已打开 ' + file.name + (unknownNames ? '（跳过 ' + unknownNames + ' 个未知方块）' : ''), 'ok');
     } catch (err) {
       toast('打开失败：' + err.message, 'err');
