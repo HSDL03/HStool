@@ -2616,6 +2616,55 @@ body.dock-min .dock{height:44px}
   } catch (bootErr) {
     $('#tip').textContent = '启动失败：' + (bootErr && bootErr.message || bootErr);
   }
+
+  /* 调试 / 自动化测试用的只读句柄。
+     页面本来就是纯前端本地工具，暴露这些不涉及任何隐私数据；
+     有了它才能批量验证「每种方块单独渲染是否正常」。 */
+  w.__hsStruct = {
+    blocks: function () { return BLOCKS; },
+    byName: function () { return BY_NAME; },
+    models: function () { return MODELS; },
+    tex: function () { return TEX; },
+    b64: function () { return B64; },
+    kindOf: kindOf,
+    tileURL: tileURL,
+    loadTile: loadTile,
+    /* 把给定方块 id 列表摊成一排，每格独立，用来目视/程序化检查 */
+    showcase: function (ids, perRow) {
+      perRow = perRow || 16;
+      var n = ids.length;
+      var rows = Math.ceil(n / perRow);
+      var sy = rows * 3 + 2;
+      newStruct(perRow + 2, sy, 3);
+      ids.forEach(function (id, i) {
+        var cx = (i % perRow) + 1, cz = 1;
+        var row = Math.floor(i / perRow);
+        var cy = sy - 2 - row * 3;
+        setB(cx, cy, cz, id);
+      });
+      return rebuildAll().then(function () {
+        /* 相机怼近一点，方块才不会小得看不清 */
+        cam.yaw = -0.72; cam.pitch = 0.36;
+        cam.target = [S.sx / 2, sy / 2, S.sz / 2];
+        cam.dist = Math.max(8, S.sx * 0.62);
+        camUpdate();
+        return { sx: S.sx, sy: S.sy, sz: S.sz };
+      });
+    },
+    /* 返回当前结构里每个方块是否产生了几何（顶点数 > 0） */
+    auditGeom: function () {
+      var out = {};
+      var g = {};
+      for (var i = 0; i < S.data.length; i++) {
+        var id = S.data[i];
+        if (!id || out[id] !== undefined) continue;
+        /* 单独铺一块再数顶点，避免邻居剔面干扰 */
+        var kk = kindOf(id);
+        out[id] = kk;
+      }
+      return out;
+    }
+  };
 })();
 </script>
 </body>
