@@ -172,6 +172,18 @@ body.dock-min .dock{height:44px}
 .pitem .en{display:none}
 .pcount{font-family:var(--ui-mono);font-size:10.5px;color:var(--ui-faint);margin-top:6px}
 
+/* 选区批量操作 */
+.selbox{
+  flex:none;margin-top:4px;padding:9px 11px;border-radius:var(--ui-r-sm);
+  background:var(--ui-sunk);border:1px solid var(--ui-line);
+}
+.selbox-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.selbox-h b{font-size:11.5px;font-weight:800;color:var(--ui-dim);letter-spacing:.02em}
+.selbox-h .pcount{margin:0 0 0 auto}
+.selbox-row{display:flex;flex-wrap:wrap;gap:6px}
+.selbox-row .bt{flex:1 1 auto;min-width:88px;height:27px;padding:0 9px;font-size:11px}
+.selbox.disabled{opacity:.45;pointer-events:none}
+
 /* ── 方块数据侧栏 ─────────────────────────────────────────────── */
 .nbt{
   position:absolute;right:11px;top:11px;bottom:11px;width:358px;z-index:12;
@@ -437,6 +449,21 @@ body.dock-min .dock{height:44px}
       <div class="pcount" id="pbInfo">未选画笔</div>
       <div class="pcount" id="nbtInfo">未选中方块</div>
       <span id="nbtCount" class="hidden"></span>
+
+      <!-- 选区批量操作：框选之后直接填 / 换 / 清，不用一格一格点 -->
+      <div class="selbox" id="selBox">
+        <div class="selbox-h">
+          <b>选区</b>
+          <span class="pcount" id="selStat" style="margin:0">未选中</span>
+        </div>
+        <div class="selbox-row">
+          <button class="bt sm" id="selFill" title="把选区里每个格子都换成画笔方块">填充画笔</button>
+          <button class="bt sm" id="selSwap" title="选区里同一种方块统一换成画笔方块">替换同种</button>
+          <button class="bt sm" id="selWalls" title="只保留选区里最外一圈，中间掏空">只留外壳</button>
+          <button class="bt sm dgr" id="selErase" title="清空选区里的方块">清空</button>
+        </div>
+        <p class="hintline" style="margin:6px 0 0">先在「数据」模式（4）里点选 / Shift 多选 / 拖框选出选区，再回来操作。每一步都能 Ctrl+Z 撤销。</p>
+      </div>
     </div>
 
     <div class="dbody" data-pane="icon">
@@ -1442,7 +1469,120 @@ body.dock-min .dock{height:44px}
     updateSelVis();
     if (openPanel !== false && selKeys().length) panelOpen = true;
     renderNbtPanel();
+    updateSelBox();
   }
+
+  /* ═════════════════ 选区批量操作 ═════════════════
+     框选之后要能一把填 / 换 / 掏空，不然只能一格一格点。
+     每个操作都走 beginTx，所以一次批量 = 一步撤销。 */
+  function updateSelBox() {
+    var n = selKeys().length;
+    var st = $('#selStat');
+    if (st) st.textContent = n ? (n + ' 格') : '未选中';
+    var box = $('#selBox');
+    if (box) box.classList.toggle('disabled', n === 0);
+  }
+  function needSel() {
+    var ks = selKeys();
+    if (!ks.length) { toast('先在「数据」模式里选中方块', 'err'); return null; }
+    return ks;
+  }
+  /* 填充：选区内每格都换成画笔方块（含空气格也填） */
+  function selFillBlocks() {
+    var ks = needSel();
+    if (!ks) return;
+    if (!curBlock) return toast('先在方块库里选一个画笔', 'err');
+    beginTx('填充选区');
+    var n = 0;
+    ks.forEach(function (k) {
+      var c = unIdx(k);
+      if (!inB(c[0], c[1], c[2])) return;
+      setB(c[0], c[1], c[2], curBlock);
+      n++;
+    });
+    commitTx();
+    refreshChunksFor(ks);
+    toast('已填充 ' + n + ' 格', 'ok');
+  }
+  /* 替换：只把选区里和「第一个选中方块」同种的格子换成画笔，其余不动 */
+  function selSwapBlocks() {
+    var ks = needSel();
+    if (!ks) return;
+    if (!curBlock) return toast('先在方块库里选一个画笔', 'err');
+    var from = S.data[ks[0]];
+    if (!from) return toast('第一个选中的是空气，换「填充」试试', 'err');
+    if (from === curBlock) return toast('目标方块和画笔是同一个', 'err');
+    beginTx('替换同种');
+    var n = 0;
+    ks.forEach(function (k) {
+      if (S.data[k] !== from) return;
+      var c = unIdx(k);
+      setB(c[0], c[1], c[2], curBlock);
+      n++;
+    });
+    commitTx();
+    refreshChunksFor(ks);
+    toast('已替换 ' + n + ' 格（' + (BLOCKS[from] || {}).n + ' → ' + (BLOCKS[curBlock] || {}).n + '）', 'ok');
+  }
+  /* 只留外壳：把选区包围盒内部（六面都不露头的格子）掏空 */
+  function selKeepShell() {
+    var ks = needSel();
+    if (!ks) return;
+    var minx = 1e9, miny = 1e9, minz = 1e9, maxx = -1e9, maxy = -1e9, maxz = -1e9;
+    ks.forEach(function (k) {
+      var c = unIdx(k);
+      if (c[0] < minx) minx = c[0]; if (c[0] > maxx) maxx = c[0];
+      if (c[1] < miny) miny = c[1]; if (c[1] > maxy) maxy = c[1];
+      if (c[2] < minz) minz = c[2]; if (c[2] > maxz) maxz = c[2];
+    });
+    beginTx('只留外壳');
+    var n = 0;
+    ks.forEach(function (k) {
+      var c = unIdx(k);
+      /* 包围盒的边界格算外壳，留在里面 */
+      if (c[0] === minx || c[0] === maxx || c[1] === miny ||
+        c[1] === maxy || c[2] === minz || c[2] === maxz) return;
+      if (!S.data[k]) return;
+      setB(c[0], c[1], c[2], 0);
+      n++;
+    });
+    commitTx();
+    refreshChunksFor(ks);
+    toast(n ? ('已掏空 ' + n + ' 格内部') : '选区分不出内外圈（可能只有薄薄一层）', n ? 'ok' : 'err');
+  }
+  /* 清空选区 */
+  function selEraseBlocks() {
+    var ks = needSel();
+    if (!ks) return;
+    beginTx('清空选区');
+    var n = 0;
+    ks.forEach(function (k) {
+      if (!S.data[k]) return;
+      var c = unIdx(k);
+      setB(c[0], c[1], c[2], 0);
+      n++;
+    });
+    commitTx();
+    refreshChunksFor(ks);
+    toast('已清空 ' + n + ' 格', 'ok');
+  }
+  /* 批量改完只重建受影响的区块，别整结构重来 */
+  function refreshChunksFor(ks) {
+    S.dirty = {};
+    ks.forEach(function (k) {
+      var c = unIdx(k);
+      if (inB(c[0], c[1], c[2])) touchChunk(c[0], c[1], c[2]);
+    });
+    selection = {};
+    updateSelVis();
+    updateStatus();
+    renderNbtPanel();
+    updateSelBox();
+  }
+  $('#selFill').addEventListener('click', selFillBlocks);
+  $('#selSwap').addEventListener('click', selSwapBlocks);
+  $('#selWalls').addEventListener('click', selKeepShell);
+  $('#selErase').addEventListener('click', selEraseBlocks);
 
   /* ── 框选（屏幕矩形 → 方块中心的投影落点）── */
   var marq = null;
@@ -1515,6 +1655,7 @@ body.dock-min .dock{height:44px}
     $('#nbtInfo').textContent = ks.length
       ? '已选 ' + ks.length + ' 个 · ' + (ks.length === 1 ? (unIdx(ks[0]).join(', ')) : '点单个方块可切到单选')
       : '未选中方块';
+    updateSelBox();          // 选区批量操作区的启用状态跟着选区走
     if (!ks.length) return;
 
     var title = '方块数据';
