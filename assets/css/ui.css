@@ -336,6 +336,8 @@ select optgroup{background:var(--ui-panel);color:var(--ui-faint);font-weight:700
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+/* 两列各自撑满，避免一侧长内容把另一侧拽出大片空白 */
+.cols>*{min-width:0}
 .hintline{margin:-2px 0 0;font-size:11px;line-height:1.7;color:var(--ui-faint)}
 .mono{font-family:var(--ui-mono);font-variant-numeric:tabular-nums}
 .dim{color:var(--ui-dim)}

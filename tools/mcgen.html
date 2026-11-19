@@ -185,6 +185,41 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 }
 .sw.on span{color:var(--ui-dim)}
 
+/* ── 用料清单 ─────────────────────────────────────────────────── */
+/* 右栏两块（可用方块 / 用料清单）自己成一列，各按内容高度排，
+   不会被左边那张很长的参数卡拉出大片空档 */
+.col-stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+.bill{display:flex;flex-direction:column;gap:3px;max-height:326px;overflow:auto;padding-right:3px}
+.bill-row{
+  display:flex;align-items:center;gap:9px;padding:5px 7px;border-radius:var(--ui-r-sm);
+  background:var(--ui-sunk);border:1px solid transparent;
+  transition:border-color .13s var(--ui-ease),background .13s var(--ui-ease);
+}
+.bill-row:hover{border-color:var(--ui-line-hi);background:var(--ui-panel-2)}
+.bill-row img{width:20px;height:20px;flex:none;object-fit:contain;image-rendering:pixelated}
+.bill-row .nm{
+  flex:1;min-width:0;font-size:11.5px;color:var(--ui-dim);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.bill-row .bar{
+  flex:0 0 54px;height:3px;border-radius:2px;background:var(--ui-line);overflow:hidden;
+}
+.bill-row .bar i{display:block;height:100%;border-radius:2px;background:var(--ui-ac-d)}
+.bill-row .n{
+  flex:none;min-width:52px;text-align:right;
+  font-family:var(--ui-mono);font-size:11px;font-variant-numeric:tabular-nums;color:var(--ui-ink);
+}
+.bill-row .st{
+  flex:none;min-width:46px;text-align:right;
+  font-family:var(--ui-mono);font-size:10px;color:var(--ui-faint);
+}
+.bill-total{
+  display:flex;align-items:center;gap:8px;margin-top:7px;padding-top:8px;
+  border-top:1px dashed var(--ui-line);
+  font-family:var(--ui-mono);font-size:10.5px;color:var(--ui-faint);
+}
+.bill-total b{color:var(--ui-dim);font-weight:600}
+
 /* ── 底部操作条 ───────────────────────────────────────────────── */
 .actionbar{
   flex:none;display:flex;align-items:center;gap:8px;padding:10px 16px;
@@ -561,6 +596,8 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
         <p class="hintline">立放 = 一面墙（XY 平面）；平铺 = 铺在地上（XZ 平面）。改参数会自动重算。</p>
       </section>
 
+      <!-- 右栏：可用方块 + 用料清单。两块自己成列，不会跟左边的长参数卡错位 -->
+      <div class="col-stack">
       <section class="card">
         <header><h3>可用方块</h3><span class="cnt" id="msPalCnt">已选 0 种</span></header>
         <p class="hintline" style="margin:0 0 10px">点方块可开关。能用的越少，颜色越统一、越好凑材料。</p>
@@ -576,6 +613,20 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
         </div>
         <div class="swatches" id="msSwatches"></div>
       </section>
+
+      <section class="card" id="miBill">
+        <header><h3>用料清单</h3><span class="cnt" id="mbCnt">还没生成</span></header>
+        <div class="bill" id="mbList">
+          <p class="hintline" style="margin:0">生成一次之后，这里按用量从多到少列出要准备的方块。</p>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="bt sm" id="mbCsv">导出 CSV</button>
+          <button class="bt sm" id="mbCopy">复制清单</button>
+          <span class="sp"></span>
+          <label class="check" style="margin:0"><input type="checkbox" id="mbStacks" checked> 折算成组</label>
+        </div>
+      </section>
+      </div>
     </div>
   </section>
 
@@ -2386,6 +2437,8 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
         used + ' 种颜色 · ΔE ' + de.toFixed(1) +
         (st.lut ? ' · 查表命中 ' + Math.round(st.hits / Math.max(1, st.hits + st.misses) * 100) + '%' : '');
       endPhase('完成 · ' + total.toFixed(0) + ' ms');
+      billData = buildBill(res);
+      renderBill();
       if (download) downloadMap();
       else {
         var fr = $('#msCmp').getBoundingClientRect();
@@ -2464,6 +2517,82 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
     for (var i = 0; i < S.data.length; i++) if (S.data[i]) n++;
     return n;
   }
+
+  /* ═════════════ 用料清单 ═════════════
+     建造地图画真正要准备的是「每种方块几个」。按真实结构里的方块数统计
+     （浮雕会让同一格占多个方块，所以不能拿 W×H×厚度 糊弄）。
+     顺带折算成 64 个一组的整组数，方便算箱子。 */
+  var billData = null;
+  function buildBill(S) {
+    var byId = {};
+    for (var i = 0; i < S.data.length; i++) {
+      var id = S.data[i];
+      if (!id) continue;
+      byId[id] = (byId[id] || 0) + 1;
+    }
+    var rows = Object.keys(byId).map(function (k) {
+      var id = +k, b = BLOCKS[id] || {};
+      return {
+        id: id, n: b.n || ('#' + id), e: b.e || '', c: byId[k],
+        img: tileURL(b.t) || ''
+      };
+    });
+    rows.sort(function (a, b) { return b.c - a.c; });
+    var total = 0;
+    rows.forEach(function (r) { total += r.c; });
+    return { rows: rows, total: total };
+  }
+  function renderBill() {
+    var list = $('#mbList'), cnt = $('#mbCnt');
+    if (!billData || !billData.rows.length) {
+      list.innerHTML = '<p class="hintline" style="margin:0">生成一次之后，这里按用量从多到少列出要准备的方块。</p>';
+      if (cnt) cnt.textContent = '还没生成';
+      return;
+    }
+    var rows = billData.rows, max = rows[0].c || 1;
+    var showStacks = $('#mbStacks').checked;
+    var html = rows.map(function (r) {
+      var pct = Math.round(r.c / max * 100);
+      var stacks = showStacks
+        ? (r.c >= 64 ? (r.c / 64).toFixed(r.c % 64 ? 1 : 0) + ' 组' : r.c + ' 个')
+        : '';
+      return '<div class="bill-row" title="' + esc(r.e || '') + '">' +
+        (r.img ? '<img src="' + r.img + '" alt="" loading="lazy">' : '') +
+        '<span class="nm">' + esc(r.n) + '</span>' +
+        '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
+        '<span class="n">' + fmtInt(r.c) + '</span>' +
+        '<span class="st">' + stacks + '</span></div>';
+    }).join('');
+    var boxes = Math.ceil(billData.total / (27 * 64));
+    html += '<div class="bill-total"><span>合计 <b>' + fmtInt(billData.total) + '</b> 个方块 · ' +
+      '<b>' + rows.length + '</b> 种 · 约 <b>' + boxes + '</b> 个大箱子</span></div>';
+    list.innerHTML = html;
+    if (cnt) cnt.textContent = rows.length + ' 种 · ' + fmtInt(billData.total) + ' 个';
+  }
+  $('#mbStacks').addEventListener('change', renderBill);
+  $('#mbCsv').addEventListener('click', function () {
+    if (!billData || !billData.rows.length) { toast('先点「生成预览」', 'err'); return; }
+    var lines = ['方块,英文 ID,数量,组数'];
+    billData.rows.forEach(function (r) {
+      lines.push([r.n, r.e, r.c, (r.c / 64).toFixed(2)].join(','));
+    });
+    lines.push(['合计', '', billData.total, (billData.total / 64).toFixed(2)].join(','));
+    /* 加 BOM，Excel 打开中文不乱码 */
+    var csv = '\ufeff' + lines.join('\r\n');
+    saveBlob(new TextEncoder().encode(csv), 'mapart-materials.csv', 'text/csv');
+    toast('已导出清单（' + billData.rows.length + ' 种）', 'ok');
+  });
+  $('#mbCopy').addEventListener('click', function () {
+    if (!billData || !billData.rows.length) { toast('先点「生成预览」', 'err'); return; }
+    var txt = billData.rows.map(function (r) {
+      return r.n + ' × ' + r.c + '（' + r.e + '）';
+    }).join('\n') + '\n合计 ' + billData.total + ' 个';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () {
+        toast('已复制用料清单', 'ok');
+      }).catch(function () { toast('复制失败，试试导出 CSV', 'err'); });
+    } else toast('这个浏览器不支持直接复制，试试导出 CSV', 'err');
+  });
 
   /* 设置存取 */
   function persistMap() {
