@@ -114,6 +114,10 @@ body.dock-min .dock{height:44px}
 }
 .dock-bar .sp{flex:1}
 .dock-bar .bt{height:26px;padding:0 10px;font-size:11.5px}
+/* 撤销 / 重做：图标 + 文字，禁用时明显变灰 */
+#btnUndo,#btnRedo{gap:5px}
+#btnUndo svg,#btnRedo svg{width:13px;height:13px}
+#btnUndo:disabled,#btnRedo:disabled{opacity:.3}
 .seg-mode{flex:none;overflow:hidden}
 .seg-mode button{
   flex:none;display:inline-flex;align-items:center;gap:6px;
@@ -392,6 +396,14 @@ body.dock-min .dock{height:44px}
         <button data-pane="export">导出</button>
       </div>
       <span class="sp"></span>
+      <button class="bt" id="btnUndo" title="撤销（Ctrl+Z）" disabled>
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M6.5 4.5 3 8l3.5 3.5"/><path d="M3 8h7.2a4 4 0 0 1 0 8H7"/></svg>
+        撤销
+      </button>
+      <button class="bt" id="btnRedo" title="重做（Ctrl+Shift+Z）" disabled>
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11.5 4.5 15 8l-3.5 3.5"/><path d="M15 8H7.8a4 4 0 0 0 0 8H11"/></svg>
+        重做
+      </button>
       <button class="bt" id="btnSelClear" title="清空选择">清空选择</button>
       <button class="bt" id="dockMin" title="收起面板（再点任意标签展开）">收起</button>
       <input type="file" id="fileIn" class="hidden" accept=".mcstructure,.schem,.nbt,.json,.litematic">
@@ -793,6 +805,7 @@ body.dock-min .dock{height:44px}
     VIEW.addEventListener('pointerup', function (e) {
       if (btn === 0 && mode === 'nbt') marqueeEnd(e);
       if (btn === 0 && mode === 'move') moveEnd();
+      commitTx();               // 一次拖拽 = 一步撤销
       btn = -1;
       try { VIEW.releasePointerCapture(e.pointerId); } catch (err) { }
     });
@@ -811,6 +824,122 @@ body.dock-min .dock{height:44px}
     cam.target[1] = Math.max(0, cam.target[1] + dy * s);
   }
 
+  /* ═════════════════ 撤销 / 重做 ═════════════════
+     按「操作」记账，不是按格子：一次拖拽刷一片、一次框选批量写、
+     一次整体平移，都只算一步，Ctrl+Z 一次退回一步。
+     记录的是每个格子的前后状态（值 + 调色板下标 + 方块实体），
+     回放时只写差异，不整块重存，109 万方块的结构也不会爆内存。 */
+  var undoStack = [], redoStack = [], UNDO_MAX = 60;
+  var tx = null;                    // 当前操作组；null = 没在记录
+
+  function beginTx(label) {
+    if (tx) return tx;              // 已经在记录里就不重复开
+    tx = { label: label || '编辑', cells: Object.create(null), order: [] };
+    return tx;
+  }
+  /* 记一个格子的「原值」，同一格只记第一次（后面都是同一次操作里的覆写） */
+  function txRecord(k) {
+    if (!tx || tx.cells[k]) return;
+    tx.cells[k] = {
+      v: S.data[k], s: S.sidx[k],
+      p: S.pdata[k] ? JSON.parse(JSON.stringify(S.pdata[k])) : null
+    };
+    tx.order.push(k);
+  }
+  function commitTx() {
+    if (!tx) return;
+    var t = tx; tx = null;
+    if (!t.order.length) return;
+    undoStack.push(t);
+    if (undoStack.length > UNDO_MAX) undoStack.shift();
+    redoStack.length = 0;
+    updateUndoUI();
+  }
+  function cancelTx() { tx = null; }
+
+  /* 把一组格子恢复成快照 */
+  function applySnapshot(cells, keys, touch) {
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i], c = cells[k];
+      S.data[k] = c.v;
+      S.sidx[k] = c.s;
+      if (c.p) S.pdata[k] = JSON.parse(JSON.stringify(c.p));
+      else delete S.pdata[k];
+      /* 反推坐标标记分区重建 */
+      var x = k % S.sx, t2 = (k - x) / S.sx, z = t2 % S.sz, y = (t2 - z) / S.sz;
+      touch(x, y, z);
+    }
+  }
+  function snapshotNow(keys) {
+    var out = Object.create(null), order = [];
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      out[k] = {
+        v: S.data[k], s: S.sidx[k],
+        p: S.pdata[k] ? JSON.parse(JSON.stringify(S.pdata[k])) : null
+      };
+      order.push(k);
+    }
+    return { cells: out, order: order };
+  }
+  function undo() {
+    if (!S) return;
+    if (!undoStack.length) { toast('没有可撤销的操作'); return; }
+    commitTx();
+    var t = undoStack.pop();
+    if (t.full) {                       // 整份快照型（移动 / 扩边 / 文字生成）
+      if (!t.after) t.after = captureFull();   // 懒捕获：撤销前的当前状态
+      restoreFull(t.full);
+      redoStack.push({ full: t.after, after: t.full, label: t.label });
+      if (redoStack.length > UNDO_MAX) redoStack.shift();
+      updateUndoUI();
+      toast('撤销：' + t.label);
+      return;
+    }
+    var now = snapshotNow(t.order);
+    applySnapshot(t.cells, t.order, touchChunk);
+    redoStack.push({ label: t.label, cells: now.cells, order: now.order });
+    if (redoStack.length > UNDO_MAX) redoStack.shift();
+    afterHistory(t.label, '撤销');
+  }
+  function redo() {
+    if (!S) return;
+    if (!redoStack.length) { toast('没有可重做的操作'); return; }
+    commitTx();
+    var t = redoStack.pop();
+    if (t.full) {
+      restoreFull(t.full);
+      undoStack.push({ full: t.after, after: t.full, label: t.label });
+      if (undoStack.length > UNDO_MAX) undoStack.shift();
+      updateUndoUI();
+      toast('重做：' + t.label);
+      return;
+    }
+    var now = snapshotNow(t.order);
+    applySnapshot(t.cells, t.order, touchChunk);
+    undoStack.push({ label: t.label, cells: now.cells, order: now.order });
+    afterHistory(t.label, '重做');
+  }
+  function afterHistory(label, what) {
+    S.dirty = {};
+    rebuildAll();
+    updateStatus();
+    renderNbtPanel();
+    updateUndoUI();
+    toast(what + '：' + label);
+  }
+  function updateUndoUI() {
+    var u = $('#btnUndo'), r = $('#btnRedo');
+    if (u) {
+      u.disabled = !undoStack.length;
+      u.title = undoStack.length ? ('撤销：' + undoStack[undoStack.length - 1].label + '（Ctrl+Z）') : '没有可撤销的操作';
+    }
+    if (r) {
+      r.disabled = !redoStack.length;
+      r.title = redoStack.length ? ('重做：' + redoStack[redoStack.length - 1].label + '（Ctrl+Shift+Z）') : '没有可重做的操作';
+    }
+  }
+
   /* ═════════════════ 结构数据 ═════════════════ */
   var S = null;
   function idx(x, y, z) { return (y * S.sz + z) * S.sx + x; }
@@ -819,6 +948,7 @@ body.dock-min .dock{height:44px}
   function setB(x, y, z, v) {
     if (!inB(x, y, z)) return;
     var k = idx(x, y, z);
+    if (tx) txRecord(k);               // 撤销记账：留一份改之前的样子
     S.data[k] = v;
     S.sidx[k] = 65535;                 // 编辑过的格子：导出时按 id 重建调色板项
     if (!v) delete S.pdata[k];          // 擦掉方块 = 连带擦掉它的方块实体
@@ -839,6 +969,8 @@ body.dock-min .dock{height:44px}
     sx = Math.max(1, Math.min(256, sx | 0));
     sy = Math.max(1, Math.min(256, sy | 0));
     sz = Math.max(1, Math.min(256, sz | 0));
+    undoStack.length = 0; redoStack.length = 0; cancelTx();   // 新建 = 新文档
+    updateUndoUI();
     S = {
       sx: sx, sy: sy, sz: sz, data: new Uint16Array(sx * sy * sz), dirty: {},
       sidx: new Uint16Array(sx * sy * sz).fill(65535),
@@ -917,6 +1049,54 @@ body.dock-min .dock{height:44px}
     if (!S || (!ddx && !ddy && !ddz)) return;
     var onlySel = selKeys().length > 0;
 
+    /* 平移可能触发扩边（整块重排、尺寸都变），逐格 diff 没法还原。
+       这里整份快照当一步，直接存数据和调色板下标。 */
+    var before = {
+      sx: S.sx, sy: S.sy, sz: S.sz,
+      data: S.data.slice(), sidx: S.sidx.slice(),
+      pdata: JSON.parse(JSON.stringify(S.pdata))
+    };
+    shiftBlocks0(ddx, ddy, ddz, onlySel);
+    if (before.sx === S.sx && before.sy === S.sy && before.sz === S.sz &&
+      before.data.every(function (v, i) { return v === S.data[i]; })) return;
+    /* 连续按方向键是「一次移动」，别拆成几十步撤销：
+       600ms 内的连续移动并进同一条记录，只保留最早那份 before。 */
+    var now = Date.now();
+    var top = undoStack[undoStack.length - 1];
+    if (moveMergeT && now - moveMergeT < 600 && top && top.mergeMove) {
+      top.after = captureFull();
+    } else {
+      undoStack.push({ full: before, after: captureFull(), label: '移动', mergeMove: true });
+      if (undoStack.length > UNDO_MAX) undoStack.shift();
+    }
+    moveMergeT = now;
+    redoStack.length = 0;
+    updateUndoUI();
+  }
+  var moveMergeT = 0;
+  function captureFull() {
+    return {
+      sx: S.sx, sy: S.sy, sz: S.sz,
+      data: S.data.slice(), sidx: S.sidx.slice(),
+      pdata: JSON.parse(JSON.stringify(S.pdata))
+    };
+  }
+  function restoreFull(sn) {
+    S.sx = sn.sx; S.sy = sn.sy; S.sz = sn.sz;
+    S.data = sn.data.slice();
+    S.sidx = sn.sidx.slice();
+    S.pdata = JSON.parse(JSON.stringify(sn.pdata));
+    S.dirty = {};
+    selection = {};
+    clearMeshes();
+    rebuildAll();
+    updateSelVis();
+    updateStatus();
+    renderNbtPanel();
+  }
+
+  function shiftBlocks0(ddx, ddy, ddz, onlySel) {
+
     function scan() {
       var out = [];
       if (onlySel) {
@@ -946,7 +1126,6 @@ body.dock-min .dock{height:44px}
     var nsz = Math.max(S.sz + oz, maxz + ddz + 1 + oz);
     var grew = (ox || oy || oz || nsx !== S.sx || nsy !== S.sy || nsz !== S.sz);
     if (grew) { growStruct(ox, oy, oz, nsx, nsy, nsz); list = scan(); }
-
     var moved = [];
     for (var i = 0; i < list.length; i++) {
       var k = list[i], c = unIdx(k);
@@ -1207,11 +1386,13 @@ body.dock-min .dock{height:44px}
     var hit = pick(e);
     if (!hit) return;
     if (mode === 'erase') {
+      beginTx('删除方块');
       setB(hit.x, hit.y, hit.z, 0);
     } else if (mode === 'place' && curBlock) {
       var px = hit.x + hit.nx, py = hit.y + hit.ny, pz = hit.z + hit.nz;
       if (!inB(px, py, pz)) return;
       if (getB(px, py, pz)) return;
+      beginTx('放置方块');
       setB(px, py, pz, curBlock);
     }
   }
@@ -1448,7 +1629,17 @@ body.dock-min .dock{height:44px}
     if (!btn) return;
     var act = btn.getAttribute('data-act'), key = btn.getAttribute('data-k'), ks = selKeys();
     if (!ks.length) return;
+    /* NBT 编辑不经过 setB，单独记一步撤销；复制不算改动，不入栈 */
+    var NBT_ACTS = { addbe: '加方块实体', addf: '加字段', delf: '删字段', setall: '写字段', paste: '粘贴 NBT', delp: '删数据' };
+    if (NBT_ACTS[act]) { beginTx(NBT_ACTS[act]); ks.forEach(txRecord); }
+    try {
+      nbtAction(act, key, ks);
+    } finally {
+      if (NBT_ACTS[act]) commitTx();
+    }
+  });
 
+  function nbtAction(act, key, ks) {
     if (act === 'addbe') {
       var b = BLOCKS[S.data[ks[0]]] || {};
       var be = ensureBE(ks[0]);
@@ -1513,7 +1704,7 @@ body.dock-min .dock{height:44px}
       renderNbtPanel();
       toast('已写入 ' + ks.length + ' 个方块', 'ok');
     }
-  });
+  }
 
   /* 单个字段：改完直接生效（失焦 / 回车） */
   $('#nbtFields').addEventListener('change', function (e) {
@@ -1524,7 +1715,10 @@ body.dock-min .dock{height:44px}
     var key = inp.getAttribute('data-k');
     var be = beOf(ks[0]);
     if (!be || !(key in be)) return;
+    beginTx('改字段 ' + key);
+    txRecord(ks[0]);
     be[key] = setVal(be[key], inp.value);
+    commitTx();
     toast('已更新 ' + key, 'ok');
   });
   $('#nbtFields').addEventListener('keydown', function (e) {
@@ -1536,6 +1730,8 @@ body.dock-min .dock{height:44px}
   });
   $('#nbtClose').addEventListener('click', function () { panelOpen = false; renderNbtPanel(); });
   $('#btnSelClear').addEventListener('click', function () { setSelection({}); toast('已清空选择'); });
+  $('#btnUndo').addEventListener('click', undo);
+  $('#btnRedo').addEventListener('click', redo);
 
   /* ═════════════════ 底部常驻面板 ═════════════════
      以前是左侧抽屉，点几下就自己关掉、很烦。现在钉在底部：切标签只换内容，
@@ -1630,7 +1826,7 @@ body.dock-min .dock{height:44px}
     if (!id) { toast('没找到这个方块，去方块库选一个吧', 'err'); return null; }
     var res = textToStruct(txt, +$('#txtH').value || 20, +$('#txtD').value || 1, id, +$('#txtQ').value || 4);
     if (!res) { toast('这段文字画不出内容（全是空白？）', 'err'); return null; }
-    applyStruct(res);
+    applyStruct(res, false);          // 原地换内容，留一步可撤销
     $('#docName').textContent = '文字：' + txt.split('\n')[0].slice(0, 16);
     toast('已生成 ' + res.sx + '×' + res.sy + '×' + res.sz + ' · ' + countBlocks() + ' 个方块', 'ok');
     return res;
@@ -1660,6 +1856,15 @@ body.dock-min .dock{height:44px}
   });
   d.addEventListener('keydown', function (e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    /* 撤销 / 重做：Ctrl+Z，Ctrl+Shift+Z 或 Ctrl+Y */
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+      e.preventDefault();
+      if (e.shiftKey) redo(); else undo();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+      e.preventDefault(); redo(); return;
+    }
     if (e.key === '1') setMode('orbit');
     else if (e.key === '2') setMode('place');
     else if (e.key === '3') setMode('erase');
@@ -2023,7 +2228,19 @@ body.dock-min .dock{height:44px}
       toast('打开失败：' + err.message, 'err');
     }
   }
-  function applyStruct(res) {
+  /* replace=true：换文档（打开文件 / 导入），历史清空
+     replace=false：原地换内容（文字生成），整份快照入撤销栈 */
+  function applyStruct(res, replace) {
+    if (replace !== false) {
+      undoStack.length = 0; redoStack.length = 0; cancelTx();
+      updateUndoUI();
+    } else if (S) {
+      var before = captureFull();
+      undoStack.push({ full: before, after: null, label: '文字生成' });
+      if (undoStack.length > UNDO_MAX) undoStack.shift();
+      redoStack.length = 0;
+      updateUndoUI();
+    }
     S = {
       sx: res.sx, sy: res.sy, sz: res.sz, data: res.data, dirty: {},
       sidx: res.sidx || new Uint16Array(res.sx * res.sy * res.sz).fill(65535),
@@ -2254,7 +2471,7 @@ body.dock-min .dock{height:44px}
     for (var x = 4; x < 12; x++) for (var z = 4; z < 12; z++) setB(x, 0, z, stone);
     for (var x2 = 6; x2 < 10; x2++) for (var z2 = 6; z2 < 10; z2++) setB(x2, 1, z2, glass);
     for (var x3 = 7; x3 < 9; x3++) for (var z3 = 7; z3 < 9; z3++) setB(x3, 2, z3, plank);
-    rebuildAll().then(function () { camUpdate(); });
+    rebuildAll().then(function () { camUpdate(); updateUndoUI(); });
   } catch (bootErr) {
     $('#tip').textContent = '启动失败：' + (bootErr && bootErr.message || bootErr);
   }
