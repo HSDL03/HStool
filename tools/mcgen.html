@@ -138,6 +138,10 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
   padding:0 18px;text-align:center;font-size:11.5px;line-height:1.85;
   color:var(--ui-dim);opacity:.78;
 }
+/* 深度图：单独一块，只在「深度图」视图下显示 */
+.fig-depth{display:none;min-height:300px;margin-top:10px}
+.fig-depth.on{display:flex}
+.fig-depth canvas{image-rendering:pixelated}
 /* 预览区空着时，别让棋盘格看起来像「已经有内容」——压暗一层 */
 .fig:has(canvas[width="0"]),.fig.is-empty{background-color:#050806}
 .fig canvas:not([width]),.fig canvas[width="0"]{display:none}
@@ -410,6 +414,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
       <div class="seg" id="msView" role="group" aria-label="对照方式">
         <button data-v="side" class="on">并排</button>
         <button data-v="res">只看结果</button>
+        <button data-v="depth" title="按浮雕层高画成灰度图：越亮越高">深度图</button>
       </div>
       <span class="sp"></span>
       <div class="seg" id="msZoom" role="group" aria-label="缩放">
@@ -431,6 +436,11 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
         <div class="ph" id="msPh">先选素材，再点「生成预览」</div>
       </figure>
     </div>
+    <figure class="fig fig-depth" id="msFigDepth">
+      <canvas id="msDepth"></canvas>
+      <figcaption>深度图 · 亮 = 高</figcaption>
+      <div class="ph" id="msDepthPh">切到「深度图」并生成后显示</div>
+    </figure>
     <div class="meta" id="msMeta"></div>
 
     <div class="cols">
@@ -2036,6 +2046,43 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
     paintZoom();
   }
 
+  /* 深度图：把每格层高画成灰度（亮 = 高）。
+     调浮雕参数时靠它判断起伏对不对，比盯着结果图猜快得多。 */
+  function paintDepth(depth, W, H) {
+    var cv = $('#msDepth');
+    var ph = $('#msDepthPh');
+    if (!cv) return;
+    if (!depth) {
+      cv.width = cv.height = 0;
+      if (ph) ph.classList.remove('hidden');
+      return;
+    }
+    cv.width = W; cv.height = H;
+    var cx = cv.getContext('2d');
+    var img = cx.createImageData(W, H), p = img.data;
+    var maxD = 1, i;
+    for (i = 0; i < depth.length; i++) if (depth[i] > maxD) maxD = depth[i];
+    for (i = 0; i < W * H; i++) {
+      var d = depth[i] || 0;
+      if (!d) { p[i * 4 + 3] = 0; continue; }
+      /* 最薄层不要全黑，否则看不出「这里是有方块的」 */
+      var g = Math.round(60 + (d / maxD) * 195);
+      p[i * 4] = g; p[i * 4 + 1] = g; p[i * 4 + 2] = g; p[i * 4 + 3] = 255;
+    }
+    cx.putImageData(img, 0, 0);
+    if (ph) ph.classList.add('hidden');
+    paintZoom();
+  }
+  /* 视图切换：side / res / depth，顺便决定哪块画布可见 */
+  function applyView() {
+    var isDepth = mapView === 'depth';
+    $('#msCmp').style.display = isDepth ? 'none' : '';
+    $('#msFigSrc').classList.toggle('hidden', mapView === 'res');
+    $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
+    $('#msFigDepth').classList.toggle('on', isDepth);
+    paintZoom();
+  }
+
   /* 缩放只改 CSS 尺寸，位图不重绘 */
   function paintZoom() {
     $$('.fig canvas').forEach(function (cv) {
@@ -2058,9 +2105,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
     if (!b) return;
     mapView = b.getAttribute('data-v');
     $$('#msView button').forEach(function (x) { x.classList.toggle('on', x === b); });
-    $('#msFigSrc').classList.toggle('hidden', mapView === 'res');
-    $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
-    paintZoom();
+    applyView();
     persistMap();
   });
   $('#msZoom').addEventListener('click', function (e) {
@@ -2439,6 +2484,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
       endPhase('完成 · ' + total.toFixed(0) + ' ms');
       billData = buildBill(res);
       renderBill();
+      paintDepth(depth, o.W, o.H);
       if (download) downloadMap();
       else {
         var fr = $('#msCmp').getBoundingClientRect();
@@ -2687,8 +2733,6 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
       if (m.view) {
         mapView = m.view;
         $$('#msView button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === mapView); });
-        $('#msFigSrc').classList.toggle('hidden', mapView === 'res');
-        $('#msCmp').style.gridTemplateColumns = mapView === 'res' ? '1fr' : '';
       }
     }
     syncSSState();
@@ -3385,6 +3429,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
   try {
     paintUser();
     applyPrefs();
+    applyView();
     if (prefs.iconBlock && BLOCKS[prefs.iconBlock]) {
       $('#icName').textContent = nameOf(prefs.iconBlock) + ' · ' + (BLOCKS[prefs.iconBlock] || {}).e;
     }
