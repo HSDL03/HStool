@@ -417,6 +417,31 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
             <input type="range" id="miAmt" min="0" max="200" value="70">
           </label>
         </div>
+
+        <details class="adv" id="miDepthAdv">
+          <summary>浮雕 · 让厚度有起伏</summary>
+          <p class="sub">层高来源</p>
+          <label class="fld"><span>怎么算每格的深度</span>
+            <div class="seg" id="miDepthMode">
+              <button data-v="flat" class="on" title="整块一样厚，就是一块实心板">等厚</button>
+              <button data-v="luma" title="亮的凸出来、暗的凹进去，适合照片和风景">按亮度</button>
+              <button data-v="radial" title="中心高、四周低，做出穹顶感">中凸</button>
+              <button data-v="edge" title="四周高、中心低，像一个相框">围边</button>
+            </div>
+          </label>
+          <div class="grid2">
+            <label class="fld"><span>起伏强度 <b id="miDepthMixLab">100%</b></span>
+              <input type="range" id="miDepthMix" min="0" max="100" value="100">
+            </label>
+            <label class="fld"><span>最薄留几层</span>
+              <input type="number" id="miDepthMin" value="1" min="1" max="8">
+            </label>
+          </div>
+          <label class="check"><input type="checkbox" id="miDepthInv"> 反向（凹变凸）</label>
+          <label class="check" style="margin-bottom:0"><input type="checkbox" id="miDepthNorm" checked> 自动拉满对比度（低对比度的图也能看出层次）</label>
+          <p class="hintline">厚度 1 层时浮雕不起作用。立放时深度往画面里面退，平铺时往上垒。</p>
+        </details>
+
         <label class="fld"><span>抖动算法</span>
           <select id="miDither">
             <optgroup label="不抖动">
@@ -1392,22 +1417,100 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
     return order.length ? order : pal;
   }
 
-  /* 索引图 → 结构（统一线性下标 (y·sz+z)·sx+x，导出时对称反写） */
-  function structFromMap(idx, W, H, pal, thick, orient) {
-    var flat = orient === 'flat';
-    var sx = W, sy = flat ? thick : H, sz = flat ? H : thick;
+  /* ═════════════ 深度图（浮雕用的每格层高）═════════════
+     返回 Int16Array，每格 1~maxD 层。四种来源：
+       flat    一律 maxD —— 老行为，一块实心板
+       luma    按亮度：亮的凸出来，暗的凹进去
+       radial  中心高、边缘低（穹顶）
+       edge    边缘高、中间低（相框）
+     depthMix 0~100 是在「均匀」和「起伏」之间插值，不够会至少留 1 层。 */
+  function buildDepth(idx, px, W, H, o) {
+    var maxD = Math.max(1, Math.min(8, o.thick | 0) || 1);
+    var out = new Int16Array(W * H);
+    var mode = o.depthMode || 'flat';
+    var i, k;
+
+    if (mode === 'flat' || maxD === 1) {
+      for (i = 0; i < W * H; i++) out[i] = idx[i] < 0 ? 0 : maxD;
+      return out;
+    }
+
+    /* 先把每格的 0~1 起伏算出来 */
+    var raw = new Float32Array(W * H);
+    if (mode === 'luma') {
+      for (i = 0; i < W * H; i++) {
+        if (idx[i] < 0) { raw[i] = 0; continue; }
+        var p4 = i * 4;
+        /* 感知亮度：绿权重高，跟眼睛看到的一致 */
+        raw[i] = (0.299 * px[p4] + 0.587 * px[p4 + 1] + 0.114 * px[p4 + 2]) / 255;
+      }
+    } else if (mode === 'radial' || mode === 'edge') {
+      var cxp = (W - 1) / 2, cyp = (H - 1) / 2;
+      var rad = Math.max(1, Math.hypot(cxp, cyp));
+      for (i = 0; i < W * H; i++) {
+        if (idx[i] < 0) { raw[i] = 0; continue; }
+        var x = i % W, y = (i - x) / W;
+        var d = Math.hypot(x - cxp, y - cyp) / rad;      // 0 = 中心，1 = 角落
+        raw[i] = mode === 'radial' ? 1 - d : d;
+      }
+    }
+
+    /* 归一化到满量程：不然低对比度的图几乎看不出起伏 */
+    if (o.depthNorm !== false) {
+      var lo = 1, hi = 0, any = false;
+      for (i = 0; i < W * H; i++) {
+        if (idx[i] < 0) continue;
+        any = true;
+        if (raw[i] < lo) lo = raw[i];
+        if (raw[i] > hi) hi = raw[i];
+      }
+      if (any && hi > lo) {
+        var span = hi - lo;
+        for (i = 0; i < W * H; i++) if (idx[i] >= 0) raw[i] = (raw[i] - lo) / span;
+      }
+    }
+
+    /* depthMix：0 = 全平，100 = 全起伏 */
+    var mix = o.depthMix == null ? 100 : Math.max(0, Math.min(100, +o.depthMix)) / 100;
+    var invert = o.depthInvert ? 1 : 0;
+    var lo2 = o.depthMin == null ? 1 : Math.max(1, Math.min(maxD, o.depthMin | 0));
+    for (i = 0; i < W * H; i++) {
+      if (idx[i] < 0) { out[i] = 0; continue; }
+      var v = invert ? 1 - raw[i] : raw[i];
+      var layers = 1 + v * mix * (maxD - 1);
+      k = Math.round(layers);
+      if (k < lo2) k = lo2;
+      if (k > maxD) k = maxD;
+      out[i] = k;
+    }
+    return out;
+  }
+
+  /* 索引图 + 深度图 → 结构（统一线性下标 (y·sz+z)·sx+x，导出时对称反写）
+     orient=wall：画面立在 XY 平面，厚度往 +Z 长
+     orient=flat：画面铺在 XZ 平面，厚度往 +Y 长（往上垒，不会陷进地里） */
+  function structFromMap(idx, W, H, pal, o) {
+    var flat = o.orient === 'flat';
+    var maxD = Math.max(1, Math.min(8, o.thick | 0) || 1);
+    var sx = W, sy = flat ? maxD : H, sz = flat ? H : maxD;
     var data = new Uint16Array(sx * sy * sz);
     var sidx = new Uint16Array(sx * sy * sz).fill(65535);
+    var depth = o.depth;
     for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
       var k = idx[y * W + x];
       if (k < 0) continue;
       var id = pal[k].id;
       if (!id) continue;
+      var d = depth ? depth[y * W + x] : maxD;
+      if (d <= 0) continue;
+      if (d > maxD) d = maxD;
       if (flat) {
-        for (var t2 = 0; t2 < thick; t2++) data[(t2 * sz + y) * sx + x] = id;
+        /* 从 y=0 往上垒 d 层 */
+        for (var t2 = 0; t2 < d; t2++) data[(t2 * sz + y) * sx + x] = id;
       } else {
+        /* 墙：z=0 是最前面，越往后越深；和原来一样从 vy 行开始 */
         var vy = H - 1 - y;
-        for (var z = 0; z < thick; z++) data[(vy * sz + z) * sx + x] = id;
+        for (var z = 0; z < d; z++) data[(vy * sz + z) * sx + x] = id;
       }
     }
     return { sx: sx, sy: sy, sz: sz, data: data, sidx: sidx, pal: [{ name: 'air', states: {} }], pdata: {} };
@@ -1947,7 +2050,33 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
     markDirty();
   });
   $('#miDither').addEventListener('change', markDirty);
-  $('#miD').addEventListener('input', markDirty);
+  $('#miD').addEventListener('input', function () { syncDepthState(); markDirty(); });
+
+  /* 浮雕参数 */
+  var miDepth = 'flat';
+  $('#miDepthMode').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    miDepth = b.getAttribute('data-v');
+    $$('#miDepthMode button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    markDirty();
+  });
+  bindRange('#miDepthMix', '#miDepthMixLab', function (v) { return v + '%'; });
+  ['#miDepthMin', '#miDepthInv', '#miDepthNorm'].forEach(function (s) {
+    $(s).addEventListener('change', markDirty);
+  });
+  /* 厚度 1 层时浮雕没有意义，直接把整块置灰 */
+  function syncDepthState() {
+    var t = Math.max(1, Math.min(8, +$('#miD').value || 1));
+    var off = t <= 1;
+    var box = $('#miDepthAdv');
+    if (!box) return;
+    box.style.opacity = off ? '.45' : '';
+    box.style.pointerEvents = off ? 'none' : '';
+    var mi = $('#miDepthMin');
+    mi.setAttribute('max', String(t));
+    if (+mi.value > t) mi.value = t;
+  }
   $('#miW').addEventListener('input', function () { if ($('#miLock').checked) syncAspect(); markDirty(); });
   $('#miH').addEventListener('input', markDirty);
   $('#miLock').addEventListener('change', function () { if ($('#miLock').checked) syncAspect(); markDirty(); });
@@ -2091,7 +2220,13 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
       clamp: +$('#miClamp').value,
       serp: $('#miSerp').checked,
       seed: +$('#miSeed').value || 0,
-      lut: miLut === '1'
+      lut: miLut === '1',
+      /* 浮雕 */
+      depthMode: miDepth,
+      depthMix: +$('#miDepthMix').value || 0,
+      depthMin: +$('#miDepthMin').value || 1,
+      depthInvert: $('#miDepthInv').checked,
+      depthNorm: $('#miDepthNorm').checked
     };
   }
   /* 预处理结果按参数指纹缓存：只改抖动/色距时直接复用，省掉重新缩放 */
@@ -2134,9 +2269,12 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
       var m = getMatcher(pal, o.metric, o.lut);
       var idx = quantize(px, o.W, o.H, m, o);
       var t2 = performance.now();
-      var res = structFromMap(idx, o.W, o.H, pal, o.thick, o.orient);
+      var depth = buildDepth(idx, px, o.W, o.H, o);
+      var res = structFromMap(idx, o.W, o.H, pal, {
+        orient: o.orient, thick: o.thick, depth: depth
+      });
       var t3 = performance.now();
-      mapLast = { idx: idx, W: o.W, H: o.H, pal: pal, res: res, opts: o };
+      mapLast = { idx: idx, W: o.W, H: o.H, pal: pal, res: res, opts: o, depth: depth };
       paintResult(idx, o.W, o.H, pal);
 
       var used = 0, seen = {}, filled = 0, i;
@@ -2150,9 +2288,28 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
       var de = meanDeltaE(px, idx, o.W, o.H, pal);
       var st = m.stats();
       var total = t3 - t0;
+      /* 浮雕：实际方块数、层高区间 */
+      var realBlocks = countStruct(res);
+      var dLo = 0, dHi = 0, dSum = 0, dN = 0;
+      if (depth) {
+        for (i = 0; i < depth.length; i++) {
+          var dv = depth[i];
+          if (!dv) continue;
+          if (!dLo || dv < dLo) dLo = dv;
+          if (dv > dHi) dHi = dv;
+          dSum += dv; dN++;
+        }
+      }
+      var depthTxt = '';
+      if (o.depthMode && o.depthMode !== 'flat' && o.thick > 1) {
+        depthTxt = '<span title="每格的实际层数区间，平均 ' +
+          (dN ? (dSum / dN).toFixed(2) : '0') + ' 层">浮雕 <b>' + dLo + '~' + dHi +
+          '</b> 层 · 实占 <b>' + fmtInt(realBlocks) + '</b> 方块</span>';
+      }
       $('#msMeta').innerHTML =
         '<span><b>' + o.W + ' × ' + o.H + '</b> 方块</span>' +
-        '<span><b>' + fmtInt(blocks) + '</b> 个方块</span>' +
+        '<span><b>' + fmtInt(realBlocks) + '</b> 个方块</span>' +
+        depthTxt +
         '<span><b>' + used + '</b> 种颜色</span>' +
         '<span title="结果与素材低通后的平均 CIELAB 色差，越低越接近原图">色差 <b>' + de.toFixed(2) + '</b></span>' +
         '<span>结构 <b>' + res.sx + '×' + res.sy + '×' + res.sz + '</b></span>' +
@@ -2268,6 +2425,9 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
       metric: $('#miMetric').value, maxCol: +$('#miMaxCol').value || 0,
       alpha: +$('#miAlpha').value, clamp: +$('#miClamp').value,
       serp: $('#miSerp').checked, seed: +$('#miSeed').value || 0, lut: miLut,
+      depthMode: miDepth, depthMix: +$('#miDepthMix').value || 0,
+      depthMin: +$('#miDepthMin').value || 1,
+      depthInv: $('#miDepthInv').checked, depthNorm: $('#miDepthNorm').checked,
       prof: $('#miProf').textContent
     };
     savePrefs();
@@ -2307,6 +2467,15 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
         $('#miProf').textContent = m.prof;
         $$('#miPresets button').forEach(function (x) { x.classList.toggle('on', x.textContent === m.prof); });
       }
+      /* 浮雕 */
+      if (m.depthMode && /^(flat|luma|radial|edge)$/.test(m.depthMode)) {
+        miDepth = m.depthMode;
+        $$('#miDepthMode button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === miDepth); });
+      }
+      if (typeof m.depthMix === 'number') { $('#miDepthMix').value = m.depthMix; $('#miDepthMixLab').textContent = m.depthMix + '%'; }
+      if (typeof m.depthMin === 'number') $('#miDepthMin').value = m.depthMin;
+      if (typeof m.depthInv === 'boolean') $('#miDepthInv').checked = m.depthInv;
+      if (typeof m.depthNorm === 'boolean') $('#miDepthNorm').checked = m.depthNorm;
       if (m.orient === 'wall' || m.orient === 'flat') {
         miOrient = m.orient;
         $$('#miOrient button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === miOrient); });
@@ -2338,6 +2507,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
       }
     }
     syncSSState();
+    syncDepthState();
     if (prefs.iconBlock && BLOCKS[prefs.iconBlock]) {
       iconBlockId = prefs.iconBlock;
       $('#icName').textContent = nameOf(iconBlockId) + ' · ' + (BLOCKS[iconBlockId] || {}).e;
