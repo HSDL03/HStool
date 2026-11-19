@@ -37,7 +37,7 @@
 
   /* ─────────────────────────── 主题 ─────────────────────────────── */
   var THEMES = [
-    { id: 'mc-wiki', name: '🟩 MC Wiki', desc: '我的世界中文 Wiki', colors: ['#3d521f', '#fffdf5', '#56682c'], shape: 'square' },
+    { id: 'mc-wiki', name: '🟩 深色终端', desc: '墨绿荧光，默认皮肤', colors: ['#5df08d', '#070a08', '#2fbf66'], shape: 'square' },
     { id: 'mc-night', name: '⬛ MC 夜晚', desc: 'Minecraft 夜间', colors: ['#8ec44a', '#1a1a1a', '#3d521f'], shape: 'square' },
     { id: 'mc-nether', name: '🔥 MC 下界', desc: '地狱岩浆风', colors: ['#ff6030', '#1a0a0a', '#8a2010'], shape: 'lava' },
     { id: 'mc-end', name: '🌌 MC 末地', desc: '末地虚空紫', colors: ['#a060ff', '#0f0a1a', '#4a2080'], shape: 'spark' },

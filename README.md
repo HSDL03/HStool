@@ -61,7 +61,7 @@ python -m http.server 8000     # 或 npx serve .
 | --- | --- |
 | 加一个小工具 | [`tools/`](tools) + [`data/tools-data.json`](data/tools-data.json) |
 | 加一个整站页面 | [`pages/`](pages) |
-| 改主题配色 | [`assets/css/core.css`](assets/css/core.css) 顶部的主题令牌 |
+| 改主题配色 | [`assets/css/core.css`](assets/css/core.css) 顶部的主题令牌（新页面看 [`assets/css/ui.css`](assets/css/ui.css)） |
 | 改公共能力 | [`assets/js/core.js`](assets/js/core.js) |
 | 改数据内容 | [`pages/admin.html`](pages/admin.html)（网页后台）或直接编辑 JSON |
 
@@ -75,7 +75,8 @@ python -m http.server 8000     # 或 npx serve .
 ├─ README.md
 │
 ├─ assets/
-│  ├─ css/core.css         设计系统：主题令牌 + 通用组件（.tool/.panel/.fld/.btn…）
+│  ├─ css/ui.css           共享界面层：深色终端令牌 + 新版组件（首页 / mcgen / structure 用）
+│  ├─ css/core.css         老版设计系统：主题令牌 + 通用组件（.tool/.panel/.fld/.btn…）
 │  ├─ js/core.js           主题引擎 / 命令面板 / 装饰背景 / Toast / 数据三级回落
 │  ├─ vendor/              本地化的第三方库（three.js、qrcode.js），缺失才回落 CDN
 │  ├─ mc-items-data.js     方块 / 物品 / 贴图索引（1164 方块 · 748 物品 · 1589 图集格）
@@ -269,12 +270,24 @@ cd offline && npm install && npm run dist   # → offline/dist/HStool-Offline-<�
 
 ## 视觉与主题
 
-- 主色继承 MC Wiki 风格：米黄纸底 `#fffdf5` + 橄榄绿 `#3d521f`，2px 描边、硬投影、方块化圆角；
-  首页另行采用浅色科技风（`#f6f8fb` 底 + 蓝紫点缀）。
-- 内置 8 套主题：MC Wiki / 夜晚 / 下界 / 末地 / 樱花 / 海洋 / GitHub 浅色 / 深色，外加「跟随系统」。
+- **统一深色终端皮肤**：近黑底 `#070a08` + 荧光绿 `#5df08d`，细边框、柔和外发光、等宽字体做标签与数值。
+  首页、`tools/mcgen.html`、`tools/structure.html` 由共享层 `assets/css/ui.css` 驱动；
+  其余页面走 `core.css`，默认令牌同样是这套深色终端，所以整站观感一致。
+- 想换风味就切主题 —— 内置 11 套：**深色终端（默认）** / MC 夜晚 / 下界 / 末地 / 樱花 / 海洋 /
+  牛皮纸 / 薰衣草 / 午夜靛 / GitHub 浅色 / GitHub 暗色，外加「跟随系统」。
 - 主题存 `localStorage: hs-theme`（兼容旧键 `wiki-theme`），切主题只改 `<html data-theme>`。
 - 页面里**只用 CSS 变量**（`--bg / --bd / --ac / --text / --muted …`），写死颜色换主题就会花。
 - 动效遵循系统「减弱动态效果」；触屏设备自动关掉鼠标跟随光晕这类桌面专属效果。
+
+### 两层样式怎么选
+
+| 样式层 | 谁在用 | 说明 |
+| --- | --- | --- |
+| `assets/css/ui.css` | 首页 + 两个在维护的工具页 | 新版组件：`.ui-top` / `.ui-brand` / `.bt` / `.seg` / `.card` / `.fld` / `#toast`，尺寸只有 28/32/36 三档 |
+| `assets/css/core.css` | 其余工具 / 游戏 / pages | 老版组件：`.topbar` / `.btn` / `.chip` / `.panel` / `.fld`，令牌与 `ui.css` 同色系 |
+
+新建页面挑一层就好，别混用；`ui.css` 只给重写过的页面引，互不影响。
+
 
 ## 快捷键
 

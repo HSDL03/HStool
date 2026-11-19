@@ -5,28 +5,31 @@
    ========================================================================== */
 
 /* ── 主题令牌 ─────────────────────────────────────────────────────────── */
+/* 默认皮肤已改成「深色终端」：近黑底 + 荧光绿，和首页 / mcgen / 结构处理器同一套。
+   墨绿贯穿所有主题，其余的樱花 / 海洋 / 牛皮纸 / 薰衣草 / 午夜靛保留，
+   想换风味随时切。 */
 :root,[data-theme="mc-wiki"]{
-  --bg:#fffdf5;--bg2:#f4f0e0;--bg3:#e8e2cc;--bg4:#dcd5b8;
-  --text:#1f1f1f;--muted:#5c5c5c;--faint:#8a8a7a;
-  --bd:#a8a89a;--bd2:#4a4a3a;--bd-soft:rgba(74,74,58,.16);
-  --ac:#3d521f;--acs:#e0e8d0;--ac2:#7a9c3c;
-  --ok:#2d7a2d;--warn:#b08800;--dgr:#a02020;
-  --sh:2px 2px 0 rgba(0,0,0,.2);
-  --sh-1:0 1px 2px rgba(0,0,0,.06);
-  --sh-2:0 4px 14px rgba(0,0,0,.08);
-  --sh-3:0 18px 40px rgba(0,0,0,.16);
-  --r:2px;--r-lg:4px;
-  --bevel:inset -1px -1px 0 rgba(0,0,0,.15),inset 1px 1px 0 rgba(255,255,255,.7);
-  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.15),inset -1px -1px 0 rgba(255,255,255,.7);
-  --font:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
-  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Courier New",monospace;
-  --blob1:rgba(61,82,31,.13);--blob2:rgba(106,140,60,.09);--blob3:rgba(180,150,80,.07);
-  --grid:rgba(61,82,31,.04);
-  --p1:61,82,31;--p2:106,140,60;--p3:140,180,60;--p4:180,150,80;
-  --hero-grad:linear-gradient(135deg,#3d521f 0%,#7a9c3c 100%);
-  --tile-accent:linear-gradient(135deg,#7a9c3c,#3d521f);
-  --topbar-bg:linear-gradient(180deg,#56682c,#3d521f);--topbar-fg:#fff;--topbar-bd:#2a3a1a;
-  --on-ac:#fff;
+  --bg:#070a08;--bg2:#0d120e;--bg3:#121a13;--bg4:#1a2419;
+  --text:#e8f0e9;--muted:#93a495;--faint:#5f6f61;
+  --bd:#1b241d;--bd2:#2b3a2e;--bd-soft:rgba(93,240,141,.10);
+  --ac:#5df08d;--acs:#0f2417;--ac2:#2fbf66;
+  --ok:#4ade80;--warn:#f2c14e;--dgr:#ff6a5c;
+  --sh:2px 2px 0 rgba(0,0,0,.55);
+  --sh-1:0 1px 2px rgba(0,0,0,.5);
+  --sh-2:0 6px 20px rgba(0,0,0,.5);
+  --sh-3:0 18px 44px rgba(0,0,0,.62);
+  --r:6px;--r-lg:11px;
+  --bevel:inset -1px -1px 0 rgba(0,0,0,.45),inset 1px 1px 0 rgba(93,240,141,.07);
+  --bevel-in:inset 1px 1px 0 rgba(0,0,0,.45),inset -1px -1px 0 rgba(93,240,141,.05);
+  --font:"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei UI",system-ui,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Menlo,Consolas,monospace;
+  --blob1:rgba(93,240,141,.10);--blob2:rgba(47,191,102,.07);--blob3:rgba(92,200,255,.05);
+  --grid:rgba(93,240,141,.05);
+  --p1:93,240,141;--p2:47,191,102;--p3:92,200,255;--p4:26,36,25;
+  --hero-grad:linear-gradient(135deg,#5df08d 0%,#2fbf66 100%);
+  --tile-accent:linear-gradient(135deg,#5df08d,#2fbf66);
+  --topbar-bg:linear-gradient(180deg,#0c1410,#070a08);--topbar-fg:#e8f0e9;--topbar-bd:#1b241d;
+  --on-ac:#05130a;
   --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
 }
 [data-theme="mc-night"]{
@@ -310,8 +313,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   border:1px solid var(--bd);border-radius:var(--r);outline:none;
   transition:border-color .2s,box-shadow .2s,background .2s;
 }
-[data-theme^="mc-"] .searchbox input{background:rgba(255,255,255,.94);border:2px solid var(--topbar-bd);color:#1f1f1f;box-shadow:var(--bevel-in)}
-[data-theme="mc-night"] .searchbox input,[data-theme="mc-nether"] .searchbox input,[data-theme="mc-end"] .searchbox input,[data-theme="midnight"] .searchbox input{background:#1a2138;color:#dfe6f5}
+[data-theme^="mc-"] .searchbox input{background:var(--bg);border:1px solid var(--topbar-bd);color:var(--text);box-shadow:none}
+[data-theme="mc-night"] .searchbox input,[data-theme="mc-nether"] .searchbox input,[data-theme="mc-end"] .searchbox input,[data-theme="midnight"] .searchbox input{background:#050806;color:#e8f0e9}
 [data-theme^="github-"] .searchbox input{background:var(--bg2)}
 .searchbox input::placeholder{color:var(--faint)}
 .searchbox input:focus{background:var(--bg);border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
@@ -446,7 +449,7 @@ select.select{
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
   line-clamp:2;overflow:hidden;word-break:break-word;
 }
-[data-theme^="mc-wiki"] .card .cname{color:#2a3a1a;text-shadow:1px 1px 0 rgba(255,255,255,.45)}
+[data-theme^="mc-wiki"] .card .cname{color:#eaffef;text-shadow:0 1px 0 rgba(0,0,0,.5)}
 [data-theme="mc-night"] .card .cname{color:#e8ffd0;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
 [data-theme="mc-nether"] .card .cname{color:#ffd8c8;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
 [data-theme="mc-end"] .card .cname{color:#e2d2ff;text-shadow:1px 1px 0 rgba(0,0,0,.45)}
@@ -636,7 +639,7 @@ select.select{
   pointer-events:none;white-space:pre-wrap;
 }
 [data-theme^="github-"] .toast{border-width:1px;border-radius:var(--r-lg);box-shadow:var(--sh-3)}
-[data-theme="mc-wiki"] .toast{background:#2a3a1a;color:#e8ffd0;border-color:#4a4a3a}
+[data-theme="mc-wiki"] .toast{background:#0f1a13;color:#e8f0e9;border-color:#2b3a2e}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast .ti{font-size:15px}
 
@@ -833,6 +836,19 @@ select.select{
 }
 .fld textarea{resize:vertical;min-height:96px;line-height:1.65}
 .fld textarea:focus,.fld input:focus,.fld select:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+/* 文件选择框：默认外观在深色底上是一块白，换成虚线框 + 主色按钮 */
+input[type=file]{
+  width:100%;padding:8px 10px;font-size:12.5px;color:var(--muted);
+  background:var(--bg);border:1px dashed var(--bd2);border-radius:var(--r);
+}
+input[type=file]::file-selector-button{
+  margin-right:10px;padding:4px 11px;border-radius:calc(var(--r) - 1px);cursor:pointer;
+  font:inherit;font-size:12px;font-weight:700;
+  color:var(--ac);background:var(--acs);border:1px solid var(--ac);
+}
+input[type=file]::file-selector-button:hover{filter:brightness(1.15)}
+input[type=checkbox]{accent-color:var(--ac)}
+input[type=range]{accent-color:var(--ac)}
 .fld .mono,.fld textarea.mono,input.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .tip{font-size:12.5px;color:var(--muted);line-height:1.7;padding:10px 12px;background:var(--bg3);border-left:3px solid var(--ac);border-radius:var(--r)}

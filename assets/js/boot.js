@@ -25,7 +25,7 @@
   /* ── 主题取色：遮罩要跟随用户主题，但 core.css 可能还没下完 ────────
      每个主题 [背景, 文字, 主色, 是否深色]；与 core.css 的 --bg/--text/--ac 一致 */
   var MAP = {
-    'mc-wiki':      ['#fffdf5', '#1f1f1f', '#3d521f', 0],
+    'mc-wiki':      ['#070a08', '#e8f0e9', '#5df08d', 1],
     'mc-night':     ['#1a1a1a', '#e0e0e0', '#8ec44a', 1],
     'mc-nether':    ['#1a0a0a', '#f0d0d0', '#ff6030', 1],
     'mc-end':       ['#0f0a1a', '#e0d0f0', '#a060ff', 1],

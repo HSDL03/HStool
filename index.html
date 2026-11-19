@@ -1,236 +1,246 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="mc-night">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>红石的小站</title>
 <meta name="description" content="红石的小站 —— Minecraft 的小玩具、资源与笔记。">
-<meta name="theme-color" content="#07080b">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='18' y='18' width='30' height='30' rx='6' fill='%235eead4'/><rect x='52' y='18' width='30' height='30' rx='6' fill='%23a78bfa'/><rect x='18' y='52' width='30' height='30' rx='6' fill='%23a78bfa'/><rect x='52' y='52' width='30' height='30' rx='6' fill='%23f472b6'/></svg>">
+<meta name="theme-color" content="#070a08">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23070a08'/><rect x='18' y='18' width='30' height='30' rx='5' fill='%235df08d'/><rect x='52' y='18' width='30' height='30' rx='5' fill='%232fbf66'/><rect x='18' y='52' width='30' height='30' rx='5' fill='%232fbf66'/><rect x='52' y='52' width='30' height='30' rx='5' fill='%235df08d'/></svg>">
+<link rel="stylesheet" href="./assets/css/ui.css">
 <style>
 /* ══════════════════════════════════════════════════════════════════
-   新首页 —— 深空 + 荧光。只有一块标题，什么都不挂。
+   首页 —— 深色终端。一行品牌、一块标题、两张模块卡，别的都不挂。
    ══════════════════════════════════════════════════════════════════ */
-*,*::before,*::after{box-sizing:border-box}
-:root{
-  --nx-bg:#f6f8fb;
-  --nx-panel:rgba(255,255,255,.82);
-  --nx-ink:#0b1220;
-  --nx-dim:#5b6b82;
-  --nx-faint:#94a3b4;
-  --nx-line:#e4e9f1;
-  --nx-line-hi:#cdd7e3;
-  --nx-c1:#0ea5e9;
-  --nx-c2:#6366f1;
-  --nx-c3:#14b8a6;
-}
-html{background:var(--nx-bg);scroll-behavior:smooth;color-scheme:light}
-body{
-  margin:0;min-height:100vh;display:flex;flex-direction:column;
-  background:var(--nx-bg);color:var(--nx-ink);
-  font-family:"Segoe UI","PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,sans-serif;
-  overflow-x:hidden;-webkit-font-smoothing:antialiased;
-}
-a{color:inherit}
-img,canvas{max-width:100%}
-::selection{background:var(--nx-c1);color:#04120f}
-:focus-visible{outline:2px solid var(--nx-c1);outline-offset:2px;border-radius:6px}
 
-/* ── 背景：极光 + 网格 + 漂浮方块 ─────────────────────────────── */
-#nxFx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-.nx-aura{position:fixed;pointer-events:none;z-index:0;filter:blur(70px);opacity:.55}
-.nx-aura.a1{left:-8vw;top:-14vh;width:52vw;height:52vw;border-radius:50%;
-  background:radial-gradient(circle at 40% 40%,rgba(14,165,233,.14),transparent 62%)}
-.nx-aura.a2{right:-12vw;top:-6vh;width:48vw;height:48vw;border-radius:50%;
-  background:radial-gradient(circle at 60% 40%,rgba(99,102,241,.12),transparent 62%)}
-.nx-aura.a3{left:32vw;bottom:-30vh;width:60vw;height:46vw;border-radius:50%;
-  background:radial-gradient(circle at 50% 50%,rgba(20,184,166,.08),transparent 66%)}
-.nx-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(15,23,42,.04) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(15,23,42,.04) 1px,transparent 1px);
-  background-size:64px 64px;
-  -webkit-mask-image:radial-gradient(circle at 50% 30%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
-  mask-image:radial-gradient(circle at 50% 30%,#000 0,rgba(0,0,0,.55) 38%,transparent 74%);
-}
-.nx-main{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;
-  justify-content:center;align-items:center;padding:24px 22px}
+body{display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
-/* ── 顶栏 ─────────────────────────────────────────────────────── */
-.topbar{
-  position:relative;z-index:2;height:64px;padding:0 22px;
-  display:flex;align-items:center;gap:18px;
-  border-bottom:1px solid var(--nx-line);
-  background:var(--nx-panel);
-  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+/* ── 主区 ─────────────────────────────────────────────────────── */
+main{
+  position:relative;z-index:2;flex:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(28px,7vh,86px) 20px clamp(36px,8vh,90px);
 }
-.nx-brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:15.5px;
-  color:var(--nx-ink);letter-spacing:-.01em;text-decoration:none;flex:none}
-.nx-logo{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:22px;height:22px;transform:rotate(8deg)}
-.nx-logo i{display:block;border-radius:2px;background:var(--nx-c1);opacity:.9}
-.nx-logo i:nth-child(2){background:var(--nx-c2)}
-.nx-logo i:nth-child(3){background:var(--nx-c2)}
-.nx-logo i:nth-child(4){background:var(--nx-c3)}
-.nx-nav-right{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
-.nx-ghost-sm{font-size:12.5px;font-weight:600;color:var(--nx-faint);text-decoration:none;
-  padding:7px 10px;border-radius:9px;transition:color .18s,background .18s}
-.nx-ghost-sm:hover{color:var(--nx-ink);background:rgba(255,255,255,.055)}
+.hero{width:100%;max-width:660px;display:flex;flex-direction:column;align-items:center;text-align:center}
 
-/* ── Hero ─────────────────────────────────────────────────────── */
-.nx-badge{
-  display:inline-flex;align-items:center;gap:9px;padding:6px 14px;margin-bottom:26px;
-  font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:700;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--nx-c1);
-  border:1px solid rgba(14,165,233,.3);border-radius:999px;background:rgba(14,165,233,.07);
+/* 状态行：像终端提示符 */
+.hero-kicker{
+  display:inline-flex;align-items:center;gap:9px;margin-bottom:22px;
+  padding:4px 12px 4px 10px;border-radius:999px;
+  font-family:var(--ui-mono);font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ui-ac);background:rgba(93,240,141,.06);
+  border:1px solid var(--ui-ac-bd);
 }
-.nx-badge .sep{color:var(--nx-faint)}
-.nx-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--nx-c1);animation:nxPulse 2.2s infinite}
-@keyframes nxPulse{0%{box-shadow:0 0 0 0 rgba(14,165,233,.4)}70%{box-shadow:0 0 0 7px rgba(14,165,233,0)}100%{box-shadow:0 0 0 0 rgba(14,165,233,0)}}
+.hero-kicker .led{
+  width:6px;height:6px;border-radius:50%;background:var(--ui-ac);flex:none;
+  box-shadow:0 0 8px var(--ui-ac);animation:led 2.4s infinite;
+}
+@keyframes led{0%,100%{opacity:1}50%{opacity:.25}}
+.hero-kicker .sep{color:var(--ui-faint);opacity:.7}
 
-.nx-title{
-  margin:0 0 22px;font-size:clamp(3rem,9vw,6.4rem);line-height:1.04;font-weight:900;
-  letter-spacing:0;text-align:center;
+/* 标题：逐字上浮 + 绿光 */
+.hero-title{
+  margin:0;font-size:clamp(2.9rem,8.4vw,5.6rem);line-height:1.06;font-weight:900;
+  letter-spacing:.01em;
 }
-.nx-title .ln{display:block;overflow:hidden}
-.nx-title .ch{
-  display:inline-block;transform:translateY(105%) rotate(4deg);opacity:0;
-  animation:nxChIn .85s cubic-bezier(.19,1,.22,1) forwards;
-  /* 每个字各自裁一遍渐变，用 --i 往左推 1em —— 拼起来就是一条连续的色带 */
-  background-image:linear-gradient(96deg,#0f172a 0%,#155e75 30%,#0ea5e9 55%,#6366f1 82%,#14b8a6 100%);
+.hero-title .ch{
+  display:inline-block;opacity:0;transform:translateY(28px) scale(.96);filter:blur(6px);
+  animation:chIn .78s cubic-bezier(.19,1,.22,1) forwards;
+  background-image:linear-gradient(100deg,#dff6e6 8%,#7df5a4 42%,#3ddc7d 72%,#9ef7c0 100%);
   background-size:5em 100%;
   background-position:calc(var(--i,0) * -1em) 0;
   -webkit-background-clip:text;background-clip:text;
   -webkit-text-fill-color:transparent;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(93,240,141,.28));
 }
-.nx-title .grad{filter:none}
-@keyframes nxChIn{to{transform:none;opacity:1}}
+@keyframes chIn{to{opacity:1;transform:none;filter:blur(0) drop-shadow(0 0 22px rgba(93,240,141,.28))}}
 
-/* ── 工具入口卡 ───────────────────────────────────────────────── */
-.nx-card{
-  display:flex;align-items:center;gap:16px;width:min(560px,100%);
-  margin-top:44px;padding:18px 20px;border-radius:16px;text-decoration:none;
-  background:var(--nx-panel);border:1px solid var(--nx-line);
-  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-  box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 32px rgba(15,23,42,.06);
-  transition:transform .22s cubic-bezier(.2,.9,.3,1),border-color .22s,box-shadow .22s;
+/* 副标题：终端注释 */
+.hero-sub{
+  margin:16px 0 0;font-family:var(--ui-mono);font-size:12px;line-height:1.8;
+  color:var(--ui-dim);letter-spacing:.02em;
 }
-.nx-card:hover{
-  transform:translateY(-3px);border-color:rgba(14,165,233,.4);
-  box-shadow:0 4px 10px rgba(15,23,42,.06),0 24px 60px rgba(14,165,233,.14);
+.hero-sub i{color:var(--ui-faint);font-style:normal}
+
+/* 光标 */
+.caret{
+  display:inline-block;width:7px;height:1.05em;margin-left:3px;
+  vertical-align:-.16em;background:var(--ui-ac);box-shadow:0 0 10px var(--ui-ac);
+  animation:caret 1.15s steps(1) infinite;
 }
-.nx-card .ic{
-  flex:none;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
-  background:linear-gradient(140deg,rgba(14,165,233,.12),rgba(99,102,241,.12));
-  border:1px solid var(--nx-line);
+@keyframes caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* ── 模块卡 ───────────────────────────────────────────────────── */
+.mods{width:100%;display:flex;flex-direction:column;gap:10px;margin-top:clamp(30px,5vh,46px)}
+
+.mod{
+  position:relative;display:flex;align-items:center;gap:15px;
+  padding:15px 16px;border-radius:var(--ui-r-lg);
+  background:linear-gradient(180deg,rgba(18,26,19,.92),rgba(13,18,14,.92));
+  border:1px solid var(--ui-line);
+  text-align:left;
+  transition:border-color .2s var(--ui-ease),transform .2s var(--ui-ease),
+             box-shadow .2s var(--ui-ease),background .2s var(--ui-ease);
+  isolation:isolate;overflow:hidden;
 }
-.nx-card .ic img{width:26px;height:26px;object-fit:contain;image-rendering:auto}
-.nx-card .tx{flex:1;min-width:0}
-.nx-card .tx b{display:block;font-size:14.5px;font-weight:800;color:var(--nx-ink)}
-.nx-card .tx span{display:block;font-size:12px;color:var(--nx-dim);line-height:1.65;margin-top:2px}
-.nx-card .go{flex:none;color:var(--nx-faint);font-size:15px;transition:transform .22s,color .22s}
-.nx-card:hover .go{transform:translate(2px,-2px);color:var(--nx-c1)}
+/* 悬停时从左侧扫进来的一道绿光 */
+.mod::before{
+  content:"";position:absolute;inset:0;z-index:-1;opacity:0;
+  background:radial-gradient(120% 140% at 0% 50%,rgba(93,240,141,.13),transparent 62%);
+  transition:opacity .25s var(--ui-ease);
+}
+.mod:hover{
+  border-color:var(--ui-ac-bd);transform:translateY(-2px);
+  box-shadow:0 12px 34px rgba(0,0,0,.5),0 0 0 1px rgba(93,240,141,.14);
+  background:linear-gradient(180deg,rgba(22,32,24,.96),rgba(14,20,15,.96));
+}
+.mod:hover::before{opacity:1}
+.mod:active{transform:translateY(0)}
+
+.mod .ico{
+  flex:none;width:46px;height:46px;display:grid;place-items:center;border-radius:var(--ui-r);
+  background:var(--ui-sunk);border:1px solid var(--ui-line);
+  transition:border-color .2s var(--ui-ease),box-shadow .2s var(--ui-ease);
+}
+.mod .ico img{width:30px;height:30px;object-fit:contain;display:block;image-rendering:pixelated}
+.mod:hover .ico{border-color:var(--ui-ac-bd);box-shadow:0 0 18px rgba(93,240,141,.16)}
+
+.mod .body{flex:1;min-width:0}
+.mod .row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mod .name{font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:var(--ui-ink)}
+.mod:hover .name{color:#eaffef}
+.mod .idx{
+  font-family:var(--ui-mono);font-size:10px;font-weight:700;letter-spacing:.08em;
+  color:var(--ui-faint);
+}
+.mod .desc{
+  margin:4px 0 0;font-size:11.5px;line-height:1.7;color:var(--ui-dim);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.mod .go{
+  flex:none;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;
+  color:var(--ui-faint);border:1px solid var(--ui-line);
+  font-size:12px;transition:all .22s var(--ui-ease);
+}
+.mod:hover .go{
+  color:#05130a;background:var(--ui-ac);border-color:var(--ui-ac);
+  box-shadow:0 0 16px rgba(93,240,141,.45);transform:translateX(2px);
+}
 
 /* ── 页脚 ─────────────────────────────────────────────────────── */
-.nx-foot{
-  position:relative;z-index:2;padding:22px 22px 38px;
-  display:flex;align-items:center;gap:14px;
-  border-top:1px solid var(--nx-line);font-size:12px;color:var(--nx-faint);
-  background:var(--nx-panel);
+footer{
+  position:relative;z-index:2;flex:none;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:16px 20px 22px;border-top:1px solid var(--ui-line);
+  font-family:var(--ui-mono);font-size:10.5px;letter-spacing:.05em;color:var(--ui-faint);
+  background:rgba(7,10,8,.72);
 }
-.nx-foot .sp{flex:1}
-/* 「存档」：故意压得很淡，知道的人点得到，不知道的看不见 */
-.nx-archive{color:#c3ccd9;font-size:10.5px;letter-spacing:.06em;text-decoration:none;transition:color .25s}
-.nx-archive:hover{color:var(--nx-c1)}
-
-/* ── 响应式 ───────────────────────────────────────────────────── */
-@media (max-width:720px){
-  .topbar{height:58px;padding:0 14px;gap:10px}
-  .nx-main{padding:0 16px}
-  .nx-foot{padding:20px 14px 34px}
-  .nx-badge{font-size:10px;padding:5px 11px;margin-bottom:22px}
+footer .sp{flex:1}
+/* 「存档」：压得很淡，知道的人点得到 */
+.archive{
+  color:#2c3830;font-size:10px;letter-spacing:.1em;text-decoration:none;
+  transition:color .25s var(--ui-ease);
 }
+.archive:hover{color:var(--ui-ac)}
 
+@media (max-width:640px){
+  main{padding:34px 14px 40px;justify-content:flex-start}
+  .hero-kicker{margin-bottom:18px;font-size:9.5px;letter-spacing:.12em}
+  .hero-sub{font-size:11px;margin-top:13px}
+  .mods{margin-top:28px;gap:8px}
+  .mod{padding:13px 13px;gap:12px}
+  .mod .ico{width:40px;height:40px}
+  .mod .ico img{width:26px;height:26px}
+  .mod .name{font-size:13.5px}
+  .mod .desc{font-size:11px;-webkit-line-clamp:3}
+  .mod .go{display:none}
+  footer{padding:14px 14px 18px;font-size:10px}
+}
 @media (prefers-reduced-motion:reduce){
-  .nx-title .ch{animation:none;transform:none;opacity:1}
-  #nxFx,.nx-aura{display:none}
-  .nx-badge .dot{animation:none}
+  #fx{display:none}
+  .hero-title .ch{opacity:1;transform:none;filter:none;animation:none}
+  .caret,.hero-kicker .led{animation:none}
 }
 </style>
 </head>
 <body>
 
-<canvas id="nxFx" aria-hidden="true"></canvas>
-<div class="nx-aura a1" aria-hidden="true"></div>
-<div class="nx-aura a2" aria-hidden="true"></div>
-<div class="nx-aura a3" aria-hidden="true"></div>
-<div class="nx-grid" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="ui-ambient" aria-hidden="true"></div>
 
-<header class="topbar">
-  <a class="nx-brand" href="./index.html" aria-label="红石的小站 首页">
-    <span class="nx-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+<header class="ui-top">
+  <a class="ui-brand" href="./index.html" aria-label="红石的小站 首页">
+    <span class="ui-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     红石的小站
   </a>
-  <div class="nx-nav-right">
-    <a class="nx-ghost-sm" href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GitHub</a>
-  </div>
+  <span class="sp"></span>
+  <a class="ui-link" href="https://github.com/HSDL03/HStool" target="_blank" rel="noopener">GITHUB ↗</a>
 </header>
 
-<main class="nx-main">
-  <section>
-    <div style="text-align:center">
-      <div class="nx-badge"><span class="dot"></span>STATION <span class="sep">/</span> ONLINE <span class="sep">/</span> <span id="nxStamp">2026</span></div>
+<main>
+  <div class="hero">
+    <div class="hero-kicker">
+      <span class="led"></span>STATION<span class="sep">/</span>ONLINE<span class="sep">/</span><span id="stamp">2026</span>
     </div>
-    <h1 class="nx-title" id="nxTitle" aria-label="红石的小站"></h1>
 
-    <a class="nx-card" href="./tools/mcgen.html" style="margin-top:14px">
-      <span class="ic"><img src="./assets/mc-textures/note_block.png" alt="" onerror="this.style.display='none'"></span>
-      <span class="tx">
-        <b>我的世界结构生成</b>
-        <span>图片 / 方块图标 / MIDI → 地图画与红石音乐：像素画、音符盒乐谱和 .mcfunction 指令，作品存在本机，下载 .mcstructure 再拿去编辑器里改。</span>
-      </span>
-      <span class="go">↗</span>
-    </a>
+    <h1 class="hero-title" id="title" aria-label="红石的小站"></h1>
 
-    <a class="nx-card" href="./tools/structure.html" style="margin-top:14px">
-      <span class="ic"><img src="./assets/mc-textures/structure_block.png" alt="" onerror="this.style.display='none'"></span>
-      <span class="tx">
-        <b>结构处理器</b>
-        <span>上传 .mcstructure / .schem / .nbt，原版贴图 3D 渲染，点选或框选方块直接改 NBT（命令、告示牌、箱子…），可再导出回游戏。</span>
-      </span>
-      <span class="go">↗</span>
-    </a>
-  </section>
+    <p class="hero-sub">Minecraft 的小玩具、资源与笔记<i>  //  全部在浏览器本地跑</i><span class="caret" aria-hidden="true"></span></p>
+
+    <nav class="mods" aria-label="主要工具">
+      <a class="mod" href="./tools/mcgen.html">
+        <span class="ico"><img src="./assets/mc-textures/note_block.png" alt="" onerror="this.style.display='none'"></span>
+        <span class="body">
+          <span class="row1"><span class="idx">01</span><span class="name">我的世界结构生成</span></span>
+          <span class="desc">图片 / 方块图标 / MIDI → 地图画与红石音乐：像素画、音符盒乐谱和 .mcfunction 指令，作品存在本机，下载 .mcstructure 再拿去编辑器里改。</span>
+        </span>
+        <span class="go" aria-hidden="true">↗</span>
+      </a>
+
+      <a class="mod" href="./tools/structure.html">
+        <span class="ico"><img src="./assets/mc-textures/structure_block.png" alt="" onerror="this.style.display='none'"></span>
+        <span class="body">
+          <span class="row1"><span class="idx">02</span><span class="name">结构处理器</span></span>
+          <span class="desc">上传 .mcstructure / .schem / .nbt，原版贴图 3D 渲染，点选或框选方块直接改 NBT（命令、告示牌、箱子…），可再导出回游戏。</span>
+        </span>
+        <span class="go" aria-hidden="true">↗</span>
+      </a>
+    </nav>
+  </div>
 </main>
 
-<footer class="nx-foot">
-  <span>© <span id="nxYear">2026</span> 红石的小站</span>
+<footer>
+  <span>© <span id="year">2026</span> 红石的小站</span>
   <span class="sp"></span>
-  <a class="nx-archive" href="./pages/legacy-home.html" title="旧版首页存档">存档</a>
+  <a class="archive" href="./pages/legacy-home.html" title="旧版首页存档">ARCHIVE</a>
 </footer>
 
 <script>
 (function () {
   'use strict';
   var d = document, w = window;
-  var $ = function (s, r) { return (r || d).querySelector(s); };
+  var $ = function (s) { return d.querySelector(s); };
   var reduced = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ── 标题逐字入场 ─────────────────────────────────────────────── */
+  /* ── 标题逐字入场：每个字各裁一遍渐变，--i 往左推 1em 拼成连续色带 ── */
   var TEXT = '红石的小站';
-  var title = $('#nxTitle');
+  var title = $('#title');
   if (title) {
-    title.innerHTML = '<span class="ln"><span class="grad">' +
-      TEXT.split('').map(function (c, i) {
-        return '<span class="ch" style="--i:' + i + ';animation-delay:' + (0.06 * i + 0.12).toFixed(2) + 's">' + c + '</span>';
-      }).join('') + '</span></span>';
+    title.innerHTML = TEXT.split('').map(function (c, i) {
+      return '<span class="ch" style="--i:' + i + ';animation-delay:' +
+        (0.055 * i + 0.1).toFixed(2) + 's">' + c + '</span>';
+    }).join('');
   }
 
-  /* ── 背景：漂浮的等距方块 ─────────────────────────────────────── */
+  /* ── 背景：缓慢漂移的等距线框方块，鼠标带一点视差 ───────────────── */
   (function fx() {
-    var cv = $('#nxFx');
+    var cv = $('#fx');
     if (!cv || !cv.getContext || reduced) return;
-    var ctx = cv.getContext('2d'), W = 0, H = 0, dpr = 1;
-    var cubes = [], mx = 0.5, my = 0.5, px = 0, py = 0, raf = 0, last = 0;
-    var COLORS = [[14, 165, 233], [99, 102, 241], [20, 184, 166], [148, 163, 184]];
+    var ctx = cv.getContext('2d');
+    var W = 0, H = 0, dpr = 1, cubes = [], raf = 0, last = 0;
+    var mx = 0.5, my = 0.5, px = 0, py = 0;
+    var AC = '93,240,141';
 
     function size() {
       dpr = Math.min(w.devicePixelRatio || 1, 2);
@@ -238,32 +248,36 @@ img,canvas{max-width:100%}
       cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
+
     function make() {
-      var n = W < 720 ? 13 : 22;
+      var n = W < 720 ? 11 : 20;
       cubes = [];
       for (var i = 0; i < n; i++) {
         cubes.push({
           x: Math.random() * W, y: Math.random() * H,
-          s: 9 + Math.random() * 20,
+          s: 10 + Math.random() * 22,
           a: Math.random() * Math.PI * 2,
-          va: (Math.random() - 0.5) * 0.006,
-          vx: (Math.random() - 0.5) * 0.16,
-          vy: (Math.random() - 0.5) * 0.22,
-          z: 0.25 + Math.random() * 0.75,
-          c: COLORS[(Math.random() * COLORS.length) | 0]
+          va: (Math.random() - 0.5) * 0.0055,
+          vx: (Math.random() - 0.5) * 0.14,
+          vy: (Math.random() - 0.5) * 0.2,
+          z: 0.22 + Math.random() * 0.78
         });
       }
     }
+
     function iso(x, y, s, a) {
       var ca = Math.cos(a), sa = Math.sin(a);
-      var P = function (u, v) { return [x + (u * ca - v * sa) * s, y + (u * sa + v * ca) * s * 0.5]; };
+      var P = function (u, v) {
+        return [x + (u * ca - v * sa) * s, y + (u * sa + v * ca) * s * 0.5];
+      };
       return { t: P(0, -1), r: P(1, 0), b: P(0, 1), l: P(-1, 0), c: P(0, 0) };
     }
+
     function frame(ts) {
       if (!last) last = ts;
       var dt = Math.min(48, ts - last); last = ts;
-      px += ((mx - 0.5) * 26 - px) * 0.06;
-      py += ((my - 0.5) * 18 - py) * 0.06;
+      px += ((mx - 0.5) * 24 - px) * 0.055;
+      py += ((my - 0.5) * 16 - py) * 0.055;
 
       ctx.clearRect(0, 0, W, H);
       for (var i = 0; i < cubes.length; i++) {
@@ -271,38 +285,40 @@ img,canvas{max-width:100%}
         q.a += q.va * dt * 0.06;
         q.x += q.vx * dt * 0.06;
         q.y += q.vy * dt * 0.06;
-        if (q.x < -60) q.x = W + 60; if (q.x > W + 60) q.x = -60;
-        if (q.y < -60) q.y = H + 60; if (q.y > H + 60) q.y = -60;
+        if (q.x < -70) q.x = W + 70;
+        if (q.x > W + 70) q.x = -70;
+        if (q.y < -70) q.y = H + 70;
+        if (q.y > H + 70) q.y = -70;
 
-        var s = q.s * (0.6 + q.z * 0.6);
-        var cx = q.x + px * q.z, cy = q.y + py * q.z;
-        var g = iso(cx, cy, s, q.a);
-        var al = 0.05 + q.z * 0.13;
-        var col = 'rgba(' + q.c[0] + ',' + q.c[1] + ',' + q.c[2] + ',';
+        var s = q.s * (0.55 + q.z * 0.65);
+        var g = iso(q.x + px * q.z, q.y + py * q.z, s, q.a);
 
+        /* 三个可见面：极暗的填充，让线框有厚度 */
         ctx.beginPath();
         ctx.moveTo(g.t[0], g.t[1]); ctx.lineTo(g.r[0], g.r[1]);
         ctx.lineTo(g.c[0], g.c[1]); ctx.lineTo(g.l[0], g.l[1]); ctx.closePath();
-        ctx.fillStyle = col + (al * 1.5).toFixed(3) + ')'; ctx.fill();
+        ctx.fillStyle = 'rgba(' + AC + ',' + (0.012 + q.z * 0.02).toFixed(3) + ')';
+        ctx.fill();
 
         ctx.beginPath();
         ctx.moveTo(g.l[0], g.l[1]); ctx.lineTo(g.c[0], g.c[1]);
         ctx.lineTo(g.b[0], g.b[1]); ctx.closePath();
-        ctx.fillStyle = col + (al * 0.7).toFixed(3) + ')'; ctx.fill();
+        ctx.fillStyle = 'rgba(' + AC + ',' + (0.006 + q.z * 0.012).toFixed(3) + ')';
+        ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(g.c[0], g.c[1]); ctx.lineTo(g.r[0], g.r[1]);
-        ctx.lineTo(g.b[0], g.b[1]); ctx.closePath();
-        ctx.fillStyle = col + (al * 1.0).toFixed(3) + ')'; ctx.fill();
-
+        /* 线框：靠 z 决定亮度，远的几乎看不见 */
         ctx.beginPath();
         ctx.moveTo(g.t[0], g.t[1]); ctx.lineTo(g.r[0], g.r[1]);
         ctx.lineTo(g.b[0], g.b[1]); ctx.lineTo(g.l[0], g.l[1]); ctx.closePath();
-        ctx.strokeStyle = col + (0.12 + q.z * 0.14).toFixed(3) + ')';
-        ctx.lineWidth = 1; ctx.stroke();
+        ctx.moveTo(g.c[0], g.c[1]); ctx.lineTo(g.t[0], g.t[1]);
+        ctx.moveTo(g.c[0], g.c[1]); ctx.lineTo(g.b[0], g.b[1]);
+        ctx.strokeStyle = 'rgba(' + AC + ',' + (0.03 + q.z * 0.1).toFixed(3) + ')';
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
       raf = requestAnimationFrame(frame);
     }
+
     size(); make();
     raf = requestAnimationFrame(frame);
     w.addEventListener('resize', function () { size(); make(); });
@@ -317,9 +333,9 @@ img,canvas{max-width:100%}
   })();
 
   var yr = new Date().getFullYear();
-  var stamp = $('#nxStamp'), y2 = $('#nxYear');
-  if (stamp) stamp.textContent = yr;
-  if (y2) y2.textContent = yr;
+  var s1 = $('#stamp'), s2 = $('#year');
+  if (s1) s1.textContent = yr;
+  if (s2) s2.textContent = yr;
 })();
 </script>
 </body>
