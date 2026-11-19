@@ -195,6 +195,20 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
   flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-family:var(--ui-mono);font-size:10.5px;color:var(--ui-faint);
 }
+/* 生成进度：状态文字后面跟一条细进度条，跑完自动消失 */
+.actionbar .st.wrap{flex:1 1 auto;display:flex;align-items:center;gap:9px;overflow:visible}
+.actionbar .st .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.busy{
+  flex:0 0 96px;height:3px;border-radius:2px;
+  background:var(--ui-line);overflow:hidden;display:none;
+}
+.busy.on{display:block}
+.busy i{
+  display:block;height:100%;width:0%;border-radius:2px;
+  background:linear-gradient(90deg,var(--ui-ac-d),var(--ui-ac));
+  box-shadow:0 0 8px rgba(93,240,141,.6);
+  transition:width .18s var(--ui-ease);
+}
 .actionbar .bt{height:32px;padding:0 14px}
 
 /* ── 钢琴卷帘 ─────────────────────────────────────────────────── */
@@ -642,7 +656,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 </main>
 
 <footer class="actionbar" id="mapFoot">
-  <span class="st" id="msState">还没生成</span>
+  <span class="st wrap"><span class="txt" id="msState">还没生成</span><span class="busy" id="msBusy"><i id="msBusyBar"></i></span></span>
   <span class="sp"></span>
   <button class="bt" id="btnIcon">生成预览</button>
   <button class="bt" id="btnSave">保存作品</button>
@@ -2247,36 +2261,84 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
     if (!mapImage) { toast('先选一张图片（拖进来或粘地址）', 'err'); return; }
     return renderMap(mapImage, download);
   }
+
+  /* ── 生成进度 ──────────────────────────────────────────────────
+     大图要跑几百毫秒，只显示「正在生成…」用户会以为卡死。
+     这里把状态文字 + 一条细进度条接起来，各阶段各自上报百分比。
+     进度条是纯装饰，但阶段名和耗时是真的。 */
+  var busyT = 0;
+  function setPhase(label, pct) {
+    var txt = $('#msState'), bar = $('#msBusyBar'), box = $('#msBusy');
+    if (txt) txt.textContent = label;
+    if (box) box.classList.add('on');
+    if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
+    clearTimeout(busyT);
+  }
+  function endPhase(label) {
+    var bar = $('#msBusyBar'), box = $('#msBusy');
+    if (bar) bar.style.width = '100%';
+    if (box) { clearTimeout(busyT); busyT = setTimeout(function () { box.classList.remove('on'); }, 260); }
+    if (label && $('#msState')) $('#msState').textContent = label;
+  }
+  /* 让浏览器有机会把进度画出来（大循环是同步的，不 yield 就刷不动） */
+  function nextFrame() {
+    return new Promise(function (r) { requestAnimationFrame(function () { setTimeout(r, 0); }); });
+  }
+
   function renderMap(srcIm, download) {
     var o = mapOpts();
     if (!countSel()) { toast('至少留一种可用方块', 'err'); return; }
     if (mapBusy) return;
     mapBusy = true;
     $('#btnIcon').disabled = true;
-    $('#msState').textContent = '正在生成…';
+    setPhase('准备调色板…', 4);
     return buildPalette().then(function (palAll) {
       if (!palAll.length) throw new Error('选中的方块都没有贴图数据');
       var t0 = performance.now();
       var key = prepKey(o), px = null, prepMs = 0, cached = false;
       if (prepCache.key === key && prepCache.px) { px = prepCache.px; cached = true; }
       else {
+        setPhase('缩放与预处理…', 16);
         px = prepImage(srcIm, o.W, o.H, o.fit, o);
         prepCache = { key: key, px: px };
         prepMs = performance.now() - t0;
       }
       var t1 = performance.now();
+      setPhase('挑选配色…', 30);
       var pal = limitPalette(palAll, px, o.W, o.H, o.maxCol, o.alpha);
       var m = getMatcher(pal, o.metric, o.lut);
-      var idx = quantize(px, o.W, o.H, m, o);
-      var t2 = performance.now();
-      var depth = buildDepth(idx, px, o.W, o.H, o);
-      var res = structFromMap(idx, o.W, o.H, pal, {
-        orient: o.orient, thick: o.thick, depth: depth
+      setPhase('逐格匹配颜色…', 42);
+      return nextFrame().then(function () {
+        var idx = quantize(px, o.W, o.H, m, o);
+        var t2 = performance.now();
+        setPhase('计算浮雕层高…', 72);
+        return nextFrame().then(function () {
+          var depth = buildDepth(idx, px, o.W, o.H, o);
+          setPhase('搭结构…', 84);
+          return nextFrame().then(function () {
+            var res = structFromMap(idx, o.W, o.H, pal, {
+              orient: o.orient, thick: o.thick, depth: depth
+            });
+            var t3 = performance.now();
+            mapLast = { idx: idx, W: o.W, H: o.H, pal: pal, res: res, opts: o, depth: depth };
+            paintResult(idx, o.W, o.H, pal);
+            return finishRender(o, px, idx, pal, res, depth, m, t0, t1, t2, t3, prepMs, cached, download);
+          });
+        });
       });
-      var t3 = performance.now();
-      mapLast = { idx: idx, W: o.W, H: o.H, pal: pal, res: res, opts: o, depth: depth };
-      paintResult(idx, o.W, o.H, pal);
+    }).catch(function (err) {
+      endPhase('生成失败');
+      toast('生成失败：' + (err && err.message || err), 'err');
+    }).then(function (r) {
+      mapBusy = false;
+      $('#btnIcon').disabled = false;
+      return r;
+    });
+  }
 
+  /* 收尾：统计 + 写元信息 + 状态栏 + 可选下载 */
+  function finishRender(o, px, idx, pal, res, depth, m, t0, t1, t2, t3, prepMs, cached, download) {
+    {
       var used = 0, seen = {}, filled = 0, i;
       for (i = 0; i < idx.length; i++) {
         if (idx[i] < 0) continue;
@@ -2320,23 +2382,17 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
         '<b>' + total.toFixed(0) + '</b> ms（' + (cached ? '缓存' : prepMs.toFixed(0)) + ' + ' +
         (t2 - t1).toFixed(0) + ' + ' + (t3 - t2).toFixed(0) + '）</span>';
       $('#msState').textContent = o.W + '×' + o.H + ' 预览就绪 · ' +
-        (o.orient === 'flat' ? '平铺' : '立放') + ' · ' + fmtInt(blocks) + ' 个方块 · ' +
+        (o.orient === 'flat' ? '平铺' : '立放') + ' · ' + fmtInt(realBlocks) + ' 个方块 · ' +
         used + ' 种颜色 · ΔE ' + de.toFixed(1) +
         (st.lut ? ' · 查表命中 ' + Math.round(st.hits / Math.max(1, st.hits + st.misses) * 100) + '%' : '');
+      endPhase('完成 · ' + total.toFixed(0) + ' ms');
       if (download) downloadMap();
       else {
         var fr = $('#msCmp').getBoundingClientRect();
         if (fr.top < 60 || fr.bottom > w.innerHeight) $('#msCmp').scrollIntoView({ block: 'center', behavior: 'smooth' });
       }
       return mapLast;
-    }).catch(function (err) {
-      $('#msState').textContent = '生成失败';
-      toast('生成失败：' + (err && err.message || err), 'err');
-    }).then(function (r) {
-      mapBusy = false;
-      $('#btnIcon').disabled = false;
-      return r;
-    });
+    }
   }
   function paintResult(idx, W, H, pal) {
     var cv = $('#msRes');
